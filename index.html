@@ -1,60 +1,41 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Chatbox Project</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        #chat-window { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px; }
-        #message-input { width: 80%; padding: 8px; }
-        #send-button { padding: 8px; }
-    </style>
-</head>
-<body>
+const socket = new WebSocket('wss://chatbox-final.onrender.com');
 
-    <h2>Απλό Chatbox</h2>
-    <div id="chat-window"></div>
-    <input type="text" id="username" placeholder="Το όνομά σου">
-    <input type="text" id="message-input" placeholder="Πληκτρολόγησε ένα μήνυμα...">
-    <button id="send-button">Αποστολή</button>
+const chatWindow = document.getElementById('chat-window');
+const messageInput = document.getElementById('message-input');
+const usernameInput = document.getElementById('username');
+const sendButton = document.getElementById('send-button');
 
-    <script>
-        // 1. Σύνδεση με τον WebSocket Server
-        // Εδώ πρέπει να βάλεις τη διεύθυνση του server σου
-       const socket = new WebSocket('wss://chatbox-final.onrender.com/');
+// Λήψη Μηνυμάτων από τον Server
+socket.onmessage = function(event) {
+    const message = event.data;
+    const p = document.createElement('p');
+    p.textContent = message;
+    chatWindow.appendChild(p);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+};
 
-        const chatWindow = document.getElementById('chat-window');
-        const messageInput = document.getElementById('message-input');
-        const usernameInput = document.getElementById('username');
-        const sendButton = document.getElementById('send-button');
+// Αποστολή Μηνυμάτων στον Server
+sendButton.onclick = function() {
+    const username = usernameInput.value || 'Ανώνυμος';
+    const message = messageInput.value;
+    if (message) {
+        // Στέλνουμε το μήνυμα και το όνομα
+        const formattedMessage = `${username}: ${message}`;
+        socket.send(formattedMessage);
+        
+        // Εμφανίζουμε το μήνυμα κατευθείαν
+        const p = document.createElement('p');
+        p.textContent = formattedMessage;
+        chatWindow.appendChild(p);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+        
+        messageInput.value = ''; // Καθαρίζουμε το πεδίο
+    }
+};
 
-        // 2. Λήψη Μηνυμάτων από τον Server
-        socket.onmessage = function(event) {
-            const message = event.data;
-            const p = document.createElement('p');
-            p.textContent = message;
-            chatWindow.appendChild(p);
-            // Κάνουμε scroll στο κάτω μέρος
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        };
-
-        // 3. Αποστολή Μηνυμάτων στον Server
-        sendButton.onclick = function() {
-            const username = usernameInput.value || 'Ανώνυμος';
-            const message = messageInput.value;
-            if (message) {
-                // Στέλνουμε το μήνυμα και το όνομα
-                socket.send(`${username}: ${message}`);
-                messageInput.value = ''; // Καθαρίζουμε το πεδίο
-            }
-        };
-
-        // Επίσης, στέλνουμε με το Enter
-        messageInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                sendButton.click();
-            }
-        });
-
-    </script>
-</body>
-</html>
+// Επίσης, στέλνουμε με το Enter
+messageInput.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        sendButton.click();
+    }
+});
