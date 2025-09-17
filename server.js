@@ -3,7 +3,28 @@ const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
 const { Pool } = require('pg');
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
+});
 
+// Αυτή η συνάρτηση δημιουργεί τον πίνακα 'messages'
+async function createTable() {
+    try {
+        await pool.query('CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, message TEXT NOT NULL)');
+        console.log('Ο πίνακας "messages" δημιουργήθηκε επιτυχώς.');
+    } catch (error) {
+        console.error('Σφάλμα κατά τη δημιουργία του πίνακα:', error);
+    }
+}
+
+// Καλούμε τη συνάρτηση αμέσως
+createTable();
+
+const WebSocket = require('ws');
+const wss = new WebSocket.Server({ port: process.env.PORT || 10000 });
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
