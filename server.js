@@ -4,6 +4,10 @@ const WebSocket = require('ws');
 const path = require('path');
 const { Pool } = require('pg');
 
+const session = require('express-session');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -16,19 +20,79 @@ const pool = new Pool({
     }
 });
 
-// Αυτόματη δημιουργία πίνακα μηνυμάτων κατά την εκκίνηση
-async function createTable() {
+// Ρύθμιση Session
+app.use(session({
+    secret: 'mysecret', // Βάλε ένα δικό σου μυστικό κλειδί
+    resave: false,
+    saveUninitialized: false
+}));
+
+// Ρύθμιση Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Passport Serializer/Deserializer για αποθήκευση του χρήστη στη συνεδρία
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
     try {
-        await pool.query('CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, message TEXT NOT NULL)');
-        console.log('Ο πίνακας "messages" δημιουργήθηκε επιτυχώς.');
+        const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+        done(null, result.rows[0]);
     } catch (error) {
-        console.error('Σφάλμα κατά τη δημιουργία του πίνακα:', error);
+        done(error);
+    }
+});
+
+// Ρύθμιση Google Strategy
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "/auth/google/callback"
+},
+    async (accessToken, refreshToken, profile, done) => {
+        try {
+            let user = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
+            if (user.rows.length === 0) {
+                // Νέος χρήστης, τον αποθηκεύουμε στη βάση δεδομένων
+                user = await pool.query('INSERT INTO users (google_id, display_name) VALUES ($1, $2) RETURNING *', [profile.id, profile.displayName]);
+            }
+            done(null, user.rows[0]);
+        } catch (error) {
+            done(error);
+        }
+    }
+));
+
+// Δημιουργία πίνακα χρηστών και μηνυμάτων
+async function createTables() {
+    try {
+        await pool.query('CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, google_id TEXT UNIQUE, display_name TEXT)');
+        await pool.query('CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, message TEXT NOT NULL, user_id INTEGER REFERENCES users(id), timestamp TIMESTAMPTZ DEFAULT NOW())');
+        console.log('Οι πίνακες "users" και "messages" δημιουργήθηκαν επιτυχώς.');
+    } catch (error) {
+        console.error('Σφάλμα κατά τη δημιουργία των πινάκων:', error);
     }
 }
-createTable();
+createTables();
 
-// Φόρτωση του αρχείου index.html
+// Routes για τον έλεγχο ταυτότητας
+app.get('/auth/google',
+    passport.authenticate('google', { scope: ['profile'] }));
+
+app.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/' }),
+    (req, res) => {
+        res.redirect('/');
+    });
+
+// Middleware για τον έλεγχο αν ο χρήστης είναι συνδεδεμένος
 app.get('/', (req, res) => {
+    if (!req.isAuthenticated()) {
+        return res.send('<a href="/auth/google">Σύνδεση με Google</a>');
+    }
+    // Αν ο χρήστης είναι συνδεδεμένος, φόρτωσε το chat
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
@@ -38,9 +102,9 @@ wss.on('connection', async ws => {
 
     // Φόρτωση παλαιότερων μηνυμάτων
     try {
-        const result = await pool.query('SELECT message FROM messages ORDER BY id');
+        const result = await pool.query('SELECT m.message, u.display_name FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp');
         result.rows.forEach(row => {
-            ws.send(row.message);
+            ws.send(`${row.display_name}: ${row.message}`);
         });
     } catch (error) {
         console.error('Σφάλμα φόρτωσης μηνυμάτων:', error);
@@ -48,9 +112,11 @@ wss.on('connection', async ws => {
 
     ws.on('message', async message => {
         try {
+            const userId = ws.userId; // Θα πρέπει να αποθηκεύσεις το ID του χρήστη
             const formattedMessage = message.toString();
+
             // Αποθήκευση του μηνύματος στη βάση δεδομένων
-            await pool.query('INSERT INTO messages(message) VALUES($1)', [formattedMessage]);
+            await pool.query('INSERT INTO messages(message, user_id) VALUES($1, $2)', [formattedMessage, userId]);
             console.log(`Το μήνυμα αποθηκεύτηκε: ${formattedMessage}`);
 
             // Στείλε το μήνυμα σε όλους τους συνδεδεμένους χρήστες
