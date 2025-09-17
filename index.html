@@ -42,8 +42,7 @@
 
         // Εδώ πρέπει να βάλεις τη διεύθυνση του server σου
 
-        const socket = new WebSocket('wss://https://chatbox-final.onrender.com');
-
+const socket = new WebSocket('wss://chatbox-final.onrender.com' + window.location.host);
 const chatWindow = document.getElementById('chat-window');
 const messageInput = document.getElementById('message-input');
 const usernameInput = document.getElementById('username');
