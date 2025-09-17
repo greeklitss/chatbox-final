@@ -1,13 +1,14 @@
 {
   "name": "simple-chat-app",
   "version": "1.0.0",
-  "description": "A simple chat application with WebSocket.",
+  "description": "A simple chat application with WebSocket and PostgreSQL.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
+    "pg": "^8.16.3",
     "ws": "^8.17.0"
   }
 }
