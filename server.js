@@ -37,17 +37,23 @@ wss.on('connection', async ws => {
     console.error('Σφάλμα φόρτωσης μηνυμάτων:', err.stack);
   }
 
-  ws.on('message', async message => {
-    const msg = message.toString();
-    console.log(`Λάβαμε μήνυμα: ${msg}`);
-
-    // Αποθήκευση του μηνύματος στη βάση δεδομένων
+  wss.on('message', async message => {
     try {
-      await pool.query('INSERT INTO messages(message) VALUES($1)', [msg]);
-    } catch (err) {
-      console.error('Σφάλμα αποθήκευσης μηνύματος:', err.stack);
-    }
+        const formattedMessage = message.toString();
+        // Αποθήκευση του μηνύματος στη βάση δεδομένων
+        await pool.query('INSERT INTO messages(message) VALUES($1)', [formattedMessage]);
+        console.log(`Το μήνυμα αποθηκεύτηκε: ${formattedMessage}`);
 
+        // Στείλε το μήνυμα σε όλους τους συνδεδεμένους χρήστες
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(formattedMessage);
+            }
+        });
+    } catch (error) {
+        console.error("Σφάλμα κατά την αποθήκευση του μηνύματος:", error);
+    }
+});
     // Στείλε το μήνυμα σε όλους τους συνδεδεμένους χρήστες
     wss.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
