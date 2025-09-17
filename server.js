@@ -37,7 +37,7 @@ wss.on('connection', async ws => {
     console.error('Σφάλμα φόρτωσης μηνυμάτων:', err.stack);
   }
 
-  wss.on('message', async message => {
+ wss.on('message', async message => {
     try {
         const formattedMessage = message.toString();
         // Αποθήκευση του μηνύματος στη βάση δεδομένων
@@ -53,14 +53,7 @@ wss.on('connection', async ws => {
     } catch (error) {
         console.error("Σφάλμα κατά την αποθήκευση του μηνύματος:", error);
     }
-});
-    // Στείλε το μήνυμα σε όλους τους συνδεδεμένους χρήστες
-    wss.clients.forEach(client => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(msg);
-      }
-    });
-  });
+}); // Αυτό το '});' κλείνει όλη την εντολή
 
   ws.on('close', () => {
     console.log('Ο χρήστης αποσυνδέθηκε');
