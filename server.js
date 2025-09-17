@@ -3,6 +3,12 @@ const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
 const { Pool } = require('pg');
+
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+// Σύνδεση με τη βάση δεδομένων PostgreSQL
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
@@ -10,7 +16,7 @@ const pool = new Pool({
     }
 });
 
-// Αυτή η συνάρτηση δημιουργεί τον πίνακα 'messages'
+// Αυτόματη δημιουργία πίνακα μηνυμάτων κατά την εκκίνηση
 async function createTable() {
     try {
         await pool.query('CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, message TEXT NOT NULL)');
@@ -19,69 +25,51 @@ async function createTable() {
         console.error('Σφάλμα κατά τη δημιουργία του πίνακα:', error);
     }
 }
-
-// Καλούμε τη συνάρτηση αμέσως
-createTable();
-
-const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: process.env.PORT || 10000 });
-const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
-
-// Σύνδεση με τη βάση δεδομένων PostgreSQL
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-// Δημιουργία πίνακα μηνυμάτων αν δεν υπάρχει
-async function createTable() {
-  await pool.query('CREATE TABLE IF NOT EXISTS messages (message TEXT)');
-}
 createTable();
 
 // Φόρτωση του αρχείου index.html
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Χειρισμός συνδέσεων WebSocket
 wss.on('connection', async ws => {
-  console.log('Νέος χρήστης συνδέθηκε');
+    console.log('Νέος χρήστης συνδέθηκε');
 
-  // Φόρτωση παλαιότερων μηνυμάτων
-  try {
-    const res = await pool.query('SELECT message FROM messages ORDER BY id');
-    res.rows.forEach(row => {
-      ws.send(row.message);
-    });
-  } catch (err) {
-    console.error('Σφάλμα φόρτωσης μηνυμάτων:', err.stack);
-  }
-
- wss.on('message', async message => {
+    // Φόρτωση παλαιότερων μηνυμάτων
     try {
-        const formattedMessage = message.toString();
-        // Αποθήκευση του μηνύματος στη βάση δεδομένων
-        await pool.query('INSERT INTO messages(message) VALUES($1)', [formattedMessage]);
-        console.log(`Το μήνυμα αποθηκεύτηκε: ${formattedMessage}`);
-
-        // Στείλε το μήνυμα σε όλους τους συνδεδεμένους χρήστες
-        wss.clients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(formattedMessage);
-            }
+        const result = await pool.query('SELECT message FROM messages ORDER BY id');
+        result.rows.forEach(row => {
+            ws.send(row.message);
         });
     } catch (error) {
-        console.error("Σφάλμα κατά την αποθήκευση του μηνύματος:", error);
+        console.error('Σφάλμα φόρτωσης μηνυμάτων:', error);
     }
-}); // Αυτό το '});' κλείνει όλη την εντολή
 
-  ws.on('close', () => {
-    console.log('Ο χρήστης αποσυνδέθηκε');
-  });
+    ws.on('message', async message => {
+        try {
+            const formattedMessage = message.toString();
+            // Αποθήκευση του μηνύματος στη βάση δεδομένων
+            await pool.query('INSERT INTO messages(message) VALUES($1)', [formattedMessage]);
+            console.log(`Το μήνυμα αποθηκεύτηκε: ${formattedMessage}`);
+
+            // Στείλε το μήνυμα σε όλους τους συνδεδεμένους χρήστες
+            wss.clients.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(formattedMessage);
+                }
+            });
+        } catch (error) {
+            console.error("Σφάλμα κατά την αποθήκευση του μηνύματος:", error);
+        }
+    });
+
+    ws.on('close', () => {
+        console.log('Ο χρήστης αποσυνδέθηκε');
+    });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => {
-  console.log(`Ο server τρέχει στο http://localhost:${PORT}`);
+    console.log(`Ο server τρέχει στο http://localhost:${PORT}`);
 });
