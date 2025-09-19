@@ -86,7 +86,10 @@ app.get('/auth/google/callback',
     (req, res) => {
         res.redirect('/');
     });
-
+// Route για τον έλεγχο αν ο χρήστης είναι συνδεδεμένος
+app.get('/check-login', (req, res) => {
+    res.json({ isLoggedIn: req.isAuthenticated() });
+});
 // Middleware για τον έλεγχο αν ο χρήστης είναι συνδεδεμένος
 app.get('/', (req, res) => {
     if (!req.isAuthenticated()) {
