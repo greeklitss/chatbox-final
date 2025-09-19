@@ -98,7 +98,7 @@
 
     // Προσοχή: Βάλε εδώ το ακριβές domain της εφαρμογής σου στο Render!
     // Παράδειγμα: `wss://chatbox-final.onrender.com`
-    const ws = new WebSocket(`wss://chatbox-final.onrender.com`); 
+    const ws = new WebSocket(`https://chatbox-final.onrender.com`); 
 
     ws.onmessage = event => {
         chatBox.innerHTML += `<div>${event.data}</div>`;
