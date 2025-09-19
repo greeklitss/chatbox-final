@@ -86,36 +86,38 @@
     </div>
 
     <script>
-        // Εδώ θα βάλουμε τον κώδικα JavaScript
-        if (window.location.search === '?chat=true') {
-            document.getElementById('login-container').style.display = 'none';
-            document.getElementById('chat-container').style.display = 'block';
+ <script>
+    // Όταν φορτώνει η σελίδα, ο χρήστης είναι ήδη συνδεδεμένος,
+    // άρα εμφανίζουμε το chatbox απευθείας.
+    document.getElementById('login-container').style.display = 'none';
+    document.getElementById('chat-container').style.display = 'block';
 
-            const chatBox = document.getElementById('chat-box');
-            const messageInput = document.getElementById('message-input');
-            const sendButton = document.getElementById('send-button');
+    const chatBox = document.getElementById('chat-box');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
 
-            const ws = new WebSocket(`wss://chatbox-final.onrender.com`); // Αλλάξε το με το δικό σου domain!
+    // Προσοχή: Βάλε εδώ το ακριβές domain της εφαρμογής σου στο Render!
+    // Παράδειγμα: `wss://chatbox-final.onrender.com`
+    const ws = new WebSocket(`wss://chatbox-final.onrender.com`); 
 
-            ws.onmessage = event => {
-                chatBox.innerHTML += `<div>${event.data}</div>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            };
+    ws.onmessage = event => {
+        chatBox.innerHTML += `<div>${event.data}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    };
 
-            sendButton.onclick = () => {
-                const message = messageInput.value;
-                if (message) {
-                    ws.send(message);
-                    messageInput.value = '';
-                }
-            };
-
-            messageInput.onkeydown = event => {
-                if (event.key === 'Enter') {
-                    sendButton.click();
-                }
-            };
+    sendButton.onclick = () => {
+        const message = messageInput.value;
+        if (message) {
+            ws.send(message);
+            messageInput.value = '';
         }
+    };
+
+    messageInput.onkeydown = event => {
+        if (event.key === 'Enter') {
+            sendButton.click();
+        }
+    };
     </script>
 </body>
 </html>
