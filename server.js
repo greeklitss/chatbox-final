@@ -3,7 +3,6 @@ const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
 const { Pool } = require('pg');
-
 const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
@@ -84,19 +83,26 @@ app.get('/auth/google',
 app.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/' }),
     (req, res) => {
-        res.redirect('/');
+        // Επιτυχής σύνδεση, ανακατεύθυνση στο chatbox
+        res.redirect('/chat');
     });
-// Route για τον έλεγχο αν ο χρήστης είναι συνδεδεμένος
-app.get('/check-login', (req, res) => {
-    res.json({ isLoggedIn: req.isAuthenticated() });
-});
-// Middleware για τον έλεγχο αν ο χρήστης είναι συνδεδεμένος
+
+// Main Route - Ανάλογα με την κατάσταση του χρήστη, στέλνει τη σωστή σελίδα
 app.get('/', (req, res) => {
-    if (!req.isAuthenticated()) {
-        return res.send('<a href="/auth/google">Σύνδεση με Google</a>');
+    if (req.isAuthenticated()) {
+        res.redirect('/chat');
+    } else {
+        res.sendFile(path.join(__dirname, 'login.html'));
     }
-    // Αν ο χρήστης είναι συνδεδεμένος, φόρτωσε το chat
-    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Route για το chatbox - Απαιτεί σύνδεση
+app.get('/chat', (req, res) => {
+    if (req.isAuthenticated()) {
+        res.sendFile(path.join(__dirname, 'chat.html'));
+    } else {
+        res.redirect('/');
+    }
 });
 
 // Χειρισμός συνδέσεων WebSocket

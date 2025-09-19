@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+        #chat-container {
+            width: 400px;
+            max-width: 90%;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        #chat-box {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        #message-input {
+            width: calc(100% - 70px);
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        #send-button {
+            width: 60px;
+            padding: 8px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <input type="text" id="message-input" placeholder="Πληκτρολόγησε ένα μήνυμα...">
+        <button id="send-button">Αποστολή</button>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+
+        // Αλλάξε το domain με το δικό σου
+        const ws = new WebSocket(`wss://chatbox-final.onrender.com`);
+
+        ws.onmessage = event => {
+            chatBox.innerHTML += `<div>${event.data}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+
+        sendButton.onclick = () => {
+            const message = messageInput.value;
+            if (message) {
+                ws.send(message);
+                messageInput.value = '';
+            }
+        };
+
+        messageInput.onkeydown = event => {
+            if (event.key === 'Enter') {
+                sendButton.click();
+            }
+        };
+    </script>
+</body>
+</html>
