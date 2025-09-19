@@ -1,92 +1,121 @@
 <!DOCTYPE html>
-
 <html>
-
 <head>
-
-    <title>Chatbox Project</title>
-
-    <style>
-
-        body { font-family: Arial, sans-serif; }
-
-        #chat-window { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px; }
-
-        #message-input { width: 80%; padding: 8px; }
-
-        #send-button { padding: 8px; }
-
-    </style>
-
+    <title>Chat App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+        #login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        #login-container a {
+            text-decoration: none;
+            background-color: #4285F4;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        #login-container a:hover {
+            background-color: #357ae8;
+        }
+        #chat-container {
+            display: none; /* Το κρύβουμε στην αρχή */
+            width: 400px;
+            max-width: 90%;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        #chat-box {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        #message-input {
+            width: calc(100% - 70px);
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        #send-button {
+            width: 60px;
+            padding: 8px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
-
 <body>
+    <div id="login-container">
+        <h2>Σύνδεση</h2>
+        <a href="/auth/google">Σύνδεση με Google</a>
+    </div>
 
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <input type="text" id="message-input" placeholder="Πληκτρολόγησε ένα μήνυμα...">
+        <button id="send-button">Αποστολή</button>
+    </div>
 
+    <script>
+        // Εδώ θα βάλουμε τον κώδικα JavaScript
+        if (window.location.search === '?chat=true') {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('chat-container').style.display = 'block';
 
-    <h2>Απλό Chatbox</h2>
+            const chatBox = document.getElementById('chat-box');
+            const messageInput = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
 
-    <div id="chat-window"></div>
+            const ws = new WebSocket(`wss://chatbox-final.onrender.com`); // Αλλάξε το με το δικό σου domain!
 
-    <input type="text" id="username" placeholder="Το όνομά σου">
+            ws.onmessage = event => {
+                chatBox.innerHTML += `<div>${event.data}</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            };
 
-    <input type="text" id="message-input" placeholder="Πληκτρολόγησε ένα μήνυμα...">
+            sendButton.onclick = () => {
+                const message = messageInput.value;
+                if (message) {
+                    ws.send(message);
+                    messageInput.value = '';
+                }
+            };
 
-    <button id="send-button">Αποστολή</button>
-
-
-
-    <script>
-
-        // 1. Σύνδεση με τον WebSocket Server
-
-        // Εδώ πρέπει να βάλεις τη διεύθυνση του server σου
-
-const socket = new WebSocket('wss://' + window.location.host);
-const chatWindow = document.getElementById('chat-window');
-const messageInput = document.getElementById('message-input');
-const usernameInput = document.getElementById('username');
-const sendButton = document.getElementById('send-button');
-
-// Λήψη Μηνυμάτων από τον Server
-socket.onmessage = function(event) {
-    const message = event.data;
-    const p = document.createElement('p');
-    p.textContent = message;
-    chatWindow.appendChild(p);
-    chatWindow.scrollTop = chatWindow.scrollHeight;
-};
-
-// Αποστολή Μηνυμάτων στον Server
-sendButton.onclick = function() {
-    const username = usernameInput.value || 'Ανώνυμος';
-    const message = messageInput.value;
-    if (message) {
-        // Στέλνουμε το μήνυμα και το όνομα
-        const formattedMessage = `${username}: ${message}`;
-        socket.send(formattedMessage);
-        
-        // Εμφανίζουμε το μήνυμα κατευθείαν
-        const p = document.createElement('p');
-        p.textContent = formattedMessage;
-        chatWindow.appendChild(p);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-        
-        messageInput.value = ''; // Καθαρίζουμε το πεδίο
-    }
-};
-
-// Επίσης, στέλνουμε με το Enter
-messageInput.addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-        sendButton.click();
-    }
-});
-
-
-
-    </script>
-
+            messageInput.onkeydown = event => {
+                if (event.key === 'Enter') {
+                    sendButton.click();
+                }
+            };
+        }
+    </script>
 </body>
-
 </html>
