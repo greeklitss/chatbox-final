@@ -7,6 +7,7 @@ const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
+const expressWs = require('express-ws'); // Χρησιμοποιούμε αυτό το module για να συνδέσουμε τα WebSockets με το Express session
 
 const app = express();
 const server = http.createServer(app);
@@ -21,17 +22,18 @@ const pool = new Pool({
 });
 
 // Ρύθμιση Session
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'mysecret', // Βάλε ένα δικό σου μυστικό κλειδί
+const sessionMiddleware = session({
+    secret: process.env.SESSION_SECRET || 'mysecret',
     resave: false,
     saveUninitialized: false
-}));
+});
+app.use(sessionMiddleware);
 
 // Ρύθμιση Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Passport Serializer/Deserializer για αποθήκευση του χρήστη στη συνεδρία
+// Passport Serializer/Deserializer
 passport.serializeUser((user, done) => {
     done(null, user.id);
 });
@@ -55,7 +57,6 @@ passport.use(new GoogleStrategy({
         try {
             let user = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
             if (user.rows.length === 0) {
-                // Νέος χρήστης, τον αποθηκεύουμε στη βάση δεδομένων με ρόλο 'user'
                 user = await pool.query('INSERT INTO users (google_id, display_name, role) VALUES ($1, $2, $3) RETURNING *', [profile.id, profile.displayName, 'user']);
             }
             done(null, user.rows[0]);
@@ -76,7 +77,6 @@ passport.use(new FacebookStrategy({
         try {
             let user = await pool.query('SELECT * FROM users WHERE facebook_id = $1', [profile.id]);
             if (user.rows.length === 0) {
-                // Νέος χρήστης, τον αποθηκεύουμε στη βάση δεδομένων με ρόλο 'user'
                 user = await pool.query('INSERT INTO users (facebook_id, display_name, role) VALUES ($1, $2, $3) RETURNING *', [profile.id, profile.displayName, 'user']);
             }
             done(null, user.rows[0]);
@@ -89,7 +89,6 @@ passport.use(new FacebookStrategy({
 // Δημιουργία πινάκων χρηστών και μηνυμάτων
 async function createTables() {
     try {
-        // Προσθήκη στήλης 'role' και 'facebook_id' στον πίνακα users
         await pool.query('CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, google_id TEXT UNIQUE, facebook_id TEXT UNIQUE, display_name TEXT, role TEXT DEFAULT \'user\')');
         await pool.query('CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, message TEXT NOT NULL, user_id INTEGER REFERENCES users(id), timestamp TIMESTAMPTZ DEFAULT NOW())');
         console.log('Οι πίνακες "users" και "messages" δημιουργήθηκαν/ενημερώθηκαν επιτυχώς.');
@@ -136,25 +135,34 @@ app.get('/chat', (req, res) => {
     }
 });
 
-// Χειρισμός συνδέσεων WebSocket
-wss.on('connection', async ws => {
-    console.log('Νέος χρήστης συνδέθηκε');
+// Ενσωμάτωση του session middleware στο WebSocket server
+wss.on('connection', (ws, req) => {
+    // Ελέγχουμε αν η session υπάρχει και έχει πληροφορίες χρήστη
+    if (!req.session || !req.session.passport || !req.session.passport.user) {
+        console.log('Απορρίφθηκε η σύνδεση WebSocket. Ο χρήστης δεν είναι συνδεδεμένος.');
+        ws.close();
+        return;
+    }
+
+    const userId = req.session.passport.user;
+
+    console.log(`Νέος χρήστης συνδέθηκε με user ID: ${userId}`);
 
     // Φόρτωση παλαιότερων μηνυμάτων
-    try {
-        const result = await pool.query('SELECT m.message, u.display_name, u.role FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp');
-        result.rows.forEach(row => {
-            const role = row.role === 'admin' ? '[Admin]' : '';
-            ws.send(`<strong>${row.display_name} ${role}:</strong> ${row.message}`);
-        });
-    } catch (error) {
-        console.error('Σφάλμα φόρτωσης μηνυμάτων:', error);
-    }
+    (async () => {
+        try {
+            const result = await pool.query('SELECT m.message, u.display_name, u.role FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp');
+            result.rows.forEach(row => {
+                const role = row.role === 'admin' ? '[Admin]' : '';
+                ws.send(`<strong>${row.display_name} ${role}:</strong> ${row.message}`);
+            });
+        } catch (error) {
+            console.error('Σφάλμα φόρτωσης μηνυμάτων:', error);
+        }
+    })();
 
     ws.on('message', async message => {
         try {
-            const userId = ws.request.session.passport.user;
-
             const userResult = await pool.query('SELECT display_name, role FROM users WHERE id = $1', [userId]);
             const displayName = userResult.rows[0].display_name;
             const role = userResult.rows[0].role;
