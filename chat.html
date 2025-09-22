@@ -2,32 +2,59 @@
 <html>
 <head>
     <title>Chat App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            flex-direction: column;
         }
-        #chat-box div {
+        #chat-container {
+            display: block;
+            width: 400px;
+            max-width: 90%;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        #chat-box {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        #message-input {
+            width: calc(100% - 70px);
             padding: 8px;
-            border-bottom: 1px solid #e5e7eb;
+            border-radius: 5px;
+            border: 1px solid #ccc;
         }
-        #chat-box div:last-child {
-            border-bottom: none;
+        #send-button {
+            width: 60px;
+            padding: 8px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 min-h-screen flex flex-col items-center justify-center p-4">
-    <div id="chat-container" class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-md flex flex-col space-y-4">
-        <h1 class="text-2xl font-bold text-center text-gray-800">Shoutbox</h1>
-        <div id="chat-box" class="bg-gray-100 p-4 h-96 overflow-y-auto rounded-xl border border-gray-300 shadow-inner"></div>
-        <div class="flex space-x-2">
-            <input type="text" id="message-input" placeholder="Πληκτρολόγησε ένα μήνυμα..." class="flex-grow rounded-xl border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-            <button id="send-button" class="bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-blue-700 shadow-md">
-                Αποστολή
-            </button>
-        </div>
+<body>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <input type="text" id="message-input" placeholder="Πληκτρολόγησε ένα μήνυμα...">
+        <button id="send-button">Αποστολή</button>
     </div>
 
     <script>
@@ -35,8 +62,7 @@
         const messageInput = document.getElementById('message-input');
         const sendButton = document.getElementById('send-button');
 
-        // ΑΛΛΑΞΕ ΑΥΤΗ ΤΗ ΔΙΕΥΘΥΝΣΗ ΜΕ ΤΟ ΔΙΚΟ ΣΟΥ DOMAIN ΤΟΥ RENDER
-        const ws = new WebSocket(`https://chatbox-final.onrender.com`);
+        const ws = new WebSocket(`https://chatbox-final.onrender.com`); 
 
         ws.onmessage = event => {
             chatBox.innerHTML += `<div>${event.data}</div>`;
@@ -59,4 +85,3 @@
     </script>
 </body>
 </html>
-```eof
