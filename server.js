@@ -1,17 +1,18 @@
 const express = require('express');
 const http = require('http');
-const WebSocket = require('ws');
 const path = require('path');
 const { Pool } = require('pg');
 const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
-const expressWs = require('express-ws'); // Χρησιμοποιούμε αυτό το module για να συνδέσουμε τα WebSockets με το Express session
+const expressWs = require('express-ws'); // Χρησιμοποιούμε αυτό το module
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+
+// Ενσωμάτωση του express-ws
+const wsInstance = expressWs(app, server);
 
 // Σύνδεση με τη βάση δεδομένων PostgreSQL
 const pool = new Pool({
@@ -99,25 +100,12 @@ async function createTables() {
 createTables();
 
 // Routes για τον έλεγχο ταυτότητας
-app.get('/auth/google',
-    passport.authenticate('google', { scope: ['profile'] }));
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
+app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }), (req, res) => { res.redirect('/chat'); });
+app.get('/auth/facebook', passport.authenticate('facebook'));
+app.get('/auth/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/' }), (req, res) => { res.redirect('/chat'); });
 
-app.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/' }),
-    (req, res) => {
-        res.redirect('/chat');
-    });
-
-app.get('/auth/facebook',
-    passport.authenticate('facebook'));
-
-app.get('/auth/facebook/callback',
-    passport.authenticate('facebook', { failureRedirect: '/' }),
-    (req, res) => {
-        res.redirect('/chat');
-    });
-
-// Main Route - Ανάλογα με την κατάσταση του χρήστη, στέλνει τη σωστή σελίδα
+// Main Route
 app.get('/', (req, res) => {
     if (req.isAuthenticated()) {
         res.redirect('/chat');
@@ -126,7 +114,7 @@ app.get('/', (req, res) => {
     }
 });
 
-// Route για το chatbox - Απαιτεί σύνδεση
+// Route για το chatbox
 app.get('/chat', (req, res) => {
     if (req.isAuthenticated()) {
         res.sendFile(path.join(__dirname, 'chat.html'));
@@ -135,31 +123,22 @@ app.get('/chat', (req, res) => {
     }
 });
 
-// Ενσωμάτωση του session middleware στο WebSocket server
-wss.on('connection', (ws, req) => {
-    // Ελέγχουμε αν η session υπάρχει και έχει πληροφορίες χρήστη
-    if (!req.session || !req.session.passport || !req.session.passport.user) {
-        console.log('Απορρίφθηκε η σύνδεση WebSocket. Ο χρήστης δεν είναι συνδεδεμένος.');
-        ws.close();
-        return;
-    }
-
+// Χειρισμός συνδέσεων WebSocket
+app.ws('/chat', async (ws, req) => {
     const userId = req.session.passport.user;
 
     console.log(`Νέος χρήστης συνδέθηκε με user ID: ${userId}`);
 
     // Φόρτωση παλαιότερων μηνυμάτων
-    (async () => {
-        try {
-            const result = await pool.query('SELECT m.message, u.display_name, u.role FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp');
-            result.rows.forEach(row => {
-                const role = row.role === 'admin' ? '[Admin]' : '';
-                ws.send(`<strong>${row.display_name} ${role}:</strong> ${row.message}`);
-            });
-        } catch (error) {
-            console.error('Σφάλμα φόρτωσης μηνυμάτων:', error);
-        }
-    })();
+    try {
+        const result = await pool.query('SELECT m.message, u.display_name, u.role FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp');
+        result.rows.forEach(row => {
+            const role = row.role === 'admin' ? '[Admin]' : '';
+            ws.send(`<strong>${row.display_name} ${role}:</strong> ${row.message}`);
+        });
+    } catch (error) {
+        console.error('Σφάλμα φόρτωσης μηνυμάτων:', error);
+    }
 
     ws.on('message', async message => {
         try {
@@ -167,13 +146,13 @@ wss.on('connection', (ws, req) => {
             const displayName = userResult.rows[0].display_name;
             const role = userResult.rows[0].role;
             const roleTag = role === 'admin' ? '[Admin]' : '';
-
             const formattedMessage = `<strong>${displayName} ${roleTag}:</strong> ${message.toString()}`;
 
             await pool.query('INSERT INTO messages(message, user_id) VALUES($1, $2)', [message.toString(), userId]);
             console.log(`Το μήνυμα αποθηκεύτηκε: ${formattedMessage}`);
 
-            wss.clients.forEach(client => {
+            // Στέλνει το μήνυμα σε όλους τους συνδεδεμένους clients
+            wsInstance.getWss().clients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
                     client.send(formattedMessage);
                 }
