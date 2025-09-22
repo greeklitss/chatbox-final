@@ -1,87 +1,91 @@
 <!DOCTYPE html>
 <html>
 <head>
+<style>
+    .message-row {
+        padding: 8px 12px;
+        border-radius: 12px;
+        margin-bottom: 8px;
+    }
+    .my-message {
+        background-color: #dcf8c6;
+        margin-left: auto;
+        text-align: right;
+    }
+    .other-message {
+        background-color: #ffffff;
+        margin-right: auto;
+        text-align: left;
+    }
+    .username {
+        font-weight: bold;
+        color: #1a73e8; /* Χρώμα για το όνομα χρήστη */
+    }
+</style>
     <title>Chat App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f0f0f0;
-            flex-direction: column;
+            font-family: 'Inter', sans-serif;
         }
-        #chat-container {
-            display: block;
-            width: 400px;
-            max-width: 90%;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            box-sizing: border-box;
-        }
-        #chat-box {
-            height: 300px;
-            overflow-y: scroll;
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            background-color: #fafafa;
-        }
-        #message-input {
-            width: calc(100% - 70px);
+        #chat-box div {
             padding: 8px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+            border-bottom: 1px solid #e5e7eb;
         }
-        #send-button {
-            width: 60px;
-            padding: 8px;
-            border: none;
-            background-color: #007BFF;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
+        #chat-box div:last-child {
+            border-bottom: none;
         }
     </style>
 </head>
-<body>
-    <div id="chat-container">
-        <div id="chat-box"></div>
-        <input type="text" id="message-input" placeholder="Πληκτρολόγησε ένα μήνυμα...">
-        <button id="send-button">Αποστολή</button>
+<body class="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 min-h-screen flex flex-col items-center justify-center p-4">
+    <div id="chat-container" class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-md flex flex-col space-y-4">
+        <h1 class="text-2xl font-bold text-center text-gray-800">Shoutbox</h1>
+        <div id="chat-box" class="bg-gray-100 p-4 h-96 overflow-y-auto rounded-xl border border-gray-300 shadow-inner"></div>
+        <div class="flex space-x-2">
+            <input type="text" id="message-input" placeholder="Πληκτρολόγησε ένα μήνυμα..." class="flex-grow rounded-xl border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+            <button id="send-button" class="bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-blue-700 shadow-md">
+                Αποστολή
+            </button>
+        </div>
     </div>
+  <script>
+    const chatBox = document.getElementById('chat-box');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    const ws = new WebSocket(`https://chatbox-final.onrender.com`);
 
-    <script>
-        const chatBox = document.getElementById('chat-box');
-        const messageInput = document.getElementById('message-input');
-        const sendButton = document.getElementById('send-button');
+    ws.onmessage = event => {
+        // Δημιουργούμε ένα νέο div για το μήνυμα
+        const messageDiv = document.createElement('div');
+        // Εισάγουμε το μήνυμα μέσα στο div, αναγνωρίζοντας τα HTML tags
+        messageDiv.innerHTML = event.data;
 
-        const ws = new WebSocket(`https://chatbox-final.onrender.com`); 
+        // Προσθέτουμε τη σωστή κλάση για το στυλ του μηνύματος
+        // Εδώ προσθέτουμε την κλάση 'other-message' επειδή πρόκειται για μήνυμα από άλλο χρήστη
+        messageDiv.classList.add('message-row', 'other-message');
 
-        ws.onmessage = event => {
-            chatBox.innerHTML += `<div>${event.data}</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-        };
+        // Εισάγουμε το νέο div στο chatbox
+        chatBox.appendChild(messageDiv);
+        
+        // Κυλάμε το chatbox προς τα κάτω για να φαίνεται το τελευταίο μήνυμα
+        chatBox.scrollTop = chatBox.scrollHeight;
+    };
 
-        sendButton.onclick = () => {
-            const message = messageInput.value;
-            if (message) {
-                ws.send(message);
-                messageInput.value = '';
-            }
-        };
+    sendButton.onclick = () => {
+        const message = messageInput.value;
+        if (message) {
+            ws.send(message);
+            messageInput.value = '';
+        }
+    };
 
-        messageInput.onkeydown = event => {
-            if (event.key === 'Enter') {
-                sendButton.click();
-            }
-        };
-    </script>
+    messageInput.onkeydown = event => {
+        if (event.key === 'Enter') {
+            sendButton.click();
+        }
+    };
+</script>
 </body>
 </html>

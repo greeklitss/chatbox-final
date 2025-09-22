@@ -2,47 +2,27 @@
 <html>
 <head>
     <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f0f0f0;
-            flex-direction: column;
-        }
-        #login-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        #login-container a {
-            text-decoration: none;
-            background-color: #4285F4;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        #login-container a:hover {
-            background-color: #357ae8;
+            font-family: 'Inter', sans-serif;
         }
     </style>
 </head>
-<body>
-    <div id="login-container">
-        <h2>Σύνδεση</h2>
-        <a href="/auth/google">Σύνδεση με Google</a>
+<body class="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 md:p-12 rounded-2xl shadow-2xl text-center max-w-sm w-full">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Καλώς ήρθες!</h1>
+        <p class="text-gray-600 mb-8">Συνδέσου για να ξεκινήσεις το chat.</p>
+        <div class="space-y-4">
+            <a href="/auth/google" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg">
+                Σύνδεση με Google
+            </a>
+            <a href="/auth/facebook" class="inline-block bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg">
+                Σύνδεση με Facebook
+            </a>
+        </div>
     </div>
 </body>
 </html>
