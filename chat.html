@@ -1,253 +1,182 @@
 <!DOCTYPE html>
- <html>
- <head>
-     <title>Chatbox</title>
-     <link rel="preconnect" href="https://fonts.googleapis.com">
-     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
-     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-     <style>
-         body {
-             font-family: 'Merriweather', serif;
-             margin: 0;
-             padding: 0;
-             display: flex;
-             justify-content: center;
-             align-items: center;
-             height: 100vh;
-             
-             background-image: url('https://i.imgur.com/your-image-id-here.png'); /* ΑΝΤΙΚΑΤΑΣΤΗΣΕ ΕΔΩ ΤΟ URL ΤΗΣ ΕΙΚΟΝΑΣ ΣΟΥ */
-             background-size: cover;
-             background-position: center;
-             background-repeat: no-repeat;
-             background-attachment: fixed;
-         }
-         .container {
-             width: 80%;
-             max-width: 800px;
-             height: 90%;
-             background: rgba(255, 255, 255, 0.7);
-             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-             border-radius: 8px;
-             display: flex;
-             flex-direction: column;
-             position: relative;
-         }
-         #header {
-             padding: 15px;
-             background: #007bff;
-             color: white;
-             border-top-left-radius: 8px;
-             border-top-right-radius: 8px;
-             display: flex;
-             justify-content: space-between;
-             align-items: center;
-         }
-         #header h2 {
-             margin: 0;
-         }
-         #logoutBtn {
-             background-color: #dc3545;
-             color: white;
-             border: none;
-             padding: 8px 15px;
-             border-radius: 5px;
-             cursor: pointer;
-             font-size: 14px;
-         }
-         #logoutBtn:hover {
-             background-color: #c82333;
-         }
-         #chatbox-container {
-             display: flex;
-             flex-grow: 1;
-             overflow: hidden;
-         }
-         #chatbox {
-             flex-grow: 1;
-             padding: 20px;
-             overflow-y: auto;
-             border-bottom: 1px solid #ddd;
-             display: flex;
-             flex-direction: column;
-         }
-         .message {
-             margin-bottom: 10px;
-             padding: 8px 12px;
-             border-radius: 18px;
-             word-wrap: break-word;
-             max-width: 70%;
-             position: relative;
-             align-self: flex-start;
-             display: flex;
-             align-items: center;
-         }
-         .avatar {
-             width: 40px;
-             height: 40px;
-             border-radius: 50%;
-             margin-right: 10px;
-             object-fit: cover;
-         }
-         .message-content-container {
-             display: flex;
-             flex-direction: column;
-         }
-         .message .sender {
-             font-weight: bold;
-             display: block;
-             margin-bottom: 2px;
-         }
-         .message-content {
-             display: inline-block;
-         }
-         .message img.gif {
-             max-width: 100%;
-             border-radius: 8px;
-             display: block;
-             margin-top: 5px;
-         }
-         .admin-badge {
-             background-color: #f5c518;
-             color: black;
-             font-size: 0.7em;
-             padding: 2px 6px;
-             border-radius: 10px;
-             margin-left: 5px;
-         }
-         .user-message {
-             background-color: #e6e6fa;
-         }
-         .admin-message {
-             background-color: #ffcccb;
-         }
-         .moderator-message {
-             background-color: #b0e0e6;
-         }
-         #input-container {
-             display: flex;
-             padding: 15px;
-             border-top: 1px solid #ddd;
-             position: relative;
-         }
-         #messageInput {
-             flex-grow: 1;
-             padding: 10px;
-             border: 1px solid #ccc;
-             border-radius: 5px;
-             margin-right: 10px;
-         }
-         #sendBtn {
-             background-color: #28a745;
-             color: white;
-             border: none;
-             padding: 10px 20px;
-             border-radius: 5px;
-             cursor: pointer;
-         }
-         #sendBtn:hover {
-             background-color: #218838;
-         }
-         .delete-btn {
-             background-color: transparent;
-             color: #dc3545;
-             border: none;
-             font-size: 1.2em;
-             cursor: pointer;
-             padding: 0;
-             margin-left: 10px;
-         }
-         #admin-panel {
-             padding: 20px;
-             background: #f0f2f5;
-             border-left: 1px solid #ddd;
-             display: none;
-             width: 250px;
-             overflow-y: auto;
-         }
-         #admin-panel h3 {
-             margin-top: 0;
-         }
-         #admin-panel button {
-             width: 100%;
-             padding: 8px;
-             margin-bottom: 10px;
-             cursor: pointer;
-         }
-         .user-item {
-             display: flex;
-             justify-content: space-between;
-             align-items: center;
-             margin-bottom: 5px;
-             font-size: 0.9em;
-         }
-         #emojiBtn, #gifBtn {
-             margin-left: 5px;
-             padding: 10px;
-             border: none;
-             background-color: #f0f2f5;
-             cursor: pointer;
-             border-radius: 5px;
-         }
-         #emojiPicker, #gifPicker {
-             position: absolute;
-             bottom: 80px;
-             right: 20px;
-             z-index: 1000;
-             display: none;
-         }
-         #gifPicker {
-             background: white;
-             border: 1px solid #ccc;
-             border-radius: 5px;
-             padding: 10px;
-             width: 300px;
-             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-         }
-         #gifResults {
-             display: grid;
-             grid-template-columns: repeat(2, 1fr);
-             gap: 5px;
-             max-height: 200px;
-             overflow-y: auto;
-         }
-         #gifResults img {
-             width: 100%;
-             height: auto;
-             cursor: pointer;
-             border-radius: 4px;
-         }
-         #profile-settings {
-             padding: 20px;
-             background: #f0f2f5;
-             border-left: 1px solid #ddd;
-             display: none;
-             width: 250px;
-             overflow-y: auto;
-         }
-         #current-avatar-container {
-             text-align: center;
-             margin-bottom: 15px;
-         }
-         #current-avatar {
-             width: 80px;
-             height: 80px;
-             border-radius: 50%;
-             object-fit: cover;
-             border: 2px solid #007bff;
-         }
-         .settings-btn {
-             background-color: #007bff;
-             color: white;
-             border: none;
-             padding: 8px 15px;
-             border-radius: 5px;
-             cursor: pointer;
-             font-size: 14px;
-             margin-left: 10px;
-         }
-     </style>
- </head>
- <body>
-     <div class="container">
-         <div id="header
+<html>
+<head>
+    <title>Chatbox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Merriweather', serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            
+            background-image: url('https://i.imgur.com/your-image-id-here.png'); /* ΑΝΤΙΚΑΤΑΣΤΗΣΕ ΕΔΩ ΤΟ URL ΤΗΣ ΕΙΚΟΝΑΣ ΣΟΥ */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            height: 90%;
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        #header {
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #header h2 {
+            margin: 0;
+        }
+        #logoutBtn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #logoutBtn:hover {
+            background-color: #c82333;
+        }
+        #chatbox-container {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        #chatbox {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            max-width: 70%;
+            position: relative;
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+        .message-content-container {
+            display: flex;
+            flex-direction: column;
+        }
+        .message .sender {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .message-content {
+            display: inline-block;
+        }
+        .message img.gif {
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+            margin-top: 5px;
+        }
+        .admin-badge {
+            background-color: #f5c518;
+            color: black;
+            font-size: 0.7em;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+        .user-message {
+            background-color: #e6e6fa;
+        }
+        .admin-message {
+            background-color: #ffcccb;
+        }
+        .moderator-message {
+            background-color: #b0e0e6;
+        }
+        #input-container {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            position: relative;
+        }
+        #messageInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        #sendBtn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #sendBtn:hover {
+            background-color: #218838;
+        }
+        .delete-btn {
+            background-color: transparent;
+            color: #dc3545;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 10px;
+        }
+        #admin-panel {
+            padding: 20px;
+            background: #f0f2f5;
+            border-left: 1px solid #ddd;
+            display: none;
+            width: 250px;
+            overflow-y: auto;
+        }
+        #admin-panel h3 {
+            margin-top: 0;
+        }
+        #admin-panel button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size
