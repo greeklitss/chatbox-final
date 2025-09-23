@@ -52,7 +52,7 @@
         const chatBox = document.getElementById('chat-box');
         const messageInput = document.getElementById('message-input');
         const sendButton = document.getElementById('send-button');
-        const ws = new WebSocket(`https://chatbox-final.onrender.com`);
+        const ws = new WebSocket(`wss://chatbox-final.onrender.com/chat`);
 
         ws.onmessage = event => {
             const messageDiv = document.createElement('div');
