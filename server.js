@@ -13,6 +13,13 @@ const LocalStrategy = require('passport-local').Strategy; // New: For username/p
 
 const app = express();
 const server = http.createServer(app);
+app.use((req, res, next) => {
+    if (req.header('x-forwarded-proto') !== 'https') {
+        res.redirect(`https://${req.header('host')}${req.url}`);
+    } else {
+        next();
+    }
+});
 
 // Ενσωμάτωση του express-ws
 const wsInstance = expressWs(app, server);
