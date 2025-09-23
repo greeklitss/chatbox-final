@@ -1,264 +1,147 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chatbox</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f2f5;
-        }
-        .container {
-            width: 80%;
-            max-width: 800px;
-            height: 90%;
-            background: #fff;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-        }
-        #header {
-            padding: 15px;
-            background: #007bff;
-            color: white;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #header h2 {
-            margin: 0;
-        }
-        #logoutBtn {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        #logoutBtn:hover {
-            background-color: #c82333;
-        }
-        #chatbox-container {
-            display: flex;
-            flex-grow: 1;
-            overflow: hidden;
-        }
-        #chatbox {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            flex-direction: column;
-        }
-        .message {
-            margin-bottom: 10px;
-            padding: 8px 12px;
-            border-radius: 18px;
-            word-wrap: break-word;
-            max-width: 70%;
-            position: relative;
-        }
-        .message .sender {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 2px;
-        }
-        .message-content {
-            display: inline-block;
-        }
-        .admin-badge {
-            background-color: #f5c518;
-            color: black;
-            font-size: 0.7em;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 5px;
-        }
-        #input-container {
-            display: flex;
-            padding: 15px;
-            border-top: 1px solid #ddd;
-        }
-        #messageInput {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-right: 10px;
-        }
-        #sendBtn {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #sendBtn:hover {
-            background-color: #218838;
-        }
-        .delete-btn {
-            background-color: transparent;
-            color: #dc3545;
-            border: none;
-            font-size: 1.2em;
-            cursor: pointer;
-            padding: 0;
-            margin-left: 10px;
-        }
-    </style>
+    <title>Chatbox</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f2f5;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            height: 90%;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+        #header {
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #header h2 {
+            margin: 0;
+        }
+        #logoutBtn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #logoutBtn:hover {
+            background-color: #c82333;
+        }
+        #chatbox-container {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        #chatbox {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            max-width: 70%;
+            position: relative;
+        }
+        .message .sender {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .message-content {
+            display: inline-block;
+        }
+        .admin-badge {
+            background-color: #f5c518;
+            color: black;
+            font-size: 0.7em;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+        #input-container {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+        }
+        #messageInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        #sendBtn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #sendBtn:hover {
+            background-color: #218838;
+        }
+        .delete-btn {
+            background-color: transparent;
+            color: #dc3545;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 10px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div id="header">
-            <h2>Chatbox - Webradio Akoyme</h2>
-            <button id="logoutBtn">Αποσύνδεση</button>
-        </div>
-        <div id="chatbox-container">
-            <div id="chatbox"></div>
-        </div>
-        <div id="input-container">
-            <input type="text" id="messageInput" placeholder="Πληκτρολογήστε ένα μήνυμα..." autocomplete="off">
-            <button id="sendBtn">Αποστολή</button>
-        </div>
-    </div>
+    <div class="container">
+        <div id="header">
+            <h2>Chatbox - Webradio Akoyme</h2>
+            <button id="logoutBtn">Αποσύνδεση</button>
+        </div>
+        <div id="chatbox-container">
+            <div id="chatbox"></div>
+        </div>
+        <div id="input-container">
+            <input type="text" id="messageInput" placeholder="Πληκτρολογήστε ένα μήνυμα..." autocomplete="off">
+            <button id="sendBtn">Αποστολή</button>
+        </div>
+    </div>
 
-    <script>
-        const chatbox = document.getElementById('chatbox');
-        const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const ws = new WebSocket('wss://' + window.location.host + '/chat');
+    <script>
+        const chatbox = document.getElementById('chatbox');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const ws = new WebSocket('wss://' + window.location.host + '/chat');
 
-        // Handles messages from the server
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            switch (data.type) {
-                case 'oldMessages':
-                    data.messages.forEach(message => appendMessage(message));
-                    break;
-                case 'newMessage':
-                    appendMessage(data);
-                    break;
-                case 'deleteMessage':
-                    deleteMessage(data.messageId);
-                    break;
-            }
-        };
-
-        // Sends a message to the server
-        sendBtn.addEventListener('click', () => {
-            const message = messageInput.value.trim();
-            if (message) {
-                ws.send(JSON.stringify({ type: 'chatMessage', message }));
-                messageInput.value = '';
-            }
-        });
-
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendBtn.click();
-            }
-        });
-
-        // Handles logout
-        logoutBtn.addEventListener('click', async () => {
-            try {
-                const response = await fetch('/logout', { method: 'POST' });
-                if (response.ok) {
-                    window.location.href = '/'; 
-                } else {
-                    alert('Αποτυχία αποσύνδεσης.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Σφάλμα δικτύου κατά την αποσύνδεση.');
-            }
-        });
-
-        // Function to display a message in the chatbox
-        function appendMessage(data) {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message');
-            messageElement.dataset.messageId = data.id;
-
-            // Sender and role
-            const senderSpan = document.createElement('span');
-            senderSpan.classList.add('sender');
-            senderSpan.textContent = data.display_name;
-            if (data.role === 'admin') {
-                const adminBadge = document.createElement('span');
-                adminBadge.classList.add('admin-badge');
-                adminBadge.textContent = 'Admin';
-                senderSpan.appendChild(adminBadge);
-            }
-
-            // Message content
-            const messageText = document.createElement('span');
-            messageText.classList.add('message-content');
-            messageText.textContent = data.message;
-            
-            // Timestamp
-            const date = new Date(data.timestamp);
-            const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            // Delete button for admins
-            const deleteBtn = document.createElement('button');
-            deleteBtn.classList.add('delete-btn');
-            deleteBtn.innerHTML = '&#x2715;'; // X mark
-            deleteBtn.title = 'Διαγραφή μηνύματος';
-            deleteBtn.style.display = 'none'; // Hidden by default
-
-            // Check if the current user is an admin to show the button
-            fetch('/check-admin') // We'll need to create this endpoint
-                .then(res => res.json())
-                .then(adminData => {
-                    if (adminData.isAdmin) {
-                        deleteBtn.style.display = 'inline';
-                    }
-                });
-
-            // Handle delete button click
-            deleteBtn.addEventListener('click', async () => {
-                if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το μήνυμα;')) {
-                    try {
-                        const res = await fetch(`/delete-message/${data.id}`, { method: 'DELETE' });
-                        if (!res.ok) {
-                            alert('Αποτυχία διαγραφής μηνύματος.');
-                        }
-                    } catch (error) {
-                        console.error('Error deleting message:', error);
-                    }
-                }
-            });
-
-            messageElement.appendChild(senderSpan);
-            messageElement.appendChild(document.createTextNode(` [${timeString}]: `));
-            messageElement.appendChild(messageText);
-            messageElement.appendChild(deleteBtn);
-
-            chatbox.appendChild(messageElement);
-            chatbox.scrollTop = chatbox.scrollHeight;
-        }
-
-        function deleteMessage(messageId) {
-            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-            if (messageElement) {
-                messageElement.remove();
-            }
-        }
-
-    </script>
-</body>
-</html>
+        // Handles messages from the server
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            switch (data.type) {

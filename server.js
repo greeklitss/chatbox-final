@@ -147,6 +147,19 @@ app.post('/direct-login', passport.authenticate('local', { failureRedirect: '/' 
     res.redirect('/chat');
 });
 
+// New: Route για να στέλνει τα στοιχεία του χρήστη (αυτή είναι η αλλαγή)
+app.get('/user-info', (req, res) => {
+    if (req.isAuthenticated()) {
+        res.json({
+            id: req.user.id,
+            displayName: req.user.display_name,
+            role: req.user.role
+        });
+    } else {
+        res.status(401).json({ error: 'Not authenticated' });
+    }
+});
+
 // Main Route
 app.get('/', (req, res) => {
     if (req.isAuthenticated()) {
