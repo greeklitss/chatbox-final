@@ -8,8 +8,10 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const expressWs = require('express-ws');
 const WebSocket = require('ws');
-const bcrypt = require('bcryptjs'); // New: For password hashing
-const LocalStrategy = require('passport-local').Strategy; // New: For username/password login
+const bcrypt = require('bcryptjs');
+const LocalStrategy = require('passport-local').Strategy;
+const multer = require('multer'); // Προσθήκη multer
+const { v4: uuidv4 } = require('uuid'); // Για μοναδικά ονόματα αρχείων
 
 const app = express();
 const server = http.createServer(app);
@@ -21,14 +23,32 @@ app.use((req, res, next) => {
     }
 });
 
-// Ενσωμάτωση του express-ws
 const wsInstance = expressWs(app, server);
 
-// Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Σύνδεση με τη βάση δεδομένων PostgreSQL
+// Εγκατάσταση του multer για αποθήκευση εικόνων
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = uuidv4();
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
+
+// Δημιουργία του φακέλου 'uploads' αν δεν υπάρχει
+const fs = require('fs');
+const uploadDir = 'uploads';
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+// Serve static files from the 'uploads' directory
+app.use('/uploads', express.static('uploads'));
+
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
@@ -36,7 +56,6 @@ const pool = new Pool({
     }
 });
 
-// Ρύθμιση Session
 const sessionMiddleware = session({
     secret: process.env.SESSION_SECRET || 'mysecret',
     resave: false,
@@ -44,11 +63,9 @@ const sessionMiddleware = session({
 });
 app.use(sessionMiddleware);
 
-// Ρύθμιση Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Passport Serializer/Deserializer
 passport.serializeUser((user, done) => {
     done(null, user.id);
 });
@@ -62,7 +79,6 @@ passport.deserializeUser(async (id, done) => {
     }
 });
 
-// Ρύθμιση Google Strategy
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -72,7 +88,7 @@ passport.use(new GoogleStrategy({
         try {
             let user = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
             if (user.rows.length === 0) {
-                user = await pool.query('INSERT INTO users (google_id, display_name, role) VALUES ($1, $2, $3) RETURNING *', [profile.id, profile.displayName, 'user']);
+                user = await pool.query('INSERT INTO users (google_id, display_name, role, avatar_url) VALUES ($1, $2, $3, $4) RETURNING *', [profile.id, profile.displayName, 'user', 'uploads/default-avatar.png']);
             }
             done(null, user.rows[0]);
         } catch (error) {
@@ -81,7 +97,6 @@ passport.use(new GoogleStrategy({
     }
 ));
 
-// Ρύθμιση Facebook Strategy
 passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_CLIENT_ID,
     clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
@@ -92,7 +107,7 @@ passport.use(new FacebookStrategy({
         try {
             let user = await pool.query('SELECT * FROM users WHERE facebook_id = $1', [profile.id]);
             if (user.rows.length === 0) {
-                user = await pool.query('INSERT INTO users (facebook_id, display_name, role) VALUES ($1, $2, \'user\') RETURNING *', [profile.id, profile.displayName]);
+                user = await pool.query('INSERT INTO users (facebook_id, display_name, role, avatar_url) VALUES ($1, $2, \'user\', $3) RETURNING *', [profile.id, profile.displayName, 'uploads/default-avatar.png']);
             }
             done(null, user.rows[0]);
         } catch (error) {
@@ -101,7 +116,6 @@ passport.use(new FacebookStrategy({
     }
 ));
 
-// New: Ρύθμιση Local Strategy (για login με username/password)
 passport.use(new LocalStrategy(async (username, password, done) => {
     try {
         const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
@@ -110,7 +124,6 @@ passport.use(new LocalStrategy(async (username, password, done) => {
         }
         const user = result.rows[0];
 
-        // Compare hashed password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return done(null, false, { message: 'Incorrect password.' });
@@ -122,13 +135,16 @@ passport.use(new LocalStrategy(async (username, password, done) => {
     }
 }));
 
-
-// Δημιουργία πινάκων χρηστών και μηνυμάτων
 async function createTables() {
     try {
-        // Updated: added 'username' and 'password' columns
-        await pool.query('CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, google_id TEXT UNIQUE, facebook_id TEXT UNIQUE, display_name TEXT, role TEXT DEFAULT \'user\', username TEXT UNIQUE, password TEXT)');
+        // Ενημέρωση του πίνακα users με το πεδίο avatar_url
+        await pool.query('CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, google_id TEXT UNIQUE, facebook_id TEXT UNIQUE, display_name TEXT, role TEXT DEFAULT \'user\', username TEXT UNIQUE, password TEXT, avatar_url TEXT)');
         await pool.query('CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, message TEXT NOT NULL, user_id INTEGER REFERENCES users(id), timestamp TIMESTAMPTZ DEFAULT NOW())');
+        // Προσθήκη του avatar_url αν δεν υπάρχει ήδη
+        await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT');
+        // Set default avatar for existing users if the column was just added
+        await pool.query('UPDATE users SET avatar_url = $1 WHERE avatar_url IS NULL', ['uploads/default-avatar.png']);
+        
         console.log('Οι πίνακες "users" και "messages" δημιουργήθηκαν/ενημερώθηκαν επιτυχώς.');
     } catch (error) {
         console.error('Σφάλμα κατά τη δημιουργία των πινάκων:', error);
@@ -136,31 +152,97 @@ async function createTables() {
 }
 createTables();
 
-// Routes για τον έλεγχο ταυτότητας
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
 app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }), (req, res) => { res.redirect('/chat'); });
 app.get('/auth/facebook', passport.authenticate('facebook'));
 app.get('/auth/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/' }), (req, res) => { res.redirect('/chat'); });
 
-// New: Route για login με username/password
 app.post('/direct-login', passport.authenticate('local', { failureRedirect: '/' }), (req, res) => {
     res.redirect('/chat');
 });
 
-// New: Route για να στέλνει τα στοιχεία του χρήστη (αυτή είναι η αλλαγή)
 app.get('/user-info', (req, res) => {
     if (req.isAuthenticated()) {
         res.json({
             id: req.user.id,
             displayName: req.user.display_name,
-            role: req.user.role
+            role: req.user.role,
+            avatarUrl: req.user.avatar_url
         });
     } else {
         res.status(401).json({ error: 'Not authenticated' });
     }
 });
 
-// Main Route
+app.get('/users', async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== 'admin') {
+        return res.status(403).send('Forbidden');
+    }
+    try {
+        const result = await pool.query('SELECT id, display_name, role FROM users ORDER BY display_name');
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).send('An error occurred.');
+    }
+});
+
+app.post('/change-role', async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== 'admin') {
+        return res.status(403).send('Forbidden');
+    }
+    const { userId, newRole } = req.body;
+    if (!userId || !newRole) {
+        return res.status(400).send('User ID and new role are required.');
+    }
+    try {
+        await pool.query('UPDATE users SET role = $1 WHERE id = $2', [newRole, userId]);
+        res.status(200).send('User role updated successfully.');
+    } catch (error) {
+        console.error('Error changing user role:', error);
+        res.status(500).send('An error occurred.');
+    }
+});
+
+// Νέο endpoint για αλλαγή avatar
+app.post('/change-avatar', upload.single('avatar'), async (req, res) => {
+    if (!req.isAuthenticated()) {
+        return res.status(401).send('Not authenticated.');
+    }
+    if (!req.file) {
+        return res.status(400).send('No file uploaded.');
+    }
+
+    const userId = req.user.id;
+    const avatarUrl = `/uploads/${req.file.filename}`;
+    
+    try {
+        await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatarUrl, userId]);
+        res.status(200).json({ success: true, avatarUrl });
+    } catch (error) {
+        console.error('Error updating avatar:', error);
+        res.status(500).send('An error occurred while updating avatar.');
+    }
+});
+
+app.delete('/clear-history', async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== 'admin') {
+        return res.status(403).send('Forbidden');
+    }
+    try {
+        await pool.query('DELETE FROM messages');
+        wsInstance.getWss().clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({ type: 'clearChat' }));
+            }
+        });
+        res.status(200).send('Chat history cleared successfully.');
+    } catch (error) {
+        console.error('Error clearing chat history:', error);
+        res.status(500).send('An error occurred.');
+    }
+});
+
 app.get('/', (req, res) => {
     if (req.isAuthenticated()) {
         res.redirect('/chat');
@@ -169,7 +251,6 @@ app.get('/', (req, res) => {
     }
 });
 
-// Route για το chatbox
 app.get('/chat', (req, res) => {
     if (req.isAuthenticated()) {
         res.sendFile(path.join(__dirname, 'chat.html'));
@@ -178,7 +259,6 @@ app.get('/chat', (req, res) => {
     }
 });
 
-// Νέος route για αποσύνδεση
 app.post('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
@@ -188,9 +268,7 @@ app.post('/logout', (req, res) => {
     });
 });
 
-// New: Route για να δημιουργείς χρήστες
 app.post('/create-user', async (req, res) => {
-    // This route will be secured later, for now, anyone can create a user for testing
     const { username, password, displayName } = req.body;
     if (!username || !password || !displayName) {
         return res.status(400).send('Username, password, and display name are required.');
@@ -198,10 +276,10 @@ app.post('/create-user', async (req, res) => {
     
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        await pool.query('INSERT INTO users (username, password, display_name, role) VALUES ($1, $2, $3, \'user\')', [username, hashedPassword, displayName]);
+        await pool.query('INSERT INTO users (username, password, display_name, role, avatar_url) VALUES ($1, $2, $3, \'user\', $4)', [username, hashedPassword, displayName, 'uploads/default-avatar.png']);
         res.status(201).send('User created successfully.');
     } catch (error) {
-        if (error.code === '23505') { // PostgreSQL unique violation error
+        if (error.code === '23505') {
             return res.status(409).send('Username already exists.');
         }
         console.error('Error creating user:', error);
@@ -209,60 +287,41 @@ app.post('/create-user', async (req, res) => {
     }
 });
 
-// Νέος route για να ορίσουμε χρήστη ως admin
-app.post('/set-admin', async (req, res) => {
-    // Έλεγχος αν ο συνδεδεμένος χρήστης είναι ήδη admin
-    if (!req.isAuthenticated() || req.user.role !== 'admin') {
-        return res.status(403).send('Forbidden: Only admins can perform this action.');
-    }
-
-    const { userId } = req.body;
-    if (!userId) {
-        return res.status(400).send('User ID is required.');
-    }
-
-    try {
-        await pool.query('UPDATE users SET role = \'admin\' WHERE id = $1', [userId]);
-        res.status(200).send('User role updated to admin.');
-    } catch (error) {
-        console.error('Error setting user as admin:', error);
-        res.status(500).send('An error occurred.');
-    }
-});
-
-// Νέος route για διαγραφή μηνυμάτων
-app.delete('/delete-message/:messageId', async (req, res) => {
-    // Έλεγχος αν ο συνδεδεμένος χρήστης είναι admin
+app.delete('/delete-message/:id', async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== 'admin') {
         return res.status(403).send('Forbidden: Only admins can delete messages.');
     }
 
-    const { messageId } = req.params;
+    const messageId = req.params.id;
+
     try {
-        await pool.query('DELETE FROM messages WHERE id = $1', [messageId]);
-        // Ενημέρωση όλων των clients ότι το μήνυμα διαγράφηκε
+        const result = await pool.query('DELETE FROM messages WHERE id = $1 RETURNING *', [messageId]);
+        
+        if (result.rowCount === 0) {
+            return res.status(404).send('Message not found.');
+        }
+
         wsInstance.getWss().clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify({ type: 'deleteMessage', messageId: messageId }));
             }
         });
-        res.status(200).send('Message deleted.');
+
+        res.status(200).send('Message deleted successfully.');
     } catch (error) {
         console.error('Error deleting message:', error);
-        res.status(500).send('An error occurred.');
+        res.status(500).send('Server error.');
     }
 });
 
-// Χειρισμός συνδέσεων WebSocket
 app.ws('/chat', async (ws, req) => {
     if (!req.isAuthenticated()) {
         ws.close();
         return;
     }
 
-    // Load old messages
     try {
-        const result = await pool.query('SELECT m.id, m.message, m.timestamp, u.display_name, u.role, u.id as user_id FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp ASC');
+        const result = await pool.query('SELECT m.id, m.message, m.timestamp, u.display_name, u.role, u.avatar_url, u.id as user_id FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp ASC');
         ws.send(JSON.stringify({ type: 'oldMessages', messages: result.rows }));
     } catch (error) {
         console.error('Error fetching old messages:', error);
@@ -276,21 +335,20 @@ app.ws('/chat', async (ws, req) => {
                 const result = await pool.query('INSERT INTO messages (user_id, message) VALUES ($1, $2) RETURNING *', [req.user.id, message]);
                 const newMessage = result.rows[0];
 
-                const userResult = await pool.query('SELECT display_name, role FROM users WHERE id = $1', [req.user.id]);
-                const displayName = userResult.rows[0].display_name;
-                const role = userResult.rows[0].role;
+                const userResult = await pool.query('SELECT display_name, role, avatar_url FROM users WHERE id = $1', [req.user.id]);
+                const { display_name, role, avatar_url } = userResult.rows[0];
                 
                 const response = {
                     type: 'newMessage',
                     message: newMessage.message,
-                    displayName,
+                    displayName: display_name,
                     timestamp: newMessage.timestamp,
                     role,
+                    avatarUrl: avatar_url,
                     userId: req.user.id,
                     messageId: newMessage.id
                 };
                 
-                // Broadcast to all connected clients
                 wsInstance.getWss().clients.forEach(client => {
                     if (client.readyState === WebSocket.OPEN) {
                         client.send(JSON.stringify(response));

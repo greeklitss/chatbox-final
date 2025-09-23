@@ -1,202 +1,342 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chatbox</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f2f5;
-        }
-        .container {
-            width: 80%;
-            max-width: 800px;
-            height: 90%;
-            background: #fff;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-        }
-        #header {
-            padding: 15px;
-            background: #007bff;
-            color: white;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #header h2 {
-            margin: 0;
-        }
-        #logoutBtn {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        #logoutBtn:hover {
-            background-color: #c82333;
-        }
-        #chatbox-container {
-            display: flex;
-            flex-grow: 1;
-            overflow: hidden;
-        }
-        #chatbox {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            flex-direction: column;
-        }
-        .message {
-            margin-bottom: 10px;
-            padding: 8px 12px;
-            border-radius: 18px;
-            word-wrap: break-word;
-            max-width: 70%;
-            position: relative;
-        }
-        .message .sender {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 2px;
-        }
-        .message-content {
-            display: inline-block;
-        }
-        .admin-badge {
-            background-color: #f5c518;
-            color: black;
-            font-size: 0.7em;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 5px;
-        }
-        #input-container {
-            display: flex;
-            padding: 15px;
-            border-top: 1px solid #ddd;
-        }
-        #messageInput {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-right: 10px;
-        }
-        #sendBtn {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #sendBtn:hover {
-            background-color: #218838;
-        }
-        .delete-btn {
-            background-color: transparent;
-            color: #dc3545;
-            border: none;
-            font-size: 1.2em;
-            cursor: pointer;
-            padding: 0;
-            margin-left: 10px;
-        }
-        #admin-panel {
-            padding: 20px;
-            background: #f0f2f5;
-            border-left: 1px solid #ddd;
-            display: none; /* Κρυφό από προεπιλογή */
-            width: 250px;
-            overflow-y: auto;
-        }
-    </style>
+    <title>Chatbox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Merriweather', serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            
+            background-image: url('https://i.imgur.com/your-image-id-here.png'); /* ΑΝΤΙΚΑΤΑΣΤΗΣΕ ΕΔΩ ΤΟ URL ΤΗΣ ΕΙΚΟΝΑΣ ΣΟΥ */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            height: 90%;
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        #header {
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #header h2 {
+            margin: 0;
+        }
+        #logoutBtn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #logoutBtn:hover {
+            background-color: #c82333;
+        }
+        #chatbox-container {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        #chatbox {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            max-width: 70%;
+            position: relative;
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+        .message-content-container {
+            display: flex;
+            flex-direction: column;
+        }
+        .message .sender {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .message-content {
+            display: inline-block;
+        }
+        .message img.gif {
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+            margin-top: 5px;
+        }
+        .admin-badge {
+            background-color: #f5c518;
+            color: black;
+            font-size: 0.7em;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+        .user-message {
+            background-color: #e6e6fa;
+        }
+        .admin-message {
+            background-color: #ffcccb;
+        }
+        .moderator-message {
+            background-color: #b0e0e6;
+        }
+        #input-container {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            position: relative;
+        }
+        #messageInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        #sendBtn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #sendBtn:hover {
+            background-color: #218838;
+        }
+        .delete-btn {
+            background-color: transparent;
+            color: #dc3545;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 10px;
+        }
+        #admin-panel {
+            padding: 20px;
+            background: #f0f2f5;
+            border-left: 1px solid #ddd;
+            display: none;
+            width: 250px;
+            overflow-y: auto;
+        }
+        #admin-panel h3 {
+            margin-top: 0;
+        }
+        #admin-panel button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        #emojiBtn, #gifBtn {
+            margin-left: 5px;
+            padding: 10px;
+            border: none;
+            background-color: #f0f2f5;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #emojiPicker, #gifPicker {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+        }
+        #gifPicker {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            width: 300px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        #gifResults {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #gifResults img {
+            width: 100%;
+            height: auto;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #profile-settings {
+            padding: 20px;
+            background: #f0f2f5;
+            border-left: 1px solid #ddd;
+            display: none;
+            width: 250px;
+            overflow-y: auto;
+        }
+        #current-avatar-container {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        #current-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #007bff;
+        }
+        .settings-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div id="header">
-            <h2>Chatbox - Webradio Akoyme</h2>
-            <button id="logoutBtn">Αποσύνδεση</button>
-        </div>
-        <div id="chatbox-container">
-            <div id="chatbox"></div>
-            <div id="admin-panel">
-                <h3>Admin Panel</h3>
-                <p>This is the admin panel. Here you can see more options.</p>
-            </div>
-        </div>
-        <div id="input-container">
-            <input type="text" id="messageInput" placeholder="Πληκτρολογήστε ένα μήνυμα..." autocomplete="off">
-            <button id="sendBtn">Αποστολή</button>
-        </div>
-    </div>
+    <div class="container">
+        <div id="header">
+            <h2>Chatbox - Webradio Akoyme</h2>
+            <button id="settingsBtn" class="settings-btn">Ρυθμίσεις</button>
+            <button id="logoutBtn">Αποσύνδεση</button>
+        </div>
+        <div id="chatbox-container">
+            <div id="chatbox"></div>
+            <div id="admin-panel">
+                <h3>Admin Panel</h3>
+                <button id="clearHistoryBtn">Καθαρισμός Ιστορικού</button>
+                <button id="savePdfBtn">Αποθήκευση ως PDF</button>
+                <hr>
+                <h4>Αλλαγή Ρόλου Χρήστη</h4>
+                <div id="userList"></div>
+            </div>
+            <div id="profile-settings">
+                <h3>Ρυθμίσεις Προφίλ</h3>
+                <div id="current-avatar-container">
+                    <img id="current-avatar" src="">
+                </div>
+                <h4>Αλλαγή Εικόνας Προφίλ</h4>
+                <form id="avatar-form">
+                    <input type="file" id="avatar-upload" name="avatar" accept="image/*" required>
+                    <button type="submit">Αποθήκευση Εικόνας</button>
+                </form>
+            </div>
+        </div>
+        <div id="input-container">
+            <input type="text" id="messageInput" placeholder="Πληκτρολογήστε ένα μήνυμα..." autocomplete="off">
+            <button id="emojiBtn">😊</button>
+            <button id="gifBtn">GIF</button>
+            <button id="sendBtn">Αποστολή</button>
+        </div>
+    </div>
+    
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+    <emoji-picker id="emojiPicker"></emoji-picker>
 
-    <script>
-        const chatbox = document.getElementById('chatbox');
-        const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const adminPanel = document.getElementById('admin-panel');
-        const ws = new WebSocket('wss://' + window.location.host + '/chat');
+    <div id="gifPicker">
+        <input type="text" id="gifSearchInput" placeholder="Αναζήτηση GIF...">
+        <div id="gifResults"></div>
+    </div>
 
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            switch (data.type) {
-                case 'oldMessages':
-                    data.messages.forEach(message => appendMessage(message));
-                    break;
-                case 'newMessage':
-                    appendMessage(data);
-                    break;
-                case 'deleteMessage':
-                    deleteMessage(data.messageId);
-                    break;
-            }
-        };
+    <script>
+        const chatbox = document.getElementById('chatbox');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const adminPanel = document.getElementById('admin-panel');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const savePdfBtn = document.getElementById('savePdfBtn');
+        const userListDiv = document.getElementById('userList');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const profileSettings = document.getElementById('profile-settings');
+        const currentAvatar = document.getElementById('current-avatar');
+        const avatarForm = document.getElementById('avatar-form');
+        const emojiBtn = document.getElementById('emojiBtn');
+        const emojiPicker = document.getElementById('emojiPicker');
+        const gifBtn = document.getElementById('gifBtn');
+        const gifPicker = document.getElementById('gifPicker');
+        const gifSearchInput = document.getElementById('gifSearchInput');
+        const gifResults = document.getElementById('gifResults');
 
-        sendBtn.addEventListener('click', () => {
-            const message = messageInput.value.trim();
-            if (message) {
-                ws.send(JSON.stringify({ type: 'chatMessage', message }));
-                messageInput.value = '';
-            }
-        });
+        const ws = new WebSocket('wss://' + window.location.host + '/chat');
+        const GIPHY_API_KEY = 'UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs';
 
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendBtn.click();
-            }
-        });
+        // --- WebSocket Messages ---
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            switch (data.type) {
+                case 'oldMessages':
+                    chatbox.innerHTML = '';
+                    data.messages.forEach(message => appendMessage(message));
+                    break;
+                case 'newMessage':
+                    appendMessage(data);
+                    break;
+                case 'deleteMessage':
+                    deleteMessage(data.messageId);
+                    break;
+                case 'clearChat':
+                    chatbox.innerHTML = '';
+                    break;
+            }
+        };
 
-        logoutBtn.addEventListener('click', async () => {
-            try {
-                const response = await fetch('/logout', { method: 'POST' });
-                if (response.ok) {
-                    window.location.href = '/'; 
-                } else {
-                    alert('Αποτυχία αποσύνδεσης.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Σφάλμα δικτύου κατά την αποσύνδεση.');
-            }
-        });
-        
+        // --- Admin Panel and User Settings Logic ---
         fetch('/user-info')
             .then(res => {
                 if (!res.ok) throw new Error('Not authenticated');
@@ -205,75 +345,321 @@
             .then(data => {
                 if (data.role === 'admin') {
                     adminPanel.style.display = 'block';
+                    loadAdminPanel();
                 }
+                currentAvatar.src = data.avatarUrl;
             })
             .catch(error => {
                 console.error('Σφάλμα κατά την ανάκτηση πληροφοριών χρήστη:', error);
             });
 
-        function appendMessage(data) {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message');
-            messageElement.dataset.messageId = data.id;
+        settingsBtn.addEventListener('click', () => {
+            if (profileSettings.style.display === 'block') {
+                profileSettings.style.display = 'none';
+            } else {
+                profileSettings.style.display = 'block';
+                adminPanel.style.display = 'none'; // Ensure admin panel is hidden
+            }
+        });
 
-            // Sender and role
-            const senderSpan = document.createElement('span');
-            senderSpan.classList.add('sender');
-            senderSpan.textContent = data.display_name;
-            if (data.role === 'admin') {
-                const adminBadge = document.createElement('span');
-                adminBadge.classList.add('admin-badge');
-                adminBadge.textContent = 'Admin';
-                senderSpan.appendChild(adminBadge);
-            }
+        // Hide panels on window resize or when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!adminPanel.contains(e.target) && e.target !== settingsBtn && !profileSettings.contains(e.target) && e.target !== settingsBtn) {
+                profileSettings.style.display = 'none';
+                // You may want to hide the admin panel as well here if it's open, but let's keep it simple for now
+            }
+        });
 
-            // Message content
-            const messageText = document.createElement('span');
-            messageText.classList.add('message-content');
-            messageText.textContent = data.message;
-            
-            // Timestamp
-            const date = new Date(data.timestamp);
-            const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            // Delete button for admins
-            const deleteBtn = document.createElement('button');
-            deleteBtn.classList.add('delete-btn');
-            deleteBtn.innerHTML = '&#x2715;';
-            deleteBtn.title = 'Διαγραφή μηνύματος';
-            if (data.role === 'admin') {
-                deleteBtn.style.display = 'inline';
-            }
+        async function loadAdminPanel() {
+            try {
+                const response = await fetch('/users');
+                if (!response.ok) throw new Error('Failed to fetch users');
+                const users = await response.json();
+                userListDiv.innerHTML = '';
+                users.forEach(user => {
+                    const userItem = document.createElement('div');
+                    userItem.classList.add('user-item');
+                    userItem.innerHTML = `
+                        <span>${user.display_name}</span>
+                        <select data-user-id="${user.id}">
+                            <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                            <option value="moderator" ${user.role === 'moderator' ? 'selected' : ''}>Moderator</option>
+                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        </select>
+                    `;
+                    const select = userItem.querySelector('select');
+                    select.addEventListener('change', async () => {
+                        const newRole = select.value;
+                        const userId = select.dataset.userId;
+                        try {
+                            const res = await fetch('/change-role', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId, newRole })
+                            });
+                            if (!res.ok) throw new Error('Role change failed');
+                            alert('Ο ρόλος άλλαξε επιτυχώς!');
+                        } catch (error) {
+                            console.error('Error changing role:', error);
+                            alert('Αποτυχία αλλαγής ρόλου.');
+                        }
+                    });
+                    userListDiv.appendChild(userItem);
+                });
+            } catch (error) {
+                console.error('Error loading admin panel:', error);
+            }
+        }
 
-            deleteBtn.addEventListener('click', async () => {
-                if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το μήνυμα;')) {
-                    try {
-                        const res = await fetch(`/delete-message/${data.id}`, { method: 'DELETE' });
-                        if (!res.ok) {
-                            alert('Αποτυχία διαγραφής μηνύματος.');
-                        }
-                    } catch (error) {
-                        console.error('Error deleting message:', error);
-                    }
-                }
-            });
+        clearHistoryBtn.addEventListener('click', async () => {
+            if (confirm('Είστε σίγουροι ότι θέλετε να καθαρίσετε ΟΛΟ το ιστορικό του chat;')) {
+                try {
+                    const response = await fetch('/clear-history', { method: 'DELETE' });
+                    if (!response.ok) {
+                        alert('Αποτυχία καθαρισμού ιστορικού.');
+                    }
+                } catch (error) {
+                    console.error('Error clearing history:', error);
+                    alert('Σφάλμα δικτύου κατά τον καθαρισμό του ιστορικού.');
+                }
+            }
+        });
 
-            messageElement.appendChild(senderSpan);
-            messageElement.appendChild(document.createTextNode(` [${timeString}]: `));
-            messageElement.appendChild(messageText);
-            messageElement.appendChild(deleteBtn);
+        savePdfBtn.addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text('Ιστορικό Chat', 10, 10);
+            const chatContent = chatbox.innerText.split('\n').filter(line => line.trim() !== '');
+            let y = 20;
+            const lineHeight = 7;
+            chatContent.forEach(line => {
+                if (y > 280) {
+                    doc.addPage();
+                    y = 10;
+                }
+                doc.text(line, 10, y);
+                y += lineHeight;
+            });
+            doc.save('chat-history.pdf');
+        });
 
-            chatbox.appendChild(messageElement);
-            chatbox.scrollTop = chatbox.scrollHeight;
-        }
+        avatarForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(avatarForm);
+            try {
+                const res = await fetch('/change-avatar', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    currentAvatar.src = data.avatarUrl;
+                    alert('Η εικόνα προφίλ άλλαξε επιτυχώς!');
+                } else {
+                    alert('Αποτυχία αλλαγής εικόνας.');
+                }
+            } catch (error) {
+                console.error('Error uploading avatar:', error);
+                alert('Σφάλμα κατά το ανέβασμα της εικόνας.');
+            }
+        });
 
-        function deleteMessage(messageId) {
-            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-            if (messageElement) {
-                messageElement.remove();
-            }
-        }
+        // --- Message Handling ---
+        function appendMessage(data) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.dataset.messageId = data.id;
 
-    </script>
+            // Apply role-based color
+            switch (data.role) {
+                case 'admin':
+                    messageElement.classList.add('admin-message');
+                    break;
+                case 'moderator':
+                    messageElement.classList.add('moderator-message');
+                    break;
+                default:
+                    messageElement.classList.add('user-message');
+                    break;
+            }
+
+            const avatarImg = document.createElement('img');
+            avatarImg.classList.add('avatar');
+            avatarImg.src = data.avatarUrl || 'uploads/default-avatar.png';
+            messageElement.appendChild(avatarImg);
+
+            const contentContainer = document.createElement('div');
+            contentContainer.classList.add('message-content-container');
+            
+            const senderSpan = document.createElement('span');
+            senderSpan.classList.add('sender');
+            senderSpan.textContent = data.displayName;
+            if (data.role === 'admin') {
+                const adminBadge = document.createElement('span');
+                adminBadge.classList.add('admin-badge');
+                adminBadge.textContent = 'Admin';
+                senderSpan.appendChild(adminBadge);
+            }
+
+            const isGif = data.message.startsWith('https://media');
+            if (isGif) {
+                const gifImage = document.createElement('img');
+                gifImage.src = data.message;
+                gifImage.classList.add('gif');
+                contentContainer.appendChild(gifImage);
+            } else {
+                const messageText = document.createElement('span');
+                messageText.classList.add('message-content');
+                messageText.textContent = data.message;
+                contentContainer.appendChild(messageText);
+            }
+
+            const date = new Date(data.timestamp);
+            const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.classList.add('delete-btn');
+            deleteBtn.innerHTML = '&#x2715;';
+            deleteBtn.title = 'Διαγραφή μηνύματος';
+            fetch('/user-info').then(res => res.json()).then(userInfo => {
+                if (userInfo.role === 'admin') {
+                    deleteBtn.style.display = 'inline';
+                }
+            });
+            deleteBtn.addEventListener('click', async () => {
+                if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το μήνυμα;')) {
+                    try {
+                        const res = await fetch(`/delete-message/${data.id}`, { method: 'DELETE' });
+                        if (!res.ok) {
+                            alert('Αποτυχία διαγραφής μηνύματος.');
+                        }
+                    } catch (error) {
+                        console.error('Error deleting message:', error);
+                    }
+                }
+            });
+
+            contentContainer.prepend(senderSpan, document.createTextNode(` [${timeString}]: `));
+            contentContainer.appendChild(deleteBtn);
+
+            messageElement.appendChild(contentContainer);
+            chatbox.appendChild(messageElement);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        function deleteMessage(messageId) {
+            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (messageElement) {
+                messageElement.remove();
+            }
+        }
+
+        // --- Input and Button Events ---
+        sendBtn.addEventListener('click', () => {
+            const message = messageInput.value.trim();
+            if (message) {
+                ws.send(JSON.stringify({ type: 'chatMessage', message }));
+                messageInput.value = '';
+            }
+        });
+
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendBtn.click();
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/logout', { method: 'POST' });
+                if (response.ok) {
+                    window.location.href = '/'; 
+                } else {
+                    alert('Αποτυχία αποσύνδεσης.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Σφάλμα δικτύου κατά την αποσύνδεση.');
+            }
+        });
+        
+        const emojiBtn = document.getElementById('emojiBtn');
+        const emojiPicker = document.getElementById('emojiPicker');
+        const gifBtn = document.getElementById('gifBtn');
+        const gifPicker = document.getElementById('gifPicker');
+        const gifSearchInput = document.getElementById('gifSearchInput');
+        const gifResults = document.getElementById('gifResults');
+
+        emojiBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'block' : 'none';
+            if (gifPicker.style.display === 'block') {
+                gifPicker.style.display = 'none';
+            }
+        });
+        
+        emojiPicker.addEventListener('emoji-click', event => {
+            messageInput.value += event.detail.unicode;
+            emojiPicker.style.display = 'none';
+            messageInput.focus();
+        });
+
+        gifBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            gifPicker.style.display = gifPicker.style.display === 'none' ? 'block' : 'none';
+            if (emojiPicker.style.display === 'block') {
+                emojiPicker.style.display = 'none';
+            }
+            if (gifPicker.style.display === 'block') {
+                searchGifs();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) {
+                emojiPicker.style.display = 'none';
+            }
+            if (!gifPicker.contains(e.target) && e.target !== gifBtn) {
+                gifPicker.style.display = 'none';
+            }
+        });
+
+        let searchTimeout;
+        gifSearchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchGifs(gifSearchInput.value);
+            }, 500);
+        });
+
+        async function searchGifs(query = '') {
+            const url = query ? 
+                `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${query}&limit=8` :
+                `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=8`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                displayGifs(data.data);
+            } catch (error) {
+                console.error('Error fetching GIFs:', error);
+            }
+        }
+
+        function displayGifs(gifs) {
+            gifResults.innerHTML = '';
+            gifs.forEach(gif => {
+                const img = document.createElement('img');
+                img.src = gif.images.fixed_height_small.url;
+                img.alt = gif.title;
+                img.addEventListener('click', () => {
+                    const gifUrl = gif.images.original.url;
+                    ws.send(JSON.stringify({ type: 'chatMessage', message: gifUrl }));
+                    gifPicker.style.display = 'none';
+                });
+                gifResults.appendChild(img);
+            });
+        }
+    </script>
 </body>
 </html>
