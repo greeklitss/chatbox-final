@@ -6,14 +6,20 @@ const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
-const expressWs = require('express-ws'); // Χρησιμοποιούμε αυτό το module
+const expressWs = require('express-ws');
 const WebSocket = require('ws');
+const bcrypt = require('bcryptjs'); // New: For password hashing
+const LocalStrategy = require('passport-local').Strategy; // New: For username/password login
 
 const app = express();
 const server = http.createServer(app);
 
 // Ενσωμάτωση του express-ws
 const wsInstance = expressWs(app, server);
+
+// Middleware
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 // Σύνδεση με τη βάση δεδομένων PostgreSQL
 const pool = new Pool({
@@ -34,7 +40,6 @@ app.use(sessionMiddleware);
 // Ρύθμιση Passport
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(express.json()); // Για να μπορούμε να διαβάσουμε JSON από τα αιτήματα POST
 
 // Passport Serializer/Deserializer
 passport.serializeUser((user, done) => {
@@ -89,10 +94,33 @@ passport.use(new FacebookStrategy({
     }
 ));
 
+// New: Ρύθμιση Local Strategy (για login με username/password)
+passport.use(new LocalStrategy(async (username, password, done) => {
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+        if (result.rows.length === 0) {
+            return done(null, false, { message: 'Incorrect username.' });
+        }
+        const user = result.rows[0];
+
+        // Compare hashed password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return done(null, false, { message: 'Incorrect password.' });
+        }
+
+        return done(null, user);
+    } catch (error) {
+        return done(error);
+    }
+}));
+
+
 // Δημιουργία πινάκων χρηστών και μηνυμάτων
 async function createTables() {
     try {
-        await pool.query('CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, google_id TEXT UNIQUE, facebook_id TEXT UNIQUE, display_name TEXT, role TEXT DEFAULT \'user\')');
+        // Updated: added 'username' and 'password' columns
+        await pool.query('CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, google_id TEXT UNIQUE, facebook_id TEXT UNIQUE, display_name TEXT, role TEXT DEFAULT \'user\', username TEXT UNIQUE, password TEXT)');
         await pool.query('CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, message TEXT NOT NULL, user_id INTEGER REFERENCES users(id), timestamp TIMESTAMPTZ DEFAULT NOW())');
         console.log('Οι πίνακες "users" και "messages" δημιουργήθηκαν/ενημερώθηκαν επιτυχώς.');
     } catch (error) {
@@ -106,6 +134,11 @@ app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }))
 app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }), (req, res) => { res.redirect('/chat'); });
 app.get('/auth/facebook', passport.authenticate('facebook'));
 app.get('/auth/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/' }), (req, res) => { res.redirect('/chat'); });
+
+// New: Route για login με username/password
+app.post('/direct-login', passport.authenticate('local', { failureRedirect: '/' }), (req, res) => {
+    res.redirect('/chat');
+});
 
 // Main Route
 app.get('/', (req, res) => {
@@ -133,6 +166,27 @@ app.post('/logout', (req, res) => {
         }
         res.status(200).send('Logged out successfully.');
     });
+});
+
+// New: Route για να δημιουργείς χρήστες
+app.post('/create-user', async (req, res) => {
+    // This route will be secured later, for now, anyone can create a user for testing
+    const { username, password, displayName } = req.body;
+    if (!username || !password || !displayName) {
+        return res.status(400).send('Username, password, and display name are required.');
+    }
+    
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await pool.query('INSERT INTO users (username, password, display_name, role) VALUES ($1, $2, $3, \'user\')', [username, hashedPassword, displayName]);
+        res.status(201).send('User created successfully.');
+    } catch (error) {
+        if (error.code === '23505') { // PostgreSQL unique violation error
+            return res.status(409).send('Username already exists.');
+        }
+        console.error('Error creating user:', error);
+        res.status(500).send('An error occurred.');
+    }
 });
 
 // Νέος route για να ορίσουμε χρήστη ως admin
@@ -181,8 +235,10 @@ app.delete('/delete-message/:messageId', async (req, res) => {
 
 // Χειρισμός συνδέσεων WebSocket
 app.ws('/chat', async (ws, req) => {
-    const userId = req.session.passport.user;
-    const user = req.session.user;
+    if (!req.isAuthenticated()) {
+        ws.close();
+        return;
+    }
 
     // Load old messages
     try {
@@ -197,10 +253,10 @@ app.ws('/chat', async (ws, req) => {
         if (messageData.type === 'chatMessage') {
             const { message } = messageData;
             try {
-                const result = await pool.query('INSERT INTO messages (user_id, message) VALUES ($1, $2) RETURNING *', [userId, message]);
+                const result = await pool.query('INSERT INTO messages (user_id, message) VALUES ($1, $2) RETURNING *', [req.user.id, message]);
                 const newMessage = result.rows[0];
 
-                const userResult = await pool.query('SELECT display_name, role FROM users WHERE id = $1', [userId]);
+                const userResult = await pool.query('SELECT display_name, role FROM users WHERE id = $1', [req.user.id]);
                 const displayName = userResult.rows[0].display_name;
                 const role = userResult.rows[0].role;
                 
@@ -210,7 +266,7 @@ app.ws('/chat', async (ws, req) => {
                     displayName,
                     timestamp: newMessage.timestamp,
                     role,
-                    userId,
+                    userId: req.user.id,
                     messageId: newMessage.id
                 };
                 
@@ -231,7 +287,6 @@ app.ws('/chat', async (ws, req) => {
         console.log('Ο χρήστης αποσυνδέθηκε');
     });
 });
-
 
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => {

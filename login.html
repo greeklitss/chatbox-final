@@ -2,27 +2,151 @@
 <html>
 <head>
     <title>Login</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 350px;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #1c1e21;
+        }
+        .login-btn, .form-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            text-decoration: none;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        .google-btn {
+            background-color: #4285F4;
+        }
+        .facebook-btn {
+            background-color: #1877F2;
+        }
+        .form-btn {
+            background-color: #28a745;
+        }
+        .google-btn:hover {
+            background-color: #357ae8;
+        }
+        .facebook-btn:hover {
+            background-color: #1562c9;
+        }
+        .form-btn:hover {
+            background-color: #218838;
+        }
+        input[type="text"], input[type="password"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #dddfe2;
+            border-radius: 6px;
+        }
+        .divider {
+            margin: 20px 0;
+            border-bottom: 1px solid #dadde1;
+            line-height: 0.1em;
+            text-align: center;
+        }
+        .divider span {
+            background: #fff;
+            padding: 0 10px;
+            font-size: 14px;
+            color: #606770;
+        }
+        .hidden-form {
+            display: none;
+            margin-top: 20px;
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white p-8 md:p-12 rounded-2xl shadow-2xl text-center max-w-sm w-full">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Καλώς ήρθες!</h1>
-        <p class="text-gray-600 mb-8">Συνδέσου για να ξεκινήσεις το chat.</p>
-        <div class="space-y-4">
-            <a href="/auth/google" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg">
-                Σύνδεση με Google
-            </a>
-            <a href="/auth/facebook" class="inline-block bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg">
-                Σύνδεση με Facebook
-            </a>
+<body>
+    <div class="container">
+        <h2>Είσοδος στο Chat</h2>
+        <a href="/auth/google" class="login-btn google-btn">Σύνδεση με Google</a>
+        <a href="/auth/facebook" class="login-btn facebook-btn">Σύνδεση με Facebook</a>
+        
+        <div class="divider"><span>ή</span></div>
+
+        <form id="adminLoginForm" action="/direct-login" method="POST">
+            <h3>Σύνδεση Διαχειριστή</h3>
+            <input type="text" name="username" placeholder="Όνομα Χρήστη" required>
+            <input type="password" name="password" placeholder="Κωδικός" required>
+            <button type="submit" class="form-btn">Σύνδεση</button>
+        </form>
+
+        <div class="divider"><span>ή</span></div>
+
+        <button id="showCreateFormBtn" class="form-btn" style="background-color: #007bff;">Δημιουργία Νέου Χρήστη</button>
+        <div id="createUserFormContainer" class="hidden-form">
+            <h3>Δημιουργία Νέου Χρήστη</h3>
+            <form id="createUserForm">
+                <input type="text" id="newUsername" placeholder="Όνομα Χρήστη" required>
+                <input type="password" id="newPassword" placeholder="Κωδικός" required>
+                <input type="text" id="newDisplayName" placeholder="Εμφανιζόμενο Όνομα" required>
+                <button type="submit" class="form-btn">Δημιουργία</button>
+            </form>
+            <p id="message" style="color: red;"></p>
         </div>
     </div>
+
+    <script>
+        document.getElementById('showCreateFormBtn').addEventListener('click', function() {
+            const formContainer = document.getElementById('createUserFormContainer');
+            formContainer.style.display = formContainer.style.display === 'block' ? 'none' : 'block';
+        });
+
+        document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('newUsername').value;
+            const password = document.getElementById('newPassword').value;
+            const displayName = document.getElementById('newDisplayName').value;
+            const messageEl = document.getElementById('message');
+
+            try {
+                const response = await fetch('/create-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, displayName })
+                });
+
+                const text = await response.text();
+                if (response.ok) {
+                    messageEl.style.color = 'green';
+                    messageEl.textContent = 'Ο χρήστης δημιουργήθηκε επιτυχώς!';
+                    document.getElementById('createUserForm').reset();
+                } else {
+                    messageEl.style.color = 'red';
+                    messageEl.textContent = text || 'Σφάλμα κατά τη δημιουργία χρήστη.';
+                }
+            } catch (error) {
+                messageEl.style.color = 'red';
+                messageEl.textContent = 'Σφάλμα δικτύου.';
+                console.error('Error:', error);
+            }
+        });
+    </script>
 </body>
 </html>
