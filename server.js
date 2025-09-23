@@ -7,6 +7,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const expressWs = require('express-ws'); // Χρησιμοποιούμε αυτό το module
+const WebSocket = require('ws');
 
 const app = express();
 const server = http.createServer(app);
@@ -33,6 +34,7 @@ app.use(sessionMiddleware);
 // Ρύθμιση Passport
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(express.json()); // Για να μπορούμε να διαβάσουμε JSON από τα αιτήματα POST
 
 // Passport Serializer/Deserializer
 passport.serializeUser((user, done) => {
@@ -78,7 +80,7 @@ passport.use(new FacebookStrategy({
         try {
             let user = await pool.query('SELECT * FROM users WHERE facebook_id = $1', [profile.id]);
             if (user.rows.length === 0) {
-                user = await pool.query('INSERT INTO users (facebook_id, display_name, role) VALUES ($1, $2, $3) RETURNING *', [profile.id, profile.displayName, 'user']);
+                user = await pool.query('INSERT INTO users (facebook_id, display_name, role) VALUES ($1, $2, \'user\') RETURNING *', [profile.id, profile.displayName]);
             }
             done(null, user.rows[0]);
         } catch (error) {
@@ -123,42 +125,105 @@ app.get('/chat', (req, res) => {
     }
 });
 
+// Νέος route για αποσύνδεση
+app.post('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            return res.status(500).send('Could not log out.');
+        }
+        res.status(200).send('Logged out successfully.');
+    });
+});
+
+// Νέος route για να ορίσουμε χρήστη ως admin
+app.post('/set-admin', async (req, res) => {
+    // Έλεγχος αν ο συνδεδεμένος χρήστης είναι ήδη admin
+    if (!req.isAuthenticated() || req.user.role !== 'admin') {
+        return res.status(403).send('Forbidden: Only admins can perform this action.');
+    }
+
+    const { userId } = req.body;
+    if (!userId) {
+        return res.status(400).send('User ID is required.');
+    }
+
+    try {
+        await pool.query('UPDATE users SET role = \'admin\' WHERE id = $1', [userId]);
+        res.status(200).send('User role updated to admin.');
+    } catch (error) {
+        console.error('Error setting user as admin:', error);
+        res.status(500).send('An error occurred.');
+    }
+});
+
+// Νέος route για διαγραφή μηνυμάτων
+app.delete('/delete-message/:messageId', async (req, res) => {
+    // Έλεγχος αν ο συνδεδεμένος χρήστης είναι admin
+    if (!req.isAuthenticated() || req.user.role !== 'admin') {
+        return res.status(403).send('Forbidden: Only admins can delete messages.');
+    }
+
+    const { messageId } = req.params;
+    try {
+        await pool.query('DELETE FROM messages WHERE id = $1', [messageId]);
+        // Ενημέρωση όλων των clients ότι το μήνυμα διαγράφηκε
+        wsInstance.getWss().clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({ type: 'deleteMessage', messageId: messageId }));
+            }
+        });
+        res.status(200).send('Message deleted.');
+    } catch (error) {
+        console.error('Error deleting message:', error);
+        res.status(500).send('An error occurred.');
+    }
+});
+
 // Χειρισμός συνδέσεων WebSocket
 app.ws('/chat', async (ws, req) => {
     const userId = req.session.passport.user;
+    const user = req.session.user;
 
-    console.log(`Νέος χρήστης συνδέθηκε με user ID: ${userId}`);
-
-    // Φόρτωση παλαιότερων μηνυμάτων
+    // Load old messages
     try {
-        const result = await pool.query('SELECT m.message, u.display_name, u.role FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp');
-        result.rows.forEach(row => {
-            const role = row.role === 'admin' ? '[Admin]' : '';
-            ws.send(`<strong>${row.display_name} ${role}:</strong> ${row.message}`);
-        });
+        const result = await pool.query('SELECT m.id, m.message, m.timestamp, u.display_name, u.role, u.id as user_id FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp ASC');
+        ws.send(JSON.stringify({ type: 'oldMessages', messages: result.rows }));
     } catch (error) {
-        console.error('Σφάλμα φόρτωσης μηνυμάτων:', error);
+        console.error('Error fetching old messages:', error);
     }
 
-    ws.on('message', async message => {
-        try {
-            const userResult = await pool.query('SELECT display_name, role FROM users WHERE id = $1', [userId]);
-            const displayName = userResult.rows[0].display_name;
-            const role = userResult.rows[0].role;
-            const roleTag = role === 'admin' ? '[Admin]' : '';
-            const formattedMessage = `<strong>${displayName} ${roleTag}:</strong> ${message.toString()}`;
+    ws.on('message', async (msg) => {
+        const messageData = JSON.parse(msg);
+        if (messageData.type === 'chatMessage') {
+            const { message } = messageData;
+            try {
+                const result = await pool.query('INSERT INTO messages (user_id, message) VALUES ($1, $2) RETURNING *', [userId, message]);
+                const newMessage = result.rows[0];
 
-            await pool.query('INSERT INTO messages(message, user_id) VALUES($1, $2)', [message.toString(), userId]);
-            console.log(`Το μήνυμα αποθηκεύτηκε: ${formattedMessage}`);
-
-            // Στέλνει το μήνυμα σε όλους τους συνδεδεμένους clients
-            wsInstance.getWss().clients.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(formattedMessage);
-                }
-            });
-        } catch (error) {
-            console.error("Σφάλμα κατά την αποθήκευση του μηνύματος:", error);
+                const userResult = await pool.query('SELECT display_name, role FROM users WHERE id = $1', [userId]);
+                const displayName = userResult.rows[0].display_name;
+                const role = userResult.rows[0].role;
+                
+                const response = {
+                    type: 'newMessage',
+                    message: newMessage.message,
+                    displayName,
+                    timestamp: newMessage.timestamp,
+                    role,
+                    userId,
+                    messageId: newMessage.id
+                };
+                
+                // Broadcast to all connected clients
+                wsInstance.getWss().clients.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify(response));
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error inserting message:', error);
+            }
         }
     });
 
@@ -166,6 +231,7 @@ app.ws('/chat', async (ws, req) => {
         console.log('Ο χρήστης αποσυνδέθηκε');
     });
 });
+
 
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => {
