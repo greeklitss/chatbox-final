@@ -312,7 +312,15 @@
         const gifPicker = document.getElementById('gifPicker');
         const gifSearchInput = document.getElementById('gifSearchInput');
         const gifResults = document.getElementById('gifResults');
-
+        const messageTemplate = document.createElement('div');
+        messageTemplate.innerHTML = `
+            <img class="avatar">
+            <div class="message-content-container">
+                <span class="sender"></span>
+                <span class="message-text"></span>
+                <button class="delete-btn">×</button>
+            </div>
+        `;
         const ws = new WebSocket('wss://' + window.location.host + '/chat');
         const GIPHY_API_KEY = 'UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs';
 
@@ -362,11 +370,9 @@
             }
         });
 
-        // Hide panels on window resize or when clicking outside
         document.addEventListener('click', (e) => {
-            if (!adminPanel.contains(e.target) && e.target !== settingsBtn && !profileSettings.contains(e.target) && e.target !== settingsBtn) {
+            if (!settingsBtn.contains(e.target) && !profileSettings.contains(e.target) && !adminPanel.contains(e.target) && e.target !== settingsBtn) {
                 profileSettings.style.display = 'none';
-                // You may want to hide the admin panel as well here if it's open, but let's keep it simple for now
             }
         });
 
@@ -539,7 +545,8 @@
                 }
             });
 
-            contentContainer.prepend(senderSpan, document.createTextNode(` [${timeString}]: `));
+            senderSpan.appendChild(document.createTextNode(` [${timeString}]: `));
+            contentContainer.prepend(senderSpan);
             contentContainer.appendChild(deleteBtn);
 
             messageElement.appendChild(contentContainer);
