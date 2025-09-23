@@ -117,6 +117,14 @@
             padding: 0;
             margin-left: 10px;
         }
+        #admin-panel {
+            padding: 20px;
+            background: #f0f2f5;
+            border-left: 1px solid #ddd;
+            display: none; /* Κρυφό από προεπιλογή */
+            width: 250px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -127,6 +135,10 @@
         </div>
         <div id="chatbox-container">
             <div id="chatbox"></div>
+            <div id="admin-panel">
+                <h3>Admin Panel</h3>
+                <p>This is the admin panel. Here you can see more options.</p>
+            </div>
         </div>
         <div id="input-container">
             <input type="text" id="messageInput" placeholder="Πληκτρολογήστε ένα μήνυμα..." autocomplete="off">
@@ -139,9 +151,129 @@
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const logoutBtn = document.getElementById('logoutBtn');
+        const adminPanel = document.getElementById('admin-panel');
         const ws = new WebSocket('wss://' + window.location.host + '/chat');
 
-        // Handles messages from the server
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             switch (data.type) {
+                case 'oldMessages':
+                    data.messages.forEach(message => appendMessage(message));
+                    break;
+                case 'newMessage':
+                    appendMessage(data);
+                    break;
+                case 'deleteMessage':
+                    deleteMessage(data.messageId);
+                    break;
+            }
+        };
+
+        sendBtn.addEventListener('click', () => {
+            const message = messageInput.value.trim();
+            if (message) {
+                ws.send(JSON.stringify({ type: 'chatMessage', message }));
+                messageInput.value = '';
+            }
+        });
+
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendBtn.click();
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/logout', { method: 'POST' });
+                if (response.ok) {
+                    window.location.href = '/'; 
+                } else {
+                    alert('Αποτυχία αποσύνδεσης.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Σφάλμα δικτύου κατά την αποσύνδεση.');
+            }
+        });
+        
+        fetch('/user-info')
+            .then(res => {
+                if (!res.ok) throw new Error('Not authenticated');
+                return res.json();
+            })
+            .then(data => {
+                if (data.role === 'admin') {
+                    adminPanel.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Σφάλμα κατά την ανάκτηση πληροφοριών χρήστη:', error);
+            });
+
+        function appendMessage(data) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.dataset.messageId = data.id;
+
+            // Sender and role
+            const senderSpan = document.createElement('span');
+            senderSpan.classList.add('sender');
+            senderSpan.textContent = data.display_name;
+            if (data.role === 'admin') {
+                const adminBadge = document.createElement('span');
+                adminBadge.classList.add('admin-badge');
+                adminBadge.textContent = 'Admin';
+                senderSpan.appendChild(adminBadge);
+            }
+
+            // Message content
+            const messageText = document.createElement('span');
+            messageText.classList.add('message-content');
+            messageText.textContent = data.message;
+            
+            // Timestamp
+            const date = new Date(data.timestamp);
+            const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            // Delete button for admins
+            const deleteBtn = document.createElement('button');
+            deleteBtn.classList.add('delete-btn');
+            deleteBtn.innerHTML = '&#x2715;';
+            deleteBtn.title = 'Διαγραφή μηνύματος';
+            if (data.role === 'admin') {
+                deleteBtn.style.display = 'inline';
+            }
+
+            deleteBtn.addEventListener('click', async () => {
+                if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το μήνυμα;')) {
+                    try {
+                        const res = await fetch(`/delete-message/${data.id}`, { method: 'DELETE' });
+                        if (!res.ok) {
+                            alert('Αποτυχία διαγραφής μηνύματος.');
+                        }
+                    } catch (error) {
+                        console.error('Error deleting message:', error);
+                    }
+                }
+            });
+
+            messageElement.appendChild(senderSpan);
+            messageElement.appendChild(document.createTextNode(` [${timeString}]: `));
+            messageElement.appendChild(messageText);
+            messageElement.appendChild(deleteBtn);
+
+            chatbox.appendChild(messageElement);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        function deleteMessage(messageId) {
+            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (messageElement) {
+                messageElement.remove();
+            }
+        }
+
+    </script>
+</body>
+</html>
