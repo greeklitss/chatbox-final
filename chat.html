@@ -16,8 +16,7 @@
             align-items: center;
             height: 100vh;
             
-            /* ΕΛΕΓΞΕ ΤΟ PATH! */
-            background-image: url('akoyme_background.png'); 
+            background-image: url('akoyme_background.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -316,11 +315,10 @@
         const gifSearchInput = document.getElementById('gifSearchInput');
         const gifResults = document.getElementById('gifResults');
 
-        // ΠΡΟΣΟΧΗ: Υποθέτω ότι ο server τρέχει σε SSL (wss)
         const ws = new WebSocket('wss://' + window.location.host + '/chat'); 
         const GIPHY_API_KEY = 'UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs';
 
-        let currentUserRole = 'user'; // <--- Η ΜΕΤΑΒΛΗΤΗ ΓΙΑ ΤΟΝ ΡΟΛΟ
+        let currentUserRole = 'user'; 
 
         // --- WebSocket Messages ---
         ws.onmessage = (event) => {
@@ -328,7 +326,6 @@
             switch (data.type) {
                 case 'oldMessages':
                     chatbox.innerHTML = '';
-                    // Χρησιμοποιούμε appendMessage για να φέρει μαζί του τη λογική του deleteBtn
                     data.messages.forEach(message => appendMessage(message)); 
                     break;
                 case 'newMessage':
@@ -350,22 +347,18 @@
                 return res.json();
             })
             .then(data => {
-                currentUserRole = data.role; // <--- ΑΠΟΘΗΚΕΥΣΗ ΡΟΛΟΥ
+                currentUserRole = data.role; 
                 
                 if (data.role === 'admin') {
                     adminPanel.style.display = 'block';
                     loadAdminPanel();
+                    // Ζητάμε τα παλιά μηνύματα ξανά, ώστε να εφαρμοστεί η λογική του deleteBtn
+                    ws.send(JSON.stringify({ type: 'requestOldMessages' })); 
                 }
                 if (data.avatarUrl) {
                     currentAvatar.src = data.avatarUrl;
                 } else {
-                    currentAvatar.src = 'uploads/default-avatar.png'; // Set default if no avatar exists
-                }
-                // Επειδή ο ρόλος φορτώνεται εδώ, πρέπει να ξαναφορτώσουμε τα παλιά μηνύματα
-                // για να εμφανιστεί το 'X' στους Admins.
-                if (currentUserRole === 'admin') {
-                    // Αυτό θα ενεργοποιήσει το ws.onmessage('oldMessages') ξανά.
-                    ws.send(JSON.stringify({ type: 'requestOldMessages' })); 
+                    currentAvatar.src = 'uploads/default-avatar.png'; 
                 }
             })
             .catch(error => {
@@ -449,7 +442,11 @@
             const chatContent = chatbox.innerText.split('\n').filter(line => line.trim() !== '');
             let y = 20;
             const lineHeight = 7;
+            doc.setFont('times', 'normal'); // Χρήση βασικής γραμματοσειράς για συμβατότητα
             chatContent.forEach(line => {
+                // Βασική υποστήριξη Ελληνικών (προσοχή: η jspdf χρειάζεται ειδικά fonts για πλήρη υποστήριξη)
+                const textWidth = doc.getStringUnitWidth(line) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+
                 if (y > 280) {
                     doc.addPage();
                     y = 10;
@@ -535,18 +532,17 @@
             const date = new Date(data.timestamp);
             const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
-            // ΔΙΟΡΘΩΜΕΝΗ ΛΟΓΙΚΗ ΓΙΑ ΤΟ ΚΟΥΜΠΙ ΔΙΑΓΡΑΦΗΣ (Admin check)
             const deleteBtn = document.createElement('button');
             deleteBtn.classList.add('delete-btn');
             deleteBtn.innerHTML = '&#x2715;';
             deleteBtn.title = 'Διαγραφή μηνύματος';
             
+            // ΕΛΕΓΧΟΣ: Εμφάνιση deleteBtn ΜΟΝΟ αν ο τρέχων χρήστης είναι Admin
             if (currentUserRole === 'admin') { 
                 deleteBtn.style.display = 'inline';
                 deleteBtn.addEventListener('click', async () => {
                     if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το μήνυμα;')) {
                         try {
-                            // Στέλνει αίτημα διαγραφής στον server (Backend Logic)
                             const res = await fetch(`/delete-message/${data.id}`, { method: 'DELETE' }); 
                             if (!res.ok) {
                                 alert('Αποτυχία διαγραφής μηνύματος.');
@@ -563,7 +559,7 @@
             senderSpan.appendChild(document.createTextNode(` [${timeString}]: `));
             contentContainer.prepend(senderSpan);
             
-            // Τοποθετούμε το κουμπί διαγραφής μετά το κείμενο/gif
+            // Τοποθέτηση του κουμπιού διαγραφής
             if (deleteBtn.style.display === 'inline') {
                 contentContainer.appendChild(deleteBtn);
             }
