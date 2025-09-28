@@ -294,6 +294,8 @@
     </div>
 
     <script>
+	
+});
         document.addEventListener('DOMContentLoaded', () => {
             const chatbox = document.getElementById('chatbox');
             const messageInput = document.getElementById('messageInput');
@@ -316,6 +318,7 @@
 
             const ws = new WebSocket('wss://' + window.location.host + '/chat');
             const GIPHY_API_KEY = 'UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs';
+	    let currentUserRole = 'user'; // <--- ΝΕΟΣ ΡΟΛΟΣ
 
             // --- WebSocket Messages ---
             ws.onmessage = (event) => {
@@ -521,12 +524,37 @@
                 const date = new Date(data.timestamp);
                 const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.classList.add('delete-btn');
-                deleteBtn.innerHTML = '&#x2715;';
-                deleteBtn.title = 'Διαγραφή μηνύματος';
-                fetch('/user-info').then(res => res.json()).then(userInfo => {
-                    if (userInfo.role === 'admin') {
+             // Δημιουργία του κουμπιού διαγραφής
+            const deleteBtn = document.createElement('button');
+            deleteBtn.classList.add('delete-btn');
+            deleteBtn.innerHTML = '&#x2715;';
+            deleteBtn.title = 'Διαγραφή μηνύματος';
+
+            // ΝΕΟΣ ΕΛΕΓΧΟΣ: Εμφάνιση ΜΟΝΟ αν ο χρήστης είναι Admin
+            if (currentUserRole === 'admin') { 
+                deleteBtn.style.display = 'inline';
+                deleteBtn.addEventListener('click', async () => {
+                    if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το μήνυμα;')) {
+                        try {
+                            const res = await fetch(`/delete-message/${data.id}`, { method: 'DELETE' });
+                            if (!res.ok) {
+                                alert('Αποτυχία διαγραφής μηνύματος.');
+                            }
+                        } catch (error) {
+                            console.error('Error deleting message:', error);
+                        }
+                    }
+                });
+            } else {
+                deleteBtn.style.display = 'none'; // Αρχική απόκρυψη για non-admins
+            }
+
+            senderSpan.appendChild(document.createTextNode(` [${timeString}]: `));
+            contentContainer.prepend(senderSpan);
+            contentContainer.appendChild(deleteBtn);
+
+                // ... ο υπόλοιπος κώδικας για τα avatars ...
+            })
                         deleteBtn.style.display = 'inline';
                     }
                 });
