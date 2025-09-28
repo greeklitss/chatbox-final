@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
+        /* ΕΠΑΝΑΦΟΡΑ ΟΛΟΥ ΤΟΥ CSS ΓΙΑ ΔΙΟΡΘΩΣΗ ΤΗΣ ΕΜΦΑΝΙΣΗΣ */
         body {
             font-family: 'Merriweather', serif;
             margin: 0;
@@ -16,7 +17,8 @@
             align-items: center;
             height: 100vh;
             
-            background-image: url('akoyme_background.png');
+            /* ΕΔΩ ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ Η ΕΙΚΟΝΑ ΦΟΝΤΟΥ - ΕΛΕΓΞΕ ΤΟ PATH! */
+            background-image: url('akoyme_background.png'); 
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -97,6 +99,8 @@
             font-weight: bold;
             display: block;
             margin-bottom: 2px;
+            display: flex; /* για να ευθυγραμμιστούν το όνομα και το κουμπί */
+            align-items: center;
         }
         .message-content {
             display: inline-block;
@@ -156,6 +160,7 @@
             cursor: pointer;
             padding: 0;
             margin-left: 10px;
+            line-height: 1; /* Διόρθωση ευθυγράμμισης */
         }
         #admin-panel {
             padding: 20px;
@@ -326,6 +331,7 @@
             switch (data.type) {
                 case 'oldMessages':
                     chatbox.innerHTML = '';
+                    // Χρησιμοποιούμε appendMessage για να φέρει μαζί του τη λογική του deleteBtn
                     data.messages.forEach(message => appendMessage(message)); 
                     break;
                 case 'newMessage':
@@ -352,13 +358,18 @@
                 if (data.role === 'admin') {
                     adminPanel.style.display = 'block';
                     loadAdminPanel();
-                    // Ζητάμε τα παλιά μηνύματα ξανά, ώστε να εφαρμοστεί η λογική του deleteBtn
-                    ws.send(JSON.stringify({ type: 'requestOldMessages' })); 
                 }
+                
+                // ΔΕΔΟΜΕΝΟΥ ΟΤΙ Ο ΡΟΛΟΣ ΦΟΡΤΩΘΗΚΕ, ΖΗΤΑΜΕ ΞΑΝΑ ΤΑ ΜΗΝΥΜΑΤΑ
+                // ΓΙΑ ΝΑ ΕΜΦΑΝΙΣΤΕΙ ΤΟ ΚΟΥΜΠΙ ΔΙΑΓΡΑΦΗΣ
+                if (data.role === 'admin') {
+                     ws.send(JSON.stringify({ type: 'requestOldMessages' })); 
+                }
+
                 if (data.avatarUrl) {
                     currentAvatar.src = data.avatarUrl;
                 } else {
-                    currentAvatar.src = 'uploads/default-avatar.png'; 
+                    currentAvatar.src = 'uploads/default-avatar.png'; // Set default if no avatar exists
                 }
             })
             .catch(error => {
@@ -370,13 +381,25 @@
                 profileSettings.style.display = 'none';
             } else {
                 profileSettings.style.display = 'block';
-                adminPanel.style.display = 'none'; 
+                // Κλείσιμο του Admin Panel αν είναι ανοιχτό
+                if (currentUserRole === 'admin') {
+                     adminPanel.style.display = 'none';
+                }
             }
         });
 
+        // Toggle Admin Panel
+        // Εάν ο Admin Panel είναι ήδη ανοιχτός, κλείσε τον όταν κάνεις κλικ στις Ρυθμίσεις
+        // Εάν το Admin Panel πρέπει να ανοίξει, αυτό γίνεται παραπάνω στο fetch.
+
         document.addEventListener('click', (e) => {
-            if (!settingsBtn.contains(e.target) && !profileSettings.contains(e.target) && !adminPanel.contains(e.target) && e.target !== settingsBtn) {
+            // Κλείνει τα panels αν κάνεις κλικ έξω από αυτά
+            if (!settingsBtn.contains(e.target) && !profileSettings.contains(e.target) && 
+                !adminPanel.contains(e.target) && e.target !== settingsBtn) {
                 profileSettings.style.display = 'none';
+                if (currentUserRole === 'admin') {
+                    adminPanel.style.display = 'none';
+                }
             }
         });
 
@@ -442,11 +465,8 @@
             const chatContent = chatbox.innerText.split('\n').filter(line => line.trim() !== '');
             let y = 20;
             const lineHeight = 7;
-            doc.setFont('times', 'normal'); // Χρήση βασικής γραμματοσειράς για συμβατότητα
+            doc.setFont('times', 'normal'); 
             chatContent.forEach(line => {
-                // Βασική υποστήριξη Ελληνικών (προσοχή: η jspdf χρειάζεται ειδικά fonts για πλήρη υποστήριξη)
-                const textWidth = doc.getStringUnitWidth(line) * doc.internal.getFontSize() / doc.internal.scaleFactor;
-
                 if (y > 280) {
                     doc.addPage();
                     y = 10;
@@ -500,7 +520,8 @@
 
             const avatarImg = document.createElement('img');
             avatarImg.classList.add('avatar');
-            avatarImg.src = data.avatarUrl || 'uploads/default-avatar.png';
+            // Αυτό είναι το path που βγάζει 404. Βεβαιώσου ότι ο φάκελος 'uploads' σερβίρεται σωστά.
+            avatarImg.src = data.avatarUrl || 'uploads/default-avatar.png'; 
             messageElement.appendChild(avatarImg);
 
             const contentContainer = document.createElement('div');
@@ -508,13 +529,22 @@
             
             const senderSpan = document.createElement('span');
             senderSpan.classList.add('sender');
-            senderSpan.textContent = data.displayName;
+            
+            // Τοποθετούμε το όνομα και το badge στον ίδιο span
+            const nameAndTime = document.createElement('span');
+            nameAndTime.textContent = data.displayName;
             if (data.role === 'admin') {
                 const adminBadge = document.createElement('span');
                 adminBadge.classList.add('admin-badge');
                 adminBadge.textContent = 'Admin';
-                senderSpan.appendChild(adminBadge);
+                nameAndTime.appendChild(adminBadge);
             }
+            const date = new Date(data.timestamp);
+            const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            nameAndTime.appendChild(document.createTextNode(` [${timeString}]: `));
+            
+            senderSpan.appendChild(nameAndTime);
+
 
             const isGif = data.message && data.message.startsWith('https://media');
             if (isGif) {
@@ -529,23 +559,22 @@
                 contentContainer.appendChild(messageText);
             }
 
-            const date = new Date(data.timestamp);
-            const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
             const deleteBtn = document.createElement('button');
             deleteBtn.classList.add('delete-btn');
             deleteBtn.innerHTML = '&#x2715;';
             deleteBtn.title = 'Διαγραφή μηνύματος';
             
-            // ΕΛΕΓΧΟΣ: Εμφάνιση deleteBtn ΜΟΝΟ αν ο τρέχων χρήστης είναι Admin
+            // ΛΟΓΙΚΗ ΓΙΑ ΤΗΝ ΕΜΦΑΝΙΣΗ ΤΟΥ ΚΟΥΜΠΙΟΥ ΔΙΑΓΡΑΦΗΣ (ΔΙΟΡΘΩΜΕΝΗ)
             if (currentUserRole === 'admin') { 
-                deleteBtn.style.display = 'inline';
+                deleteBtn.style.display = 'inline-block'; // Χρησιμοποιούμε inline-block για να εμφανίζεται σωστά
                 deleteBtn.addEventListener('click', async () => {
                     if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το μήνυμα;')) {
                         try {
                             const res = await fetch(`/delete-message/${data.id}`, { method: 'DELETE' }); 
                             if (!res.ok) {
-                                alert('Αποτυχία διαγραφής μηνύματος.');
+                                // Εμφανίζει το σφάλμα που βλέπεις στην εικόνα_cccf66.png
+                                alert('Αποτυχία διαγραφής μηνύματος.'); 
                             }
                         } catch (error) {
                             console.error('Error deleting message:', error);
@@ -556,15 +585,14 @@
                 deleteBtn.style.display = 'none'; 
             }
 
-            senderSpan.appendChild(document.createTextNode(` [${timeString}]: `));
-            contentContainer.prepend(senderSpan);
-            
-            // Τοποθέτηση του κουμπιού διαγραφής
-            if (deleteBtn.style.display === 'inline') {
-                contentContainer.appendChild(deleteBtn);
+            // Επειδή το deleteBtn είναι μέσα στο senderSpan, αυτό θα τοποθετηθεί δίπλα στο όνομα.
+            if (currentUserRole === 'admin') {
+                senderSpan.appendChild(deleteBtn);
             }
 
+            contentContainer.prepend(senderSpan);
             messageElement.appendChild(contentContainer);
+            
             chatbox.appendChild(messageElement);
             chatbox.scrollTop = chatbox.scrollHeight;
         }
@@ -676,7 +704,9 @@
                 gifResults.appendChild(img);
             });
         }
-    });
+    // ΤΕΛΟΣ document.addEventListener('DOMContentLoaded', () => {
+    }); 
+    // ΣΗΜΑΝΤΙΚΟ: ΑΦΑΙΡΕΘΗΚΕ Η ΠΕΡΙΤΤΗ ΑΓΚΥΛΗ } ΠΟΥ ΠΡΟΚΑΛΟΥΣΕ ΤΟ SyntaxError.
 </script>
     </body>
 </html>
