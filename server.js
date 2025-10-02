@@ -10,31 +10,16 @@ const expressWs = require('express-ws');
 const WebSocket = require('ws');
 const bcrypt = require('bcryptjs');
 const LocalStrategy = require('passport-local').Strategy;
-const multer = require('multer'); // Προσθήκη multer
-const { v4: uuidv4 } = require('uuid'); // Για μοναδικά ονόματα αρχείων
-
-const express = require('express');
-const http = require('http');
-const path = require('path');
-const { Pool } = require('pg');
-const session = require('express-session');
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const FacebookStrategy = require('passport-facebook').Strategy;
-const expressWs = require('express-ws');
-const WebSocket = require('ws');
-const bcrypt = require('bcryptjs');
-const LocalStrategy = require('passport-local').Strategy;
-const multer = require('multer'); 
-const { v4: uuidv4 } = require('uuid'); 
-const fs = require('fs'); // Προσθήκη fs για έλεγχο φακέλου
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
+const fs = require('fs'); // Για έλεγχο φακέλου
 
 const app = express();
-const server = http.createServer(app); // Χρειάζεσαι τον server για το expressWs
-const wsInstance = expressWs(app, server); // Τοποθέτηση εδώ
+const server = http.createServer(app); // Δημιουργία HTTP server
+const wsInstance = expressWs(app, server); // Σύνδεση express-ws
 
-// 1. ΔΗΛΩΣΗ STATIC FILES (ΠΡΩΤΑ!):
-// Εξυπηρετεί τα αρχεία του root (chat.html, akoyme_background.png, login.html)
+// --- ΣΗΜΑΝΤΙΚΗ ΔΙΟΡΘΩΣΗ: STATIC FILES ---
+// 1. Εξυπηρετεί όλα τα αρχεία στον root φάκελο (chat.html, login.html, akoyme_background.png)
 app.use(express.static(__dirname));
 
 // Δημιουργία του φακέλου 'uploads' αν δεν υπάρχει (Πρέπει να γίνει πριν την χρήση του)
@@ -43,22 +28,9 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
 
-// 2. ΕΞΥΠΗΡΕΤΗΣΗ UPLOADS:
-// Εξυπηρετεί τον φάκελο uploads για τα avatar.
-// Η γραμμή αυτή πρέπει να είναι μία, και την βάζουμε εδώ.
+// 2. Εξυπηρετεί τον φάκελο uploads για τα avatar
 app.use('/uploads', express.static('uploads'));
-
-// Η route /chat (Επειδή το chat.html βρίσκεται πλέον στο root, η static middleware το καλύπτει,
-// αλλά αφήνουμε την route για να κάνουμε redirect)
-app.get('/chat', (req, res) => {
-    // Χρησιμοποιούμε τη λογική του isAuthenticated για έλεγχο
-    if (req.isAuthenticated()) {
-        res.sendFile(path.join(__dirname, 'chat.html'));
-    } else {
-        res.redirect('/');
-    }
-});
-
+// ----------------------------------------
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -74,16 +46,6 @@ const storage = multer.diskStorage({
     }
 });
 const upload = multer({ storage: storage });
-
-// ... Ο υπόλοιπος κώδικας (Pool, Session, Passport, Routes, κλπ) συνεχίζει εδώ...
-// ...// Δημιουργία του φακέλου 'uploads' αν δεν υπάρχει
-const fs = require('fs');
-const uploadDir = 'uploads';
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
-// Serve static files from the 'uploads' directory
-app.use('/uploads', express.static('uploads'));
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -240,7 +202,7 @@ app.post('/change-role', async (req, res) => {
     }
 });
 
-// Νέο endpoint για αλλαγή avatar
+// Endpoint για αλλαγή avatar
 app.post('/change-avatar', upload.single('avatar'), async (req, res) => {
     if (!req.isAuthenticated()) {
         return res.status(401).send('Not authenticated.');
@@ -250,6 +212,7 @@ app.post('/change-avatar', upload.single('avatar'), async (req, res) => {
     }
 
     const userId = req.user.id;
+    // Το avatarUrl χρησιμοποιεί το /uploads/ path που σερβίρεται παραπάνω
     const avatarUrl = `/uploads/${req.file.filename}`;
     
     try {
@@ -356,6 +319,7 @@ app.ws('/chat', async (ws, req) => {
         return;
     }
 
+    // Στέλνει τα παλιά μηνύματα κατά τη σύνδεση
     try {
         const result = await pool.query('SELECT m.id, m.message, m.timestamp, u.display_name, u.role, u.avatar_url, u.id as user_id FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp ASC');
         ws.send(JSON.stringify({ type: 'oldMessages', messages: result.rows }));
@@ -393,6 +357,14 @@ app.ws('/chat', async (ws, req) => {
                 
             } catch (error) {
                 console.error('Error inserting message:', error);
+            }
+        } else if (messageData.type === 'requestOldMessages') {
+             // Αν ζητηθούν ξανά τα μηνύματα (π.χ. μετά το φόρτωμα του ρόλου του admin)
+             try {
+                const result = await pool.query('SELECT m.id, m.message, m.timestamp, u.display_name, u.role, u.avatar_url, u.id as user_id FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp ASC');
+                ws.send(JSON.stringify({ type: 'oldMessages', messages: result.rows }));
+            } catch (error) {
+                console.error('Error fetching old messages for client request:', error);
             }
         }
     });
