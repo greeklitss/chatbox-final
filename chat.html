@@ -6,222 +6,253 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libsers/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        /* --- CSS STYLING: FULL SCREEN, TRANSPARENT MESSAGES & COLORED NAMES --- */
-        html, body {
-            height: 100%;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden; 
-        }
-        
-        body {
-            font-family: 'Merriweather', serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f2f5; 
-        }
-        
-        .container {
-            width: 100%; 
-            height: 100%; 
-            max-width: none; 
-            max-height: none; 
-            background: none; 
-            box-shadow: none;
-            border-radius: 0;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-        
-        /* --- ΑΛΛΑΓΗ 3: ΔΙΑΦΑΝΕΙΑ ΚΕΦΑΛΙΔΑΣ (#header) --- */
-        #header {
-            padding: 15px;
-            background: rgba(0, 123, 255, 0.6); /* Μπλε με 60% διαφάνεια */
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0; 
-            backdrop-filter: blur(5px); /* Εφέ θολώματος για να φαίνεται πιο "γυάλινο" */
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        #header h2 {
-            margin: 0;
-            font-weight: 700;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-        }
-        #logoutBtn {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        #logoutBtn:hover {
-            background-color: #c82333;
-        }
-        #chatbox-container {
-            display: flex;
-            flex-grow: 1;
-            overflow: hidden;
-            border-bottom: 1px solid #ccc; 
-        }
-        
-        #chatbox {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            border-bottom: none; 
-            display: flex;
-            flex-direction: column;
-            position: relative; 
+  <style>
+    /* --- CSS STYLING: FULL SCREEN, TRANSPARENT MESSAGES & COLORED NAMES --- */
+    html, body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; 
+    }
+    
+    body {
+        font-family: 'Merriweather', serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f0f2f5; 
+    }
+    
+    .container {
+        width: 100%; 
+        height: 100%; 
+        max-width: none; 
+        max-height: none; 
+        background: none; 
+        box-shadow: none;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    
+    /* --- HEADER (Ημιδιαφανές με Blur) --- */
+    #header {
+        padding: 15px;
+        background: rgba(0, 123, 255, 0.6); 
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0; 
+        backdrop-filter: blur(5px); /* Εφέ θολώματος */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    #header h2 {
+        margin: 0;
+        font-weight: 700;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    #logoutBtn {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    #logoutBtn:hover {
+        background-color: #c82333;
+    }
+    #chatbox-container {
+        display: flex;
+        flex-grow: 1;
+        overflow: hidden;
+        border-bottom: 1px solid #ccc; 
+    }
+    
+    #chatbox {
+        flex-grow: 1;
+        padding: 20px;
+        overflow-y: auto;
+        border-bottom: none; 
+        display: flex;
+        flex-direction: column;
+        position: relative; 
 
-            /* BACKGROUND IMAGE */
-            background-image: url('akoyme_background.png'); 
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
+        /* BACKGROUND IMAGE */
+        background-image: url('akoyme_background.png'); 
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
 
-        /* --- DARK OVERLAY (70% opacity για μέγιστη αντίθεση) --- */
-        #chatbox::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7); /* Αυξήθηκε στο 70% για να "σκάσουν" τα λευκά γράμματα */
-            z-index: 1; 
-        }
+    /* --- DARK OVERLAY (70% opacity) --- */
+    #chatbox::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7); 
+        z-index: 1; 
+    }
+    
+    /* --- MESSAGES STYLING: ΕΥΘΥΓΡΑΜΜΙΣΗ ΑΡΙΣΤΕΡΑ & BLURRED BACKGROUND --- */
+    .message {
+        z-index: 2; 
+        margin-bottom: 12px; 
+        padding: 8px 12px; /* Προσθέτουμε padding για να φαίνεται το background */
+        border-radius: 15px; /* Στρογγυλές γωνίες */
+        word-wrap: break-word;
+        max-width: 80%; 
+        position: relative;
         
-        /* --- MESSAGES STYLING: ΕΥΘΥΓΡΑΜΜΙΣΗ ΑΡΙΣΤΕΡΑ & ΕΝΤΕΛΩΣ ΔΙΑΦΑΝΕΣ (#2) --- */
-        .message {
-            z-index: 2; 
-            margin-bottom: 12px; 
-            padding: 8px 0; /* Μικρότερο padding για να φαίνεται πιο "σφιχτό" */
-            border-radius: 0; 
-            word-wrap: break-word;
-            max-width: 80%; /* Αύξηση max-width για καλύτερη χρήση χώρου */
-            position: relative;
-            
-            align-self: flex-start !important; 
-            
-            display: flex;
-            align-items: flex-start;
-            
-            /* ΑΛΛΑΓΗ 2: ΕΝΤΕΛΩΣ ΔΙΑΦΑΝΕΣ BACKGROUND */
-            background: none !important; 
-            box-shadow: none; 
-        }
+        align-self: flex-start !important; 
         
-        /* Βασικό χρώμα κειμένου μηνυμάτων: Λευκό με δυνατή σκιά για μέγιστη αναγνωσιμότητα */
-        .message-content {
-             /* Δυνατή σκιά για να φαίνεται πάνω σε κάθε φόντο */
-             text-shadow: 1px 1px 4px rgba(0, 0, 0, 1), 0 0 2px rgba(255, 255, 255, 0.5); 
-             color: white; 
-             font-weight: 400; 
-        }
+        display: flex;
+        align-items: flex-start;
         
-        /* Χρωματισμός Ονόματος Χρήστη */
-        .message .sender {
-             font-weight: 700;
-             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9); 
-        }
-        
-        /* 1. Χρώμα για απλούς Χρήστες (Sender Name) */
-        .user-message .sender {
-            color: #ffffff; /* Καθαρό Λευκό */
-        }
-        
-        /* 2. Χρώμα για Moderators (Sender Name) */
-        .moderator-message .sender {
-            color: #4df9ff; /* Cyan */
-        }
-        
-        /* 3. Χρώμα για Admins (Sender Name) */
-        .admin-message .sender {
-            color: #ffd700; /* Χρυσό */
-        }
-        
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-            object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, 0.6); 
-        }
+        /* ΝΕΑ ΑΛΛΑΓΗ: Πολύ ελαφρύ, ημιδιαφανές background με Blur */
+        background: rgba(255, 255, 255, 0.1); 
+        backdrop-filter: blur(8px); /* Ισχυρότερο blur για να μη φαίνεται η εικόνα από μέσα */
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3); /* Ελαφριά σκιά για να ξεχωρίζει */
+    }
+    
+    /* Βασικό χρώμα κειμένου μηνυμάτων: Λευκό, ΑΦΑΙΡΟΥΜΕ ΣΚΙΑ */
+    .message-content {
+         text-shadow: none; /* ΑΦΑΙΡΕΣΗ ΣΚΙΑΣ: Το κείμενο είναι πλέον καθαρό */
+         color: white; 
+         font-weight: 400; 
+    }
+    
+    /* Χρωματισμός Ονόματος Χρήστη */
+    .message .sender {
+         font-weight: 700;
+         /* Ελαφριά σκιά μόνο στο όνομα για να "σκάσει" το χρώμα */
+         text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5); 
+    }
+    
+    /* 1. Χρώμα για απλούς Χρήστες (Sender Name) */
+    .user-message .sender {
+        color: #ffffff; 
+    }
+    
+    /* 2. Χρώμα για Moderators (Sender Name) */
+    .moderator-message .sender {
+        color: #4df9ff; 
+    }
+    
+    /* 3. Χρώμα για Admins (Sender Name) */
+    .admin-message .sender {
+        color: #ffd700; 
+    }
+    
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 10px;
+        object-fit: cover;
+        border: 2px solid rgba(255, 255, 255, 0.6); 
+    }
 
-        /* --- ΑΛΛΑΓΗ 4: ΔΙΑΦΑΝΕΙΑ INPUT/BUTTONS --- */
-        #input-container {
-            display: flex;
-            padding: 15px;
-            border-top: none; 
-            position: relative;
-            background-color: transparent; /* Εντελώς διαφανές */
-            flex-shrink: 0; 
-            flex-wrap: wrap; 
-        }
+    /* --- INPUT/BUTTONS (Διαφανές) --- */
+    #input-container {
+        display: flex;
+        padding: 15px;
+        border-top: none; 
+        position: relative;
+        background-color: transparent; 
+        flex-shrink: 0; 
+        flex-wrap: wrap; 
+    }
 
-        #messageInput {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.5); /* Λευκό ημιδιαφανές περίγραμμα */
-            border-radius: 5px;
-            margin-right: 10px;
-            background-color: rgba(255, 255, 255, 0.1); /* Πολύ ελαφρύ, ημιδιαφανές background input */
-            color: white; /* Χρώμα κειμένου λευκό */
-        }
-        /* Placeholder styling */
-        #messageInput::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        /* Formatting bar buttons */
-        #formatting-bar {
-            width: 100%;
-            display: flex;
-            gap: 5px;
-            margin-bottom: 10px;
-            align-items: center;
-        }
-        .format-btn {
-            background-color: rgba(255, 255, 255, 0.2); /* Ημιδιαφανές */
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .format-btn.active {
-            background-color: #007bff;
-            color: white;
-        }
-        #colorPicker {
-             /* ... (ίδιο) ... */
-        }
-        #colorLabel {
-             font-size: 0.9em;
-             margin-right: 5px;
-             color: white; /* Λευκό κείμενο για το label */
-        }
-        
-        /* Send, Emoji, GIF buttons */
-        #sendBtn, #emojiBtn, #gifBtn {
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-left: 5px;
-            background-color: rgba(0, 123, 255, 0.7); /* Μπλε ημιδιαφανές */
+    #messageInput {
+        flex-grow: 1;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.5); 
+        border-radius: 5px;
+        margin-right: 10px;
+        background-color: rgba(255, 255, 255, 0.1); 
+        color: white; 
+    }
+    #messageInput::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    /* Formatting bar buttons */
+    #formatting-bar {
+        width: 100%;
+        display: flex;
+        gap: 5px;
+        margin-bottom: 10px;
+        align-items: center;
+    }
+    .format-btn {
+        background-color: rgba(255, 255, 255, 0.2); 
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .format-btn.active {
+        background-color: #007bff;
+        color: white;
+    }
+    #colorPicker {
+         width: 30px;
+         height: 30px;
+         padding: 0;
+         border: none;
+         cursor: pointer;
+    }
+    #colorLabel {
+         font-size: 0.9em;
+         margin-right: 5px;
+         color: white; 
+    }
+    
+    /* Send, Emoji, GIF buttons */
+    #sendBtn, #emojiBtn, #gifBtn {
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-left: 5px;
+        background-color: rgba(0, 123, 255, 0.7); 
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+    #sendBtn:hover, #emojiBtn:hover, #gifBtn:hover {
+        background-color: #007bff; 
+    }
+    #admin-panel {
+        padding: 20px;
+        background: rgba(240, 242, 245, 0.9); 
+        border-left: 1px solid #ddd;
+        display: none;
+        width: 250px;
+        overflow-y: auto;
+        flex-shrink: 0; 
+    }
+    #profile-settings {
+        padding: 20px;
+        background: rgba(240, 242, 245, 0.9);
+        border-left: 1px solid #ddd;
+        display: none;
+        width: 250px;
+        overflow-y: auto;
+        flex-shrink: 0; 
+    }
+    
+    /* ... (Ο υπόλοιπος CSS κώδικας παραμένει ίδιος) ... */
+</style>          background-color: rgba(0, 123, 255, 0.7); /* Μπλε ημιδιαφανές */
             color: white;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
