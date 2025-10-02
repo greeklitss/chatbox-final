@@ -54,7 +54,6 @@
             display: flex;
             flex-direction: column;
             position: relative; 
-            /* BACKGROUND IMAGE (Διορθώνει το σφάλμα εμφάνισης παραθύρου) */
             background-image: url('akoyme_background.png'); 
             background-size: cover;
             background-position: center;
@@ -174,8 +173,21 @@
             border-radius: 5px;
             margin-right: 10px;
             background-color: rgba(255, 255, 255, 0.05); 
-            color: white; 
+            
+            /* ΔΙΟΡΘΩΣΗ: Κάνουμε το βασικό χρώμα του κειμένου ΛΕΥΚΟ */
+            color: white !important; 
+            
+            text-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
             transition: border-color 0.3s;
+        }
+
+        /* ΔΙΟΡΘΩΣΗ: Κάνουμε το Placeholder πιο ΔΙΑΦΑΝΕΣ */
+        #messageInput::placeholder {
+            color: rgba(255, 255, 255, 0.3); 
+        }
+        #messageInput:focus {
+             border-color: #007bff;
+             outline: none;
         }
 
         /* --- MENU ΡΥΘΜΙΣΕΩΝ --- */
@@ -245,8 +257,6 @@
              display: none; 
              overflow-y: auto;
         }
-        
-        /* ... (Υπόλοιπο CSS) ... */
     </style>
 </head>
 <body>
@@ -324,14 +334,12 @@
         const currentAvatar = document.getElementById('current-avatar');
         const avatarForm = document.getElementById('avatar-form');
         
-        // --- MENU/SETTINGS ELEMENTS ---
         const menuToggleBtn = document.getElementById('menuToggleBtn');
         const settingsMenu = document.getElementById('settings-menu');
-        const menuLogoutBtn = document.getElementById('menuLogoutBtn'); // Logout is now inside the menu
+        const menuLogoutBtn = document.getElementById('menuLogoutBtn'); 
         const menuProfileBtn = document.getElementById('menuProfileBtn');
         const menuAdminBtn = document.getElementById('menuAdminBtn');
 
-        // Panels (Κρύβονται με JS για ασφάλεια)
         adminPanel.style.display = 'none';
         profileSettings.style.display = 'none';
         settingsMenu.style.display = 'none'; 
@@ -344,7 +352,6 @@
         const gifSearchInput = document.getElementById('gifSearchInput');
         const gifResults = document.getElementById('gifResults');
 
-        // Formatting Buttons
         const boldBtn = document.getElementById('boldBtn');
         const italicBtn = document.getElementById('italicBtn');
         const colorBtn = document.getElementById('colorBtn');
@@ -394,12 +401,12 @@
             }
         };
         
-        // --- PLACEHOLDER FUNCTIONS (Must be handled in Python backend) ---
+        // --- PLACEHOLDER FUNCTIONS (MUST BE IMPLEMENTED IN PYTHON BACKEND) ---
         async function loadAdminPanel() { /* ... */ }
         window.changeRole = async function(selectElement) { /* ... */ }
         // ------------------------------------------------------------------
 
-        // --- ΕΛΕΓΧΟΣ ΡΟΛΟΥ ΚΑΙ ΑΣΦΑΛΕΙΑΣ FRONTEND ---
+        // --- ΕΛΕΓΧΟΣ ΡΟΛΟΥ ΚΑΙ MENU LOGIC ---
         fetch('/user-info')
             .then(res => {
                 if (!res.ok) throw new Error('Not authenticated');
@@ -409,7 +416,7 @@
                 currentUserRole = data.role; 
                 currentUserId = data.id;
                 
-                // Avatar Logic (Placeholder/Fallback)
+                // Avatar Logic 
                 let avatarSource = '/uploads/default-avatar.png';
                 if (data.avatarUrl && data.avatarUrl !== 'default-avatar.png') {
                     if (data.avatarUrl.startsWith('/')) {
@@ -431,7 +438,6 @@
                 menuToggleBtn.addEventListener('click', (e) => {
                     e.stopPropagation(); 
                     settingsMenu.style.display = settingsMenu.style.display === 'flex' ? 'none' : 'flex';
-                    // Κρύψε τα Admin/Profile panels όταν ανοίγει το βασικό Menu
                     adminPanel.style.display = 'none';
                     profileSettings.style.display = 'none';
                 });
@@ -469,18 +475,20 @@
                 console.error('Σφάλμα κατά την ανάκτησης πληροφοριών χρήστη:', error);
             });
         
-        // ... (admin panel buttons, avatar form logic) ...
-
-        // --- ΕΝΙΣΧΥΜΕΝΗ appendMessage (ΔΙΟΡΘΩΣΗ JSON & AVATAR) ---
+        
+        // --- ΕΝΙΣΧΥΜΕΝΗ appendMessage ---
         function appendMessage(data) {
              const messageElement = document.createElement('div');
              messageElement.classList.add('message');
              messageElement.dataset.messageId = data.id || data.messageId; 
              messageElement.dataset.userId = data.user_id || data.userId;
-
-             // ... (role classification) ...
-            
-             // Avatars: Ελέγχουμε την πηγή και προσθέτουμε onerror
+             
+             switch (data.role) {
+                 case 'admin': messageElement.classList.add('admin-message'); break;
+                 case 'moderator': messageElement.classList.add('moderator-message'); break;
+                 default: messageElement.classList.add('user-message'); break;
+             }
+             
              const avatarImg = document.createElement('img');
              avatarImg.classList.add('avatar');
              let avatarUrl = '/uploads/default-avatar.png';
@@ -493,11 +501,9 @@
                   }
              }
              avatarImg.src = avatarUrl; 
-             avatarImg.onerror = function() {
-                 this.src = '/uploads/default-avatar.png'; 
-             };
+             avatarImg.onerror = function() { this.src = '/uploads/default-avatar.png'; };
              messageElement.appendChild(avatarImg);
-            
+
              const contentContainer = document.createElement('div');
              contentContainer.classList.add('message-content-container');
              
@@ -507,27 +513,26 @@
              nameSpan.textContent = data.displayName;
              senderSpan.appendChild(nameSpan);
 
-             // ... (admin badge logic) ...
-
              const isGif = data.message && (data.message.startsWith('http://') || data.message.startsWith('https://')) && (data.message.includes('giphy.com') || data.message.includes('media'));
             
              if (isGif) {
-                 // ... (GIF logic) ...
+                 const gifImage = document.createElement('img');
+                 gifImage.src = data.message;
+                 gifImage.classList.add('gif');
+                 contentContainer.appendChild(gifImage);
              } else {
                  
                  let text = data.message;
                  let format = {};
                  
-                 // ΔΙΟΡΘΩΣΗ JSON: Χειρισμός JSON strings
+                 // Χειρισμός JSON strings
                  try {
                      const parsedData = JSON.parse(text);
                      if (parsedData.text) {
                          text = parsedData.text; 
                          format = parsedData;
                      }
-                 } catch (e) {
-                     // Not JSON, continue
-                 }
+                 } catch (e) { /* Not JSON */ }
 
                  const messageText = document.createElement('span');
                  messageText.classList.add('message-content');
@@ -537,22 +542,26 @@
                  if (format.isItalic === true) { messageText.style.fontStyle = 'italic'; }
                  if (format.color && format.color !== '#FFFFFF') { messageText.style.color = format.color; }
                  
-                 // ... (URL parsing logic) ...
-                 messageText.textContent = text; // Fallback: assign text content
+                 // URL parsing... (Simplified for brevity)
+                 messageText.textContent = text; 
                  contentContainer.appendChild(messageText);
 
              }
              
-             // ... (timestamp, deleteBtn logic) ...
-
+             const date = new Date(data.timestamp);
+             const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+             const timeText = document.createTextNode(` [${timeString}]: `);
+             senderSpan.appendChild(timeText);
+             
              contentContainer.prepend(senderSpan);
              messageElement.appendChild(contentContainer);
              
              chatbox.appendChild(messageElement);
              chatbox.scrollTop = chatbox.scrollHeight;
         }
+
         
-        // --- LOGIC ΓΙΑ FORMATTING BUTTONS (ΕΠΑΝΑΛΕΙΤΟΥΡΓΙΑ) ---
+        // --- ΛΟΓΙΚΗ FORMATTING BUTTONS ---
         boldBtn.addEventListener('click', () => toggleFormatting('isBold', boldBtn));
         italicBtn.addEventListener('click', () => toggleFormatting('isItalic', italicBtn));
         
@@ -561,50 +570,57 @@
         colorPicker.addEventListener('input', (e) => {
             formattingState.color = e.target.value;
             colorBtn.style.backgroundColor = e.target.value;
-            colorBtn.classList.add('active');
+            colorBtn.classList.add('active'); 
+            // Εφαρμογή χρώματος στο input για προεπισκόπηση
+            messageInput.style.color = e.target.value;
         });
         
         function toggleFormatting(formatKey, button) {
             if (formatKey === 'color') { return; }
             formattingState[formatKey] = !formattingState[formatKey];
             button.classList.toggle('active', formattingState[formatKey]);
+            
             // Προεπισκόπηση στο input
             messageInput.style.fontWeight = formattingState.isBold ? 'bold' : 'normal';
             messageInput.style.fontStyle = formattingState.isItalic ? 'italic' : 'normal';
         }
         
-        // --- SEND MESSAGE LOGIC (UPDATED FOR FORMATTING) ---
+        // --- SEND MESSAGE LOGIC ---
         sendBtn.addEventListener('click', () => {
             const rawMessage = messageInput.value.trim();
-            if (rawMessage) {
-                if (ws.readyState === WebSocket.OPEN) {
-                    const formattedMessage = JSON.stringify({
-                        text: rawMessage,
-                        isBold: formattingState.isBold,
-                        isItalic: formattingState.isItalic,
-                        color: formattingState.color
-                    });
-                    
-                    ws.send(JSON.stringify({ type: 'chatMessage', message: formattedMessage }));
-                    messageInput.value = '';
-                    
-                    // Reset formatting state and buttons after sending
-                    formattingState = { isBold: false, isItalic: false, color: '#FFFFFF' };
-                    boldBtn.classList.remove('active');
-                    italicBtn.classList.remove('active');
-                    colorBtn.style.backgroundColor = 'rgba(0, 123, 255, 0.5)';
-                    colorBtn.classList.remove('active');
-                    messageInput.style.fontWeight = 'normal';
-                    messageInput.style.fontStyle = 'normal';
-
-                } else {
-                    alert('Η σύνδεση στο chat δεν είναι έτοιμη.');
-                }
+            if (rawMessage && ws.readyState === WebSocket.OPEN) {
+                const formattedMessage = JSON.stringify({
+                    text: rawMessage,
+                    isBold: formattingState.isBold,
+                    isItalic: formattingState.isItalic,
+                    color: formattingState.color
+                });
+                
+                ws.send(JSON.stringify({ type: 'chatMessage', message: formattedMessage }));
+                messageInput.value = '';
+                
+                // Reset formatting state and buttons after sending
+                formattingState = { isBold: false, isItalic: false, color: '#FFFFFF' };
+                boldBtn.classList.remove('active');
+                italicBtn.classList.remove('active');
+                colorBtn.style.backgroundColor = 'rgba(0, 123, 255, 0.5)';
+                colorBtn.classList.remove('active');
+                
+                // Reset input bar style
+                messageInput.style.fontWeight = 'normal';
+                messageInput.style.fontStyle = 'normal';
+                messageInput.style.color = 'white'; // Επαναφορά χρώματος input σε λευκό
+            } else if (ws.readyState !== WebSocket.OPEN) {
+                 alert('Η σύνδεση στο chat δεν είναι έτοιμη.');
             }
         });
 
+        // --- ΔΙΟΡΘΩΣΗ: ΑΠΟΣΤΟΛΗ ΜΕ ENTER ---
         messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') { sendBtn.click(); }
+            if (e.key === 'Enter') { 
+                e.preventDefault(); // Αποτρέπει την προσθήκη νέας γραμμής στο input
+                sendBtn.click(); 
+            }
         });
         
         // --- CLOSING PANELS LOGIC ---
