@@ -7,23 +7,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        /* --- CSS STYLING --- */
-        body {
-            font-family: 'Merriweather', serif;
+        /* --- CSS STYLING: FULL SCREEN CHANGES --- */
+        html, body {
+            height: 100%;
+            width: 100%;
             margin: 0;
             padding: 0;
+            overflow: hidden; /* Αποφυγή scrollbars στο body */
+        }
+        
+        body {
+            font-family: 'Merriweather', serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            /* Κρατάμε ένα ελαφρύ φόντο για το υπόλοιπο της σελίδας */
             background-color: #f0f2f5; 
         }
+        
         .container {
-            width: 80%;
-            max-width: 800px;
-            height: 90%;
-            /* Αφαιρούμε το πλαίσιο του container */
+            /* Τώρα καταλαμβάνει 100% του body/viewport */
+            width: 100%; 
+            height: 100%; 
+            max-width: none; /* Αφαιρούμε το max-width */
+            max-height: none; /* Αφαιρούμε το max-height */
+
             background: none; 
             box-shadow: none;
             border-radius: 0;
@@ -31,16 +38,19 @@
             flex-direction: column;
             position: relative;
         }
+        
+        /* --- REST OF STYLES (ΜΙΚΡΕΣ ΤΡΟΠΟΠΟΙΗΣΕΙΣ) --- */
+        
         #header {
             padding: 15px;
             background: #007bff;
             color: white;
-            /* Αφαιρούμε το πλαίσιο */
             border-top-left-radius: 0;
             border-top-right-radius: 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0; /* Δεν θα μικραίνει */
         }
         #header h2 {
             margin: 0;
@@ -61,19 +71,17 @@
             display: flex;
             flex-grow: 1;
             overflow: hidden;
-            /* Προσθέτουμε ένα ελαφρύ πλαίσιο για να ξεχωρίζει από το Admin Panel/Settings */
             border-bottom: 1px solid #ccc; 
         }
         #chatbox {
             flex-grow: 1;
             padding: 20px;
             overflow-y: auto;
-            /* Αφαιρούμε το κάτω περίγραμμα */
             border-bottom: none; 
             display: flex;
             flex-direction: column;
 
-            /* ΕΔΩ ΠΡΟΣΤΙΘΕΤΑΙ ΤΟ BACKGROUND IMAGE ΣΤΟ ΠΑΡΑΘΥΡΟ ΤΟΥ CHAT */
+            /* BACKGROUND IMAGE */
             background-image: url('akoyme_background.png'); 
             background-size: cover;
             background-position: center;
@@ -82,7 +90,6 @@
         .message {
             margin-bottom: 10px;
             padding: 8px 12px;
-            /* ΑΦΑΙΡΟΥΜΕ ΤΟ ΠΛΑΙΣΙΟ/ΦΟΥΣΚΑ ΤΩΝ ΜΗΝΥΜΑΤΩΝ */
             border-radius: 0; 
             word-wrap: break-word;
             max-width: 70%;
@@ -90,7 +97,6 @@
             align-self: flex-start;
             display: flex;
             align-items: center;
-            /* Ελαφρύ σκιά/πλαίσιο για να φαίνεται πάνω από την εικόνα φόντου */
             box-shadow: 0 1px 2px rgba(0,0,0,0.2); 
         }
         .avatar {
@@ -130,20 +136,21 @@
         }
         /* Χρωματισμός μηνυμάτων ανά ρόλο */
         .user-message {
-            background-color: rgba(230, 230, 250, 0.9); /* Ελαφρώς διαφανές */
+            background-color: rgba(230, 230, 250, 0.9); 
         }
         .admin-message {
-            background-color: rgba(255, 204, 203, 0.9); /* Ελαφρώς διαφανές */
+            background-color: rgba(255, 204, 203, 0.9); 
         }
         .moderator-message {
-            background-color: rgba(176, 224, 230, 0.9); /* Ελαφρώς διαφανές */
+            background-color: rgba(176, 224, 230, 0.9); 
         }
         #input-container {
             display: flex;
             padding: 15px;
-            border-top: none; /* Αφαιρούμε το πλαίσιο */
+            border-top: none; 
             position: relative;
-            background-color: rgba(255, 255, 255, 0.9); /* Λευκό φόντο για το input */
+            background-color: rgba(255, 255, 255, 0.9); 
+            flex-shrink: 0; /* Δεν θα μικραίνει */
         }
         #messageInput {
             flex-grow: 1;
@@ -180,6 +187,7 @@
             display: none;
             width: 250px;
             overflow-y: auto;
+            flex-shrink: 0; /* Δεν θα μικραίνει */
         }
         /* ... (Ο υπόλοιπος CSS κώδικας για admin-panel/settings παραμένει ίδιος) ... */
         #admin-panel h3 {
@@ -241,6 +249,7 @@
             display: none;
             width: 250px;
             overflow-y: auto;
+            flex-shrink: 0; /* Δεν θα μικραίνει */
         }
         #current-avatar-container {
             text-align: center;
