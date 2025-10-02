@@ -13,17 +13,52 @@ const LocalStrategy = require('passport-local').Strategy;
 const multer = require('multer'); // Προσθήκη multer
 const { v4: uuidv4 } = require('uuid'); // Για μοναδικά ονόματα αρχείων
 
+const express = require('express');
+const http = require('http');
+const path = require('path');
+const { Pool } = require('pg');
+const session = require('express-session');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
+const expressWs = require('express-ws');
+const WebSocket = require('ws');
+const bcrypt = require('bcryptjs');
+const LocalStrategy = require('passport-local').Strategy;
+const multer = require('multer'); 
+const { v4: uuidv4 } = require('uuid'); 
+const fs = require('fs'); // Προσθήκη fs για έλεγχο φακέλου
+
 const app = express();
-const server = http.createServer(app);
-app.use((req, res, next) => {
-    if (req.header('x-forwarded-proto') !== 'https') {
-        res.redirect(`https://${req.header('host')}${req.url}`);
+const server = http.createServer(app); // Χρειάζεσαι τον server για το expressWs
+const wsInstance = expressWs(app, server); // Τοποθέτηση εδώ
+
+// 1. ΔΗΛΩΣΗ STATIC FILES (ΠΡΩΤΑ!):
+// Εξυπηρετεί τα αρχεία του root (chat.html, akoyme_background.png, login.html)
+app.use(express.static(__dirname));
+
+// Δημιουργία του φακέλου 'uploads' αν δεν υπάρχει (Πρέπει να γίνει πριν την χρήση του)
+const uploadDir = 'uploads';
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+
+// 2. ΕΞΥΠΗΡΕΤΗΣΗ UPLOADS:
+// Εξυπηρετεί τον φάκελο uploads για τα avatar.
+// Η γραμμή αυτή πρέπει να είναι μία, και την βάζουμε εδώ.
+app.use('/uploads', express.static('uploads'));
+
+// Η route /chat (Επειδή το chat.html βρίσκεται πλέον στο root, η static middleware το καλύπτει,
+// αλλά αφήνουμε την route για να κάνουμε redirect)
+app.get('/chat', (req, res) => {
+    // Χρησιμοποιούμε τη λογική του isAuthenticated για έλεγχο
+    if (req.isAuthenticated()) {
+        res.sendFile(path.join(__dirname, 'chat.html'));
     } else {
-        next();
+        res.redirect('/');
     }
 });
 
-const wsInstance = expressWs(app, server);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -40,7 +75,8 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Δημιουργία του φακέλου 'uploads' αν δεν υπάρχει
+// ... Ο υπόλοιπος κώδικας (Pool, Session, Passport, Routes, κλπ) συνεχίζει εδώ...
+// ...// Δημιουργία του φακέλου 'uploads' αν δεν υπάρχει
 const fs = require('fs');
 const uploadDir = 'uploads';
 if (!fs.existsSync(uploadDir)) {

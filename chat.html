@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        /* ΕΠΑΝΑΦΟΡΑ ΟΛΟΥ ΤΟΥ CSS ΓΙΑ ΔΙΟΡΘΩΣΗ ΤΗΣ ΕΜΦΑΝΙΣΗΣ */
+        /* --- CSS STYLING --- */
         body {
             font-family: 'Merriweather', serif;
             margin: 0;
@@ -17,7 +17,7 @@
             align-items: center;
             height: 100vh;
             
-            /* ΕΔΩ ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ Η ΕΙΚΟΝΑ ΦΟΝΤΟΥ - ΕΛΕΓΞΕ ΤΟ PATH! */
+            /* ΕΔΩ ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ Η ΕΙΚΟΝΑ ΦΟΝΤΟΥ */
             background-image: url('akoyme_background.png'); 
             background-size: cover;
             background-position: center;
@@ -160,7 +160,7 @@
             cursor: pointer;
             padding: 0;
             margin-left: 10px;
-            line-height: 1; /* Διόρθωση ευθυγράμμισης */
+            line-height: 1; 
         }
         #admin-panel {
             padding: 20px;
@@ -363,6 +363,8 @@
                 // ΔΕΔΟΜΕΝΟΥ ΟΤΙ Ο ΡΟΛΟΣ ΦΟΡΤΩΘΗΚΕ, ΖΗΤΑΜΕ ΞΑΝΑ ΤΑ ΜΗΝΥΜΑΤΑ
                 // ΓΙΑ ΝΑ ΕΜΦΑΝΙΣΤΕΙ ΤΟ ΚΟΥΜΠΙ ΔΙΑΓΡΑΦΗΣ
                 if (data.role === 'admin') {
+                     // Αυτό στέλνει ένα μήνυμα στον server για να πάρει τα παλιά μηνύματα
+                     // και να τα εμφανίσει ξανά με το deleteBtn.
                      ws.send(JSON.stringify({ type: 'requestOldMessages' })); 
                 }
 
@@ -387,10 +389,6 @@
                 }
             }
         });
-
-        // Toggle Admin Panel
-        // Εάν ο Admin Panel είναι ήδη ανοιχτός, κλείσε τον όταν κάνεις κλικ στις Ρυθμίσεις
-        // Εάν το Admin Panel πρέπει να ανοίξει, αυτό γίνεται παραπάνω στο fetch.
 
         document.addEventListener('click', (e) => {
             // Κλείνει τα panels αν κάνεις κλικ έξω από αυτά
@@ -520,7 +518,6 @@
 
             const avatarImg = document.createElement('img');
             avatarImg.classList.add('avatar');
-            // Αυτό είναι το path που βγάζει 404. Βεβαιώσου ότι ο φάκελος 'uploads' σερβίρεται σωστά.
             avatarImg.src = data.avatarUrl || 'uploads/default-avatar.png'; 
             messageElement.appendChild(avatarImg);
 
@@ -531,19 +528,16 @@
             senderSpan.classList.add('sender');
             
             // Τοποθετούμε το όνομα και το badge στον ίδιο span
-            const nameAndTime = document.createElement('span');
-            nameAndTime.textContent = data.displayName;
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = data.displayName;
             if (data.role === 'admin') {
                 const adminBadge = document.createElement('span');
                 adminBadge.classList.add('admin-badge');
                 adminBadge.textContent = 'Admin';
-                nameAndTime.appendChild(adminBadge);
+                nameSpan.appendChild(adminBadge);
             }
-            const date = new Date(data.timestamp);
-            const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            nameAndTime.appendChild(document.createTextNode(` [${timeString}]: `));
             
-            senderSpan.appendChild(nameAndTime);
+            senderSpan.appendChild(nameSpan);
 
 
             const isGif = data.message && data.message.startsWith('https://media');
@@ -560,20 +554,26 @@
             }
 
             
+            const date = new Date(data.timestamp);
+            const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            const timeText = document.createTextNode(` [${timeString}]: `);
+            senderSpan.appendChild(timeText);
+
             const deleteBtn = document.createElement('button');
             deleteBtn.classList.add('delete-btn');
             deleteBtn.innerHTML = '&#x2715;';
             deleteBtn.title = 'Διαγραφή μηνύματος';
             
-            // ΛΟΓΙΚΗ ΓΙΑ ΤΗΝ ΕΜΦΑΝΙΣΗ ΤΟΥ ΚΟΥΜΠΙΟΥ ΔΙΑΓΡΑΦΗΣ (ΔΙΟΡΘΩΜΕΝΗ)
+            // ΛΟΓΙΚΗ ΓΙΑ ΤΗΝ ΕΜΦΑΝΙΣΗ ΤΟΥ ΚΟΥΜΠΙΟΥ ΔΙΑΓΡΑΦΗΣ
             if (currentUserRole === 'admin') { 
-                deleteBtn.style.display = 'inline-block'; // Χρησιμοποιούμε inline-block για να εμφανίζεται σωστά
+                deleteBtn.style.display = 'inline-block'; 
                 deleteBtn.addEventListener('click', async () => {
                     if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το μήνυμα;')) {
                         try {
+                            // Χρησιμοποιούμε το messageId που έρχεται από τον server
                             const res = await fetch(`/delete-message/${data.id}`, { method: 'DELETE' }); 
                             if (!res.ok) {
-                                // Εμφανίζει το σφάλμα που βλέπεις στην εικόνα_cccf66.png
                                 alert('Αποτυχία διαγραφής μηνύματος.'); 
                             }
                         } catch (error) {
@@ -585,7 +585,7 @@
                 deleteBtn.style.display = 'none'; 
             }
 
-            // Επειδή το deleteBtn είναι μέσα στο senderSpan, αυτό θα τοποθετηθεί δίπλα στο όνομα.
+            // Τοποθετούμε το κουμπί διαγραφής
             if (currentUserRole === 'admin') {
                 senderSpan.appendChild(deleteBtn);
             }
@@ -704,9 +704,7 @@
                 gifResults.appendChild(img);
             });
         }
-    // ΤΕΛΟΣ document.addEventListener('DOMContentLoaded', () => {
     }); 
-    // ΣΗΜΑΝΤΙΚΟ: ΑΦΑΙΡΕΘΗΚΕ Η ΠΕΡΙΤΤΗ ΑΓΚΥΛΗ } ΠΟΥ ΠΡΟΚΑΛΟΥΣΕ ΤΟ SyntaxError.
 </script>
     </body>
 </html>
