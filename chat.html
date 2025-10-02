@@ -5,15 +5,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libsers/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        /* --- CSS STYLING: FULL SCREEN CHANGES --- */
+        /* --- CSS STYLING: FULL SCREEN, TRANSPARENT MESSAGES & COLORED NAMES --- */
         html, body {
             height: 100%;
             width: 100%;
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Αποφυγή scrollbars στο body */
+            overflow: hidden; 
         }
         
         body {
@@ -25,11 +25,10 @@
         }
         
         .container {
-            /* Τώρα καταλαμβάνει 100% του body/viewport */
             width: 100%; 
             height: 100%; 
-            max-width: none; /* Αφαιρούμε το max-width */
-            max-height: none; /* Αφαιρούμε το max-height */
+            max-width: none; 
+            max-height: none; 
 
             background: none; 
             box-shadow: none;
@@ -38,8 +37,6 @@
             flex-direction: column;
             position: relative;
         }
-        
-        /* --- REST OF STYLES (ΜΙΚΡΕΣ ΤΡΟΠΟΠΟΙΗΣΕΙΣ) --- */
         
         #header {
             padding: 15px;
@@ -50,7 +47,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-shrink: 0; /* Δεν θα μικραίνει */
+            flex-shrink: 0; 
         }
         #header h2 {
             margin: 0;
@@ -87,9 +84,11 @@
             background-position: center;
             background-repeat: no-repeat;
         }
+        
+        /* --- MESSAGES STYLING --- */
         .message {
             margin-bottom: 10px;
-            padding: 8px 12px;
+            padding: 8px 12px; 
             border-radius: 0; 
             word-wrap: break-word;
             max-width: 70%;
@@ -97,8 +96,49 @@
             align-self: flex-start;
             display: flex;
             align-items: center;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2); 
+            
+            box-shadow: none; 
+            background: none !important; 
         }
+        
+        /* Βασικό χρώμα κειμένου μηνυμάτων: Λευκό με σκιά για αναγνωσιμότητα */
+        .message-content {
+             text-shadow: 0 0 3px rgba(0, 0, 0, 0.6), 0 0 3px rgba(255, 255, 255, 0.6); 
+             color: white; 
+             font-weight: 400; /* Κανονική γραμματοσειρά για το μήνυμα */
+        }
+        
+        /* Χρωματισμός Ονόματος Χρήστη */
+        .message .sender {
+             font-weight: bold;
+             text-shadow: 0 0 3px rgba(0, 0, 0, 0.8); /* Εντονότερη σκιά για το όνομα */
+        }
+        
+        /* 1. Χρώμα για απλούς Χρήστες (Sender Name) */
+        .user-message .sender {
+            color: white; 
+        }
+        
+        /* 2. Χρώμα για Moderators (Sender Name) */
+        .moderator-message .sender {
+            color: cyan; /* Ανοιχτό Μπλε */
+        }
+        
+        /* 3. Χρώμα για Admins (Sender Name) */
+        .admin-message .sender {
+            color: gold; /* Χρυσό/Κίτρινο */
+        }
+        
+        .admin-badge {
+            background-color: #f5c518;
+            color: black; 
+            font-size: 0.7em;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+            text-shadow: none; 
+        }
+        
         .avatar {
             width: 40px;
             height: 40px;
@@ -111,7 +151,6 @@
             flex-direction: column;
         }
         .message .sender {
-            font-weight: bold;
             display: block;
             margin-bottom: 2px;
             display: flex; 
@@ -126,31 +165,14 @@
             display: block;
             margin-top: 5px;
         }
-        .admin-badge {
-            background-color: #f5c518;
-            color: black;
-            font-size: 0.7em;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 5px;
-        }
-        /* Χρωματισμός μηνυμάτων ανά ρόλο */
-        .user-message {
-            background-color: rgba(230, 230, 250, 0.9); 
-        }
-        .admin-message {
-            background-color: rgba(255, 204, 203, 0.9); 
-        }
-        .moderator-message {
-            background-color: rgba(176, 224, 230, 0.9); 
-        }
+        
         #input-container {
             display: flex;
             padding: 15px;
             border-top: none; 
             position: relative;
             background-color: rgba(255, 255, 255, 0.9); 
-            flex-shrink: 0; /* Δεν θα μικραίνει */
+            flex-shrink: 0; 
         }
         #messageInput {
             flex-grow: 1;
@@ -179,6 +201,7 @@
             padding: 0;
             margin-left: 10px;
             line-height: 1; 
+            text-shadow: none; 
         }
         #admin-panel {
             padding: 20px;
@@ -187,7 +210,7 @@
             display: none;
             width: 250px;
             overflow-y: auto;
-            flex-shrink: 0; /* Δεν θα μικραίνει */
+            flex-shrink: 0; 
         }
         /* ... (Ο υπόλοιπος CSS κώδικας για admin-panel/settings παραμένει ίδιος) ... */
         #admin-panel h3 {
@@ -249,7 +272,7 @@
             display: none;
             width: 250px;
             overflow-y: auto;
-            flex-shrink: 0; /* Δεν θα μικραίνει */
+            flex-shrink: 0; 
         }
         #current-avatar-container {
             text-align: center;
@@ -566,7 +589,7 @@
             messageElement.dataset.messageId = data.id || data.messageId; // Υποστήριξη και για τα δύο πεδία
             messageElement.dataset.userId = data.user_id || data.userId;
 
-            // Apply role-based color
+            // Apply role-based color (Τώρα είναι διαφανές, αλλά κρατάμε τις κλάσεις)
             switch (data.role) {
                 case 'admin':
                     messageElement.classList.add('admin-message');
