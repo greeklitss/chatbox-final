@@ -4,43 +4,30 @@
     <title>Chatbox</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libsers/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        /* --- CSS STYLING: FULL SCREEN & MINIMALISM --- */
+        /* --- GLOBAL & STRUCTURE --- */
         html, body {
             height: 100%;
             width: 100%;
             margin: 0;
             padding: 0;
             overflow: hidden; 
-        }
-        
-        body {
-            font-family: 'Merriweather', serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f2f5; 
+            font-family: 'Roboto', sans-serif;
+            background-color: #121212; /* Επαγγελματικό σκούρο φόντο */
+            color: #E0E0E0;
         }
         
         .container {
             width: 100%; 
             height: 100%; 
-            max-width: none; 
-            max-height: none; 
-            background: none; 
-            box-shadow: none; 
-            border-radius: 0;
             display: flex;
             flex-direction: column;
             position: relative;
         }
-
-        /* --- ΑΦΑΙΡΕΣΗ HEADER/ΠΕΡΙΤΩΝ ΣΤΟΙΧΕΙΩΝ --- */
-        #header { display: none !important; }
         
+        /* --- CHATBOX & BACKGROUND --- */
         #chatbox-container {
             display: flex;
             flex-grow: 1;
@@ -54,14 +41,17 @@
             display: flex;
             flex-direction: column;
             position: relative; 
-            /* Βεβαιωθείτε ότι το 'akoyme_background.png' υπάρχει στο φάκελο 'static' του server */
+            background-color: #1A1A1A; /* Πολύ σκούρο φόντο chat */
+            
+            /* Background Image (Αν υπάρχει) */
+            /* Αντικαταστήστε το 'akoyme_background.png' με το σωστό path! */
             background-image: url('akoyme_background.png'); 
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
         }
 
-        /* --- DARK OVERLAY (70% opacity) --- */
+        /* Overlay για να φαίνεται το κείμενο πάνω από την εικόνα */
         #chatbox::after {
             content: '';
             position: absolute;
@@ -69,56 +59,58 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.7); 
+            background: rgba(0, 0, 0, 0.6); /* Ελαφρώς πιο ανοιχτό overlay */
             z-index: 1; 
         }
         
-        /* --- ΕΝΤΕΛΩΣ ΔΙΑΦΑΝΗ ΜΗΝΥΜΑΤΑ --- */
+        /* --- MESSAGES --- */
         .message {
             z-index: 2; 
-            margin-bottom: 12px; 
+            margin-bottom: 15px; 
             padding: 5px 0; 
             word-wrap: break-word;
-            max-width: 80%; 
-            align-self: flex-start !important; 
+            max-width: 90%; 
             display: flex;
             align-items: flex-start;
-            background: none !important; 
-            box-shadow: none; 
         }
-        
-        .message-content {
-             text-shadow: none; 
-             color: white; 
-             font-weight: 400; 
-        }
-        
-        .message .sender {
-             font-weight: 700;
-             text-shadow: 0 0 2px rgba(0, 0, 0, 0.8); 
-        }
-        
-        .user-message .sender { color: #ffffff; }
-        .moderator-message .sender { color: #99FFFF; text-shadow: 0 0 5px rgba(153, 255, 255, 0.6); }
-        .admin-message .sender { color: #FFD700; text-shadow: 0 0 5px rgba(255, 215, 0, 0.6); }
         
         .avatar {
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
             margin-right: 10px;
             object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, 0.6); 
+            border: 2px solid #444; 
             flex-shrink: 0; 
         }
+        
+        .message-content-container {
+            display: flex;
+            flex-direction: column;
+        }
 
-        /* --- INPUT BAR & BUTTONS: FULLY TRANSPARENT & ICONS ONLY --- */
+        .sender {
+             font-weight: 700;
+             font-size: 0.9em;
+             margin-bottom: 3px;
+        }
+        
+        .user-message .sender { color: #8888FF; } /* Πιο απαλό μπλε */
+        .moderator-message .sender { color: #32CD32; } /* Πράσινο */
+        .admin-message .sender { color: #FFD700; } /* Χρυσό */
+        
+        .message-content {
+             color: #E0E0E0; /* Απαλό λευκό */
+             font-size: 1em;
+             line-height: 1.4;
+        }
+
+        /* --- INPUT & FORMATTING BAR --- */
         #input-container {
             display: flex;
             flex-direction: column; 
             padding: 10px 15px; 
-            background-color: transparent !important; 
-            box-shadow: none; 
+            background-color: #282828; /* Σκούρο γκρι φόντο input bar */
             flex-shrink: 0; 
             z-index: 10;
         }
@@ -132,60 +124,60 @@
         #formatting-bar {
             display: flex;
             justify-content: flex-start;
-            padding-bottom: 5px;
+            padding-bottom: 8px;
             width: 100%;
         }
 
-        /* Κουμπιά (Icons Only) */
+        /* Κουμπιά */
         .format-btn, #urlBtn, #emojiBtn, #gifBtn, #sendBtn {
             border: none;
-            width: 40px; 
-            height: 40px; 
+            width: 38px; 
+            height: 38px; 
             padding: 0; 
             border-radius: 5px;
             cursor: pointer;
             margin-right: 5px;
             font-size: 18px;
-            
-            background-color: rgba(0, 123, 255, 0.5); 
-            color: white;
+            background-color: #3A3A3A; 
+            color: #E0E0E0;
+            transition: background-color 0.2s;
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        .format-btn:hover, #urlBtn:hover, #emojiBtn:hover, #gifBtn:hover, #sendBtn:hover {
-            background-color: #007bff; 
+        .format-btn:hover, #urlBtn:hover, #emojiBtn:hover, #gifBtn:hover {
+            background-color: #555555; 
         }
-        .format-btn.active {
-            background-color: #007bff;
+        .format-btn.active, #sendBtn {
+            background-color: #007bff; 
         }
 
         #sendBtn {
             width: 50px; 
             margin-left: 5px;
-            margin-right: 0;
             font-size: 20px;
         }
         
-        /* ΕΠΑΝΟΡΑΤΟΤΗΤΑ ΚΕΙΜΕΝΟΥ ΚΑΙ PLACEHOLDER */
+        /* INPUT FIELD: Εγγύηση Ορατότητας */
         #messageInput {
             flex-grow: 1;
             padding: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.5); 
+            border: 1px solid #444; 
             border-radius: 5px;
             margin-right: 10px;
-            background-color: rgba(255, 255, 255, 0.05); 
+            background-color: #3A3A3A; /* Σκούρο φόντο input */
             
             /* ΕΠΙΒΟΛΗ: Το κείμενο εισαγωγής είναι πάντα λευκό */
             color: white !important; 
             
-            text-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+            font-size: 1em;
             transition: border-color 0.3s;
         }
 
-        /* ΕΠΙΒΟΛΗ: Πολύ διαφανές placeholder */
+        /* Placeholder */
         #messageInput::placeholder {
-            color: rgba(255, 255, 255, 0.15) !important; 
+            color: #999 !important; /* Πιο ορατό γκρι placeholder */
+            opacity: 1 !important;
         }
         #messageInput:focus {
              border-color: #007bff;
@@ -193,41 +185,8 @@
         }
 
         /* --- MENU ΡΥΘΜΙΣΕΩΝ --- */
-        #settings-menu {
-             position: fixed;
-             top: 55px; 
-             right: 15px;
-             background: rgba(0, 0, 0, 0.9);
-             border-radius: 5px;
-             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-             padding: 5px 0;
-             z-index: 101; 
-             width: 200px;
-             display: none; 
-             flex-direction: column;
-        }
-
-        .menu-item {
-             background: none;
-             color: white;
-             border: none;
-             padding: 10px 15px;
-             text-align: left;
-             width: 100%;
-             cursor: pointer;
-             font-size: 14px;
-             transition: background-color 0.2s;
-        }
-        .menu-item:hover {
-             background-color: rgba(255, 255, 255, 0.1);
-        }
-        .menu-item i {
-             margin-right: 10px;
-        }
-        
-        /* Κουμπί Menu (Γρανάζι) */
         #menuToggleBtn {
-            background-color: rgba(0, 123, 255, 0.7);
+            background-color: #007bff;
             color: white;
             border: none;
             width: 40px; 
@@ -244,10 +203,41 @@
             z-index: 100;
         }
         
-        /* Admin/Profile Panels (fixed to take up right side) */
+        #settings-menu {
+             position: fixed;
+             top: 55px; 
+             right: 15px;
+             background: #282828;
+             border-radius: 5px;
+             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+             padding: 5px 0;
+             z-index: 101; 
+             width: 200px;
+             display: none; 
+             flex-direction: column;
+        }
+
+        .menu-item {
+             background: none;
+             color: #E0E0E0;
+             border: none;
+             padding: 10px 15px;
+             text-align: left;
+             width: 100%;
+             cursor: pointer;
+             font-size: 14px;
+             transition: background-color 0.2s;
+        }
+        .menu-item:hover {
+             background-color: #3A3A3A;
+        }
+        .menu-item i {
+             margin-right: 10px;
+        }
+        
         #admin-panel, #profile-settings {
-             background: rgba(0, 0, 0, 0.85); 
-             color: white;
+             background: #1A1A1A; 
+             color: #E0E0E0;
              padding: 20px;
              position: fixed; 
              top: 0; 
@@ -272,7 +262,7 @@
             <div id="settings-menu" style="display: none;">
                 <button id="menuProfileBtn" class="menu-item"><i class="fas fa-user-circle"></i> Ρυθμίσεις Προφίλ</button>
                 <button id="menuAdminBtn" class="menu-item"><i class="fas fa-shield-alt"></i> Admin Panel</button>
-                <hr style="border-color: rgba(255, 255, 255, 0.2); margin: 5px 0;">
+                <hr style="border-color: #444; margin: 5px 0;">
                 <button id="menuLogoutBtn" class="menu-item" style="color: #ff6b6b;"><i class="fas fa-sign-out-alt"></i> Αποσύνδεση</button>
             </div>
 
@@ -304,25 +294,23 @@
                 <button class="format-btn" id="italicBtn" data-format="isItalic" title="Italic"><i class="fas fa-italic"></i></button>
                 <button class="format-btn" id="colorBtn" data-format="color" title="Color"><i class="fas fa-palette"></i></button>
                 <input type="color" id="colorPicker" style="display: none;">
-            </div>
+                </div>
             
             <div id="messageInputRow">
                 <input type="text" id="messageInput" placeholder="Πληκτρολογήστε ένα μήνυμα..." autocomplete="off">
-                <button id="urlBtn" title="Εισαγωγή URL"><i class="fas fa-link"></i></button>
-                <button id="emojiBtn" title="Emojis">😊</button>
-                <button id="gifBtn" title="GIF"><i class="fas fa-gift"></i></button>
                 <button id="sendBtn" disabled title="Αποστολή"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
     
-    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
-    <emoji-picker id="emojiPicker"></emoji-picker>
-
-    <div id="gifPicker">
-        <input type="text" id="gifSearchInput" placeholder="Αναζήτηση GIF...">
-        <div id="gifResults"></div>
-    </div>
+    <script>
+        // Placeholders for Emoji/GIF logic if needed later
+        /*
+        <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+        <emoji-picker id="emojiPicker"></emoji-picker>
+        <div id="gifPicker"><input type="text" id="gifSearchInput" placeholder="Αναζήτηση GIF..."><div id="gifResults"></div></div>
+        */
+    </script>
 
     
 <script>
@@ -334,7 +322,7 @@
         const adminPanel = document.getElementById('admin-panel');
         const profileSettings = document.getElementById('profile-settings');
         const currentAvatar = document.getElementById('current-avatar');
-        const avatarForm = document.getElementById('avatar-form');
+        // const avatarForm = document.getElementById('avatar-form'); // Not used in this snippet
         
         const menuToggleBtn = document.getElementById('menuToggleBtn');
         const settingsMenu = document.getElementById('settings-menu');
@@ -342,18 +330,13 @@
         const menuProfileBtn = document.getElementById('menuProfileBtn');
         const menuAdminBtn = document.getElementById('menuAdminBtn');
 
-        // Κρύβουμε τα panels κατά την εκκίνηση
         adminPanel.style.display = 'none';
         profileSettings.style.display = 'none';
         settingsMenu.style.display = 'none'; 
 
-        const urlBtn = document.getElementById('urlBtn');
-        const emojiBtn = document.getElementById('emojiBtn');
-        const emojiPicker = document.getElementById('emojiPicker');
-        const gifBtn = document.getElementById('gifBtn');
-        const gifPicker = document.getElementById('gifPicker');
-        const gifSearchInput = document.getElementById('gifSearchInput');
-        const gifResults = document.getElementById('gifResults');
+        // const urlBtn = document.getElementById('urlBtn'); // Removed for simplicity
+        // const emojiBtn = document.getElementById('emojiBtn'); // Removed for simplicity
+        // const gifBtn = document.getElementById('gifBtn'); // Removed for simplicity
 
         const boldBtn = document.getElementById('boldBtn');
         const italicBtn = document.getElementById('italicBtn');
@@ -366,9 +349,8 @@
             color: '#FFFFFF' 
         };
 
-        // Υποθέτουμε ότι το websocket setup είναι σωστό
         const ws = new WebSocket('wss://' + window.location.host + '/chat'); 
-        const GIPHY_API_KEY = 'UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs'; 
+        // const GIPHY_API_KEY = 'UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs'; // Not used in this snippet
 
         let currentUserRole = 'user'; 
         let currentUserId = null;
@@ -397,7 +379,7 @@
                     appendMessage(data);
                     break;
                 case 'deleteMessage':
-                    deleteMessage(data.messageId);
+                    // deleteMessage(data.messageId); // Backend logic needed
                     break;
                 case 'clearChat':
                     chatbox.innerHTML = '';
@@ -405,12 +387,11 @@
             }
         };
         
-        // --- PLACEHOLDER FUNCTIONS ---
-        async function loadAdminPanel() { console.log('Admin panel content loading (Backend required)'); }
-        window.changeRole = async function(selectElement) { console.log('Role change initiated (Backend required)'); }
-        // ------------------------------------------------------------------
+        // PLACEHOLDER FUNCTIONS (Απαιτείται Backend)
+        async function loadAdminPanel() { /* ... */ }
+        window.changeRole = async function(selectElement) { /* ... */ }
 
-        // --- ΕΛΕΓΧΟΣ ΡΟΛΟΥ ΚΑΙ MENU LOGIC ---
+        // Fetch User Info
         fetch('/user-info')
             .then(res => {
                 if (!res.ok) throw new Error('Not authenticated');
@@ -420,25 +401,18 @@
                 currentUserRole = data.role; 
                 currentUserId = data.id;
                 
-                // Avatar Logic 
+                // Avatar Logic (Ensure the path is correct: /uploads/ or similar)
                 let avatarSource = '/uploads/default-avatar.png';
-                if (data.avatarUrl && data.avatarUrl !== 'default-avatar.png') {
-                    if (data.avatarUrl.startsWith('/')) {
-                        avatarSource = data.avatarUrl;
-                    } else {
-                        avatarSource = `/uploads/${data.avatarUrl}`; 
-                    }
-                } else if (data.avatarUrl && data.avatarUrl.includes('/uploads/')) {
-                     avatarSource = data.avatarUrl;
+                if (data.avatarUrl) {
+                     avatarSource = data.avatarUrl.startsWith('/') ? data.avatarUrl : `/uploads/${data.avatarUrl}`;
                 }
                 currentAvatar.src = avatarSource;
                 currentAvatar.onerror = function() { this.src = '/uploads/default-avatar.png'; };
                 
-                // Ρύθμιση Εμφάνισης Menu Items βάσει Ρόλου
+                // Menu visibility based on role
                 menuAdminBtn.style.display = (data.role === 'admin') ? 'flex' : 'none'; 
-                menuProfileBtn.style.display = 'flex'; 
                 
-                // Event Listeners για το Menu
+                // Menu Event Listeners
                 menuToggleBtn.addEventListener('click', (e) => {
                     e.stopPropagation(); 
                     settingsMenu.style.display = settingsMenu.style.display === 'flex' ? 'none' : 'flex';
@@ -457,7 +431,7 @@
                     loadAdminPanel();
                 });
                 
-                // Λογική Αποσύνδεσης ΜΕΣΑ στο Menu
+                // Logout Logic
                 menuLogoutBtn.addEventListener('click', async () => {
                      if (confirm('Είστε σίγουροι ότι θέλετε να αποσυνδεθείτε;')) {
                          try {
@@ -480,29 +454,27 @@
             });
         
         
-        // --- ΕΝΙΣΧΥΜΕΝΗ appendMessage (Για JSON/Avatar Fallback) ---
+        // --- appendMessage ---
         function appendMessage(data) {
              const messageElement = document.createElement('div');
              messageElement.classList.add('message');
              messageElement.dataset.messageId = data.id || data.messageId; 
              messageElement.dataset.userId = data.user_id || data.userId;
              
+             // Message Role Styling
              switch (data.role) {
                  case 'admin': messageElement.classList.add('admin-message'); break;
                  case 'moderator': messageElement.classList.add('moderator-message'); break;
                  default: messageElement.classList.add('user-message'); break;
              }
              
+             // Avatar Setup
              const avatarImg = document.createElement('img');
              avatarImg.classList.add('avatar');
              let avatarUrl = '/uploads/default-avatar.png';
              if (data.avatar_url || data.avatarUrl) {
                  const providedUrl = data.avatar_url || data.avatarUrl;
-                  if (providedUrl.startsWith('/')) {
-                      avatarUrl = providedUrl;
-                  } else if (providedUrl !== 'default-avatar.png') {
-                      avatarUrl = `/uploads/${providedUrl}`;
-                  }
+                 avatarUrl = providedUrl.startsWith('/') ? providedUrl : `/uploads/${providedUrl}`;
              }
              avatarImg.src = avatarUrl; 
              avatarImg.onerror = function() { this.src = '/uploads/default-avatar.png'; };
@@ -517,7 +489,8 @@
              nameSpan.textContent = data.displayName;
              senderSpan.appendChild(nameSpan);
 
-             const isGif = data.message && (data.message.startsWith('http://') || data.message.startsWith('https://')) && (data.message.includes('giphy.com') || data.message.includes('media'));
+             // GIF handling (simplified)
+             const isGif = data.message && data.message.includes('giphy.com');
             
              if (isGif) {
                  const gifImage = document.createElement('img');
@@ -529,7 +502,7 @@
                  let text = data.message;
                  let format = {};
                  
-                 // Χειρισμός JSON strings
+                 // Handle JSON formatting from backend
                  try {
                      const parsedData = JSON.parse(text);
                      if (parsedData.text) {
@@ -541,14 +514,13 @@
                  const messageText = document.createElement('span');
                  messageText.classList.add('message-content');
                  
-                 // Εφαρμογή Formatting
+                 // Apply Formatting
                  if (format.isBold === true) { messageText.style.fontWeight = 'bold'; }
                  if (format.isItalic === true) { messageText.style.fontStyle = 'italic'; }
                  if (format.color && format.color !== '#FFFFFF') { messageText.style.color = format.color; }
                  
                  messageText.textContent = text; 
                  contentContainer.appendChild(messageText);
-
              }
              
              const date = new Date(data.timestamp);
@@ -564,7 +536,7 @@
         }
 
         
-        // --- ΛΟΓΙΚΗ FORMATTING BUTTONS (ΠΛΗΡΩΣ ΛΕΙΤΟΥΡΓΙΚΗ) ---
+        // --- ΛΟΓΙΚΗ FORMATTING BUTTONS ---
         boldBtn.addEventListener('click', () => toggleFormatting('isBold', boldBtn));
         italicBtn.addEventListener('click', () => toggleFormatting('isItalic', italicBtn));
         
@@ -575,8 +547,8 @@
             colorBtn.style.backgroundColor = e.target.value;
             colorBtn.classList.add('active'); 
             
-            // ΕΠΙΒΟΛΗ: Εφαρμογή χρώματος στο input (χρησιμοποιούμε setProperty για να παρακάμψουμε το CSS !important)
-            messageInput.style.setProperty('color', e.target.value, 'important');
+            // ΕΠΙΒΟΛΗ: Εφαρμογή χρώματος στο input 
+            messageInput.style.color = e.target.value;
         });
         
         function toggleFormatting(formatKey, button) {
@@ -589,7 +561,7 @@
             messageInput.style.fontStyle = formattingState.isItalic ? 'italic' : 'normal';
         }
         
-        // --- SEND MESSAGE LOGIC (ΠΕΡΙΛΑΜΒΑΝΕΙ RESET) ---
+        // --- SEND MESSAGE LOGIC & ENTER KEY ---
         sendBtn.addEventListener('click', () => {
             const rawMessage = messageInput.value.trim();
             if (rawMessage && ws.readyState === WebSocket.OPEN) {
@@ -607,19 +579,19 @@
                 formattingState = { isBold: false, isItalic: false, color: '#FFFFFF' };
                 boldBtn.classList.remove('active');
                 italicBtn.classList.remove('active');
-                colorBtn.style.backgroundColor = 'rgba(0, 123, 255, 0.5)';
+                colorBtn.style.backgroundColor = '#3A3A3A'; // Reset color button background
                 colorBtn.classList.remove('active');
                 
                 // Reset input bar style (Επαναφορά χρώματος σε λευκό)
                 messageInput.style.fontWeight = 'normal';
                 messageInput.style.fontStyle = 'normal';
-                messageInput.style.setProperty('color', 'white', 'important'); 
+                messageInput.style.color = 'white'; // Επαναφορά χρώματος σε λευκό
             } else if (ws.readyState !== WebSocket.OPEN) {
                  alert('Η σύνδεση στο chat δεν είναι έτοιμη.');
             }
         });
 
-        // --- ΑΠΟΣΤΟΛΗ ΜΕ ENTER ---
+        // ΑΠΟΣΤΟΛΗ ΜΕ ENTER
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') { 
                 e.preventDefault(); 
@@ -627,7 +599,7 @@
             }
         });
         
-        // --- CLOSING PANELS LOGIC ---
+        // CLOSING PANELS LOGIC
         document.addEventListener('click', (e) => { 
             const clickedInsideMenu = settingsMenu.contains(e.target) || menuToggleBtn.contains(e.target);
             const clickedInsideAdmin = adminPanel.contains(e.target);
@@ -643,9 +615,6 @@
                  profileSettings.style.display = 'none';
             }
         });
-
-
-        // ... (emoji/gif logic - Πρέπει να προστεθεί εάν χρειάζεται) ...
     }); 
 </script>
 </body>
