@@ -54,6 +54,7 @@
             display: flex;
             flex-direction: column;
             position: relative; 
+            /* Βεβαιωθείτε ότι το 'akoyme_background.png' υπάρχει στο φάκελο 'static' του server */
             background-image: url('akoyme_background.png'); 
             background-size: cover;
             background-position: center;
@@ -166,6 +167,7 @@
             font-size: 20px;
         }
         
+        /* ΕΠΑΝΟΡΑΤΟΤΗΤΑ ΚΕΙΜΕΝΟΥ ΚΑΙ PLACEHOLDER */
         #messageInput {
             flex-grow: 1;
             padding: 10px;
@@ -174,16 +176,16 @@
             margin-right: 10px;
             background-color: rgba(255, 255, 255, 0.05); 
             
-            /* ΔΙΟΡΘΩΣΗ: Κάνουμε το βασικό χρώμα του κειμένου ΛΕΥΚΟ */
+            /* ΕΠΙΒΟΛΗ: Το κείμενο εισαγωγής είναι πάντα λευκό */
             color: white !important; 
             
             text-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
             transition: border-color 0.3s;
         }
 
-        /* ΔΙΟΡΘΩΣΗ: Κάνουμε το Placeholder πιο ΔΙΑΦΑΝΕΣ */
+        /* ΕΠΙΒΟΛΗ: Πολύ διαφανές placeholder */
         #messageInput::placeholder {
-            color: rgba(255, 255, 255, 0.3); 
+            color: rgba(255, 255, 255, 0.15) !important; 
         }
         #messageInput:focus {
              border-color: #007bff;
@@ -340,6 +342,7 @@
         const menuProfileBtn = document.getElementById('menuProfileBtn');
         const menuAdminBtn = document.getElementById('menuAdminBtn');
 
+        // Κρύβουμε τα panels κατά την εκκίνηση
         adminPanel.style.display = 'none';
         profileSettings.style.display = 'none';
         settingsMenu.style.display = 'none'; 
@@ -363,6 +366,7 @@
             color: '#FFFFFF' 
         };
 
+        // Υποθέτουμε ότι το websocket setup είναι σωστό
         const ws = new WebSocket('wss://' + window.location.host + '/chat'); 
         const GIPHY_API_KEY = 'UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs'; 
 
@@ -401,9 +405,9 @@
             }
         };
         
-        // --- PLACEHOLDER FUNCTIONS (MUST BE IMPLEMENTED IN PYTHON BACKEND) ---
-        async function loadAdminPanel() { /* ... */ }
-        window.changeRole = async function(selectElement) { /* ... */ }
+        // --- PLACEHOLDER FUNCTIONS ---
+        async function loadAdminPanel() { console.log('Admin panel content loading (Backend required)'); }
+        window.changeRole = async function(selectElement) { console.log('Role change initiated (Backend required)'); }
         // ------------------------------------------------------------------
 
         // --- ΕΛΕΓΧΟΣ ΡΟΛΟΥ ΚΑΙ MENU LOGIC ---
@@ -476,7 +480,7 @@
             });
         
         
-        // --- ΕΝΙΣΧΥΜΕΝΗ appendMessage ---
+        // --- ΕΝΙΣΧΥΜΕΝΗ appendMessage (Για JSON/Avatar Fallback) ---
         function appendMessage(data) {
              const messageElement = document.createElement('div');
              messageElement.classList.add('message');
@@ -542,7 +546,6 @@
                  if (format.isItalic === true) { messageText.style.fontStyle = 'italic'; }
                  if (format.color && format.color !== '#FFFFFF') { messageText.style.color = format.color; }
                  
-                 // URL parsing... (Simplified for brevity)
                  messageText.textContent = text; 
                  contentContainer.appendChild(messageText);
 
@@ -561,7 +564,7 @@
         }
 
         
-        // --- ΛΟΓΙΚΗ FORMATTING BUTTONS ---
+        // --- ΛΟΓΙΚΗ FORMATTING BUTTONS (ΠΛΗΡΩΣ ΛΕΙΤΟΥΡΓΙΚΗ) ---
         boldBtn.addEventListener('click', () => toggleFormatting('isBold', boldBtn));
         italicBtn.addEventListener('click', () => toggleFormatting('isItalic', italicBtn));
         
@@ -571,8 +574,9 @@
             formattingState.color = e.target.value;
             colorBtn.style.backgroundColor = e.target.value;
             colorBtn.classList.add('active'); 
-            // Εφαρμογή χρώματος στο input για προεπισκόπηση
-            messageInput.style.color = e.target.value;
+            
+            // ΕΠΙΒΟΛΗ: Εφαρμογή χρώματος στο input (χρησιμοποιούμε setProperty για να παρακάμψουμε το CSS !important)
+            messageInput.style.setProperty('color', e.target.value, 'important');
         });
         
         function toggleFormatting(formatKey, button) {
@@ -585,7 +589,7 @@
             messageInput.style.fontStyle = formattingState.isItalic ? 'italic' : 'normal';
         }
         
-        // --- SEND MESSAGE LOGIC ---
+        // --- SEND MESSAGE LOGIC (ΠΕΡΙΛΑΜΒΑΝΕΙ RESET) ---
         sendBtn.addEventListener('click', () => {
             const rawMessage = messageInput.value.trim();
             if (rawMessage && ws.readyState === WebSocket.OPEN) {
@@ -606,19 +610,19 @@
                 colorBtn.style.backgroundColor = 'rgba(0, 123, 255, 0.5)';
                 colorBtn.classList.remove('active');
                 
-                // Reset input bar style
+                // Reset input bar style (Επαναφορά χρώματος σε λευκό)
                 messageInput.style.fontWeight = 'normal';
                 messageInput.style.fontStyle = 'normal';
-                messageInput.style.color = 'white'; // Επαναφορά χρώματος input σε λευκό
+                messageInput.style.setProperty('color', 'white', 'important'); 
             } else if (ws.readyState !== WebSocket.OPEN) {
                  alert('Η σύνδεση στο chat δεν είναι έτοιμη.');
             }
         });
 
-        // --- ΔΙΟΡΘΩΣΗ: ΑΠΟΣΤΟΛΗ ΜΕ ENTER ---
+        // --- ΑΠΟΣΤΟΛΗ ΜΕ ENTER ---
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') { 
-                e.preventDefault(); // Αποτρέπει την προσθήκη νέας γραμμής στο input
+                e.preventDefault(); 
                 sendBtn.click(); 
             }
         });
@@ -641,7 +645,7 @@
         });
 
 
-        // ... (emoji/gif logic - παραμένουν) ...
+        // ... (emoji/gif logic - Πρέπει να προστεθεί εάν χρειάζεται) ...
     }); 
 </script>
 </body>
