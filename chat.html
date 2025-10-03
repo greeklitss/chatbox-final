@@ -329,7 +329,7 @@
         const menuProfileBtn = document.getElementById('menuProfileBtn');
         const menuAdminBtn = document.getElementById('menuAdminBtn');
         
-        // ΕΠΑΝΑΦΟΡΑ JS References
+        // References για τα κουμπιά που λείπουν/δεν δούλευαν
         const urlBtn = document.getElementById('urlBtn');
         const emojiBtn = document.getElementById('emojiBtn');
         const emojiPicker = document.getElementById('emojiPicker');
@@ -339,6 +339,7 @@
         const italicBtn = document.getElementById('italicBtn');
         const colorBtn = document.getElementById('colorBtn');
         const colorPicker = document.getElementById('colorPicker');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn'); // Νέο
         
         // --- State ---
         let formattingState = {
@@ -368,13 +369,71 @@
                 data.messages.forEach(message => appendMessage(message)); 
             } else if (data.type === 'newMessage') {
                 appendMessage(data);
+            } else if (data.type === 'deleteMessage') { // Χειρισμός διαγραφής
+                const messageEl = document.querySelector(`[data-message-id="${data.messageId}"]`);
+                if (messageEl) messageEl.remove();
+            } else if (data.type === 'clearChat') { // Χειρισμός καθαρισμού ιστορικού
+                chatbox.innerHTML = '';
             }
         };
         
-        // --- PLACEHOLDER FUNCTIONS (Απαιτείται Backend) ---
-        async function loadAdminPanel() { /* ... */ }
+        // --- ADMIN PANEL & USER MANAGEMENT ---
+        async function loadAdminPanel() {
+            try {
+                const res = await fetch('/users');
+                if (!res.ok) throw new Error('Could not fetch users or not authorized.');
+                const users = await res.json();
+                
+                const userList = document.getElementById('userList');
+                userList.innerHTML = '';
+                
+                users.forEach(user => {
+                    if (user.id === currentUserId) return; // Μην εμφανίζουμε τον εαυτό μας
+                    
+                    const div = document.createElement('div');
+                    div.style.marginBottom = '10px';
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = user.display_name + ': ';
+                    nameSpan.style.marginRight = '5px';
+                    
+                    const select = document.createElement('select');
+                    select.dataset.userId = user.id;
+                    ['user', 'moderator', 'admin'].forEach(role => {
+                        const option = document.createElement('option');
+                        option.value = role;
+                        option.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+                        if (user.role === role) option.selected = true;
+                        select.appendChild(option);
+                    });
+                    
+                    select.addEventListener('change', async (e) => {
+                        try {
+                            const newRole = e.target.value;
+                            const updateRes = await fetch('/change-role', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId: user.id, newRole })
+                            });
+                            if (!updateRes.ok) throw new Error('Role update failed');
+                            alert(`Ο ρόλος του ${user.display_name} άλλαξε σε ${newRole}.`);
+                        } catch (err) {
+                            console.error('Error changing role:', err);
+                            alert('Αποτυχία αλλαγής ρόλου.');
+                        }
+                    });
+                    
+                    div.appendChild(nameSpan);
+                    div.appendChild(select);
+                    userList.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Error loading admin panel:', error);
+                alert('Δεν ήταν δυνατή η φόρτωση του Admin Panel.');
+            }
+        }
         
-        // --- USER INFO & AVATAR (Βασικό έλεγχο path) ---
+        // --- USER INFO & AVATAR FIX (για να φαίνονται τα avatars) ---
         fetch('/user-info')
             .then(res => {
                 if (!res.ok) throw new Error('Not authenticated');
@@ -384,23 +443,19 @@
                 currentUserRole = data.role; 
                 currentUserId = data.id;
                 
-                // AVATAR FIX: Ελέγχουμε αν υπάρχει avatarUrl και το φτιάχνουμε σωστά
                 let avatarSource = '/uploads/default-avatar.png'; // Fallback
                 if (data.avatarUrl) {
-                    // Υποθέτουμε ότι αν δεν ξεκινά με /, είναι απλώς το filename
                     avatarSource = data.avatarUrl.startsWith('/') ? data.avatarUrl : `/uploads/${data.avatarUrl}`;
                 }
                 currentAvatar.src = avatarSource;
-                // Εάν αποτύχει η φόρτωση, εμφανίζουμε το default
                 currentAvatar.onerror = function() { this.src = '/uploads/default-avatar.png'; };
                 
-                // Menu visibility based on role
+                // Δείχνει το admin panel μόνο στους admins
                 menuAdminBtn.style.display = (data.role === 'admin') ? 'flex' : 'none'; 
                 
             })
             .catch(error => {
                 console.error('Σφάλμα (User Info / Avatar):', error);
-                // Αν αποτύχει, κρύβουμε τα μενού
                 menuAdminBtn.style.display = 'none'; 
                 menuProfileBtn.style.display = 'none';
             });
@@ -427,17 +482,16 @@
             loadAdminPanel();
         });
         
-        // LOGOUT FIX: (Απαιτεί POST στο Backend)
+        // LOGOUT FIX
         menuLogoutBtn.addEventListener('click', async () => {
              if (confirm('Είστε σίγουροι ότι θέλετε να αποσυνδεθείτε;')) {
                  try {
-                     const res = await fetch('/logout', { method: 'POST' });
+                     // Το server.js έχει σωστά POST, οπότε αυτό δουλεύει.
+                     const res = await fetch('/logout', { method: 'POST' }); 
                      if (res.ok) {
-                         window.location.href = '/login'; 
+                         window.location.href = '/'; // Ανακατεύθυνση στη login page
                      } else {
-                         // Το σφάλμα 405 θα πιαστεί εδώ αν το backend δεν δέχεται POST
-                         alert('Αποτυχία αποσύνδεσης. Ελέγξτε τη ρύθμιση POST στο backend.');
-                         console.error('Logout failed with status:', res.status);
+                         alert('Αποτυχία αποσύνδεσης.');
                      }
                  } catch (error) {
                      console.error('Logout request error:', error);
@@ -445,6 +499,70 @@
              }
          });
 
+        // AVATAR FORM HANDLER
+        document.getElementById('avatar-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            try {
+                const res = await fetch('/change-avatar', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    currentAvatar.src = data.avatarUrl; 
+                    alert('Η εικόνα προφίλ ενημερώθηκε επιτυχώς.');
+                    // Πρέπει να κλείσουμε το panel και να ξαναφορτώσουμε τα μηνύματα
+                    profileSettings.style.display = 'none';
+                    ws.send(JSON.stringify({ type: 'requestOldMessages' })); 
+                } else {
+                    alert('Αποτυχία ενημέρωσης εικόνας προφίλ.');
+                }
+            } catch (error) {
+                console.error('Error uploading avatar:', error);
+                alert('Σφάλμα δικτύου κατά την ενημέρωση του avatar.');
+            }
+        });
+        
+        // ADMIN BUTTONS
+        clearHistoryBtn.addEventListener('click', async () => {
+            if (confirm('Είστε σίγουροι ότι θέλετε να καθαρίσετε το ιστορικό συνομιλίας; Αυτό είναι μη αναστρέψιμο.')) {
+                try {
+                    const res = await fetch('/clear-history', { method: 'DELETE' });
+                    if (!res.ok) throw new Error('Clear history failed');
+                    // Ο WebSocket θα διαχειριστεί τον καθαρισμό στο frontend
+                } catch (error) {
+                    console.error('Clear history error:', error);
+                    alert('Αποτυχία καθαρισμού ιστορικού.');
+                }
+            }
+        });
+        
+        // URL/GIF/EMOJI BUTTONS - FIX
+        urlBtn.addEventListener('click', () => {
+            const url = prompt("Εισαγωγή URL:");
+            if (url) {
+                // Απλή εισαγωγή ως κείμενο, μπορεί να αναβαθμιστεί σε link αργότερα
+                messageInput.value += ` [URL: ${url}] `;
+                messageInput.focus();
+            }
+        });
+
+        gifBtn.addEventListener('click', () => {
+            // Placeholder: Για να λειτουργήσει πλήρως, χρειάζεται ενσωμάτωση με API (π.χ. Giphy)
+            alert("Λειτουργία GIF: Χρειάζεται ενσωμάτωση με API.");
+        });
+
+        // EMOJI PICKER - FIX: Εισαγωγή Emoji στο input
+        if (emojiPicker) {
+            emojiPicker.addEventListener('emoji-click', (event) => {
+                messageInput.value += event.detail.emoji.unicode;
+                emojiPicker.style.display = 'none';
+                messageInput.focus();
+            });
+        }
+        
         // FORMATTING
         boldBtn.addEventListener('click', () => toggleFormatting('isBold', boldBtn));
         italicBtn.addEventListener('click', () => toggleFormatting('isItalic', italicBtn));
@@ -499,9 +617,8 @@
             }
         });
 
-        // EMOJI BUTTON LOGIC (Απαιτεί το emoji-picker-element)
+        // EMOJI BUTTON LOGIC
         emojiBtn.addEventListener('click', () => {
-             // Κρύβουμε/Εμφανίζουμε το emoji picker 
              const picker = document.getElementById('emojiPicker');
              if (picker) {
                  picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
@@ -519,10 +636,10 @@
                 settingsMenu.style.display = 'none';
             }
             if (!clickedInsideInputBar) {
-                // Κρύβουμε το emoji picker όταν ο χρήστης κλικάρει αλλού
                 const picker = document.getElementById('emojiPicker');
                 if (picker) picker.style.display = 'none';
             }
+            // Κλείνουμε Admin/Profile μόνο αν κλικάρουμε εκτός
             if (adminPanel.style.display === 'block' && !clickedInsideAdmin && e.target !== menuAdminBtn) {
                  adminPanel.style.display = 'none';
             }
@@ -531,7 +648,7 @@
             }
         });
         
-        // --- appendMessage (για την εμφάνιση μηνυμάτων) ---
+        // --- appendMessage (για την εμφάνιση μηνυμάτων και Admin Delete) ---
         function appendMessage(data) {
              const messageElement = document.createElement('div');
              messageElement.classList.add('message', `${data.role}-message`);
@@ -576,6 +693,30 @@
              const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
              const timeText = document.createTextNode(` [${timeString}]: `);
              senderSpan.appendChild(timeText);
+             
+             // ADMIN DELETE BUTTON (Το 'X' που φαίνεται στην εικόνα)
+             if (currentUserRole === 'admin') {
+                 const deleteBtn = document.createElement('span');
+                 deleteBtn.textContent = ' ❌';
+                 deleteBtn.style.cursor = 'pointer';
+                 deleteBtn.style.marginLeft = '10px';
+                 deleteBtn.style.color = '#ff6b6b';
+                 deleteBtn.title = 'Διαγραφή Μηνύματος';
+                 
+                 deleteBtn.addEventListener('click', async () => {
+                     if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το μήνυμα;')) {
+                         try {
+                             // Καλούμε το DELETE endpoint του server.js
+                             const res = await fetch(`/delete-message/${data.messageId}`, { method: 'DELETE' });
+                             if (!res.ok) throw new Error('Delete failed');
+                         } catch (error) {
+                             console.error('Delete message error:', error);
+                             alert('Αποτυχία διαγραφής μηνύματος.');
+                         }
+                     }
+                 });
+                 senderSpan.appendChild(deleteBtn);
+             }
              
              contentContainer.prepend(senderSpan);
              messageElement.appendChild(contentContainer);
