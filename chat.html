@@ -44,7 +44,7 @@
             position: relative; 
             background-color: #1A1A1A; 
             
-            /* Background Image */
+            /* Background Image (Διόρθωση 404: Ελέγξτε αν υπάρχει το αρχείο!) */
             background-image: url('akoyme_background.png'); 
             background-size: cover;
             background-position: center;
@@ -249,6 +249,30 @@
              display: none; 
              overflow-y: auto;
         }
+        
+        #current-avatar-container img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+        }
+        
+        #userList div {
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #userList select {
+            padding: 5px;
+            border-radius: 5px;
+            background-color: #3A3A3A;
+            color: #E0E0E0;
+            border: none;
+        }
+        
     </style>
 </head>
 <body>
@@ -269,7 +293,7 @@
             <div id="admin-panel">
                 <h3>Admin Panel</h3>
                 <button id="clearHistoryBtn">Καθαρισμός Ιστορικού</button>
-                <button id="savePdfBtn">Αποθήκευση ως PDF</button>
+                <button id="savePdfBtn" disabled title="Δεν έχει υλοποιηθεί">Αποθήκευση ως PDF</button>
                 <hr>
                 <h4>Αλλαγή Ρόλου Χρήστη</h4>
                 <div id="userList"></div>
@@ -278,7 +302,7 @@
             <div id="profile-settings">
                 <h3>Ρυθμίσεις Προφίλ</h3>
                 <div id="current-avatar-container">
-                    <img id="current-avatar" src="">
+                    <img id="current-avatar" src="" alt="Avatar">
                 </div>
                 <h4>Αλλαγή Εικόνας Προφίλ</h4>
                 <form id="avatar-form">
@@ -309,7 +333,7 @@
     </div>
     
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
-    <emoji-picker id="emojiPicker" style="display:none;"></emoji-picker>
+    <emoji-picker id="emojiPicker" style="display:none; position:absolute; bottom: 70px; right: 20px; z-index: 1000;"></emoji-picker>
 
     
 <script>
@@ -329,7 +353,7 @@
         const menuProfileBtn = document.getElementById('menuProfileBtn');
         const menuAdminBtn = document.getElementById('menuAdminBtn');
         
-        // References για τα κουμπιά που λείπουν/δεν δούλευαν
+        // References για τα κουμπιά λειτουργιών
         const urlBtn = document.getElementById('urlBtn');
         const emojiBtn = document.getElementById('emojiBtn');
         const emojiPicker = document.getElementById('emojiPicker');
@@ -339,7 +363,7 @@
         const italicBtn = document.getElementById('italicBtn');
         const colorBtn = document.getElementById('colorBtn');
         const colorPicker = document.getElementById('colorPicker');
-        const clearHistoryBtn = document.getElementById('clearHistoryBtn'); // Νέο
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn'); 
         
         // --- State ---
         let formattingState = {
@@ -388,14 +412,12 @@
                 userList.innerHTML = '';
                 
                 users.forEach(user => {
-                    if (user.id === currentUserId) return; // Μην εμφανίζουμε τον εαυτό μας
+                    if (user.id === currentUserId) return; 
                     
                     const div = document.createElement('div');
-                    div.style.marginBottom = '10px';
                     
                     const nameSpan = document.createElement('span');
                     nameSpan.textContent = user.display_name + ': ';
-                    nameSpan.style.marginRight = '5px';
                     
                     const select = document.createElement('select');
                     select.dataset.userId = user.id;
@@ -445,12 +467,13 @@
                 
                 let avatarSource = '/uploads/default-avatar.png'; // Fallback
                 if (data.avatarUrl) {
+                    // Ελέγχουμε αν το path είναι απόλυτο ή σχετικό
                     avatarSource = data.avatarUrl.startsWith('/') ? data.avatarUrl : `/uploads/${data.avatarUrl}`;
                 }
                 currentAvatar.src = avatarSource;
+                // Αν δεν βρει την εικόνα, βάζει το default (για 404)
                 currentAvatar.onerror = function() { this.src = '/uploads/default-avatar.png'; };
                 
-                // Δείχνει το admin panel μόνο στους admins
                 menuAdminBtn.style.display = (data.role === 'admin') ? 'flex' : 'none'; 
                 
             })
@@ -486,10 +509,9 @@
         menuLogoutBtn.addEventListener('click', async () => {
              if (confirm('Είστε σίγουροι ότι θέλετε να αποσυνδεθείτε;')) {
                  try {
-                     // Το server.js έχει σωστά POST, οπότε αυτό δουλεύει.
                      const res = await fetch('/logout', { method: 'POST' }); 
                      if (res.ok) {
-                         window.location.href = '/'; // Ανακατεύθυνση στη login page
+                         window.location.href = '/'; 
                      } else {
                          alert('Αποτυχία αποσύνδεσης.');
                      }
@@ -513,8 +535,8 @@
                     const data = await res.json();
                     currentAvatar.src = data.avatarUrl; 
                     alert('Η εικόνα προφίλ ενημερώθηκε επιτυχώς.');
-                    // Πρέπει να κλείσουμε το panel και να ξαναφορτώσουμε τα μηνύματα
                     profileSettings.style.display = 'none';
+                    // Ζητάμε τα παλιά μηνύματα για να ενημερωθούν τα avatars σε όλα
                     ws.send(JSON.stringify({ type: 'requestOldMessages' })); 
                 } else {
                     alert('Αποτυχία ενημέρωσης εικόνας προφίλ.');
@@ -525,13 +547,14 @@
             }
         });
         
-        // ADMIN BUTTONS
+        // ADMIN CLEAR HISTORY
         clearHistoryBtn.addEventListener('click', async () => {
             if (confirm('Είστε σίγουροι ότι θέλετε να καθαρίσετε το ιστορικό συνομιλίας; Αυτό είναι μη αναστρέψιμο.')) {
                 try {
                     const res = await fetch('/clear-history', { method: 'DELETE' });
                     if (!res.ok) throw new Error('Clear history failed');
-                    // Ο WebSocket θα διαχειριστεί τον καθαρισμό στο frontend
+                    // Ο WebSocket θα στείλει το clearChat σε όλους
+                    adminPanel.style.display = 'none';
                 } catch (error) {
                     console.error('Clear history error:', error);
                     alert('Αποτυχία καθαρισμού ιστορικού.');
@@ -539,22 +562,26 @@
             }
         });
         
-        // URL/GIF/EMOJI BUTTONS - FIX
+        // URL/GIF/EMOJI BUTTONS
         urlBtn.addEventListener('click', () => {
             const url = prompt("Εισαγωγή URL:");
             if (url) {
-                // Απλή εισαγωγή ως κείμενο, μπορεί να αναβαθμιστεί σε link αργότερα
                 messageInput.value += ` [URL: ${url}] `;
                 messageInput.focus();
             }
         });
 
         gifBtn.addEventListener('click', () => {
-            // Placeholder: Για να λειτουργήσει πλήρως, χρειάζεται ενσωμάτωση με API (π.χ. Giphy)
-            alert("Λειτουργία GIF: Χρειάζεται ενσωμάτωση με API.");
+            alert("Λειτουργία GIF: Χρειάζεται ενσωμάτωση με εξωτερικό API (π.χ. Giphy).");
         });
 
-        // EMOJI PICKER - FIX: Εισαγωγή Emoji στο input
+        emojiBtn.addEventListener('click', () => {
+             const picker = document.getElementById('emojiPicker');
+             if (picker) {
+                 picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
+             }
+        });
+        
         if (emojiPicker) {
             emojiPicker.addEventListener('emoji-click', (event) => {
                 messageInput.value += event.detail.emoji.unicode;
@@ -609,7 +636,6 @@
             }
         });
 
-        // ENTER KEY FIX
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') { 
                 e.preventDefault(); 
@@ -617,14 +643,6 @@
             }
         });
 
-        // EMOJI BUTTON LOGIC
-        emojiBtn.addEventListener('click', () => {
-             const picker = document.getElementById('emojiPicker');
-             if (picker) {
-                 picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
-             }
-        });
-        
         // CLOSING PANELS LOGIC
         document.addEventListener('click', (e) => { 
             const clickedInsideMenu = settingsMenu.contains(e.target) || menuToggleBtn.contains(e.target);
@@ -639,7 +657,6 @@
                 const picker = document.getElementById('emojiPicker');
                 if (picker) picker.style.display = 'none';
             }
-            // Κλείνουμε Admin/Profile μόνο αν κλικάρουμε εκτός
             if (adminPanel.style.display === 'block' && !clickedInsideAdmin && e.target !== menuAdminBtn) {
                  adminPanel.style.display = 'none';
             }
@@ -648,7 +665,7 @@
             }
         });
         
-        // --- appendMessage (για την εμφάνιση μηνυμάτων και Admin Delete) ---
+        // --- appendMessage ---
         function appendMessage(data) {
              const messageElement = document.createElement('div');
              messageElement.classList.add('message', `${data.role}-message`);
@@ -694,7 +711,7 @@
              const timeText = document.createTextNode(` [${timeString}]: `);
              senderSpan.appendChild(timeText);
              
-             // ADMIN DELETE BUTTON (Το 'X' που φαίνεται στην εικόνα)
+             // ADMIN DELETE BUTTON
              if (currentUserRole === 'admin') {
                  const deleteBtn = document.createElement('span');
                  deleteBtn.textContent = ' ❌';
@@ -706,7 +723,6 @@
                  deleteBtn.addEventListener('click', async () => {
                      if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το μήνυμα;')) {
                          try {
-                             // Καλούμε το DELETE endpoint του server.js
                              const res = await fetch(`/delete-message/${data.messageId}`, { method: 'DELETE' });
                              if (!res.ok) throw new Error('Delete failed');
                          } catch (error) {
