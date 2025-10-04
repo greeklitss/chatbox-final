@@ -119,7 +119,7 @@
         .delete-btn:hover {
             opacity: 1;
         }
-        
+
         /* --- INPUT & FORMATTING BAR --- */
         #input-container {
             display: flex;
@@ -252,7 +252,7 @@
         
         /* ADMIN/PROFILE PANELS */
         #admin-panel, #profile-settings {
-             background: #282828; 
+             background: #1A1A1A; 
              color: #E0E0E0;
              padding: 20px;
              position: fixed; 
@@ -264,54 +264,6 @@
              z-index: 20;
              display: none; 
              overflow-y: auto;
-        }
-        
-        /* Profile Settings styling */
-        #current-avatar-container img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            margin-bottom: 15px;
-            object-fit: cover;
-            border: 3px solid #007bff;
-        }
-        #avatar-form input[type="file"] {
-            margin-bottom: 10px;
-        }
-        #avatar-form button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
-        }
-        
-        /* Admin Panel styling */
-        #admin-panel button {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        #admin-panel #savePdfBtn {
-            background-color: #17a2b8;
-        }
-        #userList div {
-            padding: 5px;
-            border-bottom: 1px solid #444;
-        }
-        #userList select {
-            padding: 5px;
-            border-radius: 3px;
-            background-color: #3A3A3A;
-            color: #E0E0E0;
-            border: 1px solid #555;
         }
         
     </style>
@@ -326,7 +278,7 @@
             
             <div id="settings-menu" style="display: none;">
                 <button id="menuProfileBtn" class="menu-item"><i class="fas fa-user-circle"></i> Ρυθμίσεις Προφίλ</button>
-                <button id="menuAdminBtn" class="menu-item" style="display: none;"><i class="fas fa-shield-alt"></i> Admin Panel</button>
+                <button id="menuAdminBtn" class="menu-item"><i class="fas fa-shield-alt"></i> Admin Panel</button>
                 <hr style="border-color: #444; margin: 5px 0;">
                 <button id="menuLogoutBtn" class="menu-item" style="color: #ff6b6b;"><i class="fas fa-sign-out-alt"></i> Αποσύνδεση</button>
             </div>
@@ -399,7 +351,6 @@
         const avatarForm = document.getElementById('avatar-form'); 
         const savePdfBtn = document.getElementById('savePdfBtn'); 
         
-        // --- ΔΙΟΡΘΩΣΗ: Αφαίρεση διπλών ορισμών και χρήση σωστών μεταβλητών
         const urlBtn = document.getElementById('urlBtn');
         const emojiBtn = document.getElementById('emojiBtn');
         const emojiPicker = document.getElementById('emojiPicker');
@@ -417,14 +368,9 @@
             color: '#FFFFFF' 
         };
 
-        // --- Event Listener για το Input ώστε να ενεργοποιείται το Send Button ---
-        messageInput.addEventListener('input', () => {
-            sendBtn.disabled = messageInput.value.trim().length === 0;
-        });
-
         const ws = new WebSocket('wss://' + window.location.host + '/chat'); 
         let currentUserRole = 'user'; 
-        let currentUserId = null; 
+        let currentUserId = null;
         
         // --- Init ---
         sendBtn.disabled = true; 
@@ -433,4 +379,414 @@
         profileSettings.style.display = 'none';
         settingsMenu.style.display = 'none'; 
         
-        // --- PLACEHOLDER FUNCTIONS (ΤΩΡΑ ΜΕ ΠΛΗΡΗ ΛΟΓΙΚΗ) ---
+        // --- WebSockets ---
+        ws.onopen = () => { console.log('WebSocket Connected'); };
+        ws.onerror = (error) => { console.error('WebSocket Error:', error); };
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'oldMessages') {
+                chatbox.innerHTML = '';
+                data.messages.forEach(message => appendMessage(message)); 
+            } else if (data.type === 'newMessage') {
+                appendMessage(data);
+            } else if (data.type === 'clearChat') { 
+                chatbox.innerHTML = '';
+            } else if (data.type === 'deleteMessage') { 
+                const el = document.querySelector(`[data-message-id="${data.messageId}"]`);
+                if(el) el.remove();
+            }
+            chatbox.scrollTop = chatbox.scrollHeight; 
+        };
+        
+        // --- PLACEHOLDER FUNCTIONS (Απαιτείται Backend) ---
+        async function loadAdminPanel() { 
+             try {
+                const res = await fetch('/users');
+                if (!res.ok) throw new Error('Not authorised or server error');
+                const users = await res.json();
+                
+                userListDiv.innerHTML = 'Δεν βρέθηκαν άλλοι χρήστες.';
+                
+                users.forEach(user => {
+                    if (user.id === currentUserId) return; 
+                    
+                    const div = document.createElement('div');
+                    div.style.marginBottom = '10px';
+                    div.innerHTML = `
+                        <strong>${user.display_name}</strong> (${user.role})<br>
+                        <select data-user-id="${user.id}" class="role-select" style="width: 100%;">
+                            <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                            <option value="moderator" ${user.role === 'moderator' ? 'selected' : ''}>Moderator</option>
+                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        </select>
+                    `;
+                    if (userListDiv.innerHTML === 'Δεν βρέθηκαν άλλοι χρήστες.') userListDiv.innerHTML = '';
+                    userListDiv.appendChild(div);
+                });
+
+                document.querySelectorAll('.role-select').forEach(select => {
+                    select.addEventListener('change', async (e) => {
+                        const userId = e.target.dataset.userId;
+                        const newRole = e.target.value;
+                        if (!confirm(`Είστε σίγουροι ότι θέλετε να αλλάξετε τον ρόλο του χρήστη ${userId} σε ${newRole};`)) return;
+
+                        try {
+                            const res = await fetch('/change-role', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId, newRole })
+                            });
+                            if (res.ok) {
+                                alert(`Ο ρόλος του χρήστη ${userId} άλλαξε σε ${newRole}!`);
+                            } else {
+                                throw new Error('Failed to change role');
+                            }
+                        } catch (error) {
+                            console.error('Role change error:', error);
+                            alert('Αποτυχία αλλαγής ρόλου. Πιθανόν δεν έχετε επαρκή δικαιώματα.');
+                        }
+                    });
+                });
+
+            } catch (error) {
+                console.error('Failed to load admin panel:', error);
+            }
+        }
+        
+        // --- USER INFO & AVATAR ---
+        fetch('/user-info')
+            .then(res => {
+                if (!res.ok) throw new Error('Not authenticated');
+                return res.json();
+            })
+            .then(data => {
+                currentUserRole = data.role; 
+                currentUserId = data.id;
+                
+                // Avatar Source
+                let avatarSource = data.avatarUrl || '/uploads/default-avatar.png'; 
+                currentAvatar.src = avatarSource;
+                currentAvatar.onerror = function() { this.src = '/uploads/default-avatar.png'; };
+                
+                // Menu visibility based on role
+                menuAdminBtn.style.display = (data.role === 'admin') ? 'flex' : 'none'; 
+            })
+            .catch(error => {
+                console.error('Σφάλμα (User Info / Avatar):', error);
+                menuAdminBtn.style.display = 'none'; 
+                menuProfileBtn.style.display = 'none';
+            });
+        
+        
+        // --- EVENT LISTENERS ---
+        
+        // *** ΝΕΑ ΠΡΟΣΘΗΚΗ: Ενεργοποίηση/Απενεργοποίηση Send Button ***
+        messageInput.addEventListener('input', () => {
+            sendBtn.disabled = messageInput.value.trim().length === 0;
+        });
+
+        // MENU
+        menuToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            settingsMenu.style.display = settingsMenu.style.display === 'flex' ? 'none' : 'flex';
+            adminPanel.style.display = 'none';
+            profileSettings.style.display = 'none';
+        });
+
+        menuProfileBtn.addEventListener('click', () => {
+            settingsMenu.style.display = 'none'; 
+            profileSettings.style.display = 'block'; 
+        });
+
+        menuAdminBtn.addEventListener('click', () => {
+            settingsMenu.style.display = 'none';
+            adminPanel.style.display = 'block';
+            loadAdminPanel();
+        });
+        
+        // LOGOUT
+        menuLogoutBtn.addEventListener('click', async () => {
+             if (confirm('Είστε σίγουροι ότι θέλετε να αποσυνδεθείτε;')) {
+                 try {
+                     const res = await fetch('/logout', { method: 'POST' });
+                     if (res.ok) {
+                         window.location.href = '/'; 
+                     } else {
+                         alert('Αποτυχία αποσύνδεσης.');
+                     }
+                 } catch (error) {
+                     console.error('Logout request error:', error);
+                 }
+             }
+         });
+
+        // --- FORMATTING LOGIC ---
+        boldBtn.addEventListener('click', () => toggleFormatting('isBold', boldBtn));
+        italicBtn.addEventListener('click', () => toggleFormatting('isItalic', italicBtn));
+        
+        // Color Picker Logic
+        colorBtn.addEventListener('click', () => { colorPicker.click(); });
+        colorPicker.addEventListener('input', (e) => {
+            formattingState.color = e.target.value;
+            colorBtn.style.backgroundColor = e.target.value;
+            colorBtn.classList.add('active'); 
+            messageInput.style.color = e.target.value;
+        });
+
+        function toggleFormatting(formatKey, button) {
+            if (formatKey === 'color') { return; }
+            formattingState[formatKey] = !formattingState[formatKey];
+            button.classList.toggle('active', formattingState[formatKey]);
+            messageInput.style.fontWeight = formattingState.isBold ? 'bold' : 'normal';
+            messageInput.style.fontStyle = formattingState.isItalic ? 'italic' : 'normal';
+        }
+        
+        // *** ΕΠΑΝΑΦΟΡΑ: URL Button Logic ***
+        urlBtn.addEventListener('click', () => {
+            const url = prompt("Εισάγετε το URL:");
+            if (url) {
+                messageInput.value += ` [${url}] `;
+                messageInput.focus();
+                sendBtn.disabled = messageInput.value.trim().length === 0;
+            }
+        });
+        
+        // *** ΕΠΑΝΑΦΟΡΑ: GIF Button Logic ***
+        gifBtn.addEventListener('click', () => {
+             alert('Η λειτουργία GIF δεν έχει υλοποιηθεί ακόμα!');
+        });
+
+        // SEND MESSAGE & ENTER KEY
+        sendBtn.addEventListener('click', () => {
+            const rawMessage = messageInput.value.trim();
+            if (rawMessage && ws.readyState === WebSocket.OPEN) {
+                // Formatting message into JSON string
+                const formattedMessage = JSON.stringify({
+                    text: rawMessage,
+                    isBold: formattingState.isBold,
+                    isItalic: formattingState.isItalic,
+                    color: formattingState.color
+                });
+                
+                ws.send(JSON.stringify({ type: 'chatMessage', message: formattedMessage }));
+                messageInput.value = '';
+                
+                // Reset UI state
+                formattingState = { isBold: false, isItalic: false, color: '#FFFFFF' };
+                boldBtn.classList.remove('active');
+                italicBtn.classList.remove('active');
+                colorBtn.style.backgroundColor = '#3A3A3A'; 
+                colorBtn.classList.remove('active');
+                messageInput.style.fontWeight = 'normal';
+                messageInput.style.fontStyle = 'normal';
+                messageInput.style.color = 'white'; 
+                sendBtn.disabled = true; // Disable after sending
+            }
+        });
+
+        // ENTER KEY FIX
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') { 
+                e.preventDefault(); 
+                sendBtn.click(); 
+            }
+        });
+
+        // EMOJI BUTTON LOGIC
+        emojiBtn.addEventListener('click', (e) => {
+             e.stopPropagation(); 
+             const picker = document.getElementById('emojiPicker');
+             if (picker) {
+                 picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
+             }
+        });
+        
+        // *** ΕΠΑΝΑΦΟΡΑ: EMOJI PICKER SELECTION ***
+        emojiPicker.addEventListener('emoji-click', event => {
+            messageInput.value += event.detail.unicode;
+            emojiPicker.style.display = 'none';
+            messageInput.focus();
+            sendBtn.disabled = messageInput.value.trim().length === 0;
+        });
+
+        // AVATAR FORM SUBMIT (ΔΕΝ ΑΛΛΑΞΕ)
+        avatarForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(avatarForm);
+            
+            try {
+                const res = await fetch('/change-avatar', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    alert('Η εικόνα προφίλ ενημερώθηκε επιτυχώς!');
+                    currentAvatar.src = data.avatarUrl; 
+                    profileSettings.style.display = 'none'; 
+                    avatarForm.reset();
+                } else {
+                    const errorText = await res.text();
+                    alert(`Αποτυχία ενημέρωσης: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Avatar upload error:', error);
+                alert('Σφάλμα δικτύου κατά την αλλαγή εικόνας.');
+            }
+        });
+        
+        // CLEAR HISTORY BUTTON (ΔΕΝ ΑΛΛΑΞΕ)
+        clearHistoryBtn.addEventListener('click', async () => {
+            if (confirm('ΠΡΟΣΟΧΗ! Θέλετε σίγουρα να διαγράψετε όλο το ιστορικό μηνυμάτων;')) {
+                try {
+                    const res = await fetch('/clear-history', { method: 'DELETE' });
+                    if (res.ok) {
+                        alert('Το ιστορικό καθαρίστηκε!');
+                    } else {
+                        alert('Αποτυχία καθαρισμού ιστορικού. Ελέγξτε τα δικαιώματα Admin.');
+                    }
+                } catch (error) {
+                    console.error('Clear history error:', error);
+                }
+            }
+        });
+        
+        // CLOSING PANELS LOGIC (ΔΙΟΡΘΩΣΗ: Πιο ακριβής λογική κλεισίματος για το emoji picker) 
+        document.addEventListener('click', (e) => { 
+            const clickedInsideMenu = settingsMenu.contains(e.target) || menuToggleBtn.contains(e.target);
+            const clickedInsideAdmin = adminPanel.contains(e.target);
+            const clickedInsideSettings = profileSettings.contains(e.target);
+
+            // Κλείσιμο Settings Menu
+            if (settingsMenu.style.display === 'flex' && !clickedInsideMenu) {
+                settingsMenu.style.display = 'none';
+            }
+            
+            // Κλείσιμο Admin Panel
+            if (adminPanel.style.display === 'block' && !clickedInsideAdmin && e.target !== menuAdminBtn && !e.target.closest('#menuAdminBtn')) {
+                 adminPanel.style.display = 'none';
+            }
+            // Κλείσιμο Profile Settings
+            if (profileSettings.style.display === 'block' && !clickedInsideSettings && e.target !== menuProfileBtn && !e.target.closest('#menuProfileBtn')) {
+                 profileSettings.style.display = 'none';
+            }
+            
+            // Κλείσιμο Emoji Picker
+            const picker = document.getElementById('emojiPicker');
+            const clickedInsideEmoji = picker.contains(e.target) || emojiBtn.contains(e.target);
+            if (picker && picker.style.display === 'block' && !clickedInsideEmoji) {
+                picker.style.display = 'none';
+            }
+        });
+        
+        // PDF SAVE FUNCTIONALITY (ΔΕΝ ΑΛΛΑΞΕ) 
+        savePdfBtn.addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            if (!jsPDF) {
+                alert('Η βιβλιοθήκη jsPDF δεν φορτώθηκε σωστά. Ελέγξτε την κονσόλα για σφάλματα.');
+                return;
+            }
+            const doc = new jsPDF();
+            let y = 10;
+            const messages = chatbox.querySelectorAll('.message');
+
+            doc.text("Chat History", 10, y);
+            y += 10;
+
+            messages.forEach(msg => {
+                const sender = msg.querySelector('.sender').textContent.trim();
+                const content = msg.querySelector('.message-content').textContent.trim();
+                const textLine = `${sender} ${content}`;
+                
+                if (y > 280) { 
+                    doc.addPage();
+                    y = 10;
+                }
+                
+                // Χρήση text() με max width για wrap
+                const splitText = doc.splitTextToSize(textLine, 180);
+                doc.text(splitText, 10, y);
+                y += (splitText.length * 5); // Προσαρμογή ύψους
+                y += 2; // Κενό μεταξύ μηνυμάτων
+            });
+
+            doc.save("chat_history.pdf");
+        });
+        
+        
+        // --- appendMessage (για την εμφάνιση μηνυμάτων) ---
+        function appendMessage(data) {
+             const messageElement = document.createElement('div');
+             messageElement.classList.add('message', `${data.role}-message`);
+             messageElement.dataset.messageId = data.id || data.messageId; 
+             
+             const avatarImg = document.createElement('img');
+             avatarImg.classList.add('avatar');
+             let avatarUrl = data.avatar_url || data.avatarUrl || '/uploads/default-avatar.png'; 
+             avatarImg.src = avatarUrl; 
+             avatarImg.onerror = function() { this.src = '/uploads/default-avatar.png'; };
+             messageElement.appendChild(avatarImg);
+
+             const contentContainer = document.createElement('div');
+             contentContainer.classList.add('message-content-container');
+             
+             const senderSpan = document.createElement('span');
+             senderSpan.classList.add('sender');
+             const nameSpan = document.createElement('span');
+             nameSpan.textContent = data.displayName;
+             senderSpan.appendChild(nameSpan);
+
+             let text = data.message;
+             let format = {};
+             try {
+                 const parsedData = JSON.parse(text);
+                 if (parsedData.text) { text = parsedData.text; format = parsedData; }
+             } catch (e) { /* Not JSON */ }
+
+             const messageText = document.createElement('span');
+             messageText.classList.add('message-content');
+             if (format.isBold) { messageText.style.fontWeight = 'bold'; }
+             if (format.isItalic) { messageText.style.fontStyle = 'italic'; }
+             if (format.color && format.color !== '#FFFFFF') { messageText.style.color = format.color; }
+             messageText.textContent = text; 
+             
+             const date = new Date(data.timestamp);
+             const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+             const timeText = document.createTextNode(` [${timeString}]: `);
+             senderSpan.appendChild(timeText);
+             
+             contentContainer.prepend(senderSpan);
+             contentContainer.appendChild(messageText);
+
+             // Προσθήκη κουμπιού διαγραφής για Admin
+             if (currentUserRole === 'admin') {
+                 const deleteBtn = document.createElement('button');
+                 deleteBtn.classList.add('delete-btn');
+                 deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                 deleteBtn.title = 'Διαγραφή Μηνύματος';
+                 deleteBtn.addEventListener('click', async () => {
+                     if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το μήνυμα;')) {
+                         try {
+                             const res = await fetch(`/delete-message/${messageElement.dataset.messageId}`, { method: 'DELETE' });
+                             if (!res.ok) throw new Error('Δεν επιτρέπεται η διαγραφή.');
+                         } catch (error) {
+                             alert('Αποτυχία διαγραφής μηνύματος.');
+                             console.error('Delete error:', error);
+                         }
+                     }
+                 });
+                 // Προσθήκη του κουμπιού δίπλα στο κείμενο του μηνύματος
+                 contentContainer.appendChild(deleteBtn);
+             }
+
+             messageElement.appendChild(contentContainer);
+             
+             chatbox.appendChild(messageElement);
+             chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+    }); 
+</script>
+</body>
+</html>
