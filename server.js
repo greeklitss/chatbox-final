@@ -12,11 +12,11 @@ const bcrypt = require('bcryptjs');
 const LocalStrategy = require('passport-local').Strategy;
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-const fs = require('fs'); // Για έλεγχο φακέλου
+const fs = require('fs'); 
 
 const app = express();
-const server = http.createServer(app); // Δημιουργία HTTP server
-const wsInstance = expressWs(app, server); // Σύνδεση express-ws
+const server = http.createServer(app); 
+const wsInstance = expressWs(app, server); 
 
 // --- ΣΗΜΑΝΤΙΚΗ ΔΙΟΡΘΩΣΗ: STATIC FILES ---
 // 1. Εξυπηρετεί όλα τα αρχεία στον root φάκελο (chat.html, login.html, akoyme_background.png)
@@ -86,7 +86,7 @@ passport.use(new GoogleStrategy({
         try {
             let user = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
             if (user.rows.length === 0) {
-                user = await pool.query('INSERT INTO users (google_id, display_name, role, avatar_url) VALUES ($1, $2, $3, $4) RETURNING *', [profile.id, profile.displayName, 'user', 'uploads/default-avatar.png']);
+                user = await pool.query('INSERT INTO users (google_id, display_name, role, avatar_url) VALUES ($1, $2, $3, $4) RETURNING *', [profile.id, profile.displayName, 'user', '/uploads/default-avatar.png']);
             }
             done(null, user.rows[0]);
         } catch (error) {
@@ -105,7 +105,7 @@ passport.use(new FacebookStrategy({
         try {
             let user = await pool.query('SELECT * FROM users WHERE facebook_id = $1', [profile.id]);
             if (user.rows.length === 0) {
-                user = await pool.query('INSERT INTO users (facebook_id, display_name, role, avatar_url) VALUES ($1, $2, \'user\', $3) RETURNING *', [profile.id, profile.displayName, 'uploads/default-avatar.png']);
+                user = await pool.query('INSERT INTO users (facebook_id, display_name, role, avatar_url) VALUES ($1, $2, \'user\', $3) RETURNING *', [profile.id, profile.displayName, '/uploads/default-avatar.png']);
             }
             done(null, user.rows[0]);
         } catch (error) {
@@ -141,7 +141,7 @@ async function createTables() {
         // Προσθήκη του avatar_url αν δεν υπάρχει ήδη
         await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT');
         // Set default avatar for existing users if the column was just added
-        await pool.query('UPDATE users SET avatar_url = $1 WHERE avatar_url IS NULL', ['uploads/default-avatar.png']);
+        await pool.query('UPDATE users SET avatar_url = $1 WHERE avatar_url IS NULL', ['/uploads/default-avatar.png']);
         
         console.log('Οι πίνακες "users" και "messages" δημιουργήθηκαν/ενημερώθηκαν επιτυχώς.');
     } catch (error) {
@@ -177,6 +177,7 @@ app.get('/users', async (req, res) => {
         return res.status(403).send('Forbidden');
     }
     try {
+        // ΔΙΟΡΘΩΣΗ: Εξαίρεση του password από το αποτέλεσμα
         const result = await pool.query('SELECT id, display_name, role FROM users ORDER BY display_name');
         res.json(result.rows);
     } catch (error) {
@@ -212,12 +213,33 @@ app.post('/change-avatar', upload.single('avatar'), async (req, res) => {
     }
 
     const userId = req.user.id;
-    // Το avatarUrl χρησιμοποιεί το /uploads/ path που σερβίρεται παραπάνω
-    const avatarUrl = `/uploads/${req.file.filename}`;
+    const newAvatarUrl = `/uploads/${req.file.filename}`;
     
     try {
-        await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatarUrl, userId]);
-        res.status(200).json({ success: true, avatarUrl });
+        // 1. Βρες το παλιό avatar url για διαγραφή
+        const oldUserResult = await pool.query('SELECT avatar_url FROM users WHERE id = $1', [userId]);
+        const oldAvatarUrl = oldUserResult.rows[0].avatar_url;
+        
+        // 2. Ενημέρωσε τη βάση με το νέο
+        await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [newAvatarUrl, userId]);
+        
+        // 3. Διέγραψε το παλιό αρχείο, αν δεν είναι το default
+        if (oldAvatarUrl && oldAvatarUrl !== '/uploads/default-avatar.png') {
+             // Το path του αρχείου είναι το path χωρίς το /uploads
+             const fileNameToDelete = oldAvatarUrl.replace('/uploads/', '');
+             const fullPathToDelete = path.join(__dirname, 'uploads', fileNameToDelete);
+
+             if (fs.existsSync(fullPathToDelete)) {
+                 fs.unlink(fullPathToDelete, (err) => {
+                     if (err) console.error('Error deleting old avatar file:', err);
+                 });
+             }
+        }
+
+        // Ενημέρωση του req.user για το τρέχον session
+        req.user.avatar_url = newAvatarUrl;
+        
+        res.status(200).json({ success: true, avatarUrl: newAvatarUrl });
     } catch (error) {
         console.error('Error updating avatar:', error);
         res.status(500).send('An error occurred while updating avatar.');
@@ -275,7 +297,7 @@ app.post('/create-user', async (req, res) => {
     
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        await pool.query('INSERT INTO users (username, password, display_name, role, avatar_url) VALUES ($1, $2, $3, \'user\', $4)', [username, hashedPassword, displayName, 'uploads/default-avatar.png']);
+        await pool.query('INSERT INTO users (username, password, display_name, role, avatar_url) VALUES ($1, $2, $3, \'user\', $4)', [username, hashedPassword, displayName, '/uploads/default-avatar.png']);
         res.status(201).send('User created successfully.');
     } catch (error) {
         if (error.code === '23505') {
@@ -314,11 +336,15 @@ app.delete('/delete-message/:id', async (req, res) => {
 });
 
 app.ws('/chat', async (ws, req) => {
+    // ΔΙΟΡΘΩΣΗ: Πρέπει να αποθηκεύσουμε τα user info στο ws session 
+    // για να είναι διαθέσιμα σε άλλα events (όπως deleteMessage)
     if (!req.isAuthenticated()) {
         ws.close();
         return;
     }
-
+    ws.userId = req.user.id;
+    ws.userRole = req.user.role;
+    
     // Στέλνει τα παλιά μηνύματα κατά τη σύνδεση
     try {
         const result = await pool.query('SELECT m.id, m.message, m.timestamp, u.display_name, u.role, u.avatar_url, u.id as user_id FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp ASC');
@@ -370,7 +396,7 @@ app.ws('/chat', async (ws, req) => {
     });
 
     ws.on('close', () => {
-        console.log('Ο χρήστης αποσυνδέθηκε');
+        console.log(`Ο χρήστης ${ws.userId} αποσυνδέθηκε`);
     });
 });
 
