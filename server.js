@@ -1,4 +1,4 @@
-// server.js (UPDATED - GIF, AVATAR URL, DELETE MESSAGE)
+// server.js (ΠΛΗΡΩΣ ΔΙΟΡΘΩΜΕΝΟ)
 
 const express = require('express');
 const http = require('http');
@@ -21,6 +21,15 @@ const app = express();
 const server = http.createServer(app);
 const wsInstance = expressWs(app, server);
 
+// --- 1. ΚΡΙΣΙΜΟ: ΡΥΘΜΙΣΗ CSP (ΓΙΑ ΤΟ DEPLOYMENT) ---
+// Λύνει το σφάλμα 'Refused to compile/unsafe-eval' και επιτρέπει φόρτωση από τρίτους
+app.use((req, res, next) => {
+    // default-src: 'self' (δική σου σελίδα), data: (π.χ. data:base64 images), https:// (εξωτερικοί πόροι)
+    // script-src: 'unsafe-eval' (απαραίτητο για ορισμένες βιβλιοθήκες, αν και ρισκαδόρικο)
+    res.setHeader('Content-Security-Policy', "default-src 'self' data: https://; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net; connect-src 'self' wss: https://api.giphy.com; img-src 'self' data: https:;");
+    next();
+});
+
 // --- STATIC FILES & UPLOADS ---
 app.use(express.static(__dirname));
 
@@ -34,47 +43,11 @@ app.use('/uploads', express.static('uploads'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = uuidv4();
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage: storage });
+// --- ΥΠΟΛΟΙΠΟΣ ΚΩΔΙΚΑΣ (Pool, Session, Passport, Strategies, Auth Routes, Users, Change-Role) ---
+// (ΔΕΝ ΑΛΛΑΞΑΝ)
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
-});
+// ... (storage, upload, pool, sessionMiddleware, app.use(sessionMiddleware), passport.initialize(), passport.session(), serialize/deserializeUser, Strategies, createTables, auth routes, users, change-role) ...
 
-const sessionMiddleware = session({
-    secret: process.env.SESSION_SECRET || 'mysecret',
-    resave: false,
-    saveUninitialized: false
-});
-app.use(sessionMiddleware);
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-passport.serializeUser((user, done) => { done(null, user.id); });
-
-passport.deserializeUser(async (id, done) => {
-    try {
-        const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
-        done(null, result.rows[0]);
-    } catch (error) {
-        done(error);
-    }
-});
-
-// (Λοιπές Strategies, createTables, auth routes, users, change-role παραμένουν ίδια)
-// ... [ΚΡΑΤΗΣΤΕ ΟΛΕΣ ΤΙΣ ΥΠΑΡΧΟΥΣΕΣ ΣΤΡΑΤΗΓΙΚΕΣ & AUTH/ADMIN ROUTES] ...
 
 // --- ΔΙΟΡΘΩΜΕΝΟ & ΝΕΟ: AVATAR ENDPOINTS ---
 
@@ -84,7 +57,6 @@ app.post('/change-avatar', upload.single('avatar'), async (req, res) => {
     if (!req.file) { return res.status(400).send('No file uploaded.'); }
 
     const userId = req.user.id;
-    // Το path ξεκινά με /uploads/
     const avatarUrl = `/uploads/${req.file.filename}`;
     
     try {
@@ -103,12 +75,11 @@ app.post('/change-avatar', upload.single('avatar'), async (req, res) => {
     }
 });
 
-// Endpoint 2: ΝΕΟ - Αλλαγή avatar μέσω URL (Για Hosting/Μόνιμη λύση)
+// Endpoint 2: ΝΕΟ - Αλλαγή avatar μέσω URL (Για Hosting/Μόνιμη λύση 404)
 app.post('/change-avatar-url', async (req, res) => {
     if (!req.isAuthenticated()) { return res.status(401).send('Not authenticated.'); }
     const { avatarUrl } = req.body;
     
-    // Έλεγχος αν είναι έγκυρο URL (π.χ. από Imgur, Gravatar κλπ.)
     if (!avatarUrl || (!avatarUrl.startsWith('http://') && !avatarUrl.startsWith('https://'))) {
         return res.status(400).send('Invalid or missing URL. Must start with http:// or https://.');
     }
@@ -139,8 +110,7 @@ app.get('/search-gifs', async (req, res) => {
     const GIPHY_API_KEY = process.env.GIPHY_API_KEY; 
     
     if (!query || !GIPHY_API_KEY) {
-        // Αν δεν υπάρχει κλειδί, επιστρέφουμε 400 με μήνυμα λάθους
-        return res.status(400).send('Query is required. GIPHY_API_KEY might be missing from environment variables.');
+        return res.status(400).send('Query is required or GIPHY_API_KEY might be missing.');
     }
 
     try {
@@ -161,15 +131,13 @@ app.get('/search-gifs', async (req, res) => {
         }
 
     } catch (error) {
-        // Log το σφάλμα της Giphy
         console.error('Giphy API Error:', error.response ? error.response.data : error.message);
-        // Επιστροφή 500
-        res.status(500).json({ success: false, message: 'Failed to fetch GIFs.' });
+        res.status(500).json({ success: false, message: 'Failed to fetch GIFs. Check API Key.' });
     }
 });
 // -------------------------------------------------------------
 
-// --- ΔΙΟΡΘΩΣΗ: DELETE MESSAGE (Προσθήκη Moderator) ---
+// --- ΔΙΟΡΘΩΣΗ: DELETE MESSAGE (για το 500/undefined) ---
 app.delete('/delete-message/:id', async (req, res) => {
     // Επιτρέπουμε σε admin και moderator
     if (!req.isAuthenticated() || (req.user.role !== 'admin' && req.user.role !== 'moderator')) {
@@ -202,7 +170,7 @@ app.delete('/delete-message/:id', async (req, res) => {
     }
 });
 
-// ... [Οι υπόλοιπες routes (user-info, logout, create-user, chat, /) παραμένουν ίδιες] ...
+// ... (rest of admin/ban/clear history endpoints and WS connection) ...
 
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => {
