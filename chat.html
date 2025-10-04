@@ -122,7 +122,6 @@
             display: flex;
             flex-direction: column;
             max-width: 80%;
-            /* ΔΙΟΡΘΩΣΗ 1: Αφαίρεση εντελώς του background container */
             background-color: transparent; 
             padding: 0; 
         }
@@ -132,21 +131,21 @@
             margin-bottom: 3px;
             font-size: 13px;
             color: white; 
-            text-shadow: 1px 1px 2px #000; /* Σκιά για καλύτερη αντίθεση στο φόντο */
+            text-shadow: 1px 1px 2px #000; 
         }
         
-        /* ΔΙΟΡΘΩΣΗ 4: Χρώματα Ρόλων */
-        .sender.admin-color { color: #FF4136; } /* Κόκκινο για Admin */
-        .sender.user-color { color: #BB86FC; } /* Μωβ για User */
-        .sender.guest-color { color: #00CED1; } /* Ανοιχτό Τιρκουάζ για Guest */
+        /* Χρώματα Ρόλων */
+        .sender.admin-color { color: #FF4136; } 
+        .sender.user-color { color: #BB86FC; } 
+        .sender.guest-color { color: #00CED1; } 
 
 
         .message-content {
             word-wrap: break-word;
             font-size: 15px;
             line-height: 1.4;
-            color: #FFFFFF; /* Το κείμενο να είναι πάντα λευκό */
-            text-shadow: 1px 1px 2px #000; /* Σκιά για καλύτερη αντίθεση στο φόντο */
+            color: #FFFFFF; 
+            text-shadow: 1px 1px 2px #000; 
         }
         
         /* Στυλ για τα clickable links στο chatbox */
@@ -317,7 +316,7 @@
             <div id="settings-menu">
                 <button id="menuProfileBtn"><i class="fas fa-user-circle"></i> Profile</button>
                 <button id="menuAdminBtn" style="display:none;"><i class="fas fa-shield-alt"></i> Admin Panel</button>
-                <button id="savePdfBtn"><i class="fas fa-file-pdf"></i> Save as PDF</button>
+                <button id="savePdfBtn" style="display:none;"><i class="fas fa-file-pdf"></i> Save as PDF</button>
                 <button id="menuLogoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </div>
@@ -363,7 +362,7 @@
         const clearHistoryBtn = document.getElementById('clearHistoryBtn'); 
         const userListDiv = document.getElementById('userList'); 
         const avatarForm = document.getElementById('avatar-form'); 
-        const savePdfBtn = document.getElementById('savePdfBtn');
+        const savePdfBtn = document.getElementById('savePdfBtn'); // Το κουμπί Save as PDF
         
         // References για Formatting
         const urlBtn = document.getElementById('urlBtn');
@@ -383,7 +382,7 @@
             color: '#FFFFFF' 
         };
 
-        // ΥΠΟΘΕΤΙΚΗ ΣΥΝΔΕΣΗ WEBSOCKET (Πρέπει να λειτουργεί με server.js)
+        // ΥΠΟΘΕΤΙΚΗ ΣΥΝΔΕΣΗ WEBSOCKET 
         const ws = new WebSocket('wss://' + window.location.host + '/chat'); 
         let currentUserRole = 'user'; 
         let currentUserId = null;
@@ -471,6 +470,12 @@
                 
                 menuAdminBtn.style.display = (data.role === 'admin') ? 'flex' : 'none'; 
                 
+                // ΔΙΟΡΘΩΣΗ 1: Εμφάνιση Save as PDF μόνο για Admin
+                if (data.role === 'admin') {
+                    savePdfBtn.style.display = 'flex'; 
+                } else {
+                    savePdfBtn.style.display = 'none';
+                }
             })
             .catch(error => {
                 console.error('Σφάλμα (User Info / Avatar):', error);
@@ -550,7 +555,6 @@
                      const newAvatarUrl = data.avatarUrl.startsWith('/') ? data.avatarUrl : `/uploads/${data.avatarUrl}`;
                      currentAvatar.src = newAvatarUrl;
                      
-                     // Force refresh to reload the new avatar on messages
                      ws.send(JSON.stringify({ type: 'requestOldMessages' }));
                  } else {
                      const errorText = await res.text();
@@ -581,7 +585,6 @@
             button.classList.toggle('active', formattingState[formatKey]);
             messageInput.style.fontWeight = formattingState.isBold ? 'bold' : 'normal';
             messageInput.style.fontStyle = formattingState.isItalic ? 'italic' : 'normal';
-            // Επαναφορά του χρώματος του κουμπιού αν δεν είναι active (στο default deepskyblue)
             if (!formattingState[formatKey]) {
                 button.style.backgroundColor = '#00BFFF';
             }
@@ -613,7 +616,7 @@
             }
         });
 
-        // ΝΕΑ ΛΕΙΤΟΥΡΓΙΑ EMOJI: ΔΕΝ ΚΛΕΙΝΕΙ ΤΟ ΠΑΡΑΘΥΡΟ ΜΕΤΑ ΤΟ ΚΛΙΚ
+        // ΝΕΑ ΛΕΙΤΟΥΡΓΙΑ EMOJI
         emojiPicker.addEventListener('emoji-click', event => {
             messageInput.value += event.detail.unicode;
             messageInput.focus(); 
@@ -622,7 +625,12 @@
         
         // SAVE AS PDF
         savePdfBtn.addEventListener('click', () => {
-             // Επειδή διορθώσαμε το CDN, αυτό θα πρέπει να δουλέψει
+             // ΔΙΟΡΘΩΣΗ 1: Έλεγχος ρόλου
+             if (currentUserRole !== 'admin') { 
+                 alert('Δεν έχετε δικαίωμα να αποθηκεύσετε το ιστορικό ως PDF. Αυτή η λειτουργία είναι μόνο για διαχειριστές.');
+                 return; 
+             }
+             
              if (typeof jspdf === 'undefined' || !jspdf.jsPDF) {
                  alert('Σφάλμα: Η βιβλιοθήκη jsPDF δεν φορτώθηκε σωστά.');
                  return;
@@ -654,7 +662,6 @@
                      y = 10;
                  }
                  
-                 // Προσομοίωση χρώματος ρόλου (δεν γίνεται κατευθείαν στο jsPDF)
                  doc.setTextColor('#BB86FC'); 
                  const senderInfo = sender.split(']')[0] + ']'; 
                  doc.text(senderInfo, margin, y);
@@ -669,7 +676,7 @@
              doc.save('chat_log.pdf');
          });
 
-        // SEND MESSAGE & ENTER KEY
+        // SEND MESSAGE
         sendBtn.addEventListener('click', () => {
             const rawMessage = messageInput.value.trim();
             if (rawMessage && ws.readyState === WebSocket.OPEN) {
@@ -687,7 +694,7 @@
                 formattingState = { isBold: false, isItalic: false, color: '#FFFFFF' };
                 boldBtn.classList.remove('active');
                 italicBtn.classList.remove('active');
-                colorBtn.style.backgroundColor = '#00BFFF'; // Επαναφορά χρώματος
+                colorBtn.style.backgroundColor = '#00BFFF'; 
                 colorBtn.classList.remove('active');
                 messageInput.style.fontWeight = 'normal';
                 messageInput.style.fontStyle = 'normal';
@@ -696,7 +703,7 @@
             }
         });
 
-        // ΔΙΟΡΘΩΣΗ 2: ENTER KEY LOGIC (Enter για αποστολή, Shift+Enter για νέα γραμμή)
+        // ENTER KEY LOGIC (Enter για αποστολή, Shift+Enter για νέα γραμμή)
         messageInput.addEventListener('keydown', (e) => {
              // Ενεργοποίηση/Απενεργοποίηση του κουμπιού Send
              setTimeout(() => {
@@ -704,10 +711,9 @@
              }, 0); 
              
              if (e.key === 'Enter' && !e.shiftKey) { 
-                 e.preventDefault(); // Αποτρέπει την default αλλαγή γραμμής
+                 e.preventDefault(); 
                  sendBtn.click(); 
              }
-             // Αν πατηθεί Shift+Enter, ο browser κάνει την αλλαγή γραμμής (Δεν κάνουμε τίποτα)
         });
 
         // CLOSING PANELS LOGIC 
@@ -716,7 +722,6 @@
             const clickedInsideAdmin = adminPanel.contains(e.target);
             const clickedInsideSettings = profileSettings.contains(e.target);
             
-            // Λογική κλεισίματος για μενού
             if (settingsMenu.style.display === 'flex' && !clickedInsideMenu) {
                 settingsMenu.style.display = 'none';
             }
@@ -727,7 +732,6 @@
                  profileSettings.style.display = 'none';
             }
             
-            // Λογική κλεισίματος για Emoji Picker
             const picker = document.getElementById('emojiPicker');
             const clickedInsideEmoji = picker.contains(e.target) || emojiBtn.contains(e.target);
             if (picker && picker.style.display === 'block' && !clickedInsideEmoji) {
@@ -758,7 +762,6 @@
              const senderSpan = document.createElement('span');
              senderSpan.classList.add('sender');
              
-             // ΔΙΟΡΘΩΣΗ 4: Προσθήκη χρώματος ρόλου
              if (data.role) {
                  const roleClass = data.role.toLowerCase() + '-color';
                  senderSpan.classList.add(roleClass);
@@ -779,10 +782,8 @@
              messageText.classList.add('message-content');
              if (format.isBold) { messageText.style.fontWeight = 'bold'; }
              if (format.isItalic) { messageText.style.fontStyle = 'italic'; }
-             // Αν το μήνυμα έχει custom χρώμα, το εφαρμόζουμε
              if (format.color && format.color !== '#FFFFFF') { messageText.style.color = format.color; }
              
-             // ΕΦΑΡΜΟΓΗ: Μετατροπή URL σε clickable link (Regex)
              const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
              
              if (text.match(urlRegex)) {
@@ -790,13 +791,12 @@
                      return `<a href="${url}" target="_blank" style="color: #64FFDA; text-decoration: underline;">${url}</a>`;
                  });
              } else {
-                 // Αντικαθιστούμε τυχόν αλλαγές γραμμής σε <br> tags
                  messageText.innerHTML = text.replace(/\n/g, '<br>');
              }
              
              contentContainer.appendChild(messageText);
 
-             // ΔΙΟΡΘΩΣΗ 5: Πλήρες timestamp
+             // Πλήρες timestamp
              const date = new Date(data.timestamp);
              const timeString = date.toLocaleString('el-GR', { 
                 year: 'numeric', 
