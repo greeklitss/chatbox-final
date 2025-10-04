@@ -37,6 +37,7 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
+            background-color: transparent; /* ΔΙΟΡΘΩΣΗ: Για να φαίνεται το background image */
         }
 
         /* --- MESSAGE ROW --- */
@@ -119,9 +120,12 @@
             display: flex;
             flex-direction: column;
             max-width: 80%;
-            background-color: #333;
+            /* ΔΙΟΡΘΩΣΗ: Ημιδιαφανές background για να φαίνεται η εικόνα */
+            background-color: rgba(30, 30, 30, 0.75); 
             padding: 10px 15px;
             border-radius: 8px;
+            /* ΕΦΕ BLUR */
+            backdrop-filter: blur(4px); 
         }
 
         .sender {
@@ -268,6 +272,12 @@
             left: 10px; 
             z-index: 1000;
         }
+        
+        /* Στυλ για τα clickable links στο chatbox */
+        .message-content a {
+            color: #64FFDA; 
+            text-decoration: underline;
+        }
 
     </style>
 </head>
@@ -364,6 +374,7 @@
             color: '#FFFFFF' 
         };
 
+        // ΥΠΟΘΕΤΙΚΗ ΣΥΝΔΕΣΗ WEBSOCKET (Πρέπει να λειτουργεί με server.js)
         const ws = new WebSocket('wss://' + window.location.host + '/chat'); 
         let currentUserRole = 'user'; 
         let currentUserId = null;
@@ -563,12 +574,13 @@
             messageInput.style.fontStyle = formattingState.isItalic ? 'italic' : 'normal';
         }
 
-        // --- URL Button Logic ---
+        // --- URL Button Logic (ΑΥΤΟΜΑΤΗ ΕΙΣΑΓΩΓΗ) ---
         urlBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // FIX: Απαραίτητο για όλα τα κουμπιά
+            e.stopPropagation(); 
             const url = prompt("Εισάγετε το URL:");
             if (url) {
-                messageInput.value += ` [${url}] `;
+                // Εισάγει το URL στο πεδίο κειμένου χωρίς [ ]
+                messageInput.value += ` ${url} `; 
                 messageInput.focus();
                 sendBtn.disabled = messageInput.value.trim().length === 0;
             }
@@ -576,13 +588,13 @@
         
         // --- GIF Button Logic ---
         gifBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // FIX: Απαραίτητο για όλα τα κουμπιά
+            e.stopPropagation(); 
             alert('Η λειτουργία GIF δεν έχει υλοποιηθεί ακόμα!');
         });
 
         // EMOJI BUTTON LOGIC
         emojiBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // FIX: Απαραίτητο για να ανοίξει ο picker
+            e.stopPropagation(); 
             const picker = document.getElementById('emojiPicker');
             if (picker) {
                 picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
@@ -592,7 +604,7 @@
         // ΝΕΑ ΛΕΙΤΟΥΡΓΙΑ EMOJI: ΔΕΝ ΚΛΕΙΝΕΙ ΤΟ ΠΑΡΑΘΥΡΟ ΜΕΤΑ ΤΟ ΚΛΙΚ
         emojiPicker.addEventListener('emoji-click', event => {
             messageInput.value += event.detail.unicode;
-            // Η γραμμή 'picker.style.display = 'none';' ΑΦΑΙΡΕΘΗΚΕ ΕΠΙΤΗΔΕΣ.
+            // Η γραμμή 'picker.style.display = 'none';' ΑΦΑΙΡΕΘΗΚΕ
             messageInput.focus(); 
             sendBtn.disabled = messageInput.value.trim().length === 0;
         });
@@ -604,7 +616,6 @@
                  return;
              }
              
-             // Εδώ μπορεί να χρειαστεί jspdf.jsPDF αν η βιβλιοθήκη φορτώθηκε μέσω import
              const { jsPDF } = window.jspdf;
              const doc = new jsPDF();
              let y = 10;
@@ -631,21 +642,13 @@
                      y = 10;
                  }
                  
-                 // Display the sender's name and time (with color)
                  doc.setTextColor('#BB86FC');
-                 const senderInfo = sender.split(']')[0] + ']'; // Keep only name and time
+                 const senderInfo = sender.split(']')[0] + ']'; 
                  doc.text(senderInfo, margin, y);
                  
-                 // Display the message text (wrap it)
-                 doc.setTextColor('#333');
-                 
-                 const textStart = margin + doc.getStringUnitWidth(senderInfo) * doc.internal.getFontSize();
-                 
-                 const messageLines = doc.splitTextToSize(textContent, maxWidth - 50);
-
-                 // Simple version: just print the message text on the next line
                  doc.setTextColor('#333');
                  y += lineHeight; 
+                 const messageLines = doc.splitTextToSize(textContent, maxWidth);
                  doc.text(messageLines, margin, y);
                  y += messageLines.length * lineHeight + 2; 
              });
@@ -751,7 +754,19 @@
              if (format.isBold) { messageText.style.fontWeight = 'bold'; }
              if (format.isItalic) { messageText.style.fontStyle = 'italic'; }
              if (format.color && format.color !== '#FFFFFF') { messageText.style.color = format.color; }
-             messageText.textContent = text; 
+             
+             // ΝΕΑ ΛΟΓΙΚΗ: Μετατροπή URL σε clickable link
+             const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+             
+             if (text.match(urlRegex)) {
+                 // Αν το κείμενο περιέχει URL, το μετατρέπουμε σε HTML (Link Preview Placeholder)
+                 messageText.innerHTML = text.replace(urlRegex, function(url) {
+                     return '<a href="' + url + '" target="_blank">' + url + '</a>';
+                 });
+             } else {
+                 messageText.textContent = text; 
+             }
+             
              contentContainer.appendChild(messageText);
 
              const date = new Date(data.timestamp);
