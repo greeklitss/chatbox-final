@@ -37,7 +37,7 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            background-color: transparent; /* ΔΙΟΡΘΩΣΗ: Για να φαίνεται το background image */
+            /* background-color: transparent; - Αφαιρέθηκε, καθώς το container έχει το δικό του background */
         }
 
         /* --- MESSAGE ROW --- */
@@ -120,8 +120,8 @@
             display: flex;
             flex-direction: column;
             max-width: 80%;
-            /* ΔΙΟΡΘΩΣΗ: Ημιδιαφανές background για να φαίνεται η εικόνα */
-            background-color: rgba(30, 30, 30, 0.75); 
+            /* ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Αύξηση opacity σε 90% για καλύτερη αντίθεση */
+            background-color: rgba(30, 30, 30, 0.9); 
             padding: 10px 15px;
             border-radius: 8px;
             /* ΕΦΕ BLUR */
@@ -611,6 +611,7 @@
         
         // SAVE AS PDF
         savePdfBtn.addEventListener('click', () => {
+             // Επειδή διορθώσαμε το CDN, αυτό θα πρέπει να δουλέψει
              if (typeof jspdf === 'undefined' || !jspdf.jsPDF) {
                  alert('Σφάλμα: Η βιβλιοθήκη jsPDF δεν φορτώθηκε σωστά. Ελέγξτε τη γραμμή 9.');
                  return;
@@ -755,13 +756,13 @@
              if (format.isItalic) { messageText.style.fontStyle = 'italic'; }
              if (format.color && format.color !== '#FFFFFF') { messageText.style.color = format.color; }
              
-             // ΝΕΑ ΛΟΓΙΚΗ: Μετατροπή URL σε clickable link
+             // ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Μετατροπή URL σε clickable link (Regex)
              const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
              
              if (text.match(urlRegex)) {
-                 // Αν το κείμενο περιέχει URL, το μετατρέπουμε σε HTML (Link Preview Placeholder)
+                 // Εφαρμόζουμε ρητά το χρώμα και την υπογράμμιση για να είμαστε σίγουροι ότι φαίνεται
                  messageText.innerHTML = text.replace(urlRegex, function(url) {
-                     return '<a href="' + url + '" target="_blank">' + url + '</a>';
+                     return '<a href="' + url + '" target="_blank" style="color: #64FFDA; text-decoration: underline;">' + url + '</a>';
                  });
              } else {
                  messageText.textContent = text; 
