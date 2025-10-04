@@ -44,7 +44,7 @@
             position: relative; 
             background-color: #1A1A1A; 
             
-            /* Background Image - ΥΠΟΘΕΤΟΥΜΕ ότι το akoyme_background.png είναι στον ίδιο φάκελο */
+            /* Background Image - ΥΠΟΘΕΣΗ: akoyme_background.png στον ίδιο φάκελο */
             background-image: url('akoyme_background.png'); 
             background-size: cover;
             background-position: center;
@@ -95,10 +95,10 @@
              margin-bottom: 3px;
         }
         
-        /* Ρόλοι (με διόρθωση χρωμάτων) */
-        .user-message .sender { color: #8888FF; } /* Μπλε */
-        .moderator-message .sender { color: #32CD32; } /* Πράσινο */
-        .admin-message .sender { color: #FFD700; } /* Χρυσό */
+        /* Ρόλοι */
+        .user-message .sender { color: #8888FF; } 
+        .moderator-message .sender { color: #32CD32; } 
+        .admin-message .sender { color: #FFD700; } 
         
         .message-content {
              color: #E0E0E0; 
@@ -106,11 +106,20 @@
              line-height: 1.4;
         }
         
+        /* Styling για εικόνες/GIFs μέσα στα μηνύματα */
         .message-content img {
             max-width: 100%; 
             max-height: 200px; 
             border-radius: 8px; 
             margin-top: 5px;
+            display: block; 
+        }
+        
+        /* Styling για το κουμπί διαγραφής */
+        .delete-btn {
+            cursor: pointer;
+            margin-left: 10px;
+            color: #ff6b6b;
         }
 
         /* --- INPUT & FORMATTING BAR --- */
@@ -278,6 +287,24 @@
             border: none;
         }
         
+        /* Στυλ για τα inputs στο Profile Settings */
+        #avatar-url-input, #avatar-form input[type="file"], #avatar-url-form button, #avatar-form button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            box-sizing: border-box;
+            background-color: #3A3A3A;
+            color: white;
+            border: 1px solid #444;
+            border-radius: 5px;
+        }
+        #avatar-url-form button, #avatar-form button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        
     </style>
 </head>
 <body>
@@ -309,10 +336,19 @@
                 <div id="current-avatar-container">
                     <img id="current-avatar" src="" alt="Avatar">
                 </div>
-                <h4>Αλλαγή Εικόνας Προφίλ</h4>
+
+                <h4>Αλλαγή Εικόνας Προφίλ (Αρχείο)</h4>
                 <form id="avatar-form">
                     <input type="file" id="avatar-upload" name="avatar" accept="image/*" required>
-                    <button type="submit">Αποθήκευση Εικόνας</button>
+                    <button type="submit">Αποθήκευση Αρχείου</button>
+                </form>
+
+                <hr style="border-color: #444; margin: 20px 0;">
+
+                <h4>Αλλαγή Εικόνας Προφίλ (URL)</h4>
+                <form id="avatar-url-form">
+                    <input type="url" id="avatar-url-input" placeholder="Εισαγωγή μόνιμου URL εικόνας..." required>
+                    <button type="submit">Αποθήκευση URL</button>
                 </form>
             </div>
         </div>
@@ -338,7 +374,7 @@
     </div>
     
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
-    <emoji-picker id="emojiPicker" style="display:none; position:absolute; bottom: 70px; right: 20px; z-index: 1000;"></emoji-picker>
+    <emoji-picker id="emojiPicker" style="display:none; position:fixed; bottom: 70px; right: 20px; z-index: 1000;"></emoji-picker>
 
     
 <script>
@@ -359,6 +395,11 @@
         const menuAdminBtn = document.getElementById('menuAdminBtn');
         const clearHistoryBtn = document.getElementById('clearHistoryBtn');
         
+        // Forms for Avatar
+        const avatarForm = document.getElementById('avatar-form');
+        const avatarUrlForm = document.getElementById('avatar-url-form'); 
+        const avatarUrlInput = document.getElementById('avatar-url-input'); 
+        
         // References για τα κουμπιά λειτουργιών
         const urlBtn = document.getElementById('urlBtn');
         const emojiBtn = document.getElementById('emojiBtn');
@@ -378,6 +419,7 @@
         };
 
         // --- WebSocket Connection ---
+        // Χρησιμοποιούμε wss:// για HTTPS (hosted servers)
         const ws = new WebSocket('wss://' + window.location.host + '/chat'); 
         let currentUserRole = 'user'; 
         let currentUserId = null;
@@ -471,11 +513,8 @@
                 currentUserRole = data.role; 
                 currentUserId = data.id;
                 
-                // Διασφάλιση σωστής διαδρομής για το avatar
-                let avatarSource = '/uploads/default-avatar.png'; 
-                if (data.avatarUrl) {
-                    avatarSource = data.avatarUrl.startsWith('/') ? data.avatarUrl : `/uploads/${data.avatarUrl}`;
-                }
+                // Χρησιμοποιούμε το URL κατευθείαν, είτε είναι /uploads/ είτε http://
+                let avatarSource = data.avatarUrl || '/uploads/default-avatar.png'; 
                 currentAvatar.src = avatarSource;
                 currentAvatar.onerror = function() { this.src = '/uploads/default-avatar.png'; };
                 
@@ -484,8 +523,6 @@
             })
             .catch(error => {
                 console.error('Σφάλμα (User Info / Avatar):', error);
-                // Αν δεν είναι authenticated, ανακατεύθυνση στη login (προαιρετικό)
-                // window.location.href = '/'; 
             });
         
         
@@ -526,8 +563,8 @@
              }
          });
 
-        // AVATAR FORM HANDLER
-        document.getElementById('avatar-form').addEventListener('submit', async (e) => {
+        // AVATAR FORM HANDLER (Αρχείο - Για τοπικό server)
+        avatarForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
             try {
@@ -539,9 +576,8 @@
                 if (res.ok) {
                     const data = await res.json();
                     currentAvatar.src = data.avatarUrl; 
-                    alert('Η εικόνα προφίλ ενημερώθηκε επιτυχώς.');
+                    alert('Η εικόνα προφίλ ενημερώθηκε επιτυχώς (αλλά θα χαθεί με την επανεκκίνηση του server).');
                     profileSettings.style.display = 'none';
-                    // Ζητάμε ανανέωση των μηνυμάτων για να εμφανιστεί το νέο avatar σε όλους
                     ws.send(JSON.stringify({ type: 'requestOldMessages' })); 
                 } else {
                     const errorText = await res.text();
@@ -552,6 +588,40 @@
                 alert('Σφάλμα δικτύου κατά την ενημέρωση του avatar.');
             }
         });
+        
+        // AVATAR FORM HANDLER (URL - Για μόνιμη λύση)
+        avatarUrlForm.addEventListener('submit', async (e) => {
+             e.preventDefault();
+             const avatarUrl = avatarUrlInput.value.trim();
+             
+             if (!avatarUrl || (!avatarUrl.startsWith('http://') && !avatarUrl.startsWith('https://'))) {
+                 alert('Παρακαλώ εισάγετε έγκυρο URL εικόνας (πρέπει να ξεκινά με http:// ή https://).');
+                 return;
+             }
+             
+             try {
+                 const res = await fetch('/change-avatar-url', {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ avatarUrl })
+                 });
+                 
+                 if (res.ok) {
+                     const data = await res.json();
+                     currentAvatar.src = data.avatarUrl; 
+                     alert('Το Avatar URL ενημερώθηκε επιτυχώς! (Μόνιμη αποθήκευση)');
+                     profileSettings.style.display = 'none';
+                     ws.send(JSON.stringify({ type: 'requestOldMessages' })); 
+                 } else {
+                     const errorText = await res.text();
+                     alert(`Αποτυχία ενημέρωσης Avatar URL: ${errorText}`);
+                 }
+             } catch (error) {
+                 console.error('Error updating avatar URL:', error);
+                 alert('Σφάλμα δικτύου κατά την ενημέρωση του Avatar URL.');
+             }
+        });
+        
         
         // ADMIN CLEAR HISTORY
         clearHistoryBtn.addEventListener('click', async () => {
@@ -569,7 +639,7 @@
         
         // --- LISTENERS ΓΙΑ URL ΚΑΙ GIF ---
         
-        // URL BUTTON
+        // URL BUTTON 
         urlBtn.addEventListener('click', () => {
             const url = prompt("Εισαγωγή URL (πρέπει να ξεκινά με http:// ή https://):");
             if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
@@ -580,13 +650,17 @@
             }
         });
 
-        // GIF BUTTON - ΝΕΑ ΛΟΓΙΚΗ
+        // GIF BUTTON 
         gifBtn.addEventListener('click', async () => {
             const query = prompt("Πληκτρολογήστε όρο αναζήτησης GIF:");
             if (query && query.trim() !== '') {
                 try {
                     const res = await fetch(`/search-gifs?q=${encodeURIComponent(query)}`);
-                    if (!res.ok) throw new Error('Failed to fetch GIFs from server.');
+                    if (!res.ok) {
+                        const errorText = await res.text();
+                        console.error('GIF search error response:', errorText);
+                        throw new Error(`Failed to fetch GIFs from server. Status: ${res.status}`);
+                    }
                     
                     const data = await res.json();
                     
@@ -604,13 +678,14 @@
                     
                 } catch (error) {
                     console.error('GIF search error:', error);
-                    alert("Αποτυχία αναζήτησης GIF. Ελέγξτε την κονσόλα και το server.js.");
+                    alert("Αποτυχία αναζήτησης GIF. Ελέγξτε την κονσόλα και βεβαιωθείτε ότι το GIPHY_API_KEY είναι ρυθμισμένο.");
                 }
             }
         });
 
         // EMOJI BUTTON LOGIC
-        emojiBtn.addEventListener('click', () => {
+        emojiBtn.addEventListener('click', (e) => {
+             e.stopPropagation();
              const picker = document.getElementById('emojiPicker');
              if (picker) {
                  picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
@@ -645,17 +720,19 @@
             messageInput.style.fontStyle = formattingState.isItalic ? 'italic' : 'normal';
         }
 
-        // SEND MESSAGE & ENTER KEY
+        // SEND MESSAGE
         sendBtn.addEventListener('click', () => {
             const rawMessage = messageInput.value.trim();
             if (rawMessage && ws.readyState === WebSocket.OPEN) {
                 
                 // Ελέγχουμε αν πρόκειται μόνο για GIF ή LINK (special case)
-                const isSpecialTag = rawMessage.match(/^\[(GIF|LINK):http[s]?:\/\/[^\s]+\]$/i); 
+                const gifMatch = rawMessage.match(/^\[GIF:http[s]?:\/\/[^\s]+\]$/i); 
+                const linkMatch = rawMessage.match(/^\[LINK:http[s]?:\/\/[^\s]+\]$/i); 
                 
                 let messageToSend;
-                if (isSpecialTag) {
-                     // Στέλνουμε μόνο το tag (plain text) για να μην το τυλίξει σε JSON
+                
+                // Αν είναι μόνο ένα special tag, το στέλνουμε ως απλό string
+                if (gifMatch || linkMatch) {
                      messageToSend = rawMessage;
                 } else {
                     // Στέλνουμε το μήνυμα με το formatting JSON
@@ -682,6 +759,7 @@
             }
         });
 
+        // ENTER KEY FIX (ΔΙΟΡΘΩΣΗ: Αποστολή με Enter)
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') { 
                 e.preventDefault(); 
@@ -695,11 +773,12 @@
             const clickedInsideAdmin = adminPanel.contains(e.target);
             const clickedInsideSettings = profileSettings.contains(e.target);
             const clickedInsideInputBar = document.getElementById('input-container').contains(e.target);
+            const clickedInsideEmoji = emojiPicker.contains(e.target);
 
             if (settingsMenu.style.display === 'flex' && !clickedInsideMenu) {
                 settingsMenu.style.display = 'none';
             }
-            if (!clickedInsideInputBar) {
+            if (!clickedInsideInputBar && !clickedInsideEmoji) { 
                 const picker = document.getElementById('emojiPicker');
                 if (picker) picker.style.display = 'none';
             }
@@ -711,7 +790,7 @@
             }
         });
         
-        // --- appendMessage (Η ΚΑΡΔΙΑ ΤΗΣ ΕΦΑΡΜΟΓΗΣ - ΕΠΕΞΕΡΓΑΣΙΑ ΜΗΝΥΜΑΤΟΣ) ---
+        // --- appendMessage (ΕΠΕΞΕΡΓΑΣΙΑ ΜΗΝΥΜΑΤΟΣ - ΔΙΟΡΘΩΣΗ URL/GIF Rendering) ---
         function appendMessage(data) {
              const messageElement = document.createElement('div');
              messageElement.classList.add('message', `${data.role}-message`);
@@ -719,11 +798,8 @@
              
              const avatarImg = document.createElement('img');
              avatarImg.classList.add('avatar');
-             let avatarUrl = '/uploads/default-avatar.png';
-             if (data.avatar_url || data.avatarUrl) {
-                 const providedUrl = data.avatar_url || data.avatarUrl;
-                 avatarUrl = providedUrl.startsWith('/') ? providedUrl : `/uploads/${providedUrl}`;
-             }
+             let avatarUrl = data.avatarUrl || '/uploads/default-avatar.png'; 
+             
              avatarImg.src = avatarUrl; 
              avatarImg.onerror = function() { this.src = '/uploads/default-avatar.png'; }; // Fallback
              messageElement.appendChild(avatarImg);
@@ -742,14 +818,17 @@
              // ΠΡΟΣΠΑΘΕΙΑ PARSE (αν είναι JSON με formatting)
              try {
                  const parsedData = JSON.parse(text);
-                 if (parsedData.text) { text = parsedData.text; format = parsedData; }
+                 if (parsedData.text !== undefined) { 
+                     text = parsedData.text; 
+                     format = parsedData; 
+                 }
              } catch (e) { /* Είναι απλό κείμενο ή special tag */ }
 
              const messageText = document.createElement('span');
              messageText.classList.add('message-content');
              // Εφαρμογή formatting
-             if (format.isBold) { messageText.style.fontWeight = 'bold'; }
-             if (format.isItalic) { messageText.style.fontStyle = 'italic'; }
+             if (format.isBold === true) { messageText.style.fontWeight = 'bold'; }
+             if (format.isItalic === true) { messageText.style.fontStyle = 'italic'; }
              if (format.color && format.color !== '#FFFFFF') { messageText.style.color = format.color; }
              
              let contentHTML = text;
@@ -757,7 +836,7 @@
              // 1. ΕΠΕΞΕΡΓΑΣΙΑ GIF: Μετατρέπει το [GIF:url] σε HTML <img> tag
              contentHTML = contentHTML.replace(
                  /\[GIF:(http[s]?:\/\/[^\s]+)\]/gi, 
-                 '<br><img src="$1" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 5px;" alt="GIF">'
+                 '<br><img src="$1" alt="GIF">'
              );
              
              // 2. ΕΠΕΞΕΡΓΑΣΙΑ URL: Μετατρέπει το [LINK:url] σε HTML <a> tag
@@ -780,9 +859,6 @@
                  const deleteBtn = document.createElement('span');
                  deleteBtn.textContent = ' ❌';
                  deleteBtn.classList.add('delete-btn');
-                 deleteBtn.style.cursor = 'pointer';
-                 deleteBtn.style.marginLeft = '10px';
-                 deleteBtn.style.color = '#ff6b6b';
                  deleteBtn.title = 'Διαγραφή Μηνύματος';
                  
                  deleteBtn.addEventListener('click', async () => {

@@ -1,3 +1,5 @@
+// server.js (FINAL VERSION - 2025/10/04)
+
 const express = require('express');
 const http = require('http');
 const path = require('path');
@@ -13,27 +15,23 @@ const LocalStrategy = require('passport-local').Strategy;
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
-
-// ΠΡΟΣΟΧΗ: Χρησιμοποιούμε το ενσωματωμένο fetch του Node.js (v18+). 
-// Αν χρησιμοποιείτε παλαιότερη έκδοση, χρειάζεται: const fetch = require('node-fetch');
-// και npm install node-fetch
+const axios = require('axios'); // Χρειάζεται 'npm install axios'
 
 const app = express();
-const server = http.createServer(app); 
-const wsInstance = expressWs(app, server); 
+const server = http.createServer(app);
+const wsInstance = expressWs(app, server);
 
 // --- ΣΗΜΑΝΤΙΚΗ ΔΙΟΡΘΩΣΗ: STATIC FILES ---
-// 1. Εξυπηρετεί όλα τα αρχεία στον root φάκελο (chat.html, login.html, akoyme_background.png)
 app.use(express.static(__dirname));
 
-// Δημιουργία του φακέλου 'uploads' αν δεν υπάρχει
+// Δημιουργία του φακέλου 'uploads' αν δεν υπάρχει (για τοπική χρήση/avatar)
 const uploadDir = 'uploads';
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
 
-// 2. Εξυπηρετεί τον φάκελο uploads για τα avatar
-app.use('/uploads', express.static(uploadDir));
+// Εξυπηρετεί τον φάκελο uploads για τα avatar/εικόνες
+app.use('/uploads', express.static('uploads'));
 // ----------------------------------------
 
 app.use(express.urlencoded({ extended: true }));
@@ -42,7 +40,7 @@ app.use(express.json());
 // Εγκατάσταση του multer για αποθήκευση εικόνων
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, uploadDir); // Χρησιμοποιούμε τη μεταβλητή uploadDir
+        cb(null, 'uploads/');
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = uuidv4();
@@ -54,7 +52,7 @@ const upload = multer({ storage: storage });
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false // Απαραίτητο για Heroku
     }
 });
 
@@ -81,9 +79,7 @@ passport.deserializeUser(async (id, done) => {
     }
 });
 
-// Passport Strategies (Google/Facebook/Local)
-// ... (Οι στρατηγικές παραμένουν ίδιες, τις αφήνουμε ως έχουν) ...
-
+// --- GOOGLE/FACEBOOK STRATEGIES (ίδιες) ---
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -93,7 +89,7 @@ passport.use(new GoogleStrategy({
         try {
             let user = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
             if (user.rows.length === 0) {
-                user = await pool.query('INSERT INTO users (google_id, display_name, role, avatar_url) VALUES ($1, $2, $3, $4) RETURNING *', [profile.id, profile.displayName, 'user', 'uploads/default-avatar.png']);
+                user = await pool.query('INSERT INTO users (google_id, display_name, role, avatar_url) VALUES ($1, $2, $3, $4) RETURNING *', [profile.id, profile.displayName, 'user', '/uploads/default-avatar.png']);
             }
             done(null, user.rows[0]);
         } catch (error) {
@@ -112,7 +108,7 @@ passport.use(new FacebookStrategy({
         try {
             let user = await pool.query('SELECT * FROM users WHERE facebook_id = $1', [profile.id]);
             if (user.rows.length === 0) {
-                user = await pool.query('INSERT INTO users (facebook_id, display_name, role, avatar_url) VALUES ($1, $2, \'user\', $3) RETURNING *', [profile.id, profile.displayName, 'uploads/default-avatar.png']);
+                user = await pool.query('INSERT INTO users (facebook_id, display_name, role, avatar_url) VALUES ($1, $2, \'user\', $3) RETURNING *', [profile.id, profile.displayName, '/uploads/default-avatar.png']);
             }
             done(null, user.rows[0]);
         } catch (error) {
@@ -121,6 +117,7 @@ passport.use(new FacebookStrategy({
     }
 ));
 
+// --- LOCAL STRATEGY (ίδια) ---
 passport.use(new LocalStrategy(async (username, password, done) => {
     try {
         const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
@@ -140,13 +137,14 @@ passport.use(new LocalStrategy(async (username, password, done) => {
     }
 }));
 
-
+// --- ΔΗΜΙΟΥΡΓΙΑ ΠΙΝΑΚΩΝ ---
 async function createTables() {
     try {
         await pool.query('CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, google_id TEXT UNIQUE, facebook_id TEXT UNIQUE, display_name TEXT, role TEXT DEFAULT \'user\', username TEXT UNIQUE, password TEXT, avatar_url TEXT)');
         await pool.query('CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, message TEXT NOT NULL, user_id INTEGER REFERENCES users(id), timestamp TIMESTAMPTZ DEFAULT NOW())');
         await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT');
-        await pool.query('UPDATE users SET avatar_url = $1 WHERE avatar_url IS NULL', ['/uploads/default-avatar.png']); // Διόρθωση path
+        await pool.query('UPDATE users SET avatar_url = $1 WHERE avatar_url IS NULL', ['/uploads/default-avatar.png']);
+        
         console.log('Οι πίνακες "users" και "messages" δημιουργήθηκαν/ενημερώθηκαν επιτυχώς.');
     } catch (error) {
         console.error('Σφάλμα κατά τη δημιουργία των πινάκων:', error);
@@ -159,15 +157,120 @@ app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }))
 app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }), (req, res) => { res.redirect('/chat'); });
 app.get('/auth/facebook', passport.authenticate('facebook'));
 app.get('/auth/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/' }), (req, res) => { res.redirect('/chat'); });
-app.post('/direct-login', passport.authenticate('local', { failureRedirect: '/' }), (req, res) => { res.redirect('/chat'); });
-app.post('/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) { return res.status(500).send('Could not log out.'); }
-        res.status(200).send('Logged out successfully.');
-    });
+
+app.post('/direct-login', passport.authenticate('local', { failureRedirect: '/' }), (req, res) => {
+    res.redirect('/chat');
 });
 
-// --- USER & ADMIN ROUTES ---
+// Endpoint 1: Αλλαγή avatar μέσω ΑΡΧΕΙΟΥ (για Local/Ephemeral storage)
+app.post('/change-avatar', upload.single('avatar'), async (req, res) => {
+    if (!req.isAuthenticated()) {
+        return res.status(401).send('Not authenticated.');
+    }
+    if (!req.file) {
+        return res.status(400).send('No file uploaded.');
+    }
+
+    const userId = req.user.id;
+    const avatarUrl = `/uploads/${req.file.filename}`;
+    
+    try {
+        const result = await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING *', [avatarUrl, userId]);
+        const updatedUser = result.rows[0];
+
+        req.login(updatedUser, (err) => { 
+            if (err) { 
+                console.error('Error logging user back in after avatar update:', err); 
+                return res.status(500).json({ success: false, error: 'Could not update session.', avatarUrl });
+            }
+            res.status(200).json({ success: true, avatarUrl });
+        });
+
+        // Διαγραφή παλιού αρχείου (Προσοχή: αυτό δεν λειτουργεί μόνιμα σε hosted servers)
+        if (req.user.avatar_url && req.user.avatar_url.startsWith('/uploads/')) {
+            const oldPath = path.join(__dirname, req.user.avatar_url);
+            if (fs.existsSync(oldPath)) {
+                fs.unlink(oldPath, (err) => {
+                    if (err) console.error('Error deleting old avatar file:', err);
+                });
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error updating avatar:', error);
+        res.status(500).send('An error occurred while updating avatar.');
+    }
+});
+
+// Endpoint 2: Αλλαγή avatar μέσω URL (Για Hosting/Μόνιμη λύση)
+app.post('/change-avatar-url', async (req, res) => {
+    if (!req.isAuthenticated()) {
+        return res.status(401).send('Not authenticated.');
+    }
+    const { avatarUrl } = req.body;
+    
+    if (!avatarUrl || (!avatarUrl.startsWith('http://') && !avatarUrl.startsWith('https://'))) {
+        return res.status(400).send('Invalid or missing URL. Must start with http:// or https://.');
+    }
+
+    const userId = req.user.id;
+    
+    try {
+        const result = await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING *', [avatarUrl, userId]);
+        const updatedUser = result.rows[0];
+
+        req.login(updatedUser, (err) => { 
+            if (err) { 
+                console.error('Error logging user back in after avatar update:', err); 
+                return res.status(500).json({ success: false, error: 'Could not update session.' });
+            }
+            res.status(200).json({ success: true, avatarUrl });
+        });
+        
+    } catch (error) {
+        console.error('Error updating avatar URL:', error);
+        res.status(500).send('An error occurred while updating avatar URL.');
+    }
+});
+// ---------------------------------------------------------------------
+
+
+// --- GIF SEARCH ENDPOINT (Χρειάζεται axios και GIPHY_API_KEY) ---
+app.get('/search-gifs', async (req, res) => {
+    if (!req.isAuthenticated()) {
+        return res.status(401).send('Unauthorized');
+    }
+    const query = req.query.q;
+    const GIPHY_API_KEY = process.env.GIPHY_API_KEY; 
+    
+    if (!query || !GIPHY_API_KEY) {
+        // Αυτό το μήνυμα βοηθάει στην εύρεση του σφάλματος.
+        return res.status(400).send('Query is required. GIPHY_API_KEY might be missing from environment variables.');
+    }
+
+    try {
+        const response = await axios.get('https://api.giphy.com/v1/gifs/search', {
+            params: {
+                api_key: GIPHY_API_KEY,
+                q: query,
+                limit: 1 
+            }
+        });
+
+        const gifUrls = response.data.data.map(gif => ({
+            url: gif.images.original.url, 
+            title: gif.title
+        }));
+
+        res.json({ success: true, urls: gifUrls });
+
+    } catch (error) {
+        console.error('Giphy API Error:', error.response ? error.response.data : error.message);
+        res.status(500).json({ success: false, message: 'Failed to fetch GIFs.' });
+    }
+});
+// -------------------------------------------------------------
+
 app.get('/user-info', (req, res) => {
     if (req.isAuthenticated()) {
         res.json({
@@ -181,6 +284,7 @@ app.get('/user-info', (req, res) => {
     }
 });
 
+// --- ADMIN & LOGOUT ROUTES (ίδιες) ---
 app.get('/users', async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== 'admin') {
         return res.status(403).send('Forbidden');
@@ -211,37 +315,7 @@ app.post('/change-role', async (req, res) => {
     }
 });
 
-// Endpoint για αλλαγή avatar
-// server.js (περίπου στη γραμμή 175)
 
-app.post('/change-avatar', upload.single('avatar'), async (req, res) => {
-    // ... (έλεγχοι κτλ)
-    
-    const userId = req.user.id;
-    const avatarUrl = `/uploads/${req.file.filename}`;
-    
-    try {
-        // ... (Διαγραφή παλιού avatar - ΟΚ)
-        
-        // 1. Κάνουμε UPDATE στη βάση δεδομένων και ζητάμε πίσω τον ενημερωμένο χρήστη
-        const result = await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING *', [avatarUrl, userId]);
-        const updatedUser = result.rows[0]; // Ο ενημερωμένος χρήστης
-
-        // 2. Ενημερώνουμε το Session με τον ενημερωμένο χρήστη
-        req.login(updatedUser, (err) => { 
-            if (err) { 
-                console.error('Error logging user back in after avatar update:', err); 
-                return res.status(500).send('Could not update session.');
-            }
-            // 3. Επιστρέφουμε OK
-            res.status(200).json({ success: true, avatarUrl });
-        });
-        
-    } catch (error) {
-        console.error('Error updating avatar:', error);
-        res.status(500).send('An error occurred while updating avatar.');
-    }
-});
 app.delete('/clear-history', async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== 'admin') {
         return res.status(403).send('Forbidden');
@@ -260,9 +334,53 @@ app.delete('/clear-history', async (req, res) => {
     }
 });
 
+app.get('/', (req, res) => {
+    if (req.isAuthenticated()) {
+        res.redirect('/chat');
+    } else {
+        res.sendFile(path.join(__dirname, 'login.html'));
+    }
+});
+
+app.get('/chat', (req, res) => {
+    if (req.isAuthenticated()) {
+        res.sendFile(path.join(__dirname, 'chat.html'));
+    } else {
+        res.redirect('/');
+    }
+});
+
+app.post('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            return res.status(500).send('Could not log out.');
+        }
+        res.status(200).send('Logged out successfully.');
+    });
+});
+
+app.post('/create-user', async (req, res) => {
+    const { username, password, displayName } = req.body;
+    if (!username || !password || !displayName) {
+        return res.status(400).send('Username, password, and display name are required.');
+    }
+    
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await pool.query('INSERT INTO users (username, password, display_name, role, avatar_url) VALUES ($1, $2, $3, \'user\', $4)', [username, hashedPassword, displayName, '/uploads/default-avatar.png']);
+        res.status(201).send('User created successfully.');
+    } catch (error) {
+        if (error.code === '23505') {
+            return res.status(409).send('Username already exists.');
+        }
+        console.error('Error creating user:', error);
+        res.status(500).send('An error occurred.');
+    }
+});
+
 app.delete('/delete-message/:id', async (req, res) => {
-    if (!req.isAuthenticated() || (req.user.role !== 'admin' && req.user.role !== 'moderator')) { // Mod can also delete
-        return res.status(403).send('Forbidden: Only authorized users can delete messages.');
+    if (!req.isAuthenticated() || (req.user.role !== 'admin' && req.user.role !== 'moderator')) {
+        return res.status(403).send('Forbidden: Only admins and moderators can delete messages.');
     }
 
     const messageId = req.params.id;
@@ -287,82 +405,6 @@ app.delete('/delete-message/:id', async (req, res) => {
     }
 });
 
-app.post('/create-user', async (req, res) => {
-    const { username, password, displayName } = req.body;
-    if (!username || !password || !displayName) {
-        return res.status(400).send('Username, password, and display name are required.');
-    }
-    
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await pool.query('INSERT INTO users (username, password, display_name, role, avatar_url) VALUES ($1, $2, $3, \'user\', $4)', [username, hashedPassword, displayName, '/uploads/default-avatar.png']);
-        res.status(201).send('User created successfully.');
-    } catch (error) {
-        if (error.code === '23505') {
-            return res.status(409).send('Username already exists.');
-        }
-        console.error('Error creating user:', error);
-        res.status(500).send('An error occurred.');
-    }
-});
-
-// --- ΝΕΟ ENDPOINT: Αναζήτηση GIF ---
-// Χρησιμοποιεί το Giphy API key: UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs
-app.get('/search-gifs', async (req, res) => {
-    if (!req.isAuthenticated()) {
-        return res.status(401).send('Not authenticated.');
-    }
-    const GIPHY_API_KEY = 'UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs'; 
-    const query = req.query.q;
-    const limit = 5;
-
-    if (!query) {
-        return res.status(400).send({ error: 'Query parameter "q" is required' });
-    }
-    
-    try {
-        const url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=${limit}&rating=g`;
-        
-        // Χρησιμοποιούμε fetch (απαιτεί Node.js 18+ ή node-fetch)
-        const response = await fetch(url); 
-        
-        if (!response.ok) {
-             throw new Error(`Giphy API returned status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        const gifUrls = data.data.map(gif => ({
-            id: gif.id,
-            url: gif.images.fixed_height.url // Χρησιμοποιούμε fixed_height για καλή ποιότητα
-        })); 
-        
-        res.json({ urls: gifUrls });
-        
-    } catch (error) {
-        console.error('Giphy API error:', error.message);
-        res.status(500).send({ error: 'Could not fetch GIFs from Giphy.' });
-    }
-});
-
-// --- BASE ROUTES ---
-app.get('/', (req, res) => {
-    if (req.isAuthenticated()) {
-        res.redirect('/chat');
-    } else {
-        res.sendFile(path.join(__dirname, 'login.html'));
-    }
-});
-
-app.get('/chat', (req, res) => {
-    if (req.isAuthenticated()) {
-        res.sendFile(path.join(__dirname, 'chat.html'));
-    } else {
-        res.redirect('/');
-    }
-});
-
-// --- WebSockets ---
 app.ws('/chat', async (ws, req) => {
     if (!req.isAuthenticated()) {
         ws.close();
@@ -409,7 +451,6 @@ app.ws('/chat', async (ws, req) => {
                 console.error('Error inserting message:', error);
             }
         } else if (messageData.type === 'requestOldMessages') {
-             // Αίτημα για ανανέωση των παλιών μηνυμάτων (π.χ. μετά αλλαγή avatar)
              try {
                 const result = await pool.query('SELECT m.id, m.message, m.timestamp, u.display_name, u.role, u.avatar_url, u.id as user_id FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp ASC');
                 ws.send(JSON.stringify({ type: 'oldMessages', messages: result.rows }));
