@@ -29,306 +29,300 @@
         }
         
         /* --- CHATBOX & BACKGROUND --- */
-        #chatbox-container {
-            display: flex;
-            flex-grow: 1;
-            overflow: hidden;
-        }
-        
         #chatbox {
             flex-grow: 1;
             padding: 20px;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            position: relative; 
-            background-color: #1A1A1A; 
-            
-            /* Background Image */
-            background-image: url('akoyme_background.png'); 
+            background-image: url('akoyme_background.png');
             background-size: cover;
             background-position: center;
-            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
 
-        /* Overlay */
-        #chatbox::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.6); 
-            z-index: 1; 
+        /* --- MESSAGE ROW --- */
+        #messageInputRow {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #1f1f1f;
+            border-top: 1px solid #333;
+        }
+        
+        #messageInputRow button, #messageInputRow input[type="color"] {
+            background-color: #3A3A3A;
+            color: #E0E0E0;
+            border: none;
+            padding: 8px 12px;
+            margin-right: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            height: 38px;
+            line-height: 22px; 
+            font-size: 14px;
+        }
+        
+        #messageInputRow button:hover:not(:disabled),
+        #messageInputRow button.active {
+            background-color: #555;
+        }
+
+        #messageInputRow button:disabled {
+            background-color: #2a2a2a;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        #messageInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            margin-right: 10px;
+            background-color: #2a2a2a;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            resize: none; 
+            min-height: 38px;
+            line-height: 1.5;
+        }
+
+        #sendBtn {
+            background-color: #4CAF50;
+            padding: 10px 15px;
+            font-weight: bold;
+        }
+
+        #sendBtn:hover:not(:disabled) {
+            background-color: #45a049;
         }
         
         /* --- MESSAGES --- */
         .message {
-            z-index: 2; 
-            margin-bottom: 15px; 
-            padding: 5px 0; 
-            word-wrap: break-word;
-            max-width: 90%; 
             display: flex;
             align-items: flex-start;
+            margin-bottom: 15px;
         }
-        
+
         .avatar {
             width: 35px;
             height: 35px;
             border-radius: 50%;
-            margin-right: 10px;
             object-fit: cover;
-            border: 2px solid #444; 
-            flex-shrink: 0; 
+            margin-right: 10px;
+            flex-shrink: 0;
+            border: 2px solid #555;
         }
-        
+
         .message-content-container {
             display: flex;
             flex-direction: column;
+            max-width: 80%;
+            background-color: #333;
+            padding: 10px 15px;
+            border-radius: 8px;
         }
 
         .sender {
-             font-weight: 700;
-             font-size: 0.9em;
-             margin-bottom: 3px;
-        }
-        
-        .user-message .sender { color: #8888FF; } 
-        .moderator-message .sender { color: #32CD32; } 
-        .admin-message .sender { color: #FFD700; } 
-        
-        .message-content {
-             color: #E0E0E0; 
-             font-size: 1em;
-             line-height: 1.4;
+            font-weight: bold;
+            color: #BB86FC; 
+            margin-bottom: 3px;
+            font-size: 13px;
         }
 
-        /* DELETE BUTTON for Admin */
-        .delete-btn {
+        .message-content {
+            word-wrap: break-word;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        
+        /* --- ADMIN/SETTINGS --- */
+        .settings-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+        
+        #menuToggleBtn {
+            background-color: #3A3A3A;
+            border: none;
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #settings-menu {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background-color: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px 0;
+            min-width: 150px;
+            display: none;
+            flex-direction: column;
+        }
+        
+        #settings-menu button {
             background: none;
             border: none;
-            color: #ff6b6b;
-            cursor: pointer;
-            font-size: 0.9em;
-            margin-left: 10px;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
-        .delete-btn:hover {
-            opacity: 1;
-        }
-
-        /* --- INPUT & FORMATTING BAR --- */
-        #input-container {
-            display: flex;
-            flex-direction: column; 
-            padding: 10px 15px; 
-            background-color: #282828; 
-            flex-shrink: 0; 
-            z-index: 10;
-        }
-
-        #messageInputRow {
-            display: flex;
-            width: 100%;
-            align-items: center;
-        }
-
-        #formatting-bar {
-            display: flex;
-            justify-content: flex-start;
-            padding-bottom: 8px;
-            width: 100%;
-        }
-
-        /* Κουμπιά */
-        .format-btn, #urlBtn, #emojiBtn, #gifBtn, #sendBtn {
-            border: none;
-            width: 38px; 
-            height: 38px; 
-            padding: 0; 
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 5px;
-            font-size: 18px;
-            background-color: #3A3A3A; 
             color: #E0E0E0;
+            padding: 10px 15px;
+            text-align: left;
+            cursor: pointer;
             transition: background-color 0.2s;
             display: flex;
-            justify-content: center;
             align-items: center;
-        }
-        .format-btn:hover, #urlBtn:hover, #emojiBtn:hover, #gifBtn:hover {
-            background-color: #555555; 
-        }
-        .format-btn.active, #sendBtn {
-            background-color: #007bff; 
-        }
-
-        #sendBtn {
-            width: 50px; 
-            margin-left: 5px;
-            font-size: 20px;
+            font-size: 14px;
         }
         
-        /* INPUT FIELD: Εγγύηση Ορατότητας */
-        #messageInput {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #444; 
-            border-radius: 5px;
+        #settings-menu button:hover {
+            background-color: #3a3a3a;
+        }
+        
+        #settings-menu i {
             margin-right: 10px;
-            background-color: #3A3A3A; 
-            
-            /* ΕΠΙΒΟΛΗ: Το κείμενο εισαγωγής είναι πάντα λευκό */
-            color: white !important; 
-            
-            font-size: 1em;
-            transition: border-color 0.3s;
+            width: 15px;
         }
 
-        /* Placeholder */
-        #messageInput::placeholder {
-            color: #999 !important; 
-            opacity: 1 !important;
+        .panel {
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            width: 300px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            color: #E0E0E0;
+            display: none; 
+            max-height: 80vh;
+            overflow-y: auto;
         }
-        #messageInput:focus {
-             border-color: #007bff;
-             outline: none;
+        
+        .panel h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            color: #BB86FC;
         }
 
-        /* --- MENU ΡΥΘΜΙΣΕΩΝ --- */
-        #menuToggleBtn {
-            background-color: #007bff;
+        .panel form button {
+            background-color: #03dac6;
+            color: #121212;
+            font-weight: bold;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+        }
+        
+        .panel form input[type="file"],
+        .panel form input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background-color: #333;
+            color: #E0E0E0;
+            box-sizing: border-box;
+        }
+        
+        #userList div {
+            padding: 8px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #userList button {
+            background-color: #CF6679;
             color: white;
             border: none;
-            width: 40px; 
-            height: 40px; 
-            border-radius: 50%;
+            padding: 5px 10px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 18px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: fixed; 
-            top: 15px;
-            right: 15px;
-            z-index: 100;
-        }
-        
-        #settings-menu {
-             position: fixed;
-             top: 55px; 
-             right: 15px;
-             background: #282828;
-             border-radius: 5px;
-             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-             padding: 5px 0;
-             z-index: 101; 
-             width: 200px;
-             display: none; 
-             flex-direction: column;
+            font-size: 12px;
         }
 
-        .menu-item {
-             background: none;
-             color: #E0E0E0;
-             border: none;
-             padding: 10px 15px;
-             text-align: left;
-             width: 100%;
-             cursor: pointer;
-             font-size: 14px;
-             transition: background-color 0.2s;
+        /* --- EMOJI PICKER POSITIONING --- */
+        emoji-picker {
+            position: absolute;
+            bottom: 60px; 
+            left: 10px; 
+            z-index: 1000;
         }
-        .menu-item:hover {
-             background-color: #3A3A3A;
-        }
-        .menu-item i {
-             margin-right: 10px;
-        }
-        
-        /* ADMIN/PROFILE PANELS */
-        #admin-panel, #profile-settings {
-             background: #1A1A1A; 
-             color: #E0E0E0;
-             padding: 20px;
-             position: fixed; 
-             top: 0; 
-             right: 0; 
-             width: 300px;
-             height: 100%;
-             box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
-             z-index: 20;
-             display: none; 
-             overflow-y: auto;
-        }
-        
+
     </style>
 </head>
 <body>
     <div class="container">
         
-        <button id="menuToggleBtn" title="Menu"><i class="fas fa-cog"></i></button>
-
-        <div id="chatbox-container">
-            <div id="chatbox"></div>
-            
-            <div id="settings-menu" style="display: none;">
-                <button id="menuProfileBtn" class="menu-item"><i class="fas fa-user-circle"></i> Ρυθμίσεις Προφίλ</button>
-                <button id="menuAdminBtn" class="menu-item"><i class="fas fa-shield-alt"></i> Admin Panel</button>
-                <hr style="border-color: #444; margin: 5px 0;">
-                <button id="menuLogoutBtn" class="menu-item" style="color: #ff6b6b;"><i class="fas fa-sign-out-alt"></i> Αποσύνδεση</button>
+        <div id="chatbox">
             </div>
 
-            <div id="admin-panel">
-                <h3>Admin Panel</h3>
-                <button id="clearHistoryBtn">Καθαρισμός Ιστορικού</button>
-                <button id="savePdfBtn">Αποθήκευση ως PDF</button>
-                <hr style="border-color: #444;">
-                <h4>Αλλαγή Ρόλου Χρήστη</h4>
-                <div id="userList"></div>
-            </div>
+        <div id="messageInputRow">
             
-            <div id="profile-settings">
-                <h3>Ρυθμίσεις Προφίλ</h3>
-                <div id="current-avatar-container">
-                    <img id="current-avatar" src="">
-                </div>
-                <h4>Αλλαγή Εικόνας Προφίλ</h4>
-                <form id="avatar-form">
-                    <input type="file" id="avatar-upload" name="avatar" accept="image/*" required>
-                    <button type="submit">Αποθήκευση Εικόνας</button>
-                </form>
+            <button id="boldBtn"><i class="fas fa-bold"></i></button>
+            <button id="italicBtn"><i class="fas fa-italic"></i></button>
+            <button id="colorBtn"><i class="fas fa-palette"></i></button>
+            <input type="color" id="colorPicker" style="display:none;">
+
+            <button id="urlBtn"><i class="fas fa-link"></i></button>
+            <button id="emojiBtn"><i class="fas fa-smile"></i></button>
+            <button id="gifBtn"><i class="fas fa-gift"></i></button>
+
+            <textarea id="messageInput" placeholder="Πληκτρολογήστε το μήνυμά σας..."></textarea>
+            <button id="sendBtn" disabled><i class="fas fa-paper-plane"></i></button>
+        </div>
+
+        <div class="settings-container">
+            <button id="menuToggleBtn"><i class="fas fa-cog"></i></button>
+            
+            <div id="settings-menu">
+                <button id="menuProfileBtn"><i class="fas fa-user-circle"></i> Profile</button>
+                <button id="menuAdminBtn" style="display:none;"><i class="fas fa-shield-alt"></i> Admin Panel</button>
+                <button id="savePdfBtn"><i class="fas fa-file-pdf"></i> Save as PDF</button>
+                <button id="menuLogoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </div>
-        
-        <div id="input-container">
-            <div id="formatting-bar">
-                <button class="format-btn" id="boldBtn" data-format="isBold" title="Bold"><i class="fas fa-bold"></i></button>
-                <button class="format-btn" id="italicBtn" data-format="isItalic" title="Italic"><i class="fas fa-italic"></i></button>
-                <button class="format-btn" id="colorBtn" data-format="color" title="Color"><i class="fas fa-palette"></i></button>
-                <input type="color" id="colorPicker" style="display: none;">
-            </div>
-            
-            <div id="messageInputRow">
-                <input type="text" id="messageInput" placeholder="Πληκτρολογήστε ένα μήνυμα..." autocomplete="off">
-                
-                <button id="urlBtn" title="Εισαγωγή URL"><i class="fas fa-link"></i></button>
-                <button id="emojiBtn" title="Emojis">😊</button>
-                <button id="gifBtn" title="GIF"><i class="fas fa-gift"></i></button>
-                
-                <button id="sendBtn" disabled title="Αποστολή"><i class="fas fa-paper-plane"></i></button>
-            </div>
+
+        <div id="profile-settings" class="panel">
+            <h3>Profile Settings</h3>
+            <img id="current-avatar" src="/uploads/default-avatar.png" alt="Avatar" class="avatar" style="width: 100px; height: 100px; margin-bottom: 15px;">
+            <form id="avatar-form" enctype="multipart/form-data">
+                <input type="file" name="avatar" id="avatarInput" accept="image/*" required>
+                <button type="submit">Change Avatar</button>
+            </form>
+        </div>
+
+        <div id="admin-panel" class="panel">
+            <h3>Admin Panel</h3>
+            <button id="clearHistoryBtn" style="background-color: #CF6679;">Clear Chat History</button>
+            <div id="userList" style="margin-top: 15px;">
+                </div>
         </div>
     </div>
     
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
-    <emoji-picker id="emojiPicker" style="display:none;"></emoji-picker>
+    <emoji-picker id="emojiPicker" style="display:none;"></emoji-picker> 
 
-    
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- DOM Elements ---
@@ -346,13 +340,13 @@
         const menuProfileBtn = document.getElementById('menuProfileBtn');
         const menuAdminBtn = document.getElementById('menuAdminBtn');
         
-        // Προσθήκη missing references για Admin Panel (από το προηγούμενο διορθωμένο script)
+        // References για Admin Panel / PDF
         const clearHistoryBtn = document.getElementById('clearHistoryBtn'); 
         const userListDiv = document.getElementById('userList'); 
         const avatarForm = document.getElementById('avatar-form'); 
         const savePdfBtn = document.getElementById('savePdfBtn');
         
-        // ΕΠΑΝΑΦΟΡΑ JS References
+        // References για Formatting
         const urlBtn = document.getElementById('urlBtn');
         const emojiBtn = document.getElementById('emojiBtn');
         const emojiPicker = document.getElementById('emojiPicker');
@@ -398,9 +392,47 @@
         };
         
         // --- PLACEHOLDER FUNCTIONS (Απαιτείται Backend) ---
-        async function loadAdminPanel() { /* ... */ }
+        async function loadAdminPanel() { 
+             if (currentUserRole !== 'admin') return;
+             try {
+                 const res = await fetch('/admin/users');
+                 if (!res.ok) throw new Error('Failed to fetch user list');
+                 const users = await res.json();
+                 
+                 userListDiv.innerHTML = '';
+                 users.forEach(user => {
+                     const userDiv = document.createElement('div');
+                     userDiv.innerHTML = `
+                         <span>${user.display_name} (${user.username}) - ${user.role}</span>
+                         ${user.role !== 'admin' ? `<button data-user-id="${user.id}" data-action="delete">Delete</button>` : ''}
+                     `;
+                     userListDiv.appendChild(userDiv);
+                 });
+             } catch(error) {
+                 console.error('Admin Panel Error:', error);
+                 userListDiv.innerHTML = '<div>Error loading users.</div>';
+             }
+         }
+         
+         userListDiv.addEventListener('click', async (e) => {
+             const btn = e.target.closest('button[data-action="delete"]');
+             if (btn && confirm('Are you sure you want to delete this user?')) {
+                 const userId = btn.dataset.userId;
+                 try {
+                     const res = await fetch(`/admin/delete-user/${userId}`, { method: 'POST' });
+                     if (res.ok) {
+                         alert('User deleted successfully.');
+                         loadAdminPanel(); 
+                     } else {
+                         alert('Failed to delete user.');
+                     }
+                 } catch (error) {
+                     console.error('Delete user error:', error);
+                 }
+             }
+         });
         
-        // --- USER INFO & AVATAR (Βασικό έλεγχο path) ---
+        // --- USER INFO & AVATAR ---
         fetch('/user-info')
             .then(res => {
                 if (!res.ok) throw new Error('Not authenticated');
@@ -463,6 +495,53 @@
                  }
              }
          });
+         
+        // CLEAR CHAT HISTORY (Admin only)
+        clearHistoryBtn.addEventListener('click', async () => {
+             if (currentUserRole !== 'admin') { alert('Access Denied'); return; }
+             if (confirm('ΠΡΟΣΟΧΗ! Θέλετε να διαγράψετε όλο το ιστορικό συνομιλίας;')) {
+                 try {
+                     const res = await fetch('/admin/clear-chat', { method: 'POST' });
+                     if (res.ok) {
+                         alert('Chat history cleared!');
+                         ws.send(JSON.stringify({ type: 'requestOldMessages' })); // Refresh chat
+                     } else {
+                         alert('Failed to clear chat history.');
+                     }
+                 } catch (error) {
+                     console.error('Clear chat error:', error);
+                 }
+             }
+         });
+         
+         // AVATAR UPLOAD
+         avatarForm.addEventListener('submit', async function(e) {
+             e.preventDefault();
+             try {
+                 const formData = new FormData(this);
+                 const res = await fetch('/change-avatar', {
+                     method: 'POST',
+                     body: formData
+                 });
+
+                 if (res.ok) {
+                     const data = await res.json();
+                     alert('Avatar updated successfully!');
+                     const newAvatarUrl = data.avatarUrl.startsWith('/') ? data.avatarUrl : `/uploads/${data.avatarUrl}`;
+                     currentAvatar.src = newAvatarUrl;
+                     
+                     // Force refresh to reload the new avatar on messages
+                     ws.send(JSON.stringify({ type: 'requestOldMessages' }));
+                 } else {
+                     const errorText = await res.text();
+                     alert(`Failed to update avatar: ${errorText}`);
+                 }
+             } catch (error) {
+                 console.error('Avatar upload error:', error);
+                 alert('Network or server error during avatar upload.');
+             }
+         });
+
 
         // FORMATTING
         boldBtn.addEventListener('click', () => toggleFormatting('isBold', boldBtn));
@@ -484,9 +563,9 @@
             messageInput.style.fontStyle = formattingState.isItalic ? 'italic' : 'normal';
         }
 
-        // --- URL Button Logic (ΕΠΑΝΑΦΟΡΑ) ---
+        // --- URL Button Logic ---
         urlBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Fix για να μην μπλοκάρεται
+            e.stopPropagation(); // FIX: Απαραίτητο για όλα τα κουμπιά
             const url = prompt("Εισάγετε το URL:");
             if (url) {
                 messageInput.value += ` [${url}] `;
@@ -495,33 +574,85 @@
             }
         });
         
-        // --- GIF Button Logic (ΕΠΑΝΑΦΟΡΑ) ---
+        // --- GIF Button Logic ---
         gifBtn.addEventListener('click', (e) => {
-             e.stopPropagation(); // Fix για να μην μπλοκάρεται
-             alert('Η λειτουργία GIF δεν έχει υλοποιηθεί ακόμα!');
+            e.stopPropagation(); // FIX: Απαραίτητο για όλα τα κουμπιά
+            alert('Η λειτουργία GIF δεν έχει υλοποιηθεί ακόμα!');
         });
-        
-        // EMOJI BUTTON LOGIC (Απαιτεί το emoji-picker-element)
+
+        // EMOJI BUTTON LOGIC
         emojiBtn.addEventListener('click', (e) => {
-             e.stopPropagation(); // Fix για να μην μπλοκάρεται
-             // Κρύβουμε/Εμφανίζουμε το emoji picker 
-             const picker = document.getElementById('emojiPicker');
-             if (picker) {
-                 picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
-             }
+            e.stopPropagation(); // FIX: Απαραίτητο για να ανοίξει ο picker
+            const picker = document.getElementById('emojiPicker');
+            if (picker) {
+                picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
+            }
         });
 
         // ΝΕΑ ΛΕΙΤΟΥΡΓΙΑ EMOJI: ΔΕΝ ΚΛΕΙΝΕΙ ΤΟ ΠΑΡΑΘΥΡΟ ΜΕΤΑ ΤΟ ΚΛΙΚ
         emojiPicker.addEventListener('emoji-click', event => {
             messageInput.value += event.detail.unicode;
-            
-            // *** Η ΣΗΜΑΝΤΙΚΗ ΔΙΟΡΘΩΣΗ ***
-            // Αφαιρέθηκε η γραμμή: emojiPicker.style.display = 'none';
-            
-            messageInput.focus(); // Επιστρέφουμε το focus στο πεδίο κειμένου
+            // Η γραμμή 'picker.style.display = 'none';' ΑΦΑΙΡΕΘΗΚΕ ΕΠΙΤΗΔΕΣ.
+            messageInput.focus(); 
             sendBtn.disabled = messageInput.value.trim().length === 0;
         });
         
+        // SAVE AS PDF
+        savePdfBtn.addEventListener('click', () => {
+             if (typeof jspdf === 'undefined' || !jspdf.jsPDF) {
+                 alert('Σφάλμα: Η βιβλιοθήκη jsPDF δεν φορτώθηκε σωστά. Ελέγξτε τη γραμμή 9.');
+                 return;
+             }
+             
+             // Εδώ μπορεί να χρειαστεί jspdf.jsPDF αν η βιβλιοθήκη φορτώθηκε μέσω import
+             const { jsPDF } = window.jspdf;
+             const doc = new jsPDF();
+             let y = 10;
+             const margin = 10;
+             const lineHeight = 7;
+             const maxWidth = 190;
+             
+             doc.setFontSize(10);
+             doc.text("Chat Log - " + new Date().toLocaleString(), margin, y);
+             y += lineHeight * 2;
+             
+             const messages = chatbox.querySelectorAll('.message');
+             
+             messages.forEach(messageEl => {
+                 const sender = messageEl.querySelector('.sender').textContent.trim();
+                 const textContent = messageEl.querySelector('.message-content').textContent;
+                 
+                 const fullText = `${sender} ${textContent}`;
+                 
+                 const lines = doc.splitTextToSize(fullText, maxWidth);
+                 
+                 if (y + lines.length * lineHeight > 280) { // Page break check
+                     doc.addPage();
+                     y = 10;
+                 }
+                 
+                 // Display the sender's name and time (with color)
+                 doc.setTextColor('#BB86FC');
+                 const senderInfo = sender.split(']')[0] + ']'; // Keep only name and time
+                 doc.text(senderInfo, margin, y);
+                 
+                 // Display the message text (wrap it)
+                 doc.setTextColor('#333');
+                 
+                 const textStart = margin + doc.getStringUnitWidth(senderInfo) * doc.internal.getFontSize();
+                 
+                 const messageLines = doc.splitTextToSize(textContent, maxWidth - 50);
+
+                 // Simple version: just print the message text on the next line
+                 doc.setTextColor('#333');
+                 y += lineHeight; 
+                 doc.text(messageLines, margin, y);
+                 y += messageLines.length * lineHeight + 2; 
+             });
+             
+             doc.save('chat_log.pdf');
+         });
+
         // SEND MESSAGE & ENTER KEY
         sendBtn.addEventListener('click', () => {
             const rawMessage = messageInput.value.trim();
@@ -581,10 +712,6 @@
                 picker.style.display = 'none';
             }
         });
-        
-        // --- ΛΟΓΙΚΗ ΑΛΛΑΓΗΣ AVATAR / CLEAR HISTORY / SAVE PDF (ΕΠΑΝΑΦΟΡΑ) ---
-        // (Δεν συμπεριλαμβάνονται εδώ για λόγους συντομίας, αλλά πρέπει να τα επαναφέρεις από το προηγούμενο διορθωμένο script αν λείπουν)
-        
         
         // --- appendMessage (για την εμφάνιση μηνυμάτων) ---
         function appendMessage(data) {
