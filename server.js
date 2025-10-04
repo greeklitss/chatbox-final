@@ -1,4 +1,4 @@
-// server.js (ΤΕΛΙΚΗ ΔΙΟΡΘΩΜΕΝΗ ΕΚΔΟΣΗ)
+// server.js (ΤΕΛΙΚΗ ΕΚΔΟΣΗ ΜΕ ΟΛΕΣ ΤΙΣ ΔΙΟΡΘΩΣΕΙΣ ΚΑΙ ΠΛΗΡΕΣ PASSPORT)
 
 const express = require('express');
 const http = require('http');
@@ -36,7 +36,7 @@ if (!fs.existsSync(uploadDir)) {
 }
 app.use('/uploads', express.static('uploads'));
 
-// --- MULTER & AVATAR UPLOAD DEFINITION (ΣΩΣΤΗ ΘΕΣΗ) ---
+// --- MULTER & AVATAR UPLOAD DEFINITION ---
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, uploadDir);
@@ -80,11 +80,153 @@ passport.deserializeUser(async (id, done) => {
     }
 });
 
-// *************** ΣΥΜΠΛΗΡΩΣΕ ΕΔΩ ΤΙΣ PASSPORT ΣΤΡΑΤΗΓΙΚΕΣ ΣΟΥ ***************
-// *************** (LocalStrategy, GoogleStrategy, FacebookStrategy) ***************
-// *************** (Και τα auth routes: /login, /logout, /create-user) ***************
+// --- ΠΛΗΡΕΣ PASSPORT STRATEGIES (ΛΥΣΗ ΤΟΥ Cannot GET /auth/google) ---
 
-// --- ENDPOINTS (ΜΕΤΑ ΤΟΝ ΟΡΙΣΜΟ ΤΟΥ UPLOAD) ---
+// Local Strategy (Username/Password)
+passport.use(new LocalStrategy(
+    async (username, password, done) => {
+        try {
+            const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+            const user = result.rows[0];
+
+            if (!user) {
+                return done(null, false, { message: 'Incorrect username.' });
+            }
+
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                return done(null, false, { message: 'Incorrect password.' });
+            }
+
+            return done(null, user);
+        } catch (error) {
+            return done(error);
+        }
+    }
+));
+
+// Google Strategy
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || "/auth/google/callback"
+},
+async (accessToken, refreshToken, profile, done) => {
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
+        let user = result.rows[0];
+
+        if (!user) {
+            const displayName = profile.displayName || (profile.emails && profile.emails.length > 0 ? profile.emails[0].value.split('@')[0] : 'Google User');
+            const avatarUrl = profile.photos && profile.photos.length > 0 ? profile.photos[0].value : '/default-avatar.png';
+            
+            const insertResult = await pool.query(
+                'INSERT INTO users (google_id, display_name, role, avatar_url) VALUES ($1, $2, $3, $4) RETURNING *',
+                [profile.id, displayName, 'user', avatarUrl]
+            );
+            user = insertResult.rows[0];
+        }
+        return done(null, user);
+    } catch (error) {
+        return done(error);
+    }
+}));
+
+// Facebook Strategy
+passport.use(new FacebookStrategy({
+    clientID: process.env.FACEBOOK_APP_ID,
+    clientSecret: process.env.FACEBOOK_APP_SECRET,
+    callbackURL: process.env.FACEBOOK_CALLBACK_URL || "/auth/facebook/callback",
+    profileFields: ['id', 'displayName', 'photos', 'email']
+},
+async (accessToken, refreshToken, profile, done) => {
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE facebook_id = $1', [profile.id]);
+        let user = result.rows[0];
+
+        if (!user) {
+            const displayName = profile.displayName;
+            const avatarUrl = profile.photos && profile.photos.length > 0 ? profile.photos[0].value : '/default-avatar.png';
+            const insertResult = await pool.query(
+                'INSERT INTO users (facebook_id, display_name, role, avatar_url) VALUES ($1, $2, $3, $4) RETURNING *',
+                [profile.id, displayName, 'user', avatarUrl]
+            );
+            user = insertResult.rows[0];
+        }
+        return done(null, user);
+    } catch (error) {
+        return done(error);
+    }
+}));
+
+
+// --- AUTHENTICATION ROUTES ---
+
+// Local Login Route
+app.post('/login', passport.authenticate('local', {
+    successRedirect: '/chat',
+    failureRedirect: '/login.html?error=1'
+}));
+
+// Create User Route
+app.post('/create-user', async (req, res) => {
+    const { username, password, displayName } = req.body;
+    if (!username || !password || !displayName) {
+        return res.status(400).send('All fields are required.');
+    }
+
+    try {
+        const existingUser = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+        if (existingUser.rows.length > 0) {
+            return res.status(409).send('Username already exists.');
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const defaultAvatarUrl = '/default-avatar.png'; 
+
+        await pool.query(
+            'INSERT INTO users (username, password, display_name, role, avatar_url) VALUES ($1, $2, $3, $4, $5)',
+            [username, hashedPassword, displayName, 'user', defaultAvatarUrl]
+        );
+        res.status(200).send('User created successfully.');
+    } catch (error) {
+        console.error('Error creating user:', error);
+        res.status(500).send('Server error during user creation.');
+    }
+});
+
+// Google Auth Initiate (ΤΟ ΚΡΙΣΙΜΟ ROUTE)
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// Google Auth Callback (Επιστροφή από Google)
+app.get('/auth/google/callback', 
+    passport.authenticate('google', { failureRedirect: '/login.html?error=1' }),
+    (req, res) => {
+        res.redirect('/chat');
+    }
+);
+
+// Facebook Auth Initiate
+app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['email'] }));
+
+// Facebook Auth Callback (Επιστροφή από Facebook)
+app.get('/auth/facebook/callback',
+    passport.authenticate('facebook', { failureRedirect: '/login.html?error=1' }),
+    (req, res) => {
+        res.redirect('/chat');
+    }
+);
+
+// Logout Route
+app.get('/logout', (req, res, next) => {
+    req.logout((err) => {
+        if (err) { return next(err); }
+        res.redirect('/login.html');
+    });
+});
+
+
+// --- ENDPOINTS (Αλλαγή avatar, GIF Search, Delete Message) ---
 
 // Endpoint 1: Αλλαγή avatar μέσω ΑΡΧΕΙΟΥ
 app.post('/change-avatar', upload.single('avatar'), async (req, res) => {
@@ -186,7 +328,6 @@ app.delete('/delete-message/:id', async (req, res) => {
             return res.status(404).send('Message not found.');
         }
 
-        // Ενημέρωση όλων των συνδεδεμένων πελατών μέσω WebSockets
         wsInstance.getWss().clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify({ type: 'deleteMessage', messageId: messageId }));
@@ -200,7 +341,9 @@ app.delete('/delete-message/:id', async (req, res) => {
     }
 });
 
-// --- ROOT ROUTES (ΓΙΑ ΝΑ ΦΟΡΤΩΝΕΙ ΤΟΠΙΚΑ) ---
+// ... (REST OF ADMIN ENDPOINTS HERE) ...
+
+// --- ROOT ROUTES ---
 app.get('/', (req, res) => {
     if (req.isAuthenticated()) {
         res.sendFile(path.join(__dirname, 'chat.html'));
@@ -220,8 +363,6 @@ app.get('/chat', (req, res) => {
 
 // --- WEBSOCKET CONNECTION ---
 wsInstance.app.ws('/', async (ws, req) => {
-    const sessionData = req.session;
-
     ws.on('message', async (msg) => {
         const messageData = JSON.parse(msg);
 
@@ -241,14 +382,12 @@ wsInstance.app.ws('/', async (ws, req) => {
             const messageText = messageData.message;
 
             try {
-                // Αποθήκευση στο PostgreSQL
                 const result = await pool.query(
                     'INSERT INTO messages (user_id, message) VALUES ($1, $2) RETURNING *',
                     [user.id, messageText]
                 );
                 const newMessage = result.rows[0];
 
-                // Διαμόρφωση απάντησης
                 const response = {
                     type: 'chatMessage',
                     id: newMessage.id,
@@ -260,7 +399,6 @@ wsInstance.app.ws('/', async (ws, req) => {
                     avatar_url: user.avatar_url
                 };
                 
-                // Προώθηση σε όλους τους clients
                 wsInstance.getWss().clients.forEach(client => {
                     if (client.readyState === WebSocket.OPEN) {
                         client.send(JSON.stringify(response));
@@ -271,7 +409,6 @@ wsInstance.app.ws('/', async (ws, req) => {
                 console.error('Error inserting message:', error);
             }
         } else if (messageData.type === 'requestOldMessages') {
-             // Αν ζητηθούν ξανά τα μηνύματα
              try {
                 const result = await pool.query('SELECT m.id, m.message, m.timestamp, u.display_name, u.role, u.avatar_url, u.id as user_id FROM messages m JOIN users u ON m.user_id = u.id ORDER BY m.timestamp ASC');
                 ws.send(JSON.stringify({ type: 'oldMessages', messages: result.rows }));
