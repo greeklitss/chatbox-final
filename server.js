@@ -212,39 +212,36 @@ app.post('/change-role', async (req, res) => {
 });
 
 // Endpoint για αλλαγή avatar
-app.post('/change-avatar', upload.single('avatar'), async (req, res) => {
-    if (!req.isAuthenticated()) {
-        return res.status(401).send('Not authenticated.');
-    }
-    if (!req.file) {
-        return res.status(400).send('No file uploaded.');
-    }
+// server.js (περίπου στη γραμμή 175)
 
+app.post('/change-avatar', upload.single('avatar'), async (req, res) => {
+    // ... (έλεγχοι κτλ)
+    
     const userId = req.user.id;
-    const avatarUrl = `/uploads/${req.file.filename}`; // Σωστό path για εξυπηρέτηση
+    const avatarUrl = `/uploads/${req.file.filename}`;
     
     try {
-        // Διαγραφή παλιού avatar
-        if (req.user.avatar_url && req.user.avatar_url !== '/uploads/default-avatar.png') {
-            const oldPath = path.join(__dirname, req.user.avatar_url);
-            if (fs.existsSync(oldPath)) {
-                 fs.unlink(oldPath, (err) => {
-                    if (err) console.error('Error deleting old avatar:', err);
-                 });
-            }
-        }
-
-        await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatarUrl, userId]);
-        // Ενημέρωση του session user
-        req.user.avatar_url = avatarUrl;
+        // ... (Διαγραφή παλιού avatar - ΟΚ)
         
-        res.status(200).json({ success: true, avatarUrl });
+        // 1. Κάνουμε UPDATE στη βάση δεδομένων και ζητάμε πίσω τον ενημερωμένο χρήστη
+        const result = await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING *', [avatarUrl, userId]);
+        const updatedUser = result.rows[0]; // Ο ενημερωμένος χρήστης
+
+        // 2. Ενημερώνουμε το Session με τον ενημερωμένο χρήστη
+        req.login(updatedUser, (err) => { 
+            if (err) { 
+                console.error('Error logging user back in after avatar update:', err); 
+                return res.status(500).send('Could not update session.');
+            }
+            // 3. Επιστρέφουμε OK
+            res.status(200).json({ success: true, avatarUrl });
+        });
+        
     } catch (error) {
         console.error('Error updating avatar:', error);
         res.status(500).send('An error occurred while updating avatar.');
     }
 });
-
 app.delete('/clear-history', async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== 'admin') {
         return res.status(403).send('Forbidden');
