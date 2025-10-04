@@ -37,7 +37,6 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            /* background-color: transparent; - Αφαιρέθηκε, καθώς το container έχει το δικό του background */
         }
 
         /* --- MESSAGE ROW --- */
@@ -49,9 +48,11 @@
             border-top: 1px solid #333;
         }
         
-        #messageInputRow button, #messageInputRow input[type="color"] {
-            background-color: #3A3A3A;
-            color: #E0E0E0;
+        /* ΔΙΟΡΘΩΣΗ: Χρώμα στα κουμπιά */
+        #messageInputRow button:not(#sendBtn), 
+        #messageInputRow input[type="color"] {
+            background-color: #00BFFF; /* DeepSkyBlue */
+            color: #121212; 
             border: none;
             padding: 8px 12px;
             margin-right: 5px;
@@ -63,9 +64,9 @@
             font-size: 14px;
         }
         
-        #messageInputRow button:hover:not(:disabled),
-        #messageInputRow button.active {
-            background-color: #555;
+        #messageInputRow button:hover:not(#sendBtn),
+        #messageInputRow button.active:not(#sendBtn) {
+            background-color: #009ACD; /* Πιο σκούρο μπλε */
         }
 
         #messageInputRow button:disabled {
@@ -93,6 +94,7 @@
             background-color: #4CAF50;
             padding: 10px 15px;
             font-weight: bold;
+            color: white; 
         }
 
         #sendBtn:hover:not(:disabled) {
@@ -120,27 +122,40 @@
             display: flex;
             flex-direction: column;
             max-width: 80%;
-            /* ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Αύξηση opacity σε 90% για καλύτερη αντίθεση */
-            background-color: rgba(30, 30, 30, 0.9); 
-            padding: 10px 15px;
-            border-radius: 8px;
-            /* ΕΦΕ BLUR */
-            backdrop-filter: blur(4px); 
+            /* ΔΙΟΡΘΩΣΗ 1: Αφαίρεση εντελώς του background container */
+            background-color: transparent; 
+            padding: 0; 
         }
 
         .sender {
             font-weight: bold;
-            color: #BB86FC; 
             margin-bottom: 3px;
             font-size: 13px;
+            color: white; 
+            text-shadow: 1px 1px 2px #000; /* Σκιά για καλύτερη αντίθεση στο φόντο */
         }
+        
+        /* ΔΙΟΡΘΩΣΗ 4: Χρώματα Ρόλων */
+        .sender.admin-color { color: #FF4136; } /* Κόκκινο για Admin */
+        .sender.user-color { color: #BB86FC; } /* Μωβ για User */
+        .sender.guest-color { color: #00CED1; } /* Ανοιχτό Τιρκουάζ για Guest */
+
 
         .message-content {
             word-wrap: break-word;
             font-size: 15px;
             line-height: 1.4;
+            color: #FFFFFF; /* Το κείμενο να είναι πάντα λευκό */
+            text-shadow: 1px 1px 2px #000; /* Σκιά για καλύτερη αντίθεση στο φόντο */
         }
         
+        /* Στυλ για τα clickable links στο chatbox */
+        .message-content a {
+            color: #64FFDA; 
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
         /* --- ADMIN/SETTINGS --- */
         .settings-container {
             position: absolute;
@@ -273,12 +288,6 @@
             z-index: 1000;
         }
         
-        /* Στυλ για τα clickable links στο chatbox */
-        .message-content a {
-            color: #64FFDA; 
-            text-decoration: underline;
-        }
-
     </style>
 </head>
 <body>
@@ -572,6 +581,10 @@
             button.classList.toggle('active', formattingState[formatKey]);
             messageInput.style.fontWeight = formattingState.isBold ? 'bold' : 'normal';
             messageInput.style.fontStyle = formattingState.isItalic ? 'italic' : 'normal';
+            // Επαναφορά του χρώματος του κουμπιού αν δεν είναι active (στο default deepskyblue)
+            if (!formattingState[formatKey]) {
+                button.style.backgroundColor = '#00BFFF';
+            }
         }
 
         // --- URL Button Logic (ΑΥΤΟΜΑΤΗ ΕΙΣΑΓΩΓΗ) ---
@@ -579,7 +592,6 @@
             e.stopPropagation(); 
             const url = prompt("Εισάγετε το URL:");
             if (url) {
-                // Εισάγει το URL στο πεδίο κειμένου χωρίς [ ]
                 messageInput.value += ` ${url} `; 
                 messageInput.focus();
                 sendBtn.disabled = messageInput.value.trim().length === 0;
@@ -604,7 +616,6 @@
         // ΝΕΑ ΛΕΙΤΟΥΡΓΙΑ EMOJI: ΔΕΝ ΚΛΕΙΝΕΙ ΤΟ ΠΑΡΑΘΥΡΟ ΜΕΤΑ ΤΟ ΚΛΙΚ
         emojiPicker.addEventListener('emoji-click', event => {
             messageInput.value += event.detail.unicode;
-            // Η γραμμή 'picker.style.display = 'none';' ΑΦΑΙΡΕΘΗΚΕ
             messageInput.focus(); 
             sendBtn.disabled = messageInput.value.trim().length === 0;
         });
@@ -613,7 +624,7 @@
         savePdfBtn.addEventListener('click', () => {
              // Επειδή διορθώσαμε το CDN, αυτό θα πρέπει να δουλέψει
              if (typeof jspdf === 'undefined' || !jspdf.jsPDF) {
-                 alert('Σφάλμα: Η βιβλιοθήκη jsPDF δεν φορτώθηκε σωστά. Ελέγξτε τη γραμμή 9.');
+                 alert('Σφάλμα: Η βιβλιοθήκη jsPDF δεν φορτώθηκε σωστά.');
                  return;
              }
              
@@ -643,7 +654,8 @@
                      y = 10;
                  }
                  
-                 doc.setTextColor('#BB86FC');
+                 // Προσομοίωση χρώματος ρόλου (δεν γίνεται κατευθείαν στο jsPDF)
+                 doc.setTextColor('#BB86FC'); 
                  const senderInfo = sender.split(']')[0] + ']'; 
                  doc.text(senderInfo, margin, y);
                  
@@ -675,7 +687,7 @@
                 formattingState = { isBold: false, isItalic: false, color: '#FFFFFF' };
                 boldBtn.classList.remove('active');
                 italicBtn.classList.remove('active');
-                colorBtn.style.backgroundColor = '#3A3A3A'; 
+                colorBtn.style.backgroundColor = '#00BFFF'; // Επαναφορά χρώματος
                 colorBtn.classList.remove('active');
                 messageInput.style.fontWeight = 'normal';
                 messageInput.style.fontStyle = 'normal';
@@ -684,15 +696,21 @@
             }
         });
 
-        // ENTER KEY FIX
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') { 
-                e.preventDefault(); 
-                sendBtn.click(); 
-            }
+        // ΔΙΟΡΘΩΣΗ 2: ENTER KEY LOGIC (Enter για αποστολή, Shift+Enter για νέα γραμμή)
+        messageInput.addEventListener('keydown', (e) => {
+             // Ενεργοποίηση/Απενεργοποίηση του κουμπιού Send
+             setTimeout(() => {
+                 sendBtn.disabled = messageInput.value.trim().length === 0;
+             }, 0); 
+             
+             if (e.key === 'Enter' && !e.shiftKey) { 
+                 e.preventDefault(); // Αποτρέπει την default αλλαγή γραμμής
+                 sendBtn.click(); 
+             }
+             // Αν πατηθεί Shift+Enter, ο browser κάνει την αλλαγή γραμμής (Δεν κάνουμε τίποτα)
         });
 
-        // CLOSING PANELS LOGIC (Διατηρεί τον picker ανοιχτό όταν επιλέγεις Emojis)
+        // CLOSING PANELS LOGIC 
         document.addEventListener('click', (e) => { 
             const clickedInsideMenu = settingsMenu.contains(e.target) || menuToggleBtn.contains(e.target);
             const clickedInsideAdmin = adminPanel.contains(e.target);
@@ -739,6 +757,13 @@
              
              const senderSpan = document.createElement('span');
              senderSpan.classList.add('sender');
+             
+             // ΔΙΟΡΘΩΣΗ 4: Προσθήκη χρώματος ρόλου
+             if (data.role) {
+                 const roleClass = data.role.toLowerCase() + '-color';
+                 senderSpan.classList.add(roleClass);
+             }
+
              const nameSpan = document.createElement('span');
              nameSpan.textContent = data.displayName;
              senderSpan.appendChild(nameSpan);
@@ -754,24 +779,33 @@
              messageText.classList.add('message-content');
              if (format.isBold) { messageText.style.fontWeight = 'bold'; }
              if (format.isItalic) { messageText.style.fontStyle = 'italic'; }
+             // Αν το μήνυμα έχει custom χρώμα, το εφαρμόζουμε
              if (format.color && format.color !== '#FFFFFF') { messageText.style.color = format.color; }
              
-             // ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Μετατροπή URL σε clickable link (Regex)
+             // ΕΦΑΡΜΟΓΗ: Μετατροπή URL σε clickable link (Regex)
              const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
              
              if (text.match(urlRegex)) {
-                 // Εφαρμόζουμε ρητά το χρώμα και την υπογράμμιση για να είμαστε σίγουροι ότι φαίνεται
                  messageText.innerHTML = text.replace(urlRegex, function(url) {
-                     return '<a href="' + url + '" target="_blank" style="color: #64FFDA; text-decoration: underline;">' + url + '</a>';
+                     return `<a href="${url}" target="_blank" style="color: #64FFDA; text-decoration: underline;">${url}</a>`;
                  });
              } else {
-                 messageText.textContent = text; 
+                 // Αντικαθιστούμε τυχόν αλλαγές γραμμής σε <br> tags
+                 messageText.innerHTML = text.replace(/\n/g, '<br>');
              }
              
              contentContainer.appendChild(messageText);
 
+             // ΔΙΟΡΘΩΣΗ 5: Πλήρες timestamp
              const date = new Date(data.timestamp);
-             const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+             const timeString = date.toLocaleString('el-GR', { 
+                year: 'numeric', 
+                month: 'numeric', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+             });
              const timeText = document.createTextNode(` [${timeString}]: `);
              senderSpan.appendChild(timeText);
              
