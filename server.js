@@ -18,6 +18,46 @@ const app = express();
 const server = http.createServer(app); 
 const wsInstance = expressWs(app, server); 
 
+
+
+// --- DYNAMIC SETTINGS FROM DB ---
+let appSettings = {};
+
+// Συνάρτηση για τη φόρτωση των ρυθμίσεων από τη βάση δεδομένων
+async function loadSettings() {
+    try {
+        const result = await pool.query('SELECT key, value FROM settings');
+        appSettings = result.rows.reduce((acc, row) => {
+            // Μετατροπή των τιμών στον σωστό τύπο (π.χ. 'true' -> true, '0.85' -> 0.85)
+            let parsedValue = row.value;
+            if (row.value === 'true') parsedValue = true;
+            else if (row.value === 'false') parsedValue = false;
+            // Μετατροπή σε float μόνο για ρυθμίσεις διαφάνειας (opacity)
+            else if (!isNaN(parseFloat(row.value)) && isFinite(row.value) && row.key.includes('opacity')) {
+                parsedValue = parseFloat(row.value);
+            }
+            acc[row.key] = parsedValue;
+            return acc;
+        }, {});
+        console.log('Οι ρυθμίσεις της εφαρμογής φορτώθηκαν επιτυχώς:', appSettings);
+    } catch (error) {
+        console.error('Σφάλμα κατά τη φόρτωση ρυθμίσεων από τη βάση:', error);
+        // Χρησιμοποίησε default values αν αποτύχει η φόρτωση
+        appSettings = {
+            message_opacity: 0.85,
+            input_row_opacity: 0.90,
+            top_bar_opacity: 0.95,
+            default_font_color: '#E0E0E0',
+            allow_gif_searches: true,
+            app_title: 'Chat App'
+        };
+    }
+}
+
+// Καλούμε τη συνάρτηση για να φορτώσει τις ρυθμίσεις αμέσως
+loadSettings();
+// --- END DYNAMIC SETTINGS ---
+
 // --- ΣΗΜΑΝΤΙΚΗ ΔΙΟΡΘΩΣΗ: STATIC FILES ---
 // 1. Εξυπηρετεί όλα τα αρχεία στον root φάκελο (chat.html, login.html, akoyme_background.png)
 app.use(express.static(__dirname));
@@ -332,6 +372,42 @@ app.delete('/delete-message/:id', async (req, res) => {
     } catch (error) {
         console.error('Error deleting message:', error);
         res.status(500).send('Server error.');
+    }
+});
+
+// Endpoint για να δώσει τις ρυθμίσεις στον client (chat.html)
+app.get('/api/settings', (req, res) => {
+    // Επιστρέφει τις ρυθμίσεις που έχουν ήδη φορτωθεί στη μνήμη του server
+    res.json(appSettings);
+});
+
+// Endpoint για ενημέρωση ρυθμίσεων (Απαιτείται Admin role)
+app.post('/api/settings', async (req, res) => {
+    // *ΣΗΜΕΙΩΣΗ: Εάν δεν έχεις ρόλους ακόμα, μπορείς να αφαιρέσεις το '|| req.user.role !== 'admin'' προσωρινά.*
+    if (!req.isAuthenticated()) {
+        return res.status(403).send('Access denied. Login required.');
+    }
+    
+    // Εάν το role δεν υπάρχει ακόμα, απλώς ελέγχουμε το login
+    if (req.user && req.user.role && req.user.role !== 'admin') {
+         return res.status(403).send('Access denied. Admin role required.');
+    }
+    
+    const { key, value } = req.body;
+    if (!key || value === undefined) {
+        return res.status(400).send('Missing key or value.');
+    }
+
+    try {
+        await pool.query('UPDATE settings SET value = $1 WHERE key = $2', [value, key]);
+        
+        // Επαναφόρτωση των ρυθμίσεων στη μνήμη για να ενημερωθούν όλοι οι χρήστες
+        await loadSettings(); 
+        
+        res.status(200).send('Settings updated successfully. Changes applied.');
+    } catch (error) {
+        console.error('Error updating setting:', error);
+        res.status(500).send('Internal server error during settings update.');
     }
 });
 
