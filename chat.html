@@ -19,8 +19,7 @@
             background-color: #121212; 
             color: #E0E0E0;
             /* Αυτά τα 3 θα τα ορίσει η JS για να εμφανιστεί η εικόνα φόντου */
-            background-image: url('akoyme_background.png');
-            background-size: cover;
+            background-image: url('akoyme_background.png'); background-size: cover;
             background-attachment: fixed;
         }
         
@@ -408,7 +407,7 @@
     // Global object to store settings fetched from the server (ΑΠΟ ΤΗ ΒΑΣΗ)
     let appSettings = {}; 
 
-    // --- FUNCTION TO LOAD AND APPLY SETTINGS (NEW) ---
+    // --- FUNCTION TO LOAD AND APPLY SETTINGS ---
     async function loadAndApplySettings() {
         try {
             const response = await fetch('/api/settings');
@@ -417,53 +416,33 @@
             }
             appSettings = await response.json();
             console.log('Settings loaded:', appSettings);
-
-            // ΕΦΑΡΜΟΓΗ ΡΥΘΜΙΣΕΩΝ ΣΤΟ CSS
-            // Χρησιμοποιούμε document.styleSheets[0] για να έχουμε πρόσβαση στα στυλ
-            const styleSheet = document.styleSheets[0]; 
-
-            // 1. Ρύθμιση τίτλου
+            
+            // --- ΝΕΟΣ ΤΡΟΠΟΣ ΕΦΑΡΜΟΓΗΣ ΡΥΘΜΙΣΕΩΝ ΓΙΑ ΝΑ ΑΠΟΦΥΓΟΥΜΕ ΤΟ CSS Security Error ---
+            
+            // 1. Ρύθμιση τίτλου και χρώματος γραμματοσειράς
             document.title = appSettings.app_title || "Chatbox";
+            document.body.style.color = appSettings.default_font_color || '#E0E0E0';
             
-            // Συνάρτηση για να βρίσκουμε CSS κανόνες ευκολότερα
-            const findRule = (selector) => Array.from(styleSheet.cssRules).find(rule => rule.selectorText === selector);
+            // Βασικά χρώματα (σε RGB) για να τα συνδυάσουμε με τη διαφάνεια (opacity)
+            const BASE_COLOR_TOP_BAR = '18, 18, 18'; // #121212
+            const BASE_COLOR_INPUT_ROW = '31, 31, 31'; // #1f1f1f
+            const BASE_COLOR_MESSAGE = '51, 51, 51'; // #333
+            
+            // 2. Εφαρμογή Διαφάνειας στα στοιχεία (πλέον απευθείας στο style)
+            document.getElementById('top-bar').style.backgroundColor = `rgba(${BASE_COLOR_TOP_BAR}, ${appSettings.top_bar_opacity || 0.95})`;
+            document.getElementById('messageInputRow').style.backgroundColor = `rgba(${BASE_COLOR_INPUT_ROW}, ${appSettings.input_row_opacity || 0.90})`;
+            
+            // Επειδή τα μηνύματα είναι πολλά, θα ορίσουμε ένα CSS custom property (variable)
+            // και θα το χρησιμοποιήσουμε στον CSS κανόνα .message-content-container.
+            // Αν αυτό αποτύχει λόγω του SecurityError, το αφήνουμε ως έχει και βασιζόμαστε
+            // στο default χρώμα του CSS #333.
+            document.documentElement.style.setProperty('--message-bg-color', `rgba(${BASE_COLOR_MESSAGE}, ${appSettings.message_opacity || 0.85})`);
 
-            // 2. Ρυθμίσεις Διαφάνειας (Opacity)
-            
-            // #top-bar
-            const topBarRule = findRule('#top-bar');
-            if (topBarRule) {
-                // Χρησιμοποιούμε μια σταθερή σκούρα βάση (18, 18, 18) και αλλάζουμε μόνο το άλφα (διαφάνεια)
-                topBarRule.style.backgroundColor = `rgba(18, 18, 18, ${appSettings.top_bar_opacity || 0.95})`;
-            }
-            
-            // .message-content-container
-            const messageRule = findRule('.message-content-container');
-            if (messageRule) {
-                // Χρησιμοποιούμε μια σταθερή σκούρα βάση (51, 51, 51) και αλλάζουμε μόνο το άλφα (διαφάνεια)
-                messageRule.style.backgroundColor = `rgba(51, 51, 51, ${appSettings.message_opacity || 0.85})`;
-            }
 
-            // #messageInputRow
-            const inputRowRule = findRule('#messageInputRow');
-            if (inputRowRule) {
-                // Χρησιμοποιούμε μια σταθερή σκούρα βάση (31, 31, 31) και αλλάζουμε μόνο το άλφα (διαφάνεια)
-                inputRowRule.style.backgroundColor = `rgba(31, 31, 31, ${appSettings.input_row_opacity || 0.90})`;
-            }
-
-            // 3. Ρύθμιση Χρώματος/Φόντου
-            
-            // html, body
-            const htmlBodyRule = findRule('html, body');
-            if (htmlBodyRule) {
-                // Ορίζουμε το χρώμα γραμματοσειράς
-                htmlBodyRule.style.color = appSettings.default_font_color || '#E0E0E0';
-            }
-            
-            // 4. Λειτουργικότητα GIF
+            // 3. Λειτουργικότητα GIF
             const giphyButton = document.getElementById('giphyBtn');
             if (giphyButton) {
-                giphyButton.style.display = appSettings.allow_gif_searches === true ? 'block' : 'none';
+                giphyButton.style.display = appSettings.allow_gif_searches === 'true' ? 'block' : 'none';
             }
 
         } catch (error) {
@@ -474,7 +453,7 @@
                 input_row_opacity: 0.90,
                 top_bar_opacity: 0.95,
                 default_font_color: '#E0E0E0',
-                allow_gif_searches: true,
+                allow_gif_searches: 'true',
                 app_title: 'Chat App'
             };
         }
@@ -504,13 +483,18 @@
     let isItalic = false;
     let selectedColor = '#E0E0E0';
 
-    // Αυτή η γραμμή συνδέεται με τον server σου
-    const socket = new WebSocket('ws://' + window.location.host);
+    // --- ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: ΧΡΗΣΗ WSS:// ΓΙΑ HTTPS ---
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const socket = new WebSocket(wsProtocol + window.location.host);
 
-    // ... (Ο υπόλοιπος κώδικας JavaScript είναι ο ίδιος) ...
-    // ... (Δεν τον επαναλαμβάνω για συντομία) ...
 
     function sendMessage(message, isFile = false) {
+        if (socket.readyState !== socket.OPEN) {
+             console.error('WebSocket is not open. Cannot send message.');
+             // Μπορείτε να βάλετε εδώ ένα alert: alert('Η σύνδεση έχει χαθεί. Παρακαλώ ανανεώστε τη σελίδα.');
+             return;
+        }
+
         if (message.trim() !== '' || isFile) {
             let messageToSend = message;
             
@@ -641,7 +625,9 @@
     
     // --- GIPHY LISTENERS ---
     giphyBtn.addEventListener('click', () => {
-        if (appSettings.allow_gif_searches === true) {
+        // Λόγω της διόρθωσης του SecurityError, το appSettings θα φορτώνεται σωστά τώρα.
+        // Το 'true' από τη βάση δεδομένων είναι string, όχι boolean, γι' αυτό ελέγχουμε με string.
+        if (appSettings.allow_gif_searches === 'true') { 
             giphyModal.style.display = 'block';
             searchGiphy(); // Φόρτωση αρχικών trending GIFs
         } else {
@@ -666,9 +652,8 @@
         }
     });
     
-async function searchGiphy(query = 'trending') {
-        // ΤΟ ΝΕΟ ΣΑΣ ΚΛΕΙΔΙ API ΤΟΥ GIPHY:
-        const apiKey = 'UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs'; 
+    async function searchGiphy(query = 'trending') {
+        const apiKey = 'UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs'; // <--- ΔΙΟΡΘΩΘΗΚΕ: Σωστό API Key
         let url;
         
         if (query === 'trending' || !query.trim()) {
@@ -678,7 +663,7 @@ async function searchGiphy(query = 'trending') {
         }
 
         try {
-	    const response = await fetch(url);
+            const response = await fetch(url);
             const data = await response.json();
             
             giphyGrid.innerHTML = ''; // Καθαρισμός προηγούμενων GIFs
@@ -764,6 +749,12 @@ async function searchGiphy(query = 'trending') {
              const contentContainer = document.createElement('div');
              contentContainer.classList.add('message-content-container');
              
+             // --- ΔΙΟΡΘΩΣΗ: Εφαρμογή του custom property background-color ---
+             if (document.documentElement.style.getPropertyValue('--message-bg-color')) {
+                 contentContainer.style.backgroundColor = document.documentElement.style.getPropertyValue('--message-bg-color');
+             }
+             // --- ΤΕΛΟΣ ΔΙΟΡΘΩΣΗΣ ---
+             
              const senderSpan = document.createElement('span');
              senderSpan.classList.add('sender-info');
              
@@ -820,7 +811,9 @@ async function searchGiphy(query = 'trending') {
              
              chatbox.appendChild(messageElement);
              chatbox.scrollTop = chatbox.scrollHeight;
-        } // ΕΔΩ ΚΛΕΙΝΕΙ Η displayMessage. ΑΦΑΙΡΕΘΗΚΕ ΤΟ ΠΕΡΙΤΤΟ }); ΠΟΥ ΥΠΗΡΧΕ.
+        }
+
+    } 
 </script>
 </body>
 </html>
