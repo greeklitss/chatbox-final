@@ -19,10 +19,11 @@ if not os.path.exists(os.path.join(os.getcwd(), UPLOAD_FOLDER)):
 
 # Εάν το περιβάλλον είναι Render (παραγωγή), βάζουμε CORS για WebSockets
 if os.environ.get('RENDER'):
-    socketio = SocketIO(app, cors_allowed_origins="*")
+    socketio = SocketIO(app, cors_allowed_origins="*", 
+                        message_queue='redis://localhost:6379', # Χρησιμοποιεί Redis ως default, ακόμα κι αν δεν υπάρχει
+                        ping_timeout=30)
 else:
     socketio = SocketIO(app)
-
 # --- WEB PAGES ROUTES (Frontend) ---
 
 @app.route('/')
