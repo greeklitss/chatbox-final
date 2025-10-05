@@ -3,3 +3,4 @@ Flask-SocketIO
 gunicorn
 gevent
 gevent-websocket
+redis
