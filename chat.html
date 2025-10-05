@@ -19,7 +19,8 @@
             background-color: #121212; 
             color: #E0E0E0;
             /* Αυτά τα 3 θα τα ορίσει η JS για να εμφανιστεί η εικόνα φόντου */
-            background-image: url('akoyme_background.png'); background-size: cover;
+            background-image: url('akoyme_background.png'); 
+            background-size: cover;
             background-attachment: fixed;
         }
         
@@ -407,7 +408,7 @@
     // Global object to store settings fetched from the server (ΑΠΟ ΤΗ ΒΑΣΗ)
     let appSettings = {}; 
 
-    // --- FUNCTION TO LOAD AND APPLY SETTINGS ---
+    // --- FUNCTION TO LOAD AND APPLY SETTINGS (ΔΙΟΡΘΩΜΕΝΟ ΓΙΑ CSS Security Error) ---
     async function loadAndApplySettings() {
         try {
             const response = await fetch('/api/settings');
@@ -416,8 +417,6 @@
             }
             appSettings = await response.json();
             console.log('Settings loaded:', appSettings);
-            
-            // --- ΝΕΟΣ ΤΡΟΠΟΣ ΕΦΑΡΜΟΓΗΣ ΡΥΘΜΙΣΕΩΝ ΓΙΑ ΝΑ ΑΠΟΦΥΓΟΥΜΕ ΤΟ CSS Security Error ---
             
             // 1. Ρύθμιση τίτλου και χρώματος γραμματοσειράς
             document.title = appSettings.app_title || "Chatbox";
@@ -432,14 +431,11 @@
             document.getElementById('top-bar').style.backgroundColor = `rgba(${BASE_COLOR_TOP_BAR}, ${appSettings.top_bar_opacity || 0.95})`;
             document.getElementById('messageInputRow').style.backgroundColor = `rgba(${BASE_COLOR_INPUT_ROW}, ${appSettings.input_row_opacity || 0.90})`;
             
-            // Επειδή τα μηνύματα είναι πολλά, θα ορίσουμε ένα CSS custom property (variable)
-            // και θα το χρησιμοποιήσουμε στον CSS κανόνα .message-content-container.
-            // Αν αυτό αποτύχει λόγω του SecurityError, το αφήνουμε ως έχει και βασιζόμαστε
-            // στο default χρώμα του CSS #333.
+            // Ορισμός CSS custom property για τα μηνύματα
             document.documentElement.style.setProperty('--message-bg-color', `rgba(${BASE_COLOR_MESSAGE}, ${appSettings.message_opacity || 0.85})`);
 
 
-            // 3. Λειτουργικότητα GIF
+            // 3. Λειτουργικότητα GIF (ελέγχουμε για string 'true')
             const giphyButton = document.getElementById('giphyBtn');
             if (giphyButton) {
                 giphyButton.style.display = appSettings.allow_gif_searches === 'true' ? 'block' : 'none';
@@ -483,7 +479,7 @@
     let isItalic = false;
     let selectedColor = '#E0E0E0';
 
-    // --- ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: ΧΡΗΣΗ WSS:// ΓΙΑ HTTPS ---
+    // --- ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: ΑΥΤΟΜΑΤΗ ΕΠΙΛΟΓΗ WSS:// ΓΙΑ HTTPS ---
     const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
     const socket = new WebSocket(wsProtocol + window.location.host);
 
@@ -491,7 +487,7 @@
     function sendMessage(message, isFile = false) {
         if (socket.readyState !== socket.OPEN) {
              console.error('WebSocket is not open. Cannot send message.');
-             // Μπορείτε να βάλετε εδώ ένα alert: alert('Η σύνδεση έχει χαθεί. Παρακαλώ ανανεώστε τη σελίδα.');
+             // Εδώ μπορείτε να βάλετε ένα alert
              return;
         }
 
@@ -521,8 +517,6 @@
             colorPicker.value = '#E0E0E0';
         }
     }
-
-    // ... (Οι υπόλοιπες συναρτήσεις, event listeners) ...
 
     socket.onopen = () => {
         console.log('Συνδέθηκε στο chat');
@@ -625,8 +619,6 @@
     
     // --- GIPHY LISTENERS ---
     giphyBtn.addEventListener('click', () => {
-        // Λόγω της διόρθωσης του SecurityError, το appSettings θα φορτώνεται σωστά τώρα.
-        // Το 'true' από τη βάση δεδομένων είναι string, όχι boolean, γι' αυτό ελέγχουμε με string.
         if (appSettings.allow_gif_searches === 'true') { 
             giphyModal.style.display = 'block';
             searchGiphy(); // Φόρτωση αρχικών trending GIFs
@@ -653,7 +645,7 @@
     });
     
     async function searchGiphy(query = 'trending') {
-        const apiKey = 'UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs'; // <--- ΔΙΟΡΘΩΘΗΚΕ: Σωστό API Key
+        const apiKey = 'UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs'; // ΣΩΣΤΟ API Key
         let url;
         
         if (query === 'trending' || !query.trim()) {
@@ -689,7 +681,6 @@
     
     // --- PDF EXPORT LISTENER ---
     pdfBtn.addEventListener('click', () => {
-        // Η jspdf είναι φορτωμένη από το CDN στην κεφαλίδα
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
@@ -749,11 +740,10 @@
              const contentContainer = document.createElement('div');
              contentContainer.classList.add('message-content-container');
              
-             // --- ΔΙΟΡΘΩΣΗ: Εφαρμογή του custom property background-color ---
+             // Εφαρμογή του custom property background-color
              if (document.documentElement.style.getPropertyValue('--message-bg-color')) {
                  contentContainer.style.backgroundColor = document.documentElement.style.getPropertyValue('--message-bg-color');
              }
-             // --- ΤΕΛΟΣ ΔΙΟΡΘΩΣΗΣ ---
              
              const senderSpan = document.createElement('span');
              senderSpan.classList.add('sender-info');
@@ -773,7 +763,8 @@
              messageText.classList.add('message-content');
              if (format.isBold) { messageText.style.fontWeight = 'bold'; }
              if (format.isItalic) { messageText.style.fontStyle = 'italic'; }
-             if (format.color && format.color !== '#E0E0E0') { messageText.style.color = format.color; }
+             // Χρησιμοποιούμε το default χρώμα: #E0E0E0
+             if (format.color && format.color !== '#E0E0E0') { messageText.style.color = format.color; } 
              
              const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
              
@@ -811,9 +802,9 @@
              
              chatbox.appendChild(messageElement);
              chatbox.scrollTop = chatbox.scrollHeight;
-        }
+        } // ΕΔΩ ΚΛΕΙΝΕΙ Η ΣΥΝΑΡΤΗΣΗ displayMessage.
+    } // ΕΔΩ ΚΛΕΙΝΕΙ Η ΣΥΝΑΡΤΗΣΗ displayMessage. (Ελέγχθηκε και δεν υπάρχει άλλη αγκύλη)
 
-    } 
 </script>
 </body>
 </html>
