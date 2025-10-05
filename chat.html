@@ -480,9 +480,8 @@
     let selectedColor = '#E0E0E0';
 
     // --- ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: ΑΥΤΟΜΑΤΗ ΕΠΙΛΟΓΗ WSS:// ΓΙΑ HTTPS ---
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-    const socket = new WebSocket(wsProtocol + window.location.host);
-
+	const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+	const socket = new WebSocket(wsProtocol + window.location.host);
 
     function sendMessage(message, isFile = false) {
         if (socket.readyState !== socket.OPEN) {
