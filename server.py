@@ -9,6 +9,9 @@ def logout():
     # Προσθέστε εδώ την αφαίρεση του session cookie
     return response, 200
 
+import os 
+from flask_socketio import SocketIO
+# ... (άλλοι imports)
 
 import os
 import json
@@ -30,12 +33,28 @@ if not os.path.exists(os.path.join(os.getcwd(), UPLOAD_FOLDER)):
     os.makedirs(os.path.join(os.getcwd(), UPLOAD_FOLDER))
 
 # Εάν το περιβάλλον είναι Render (παραγωγή), βάζουμε CORS για WebSockets
-if os.environ.get('RENDER'):
-    socketio = SocketIO(app, cors_allowed_origins="*", 
-                        message_queue='redis://localhost:6379', # Χρησιμοποιεί Redis ως default, ακόμα κι αν δεν υπάρχει
-                        ping_timeout=30)
+# ΚΩΔΙΚΑΣ ΠΡΟΣΘΗΚΗΣ Ή ΑΝΤΙΚΑΤΑΣΤΑΣΗΣ ΣΤΟ server.py
+
+# 1. Παίρνουμε το Redis URL από τις μεταβλητές περιβάλλοντος του Render
+REDIS_URL = os.environ.get('REDIS_URL')
+
+# 2. Αρχικοποιούμε το SocketIO με το σωστό configuration
+if REDIS_URL:
+    # Αν το URL ξεκινάει με 'rediss://' (πράγμα σύνηθες στο Render)
+    if REDIS_URL.startswith('rediss://'):
+        # Χρησιμοποιούμε ssl_verify=False για να παρακάμψουμε το σφάλμα SSL
+        socketio = SocketIO(
+            app, 
+            message_queue=REDIS_URL, 
+            async_mode='gevent', 
+            ssl_verify=False # <-- Αυτό είναι το κλειδί για το σφάλμα Redis
+        )
+    else:
+        # Για απλή σύνδεση (redis://)
+        socketio = SocketIO(app, message_queue=REDIS_URL, async_mode='gevent')
 else:
-    socketio = SocketIO(app)
+    # Fallback για λειτουργία χωρίς Redis (π.χ. τοπικά)
+    socketio = SocketIO(app, async_mode='gevent')
 # --- WEB PAGES ROUTES (Frontend) ---
 
 @app.route('/')

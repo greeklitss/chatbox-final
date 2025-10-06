@@ -1,6 +1,10 @@
+
 Flask
-Flask-SocketIO
-gunicorn
+flask-socketio
+gunicorn 
+eventlet 
+python-engineio
+python-socketio
 gevent
 gevent-websocket
 redis
