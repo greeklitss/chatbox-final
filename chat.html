@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Chatbox</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
@@ -19,7 +20,7 @@
             background-color: #121212; 
             color: #E0E0E0;
             /* Αυτά τα 3 θα τα ορίσει η JS για να εμφανιστεί η εικόνα φόντου */
-            background-image: url('akoyme_background.png'); 
+            background-image: url('static/akoyme_background.png');
             background-size: cover;
             background-attachment: fixed;
         }
@@ -479,9 +480,13 @@
     let isItalic = false;
     let selectedColor = '#E0E0E0';
 
-    // --- ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: ΑΥΤΟΜΑΤΗ ΕΠΙΛΟΓΗ WSS:// ΓΙΑ HTTPS ---
-	const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-	const socket = new WebSocket(wsProtocol + window.location.host);
+ 	// --- ΣΩΣΤΗ ΣΥΝΔΕΣΗ ΓΙΑ FLASK-SOCKETIO ---
+// Χρησιμοποιούμε τη συνάρτηση io() της βιβλιοθήκης socket.io
+// Δεν χρειάζεται να ορίσουμε WSS/WS, το io() το βρίσκει αυτόματα.
+const socket = io({
+    transports: ['websocket'], // Αναγκάζει τη χρήση WebSockets για σταθερότητα σε Render
+    upgrade: false             // Αποφυγή προβλημάτων αναβάθμισης σε περιβάλλοντα Proxy/Render
+});
 
     function sendMessage(message, isFile = false) {
         if (socket.readyState !== socket.OPEN) {
