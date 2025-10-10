@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
     <title>Chatbox</title>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+	
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
@@ -483,8 +484,9 @@
 // Χρησιμοποιούμε τη συνάρτηση io() της βιβλιοθήκης socket.io
 // Δεν χρειάζεται να ορίσουμε WSS/WS, το io() το βρίσκει αυτόματα.
 const socket = io({
-    transports: ['websocket'], // Αναγκάζει τη χρήση WebSockets για σταθερότητα σε Render
-    upgrade: false             // Αποφυγή προβλημάτων αναβάθμισης σε περιβάλλοντα Proxy/Render
+    transports: ['websocket'],
+    upgrade: false
+
 });
 
     function sendMessage(message, isFile = false) {

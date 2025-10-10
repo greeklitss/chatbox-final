@@ -8,3 +8,4 @@ python-socketio
 gevent
 gevent-websocket
 redis
+eventlet  
