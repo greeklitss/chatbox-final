@@ -1,13 +1,3 @@
-# --- ΠΡΟΣΘΗΚΗ ΣΤΟ server.py ---
-@app.route('/logout', methods=['POST'])
-def logout():
-    # Εδώ θα βάλετε τη λογική για το logout
-    # π.χ. διαγραφή του session cookie.
-    # Επειδή το Flask-Session/login δεν είναι fully set up,
-    # επιστρέφουμε απλά επιτυχία.
-    response = jsonify({'message': 'Logged out'})
-    # Προσθέστε εδώ την αφαίρεση του session cookie
-    return response, 200
 
 # 1. ΌΛΑ ΤΑ IMPORTS ΣΤΗΝ ΚΟΡΥΦΗ
 import os
