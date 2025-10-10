@@ -9,10 +9,7 @@ def logout():
     # Προσθέστε εδώ την αφαίρεση του session cookie
     return response, 200
 
-import os 
-from flask_socketio import SocketIO
-
-
+# 1. ΌΛΑ ΤΑ IMPORTS ΣΤΗΝ ΚΟΡΥΦΗ
 import os
 import json
 from flask import Flask, send_from_directory, request, jsonify, url_for
@@ -20,11 +17,25 @@ from flask_socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
 from datetime import datetime
 
+# 2. ΟΡΙΣΜΟΣ ΤΟΥ FLASK APP (app)
 # --- Ρυθμίσεις Εφαρμογής ---
-# Αντικαταστήστε με το όνομα του αρχείου σας!
-app = Flask(__name__, static_folder='.') # Το static_folder='.' είναι για να σερβίρει το chat.html
+app = Flask(__name__, static_folder='.') 
 
-# Ρύθμιση φακέλου upload
+# 3. ΡΥΘΜΙΣΗ ΦΑΚΕΛΟΥ UPLOAD (app.config['UPLOAD_FOLDER']...)
+# ...
+
+# 4. ΕΔΩ ΤΟΠΟΘΕΤΕΙΤΕ ΤΩΡΑ ΤΟ ROUTE ΓΙΑ ΤΟ LOGOUT
+# --- ΠΡΟΣΘΗΚΗ ΣΤΟ server.py ---
+@app.route('/logout', methods=['POST']) 
+def logout():
+    # ... ο κώδικας της logout λειτουργίας ...
+    response = jsonify({'message': 'Logged out'})
+    return response, 200
+
+# 5. ΟΡΙΣΜΟΣ SOCKETIO (socketio) και ο υπόλοιπος κώδικας
+# ...
+# 5. ΟΡΙΣΜΟΣ SOCKETIO (socketio) και ο υπόλοιπος κώδικας
+# ...# Ρύθμιση φακέλου upload
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
