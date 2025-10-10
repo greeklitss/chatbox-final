@@ -20,7 +20,7 @@
             font-family: 'Roboto', sans-serif;
             background-color: #ccf5f5; 
             color: #E0E0E0;
-	    background-image: url('static/akoyme_background.png');
+	    background-image: url('static/akoyme_background.png'); 
             background-size: cover;
             background-attachment: fixed;
         }
@@ -523,58 +523,47 @@ const socket = io({
         }
     }
 
-    socket.onopen = () => {
+    // Η σύνδεση δεν έχει onopen, αλλά on('connect')
+    socket.on('connect', () => {
         console.log('Συνδέθηκε στο chat');
         // Ζητάμε τα παλιά μηνύματα
-        socket.send(JSON.stringify({ type: 'requestOldMessages' }));
-    };
-
-    socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-
-        if (data.type === 'oldMessages') {
-            data.messages.forEach(msg => displayMessage(msg));
-        } else if (data.type === 'message') {
-             displayMessage(data);
-        } else if (data.type === 'userStatus') {
-            // Μπορείς να εμφανίσεις ειδοποίηση εισόδου/εξόδου εδώ
-            console.log(`User status update: ${data.displayName} is ${data.status}`);
-        }
-    };
-
-    socket.onclose = () => {
-        console.log('Αποσυνδέθηκε από το chat');
-    };
-
-    socket.onerror = (error) => {
-        console.error('Σφάλμα WebSocket:', error);
-    };
-
-    sendButton.addEventListener('click', () => {
-        sendMessage(messageInput.value);
+        // Στέλνουμε με emit ή send, το send είναι σωστό για το Flask-SocketIO
+        socket.send(JSON.stringify({ type: 'requestOldMessages' })); 
     });
 
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage(messageInput.value);
-        }
-    });
-
-    logoutButton.addEventListener('click', async () => {
+    // Η λήψη μηνυμάτων δεν έχει onmessage(event), αλλά on('message', (data))
+    socket.on('message', (data) => {
+        // Η data είναι ήδη το αντικείμενο JSON από τον server (δεν χρειάζεται JSON.parse)
+        // Αλλά: Ο server στέλνει JSON.stringify({ type: 'message', message: ... })
+        // Ελέγχουμε αν το data είναι string (από το server.py) ή object (από το socket.io)
+        let parsedData = data;
         try {
-            const response = await fetch('/logout', { method: 'POST' });
-            if (response.ok) {
-                window.location.href = '/login.html';
-            } else {
-                alert('Σφάλμα κατά το Logout.');
-            }
-        } catch (error) {
-            console.error('Logout error:', error);
-            alert('Σφάλμα δικτύου κατά το Logout.');
+             parsedData = (typeof data === 'string') ? JSON.parse(data) : data;
+        } catch (e) {
+            console.warn("Received non-JSON message:", data);
+            return;
+        }
+
+        if (parsedData.type === 'oldMessages') {
+            parsedData.messages.forEach(msg => displayMessage(msg));
+        } else if (parsedData.type === 'message') {
+             displayMessage(parsedData);
+        } else if (parsedData.type === 'userStatus') {
+            // Μπορείς να εμφανίσεις ειδοποίηση εισόδου/εξόδου εδώ
+            console.log(`User status update: ${parsedData.displayName} is ${parsedData.status}`);
         }
     });
-    
+
+    // Αφήστε το onclose και onerror όπως είναι
+    socket.on('disconnect', () => {
+        console.log('Αποσυνδέθηκε από το chat');
+    });
+
+    socket.on('error', (error) => {
+        console.error('Σφάλμα SocketIO:', error);
+    });
+
+
     // --- FORMATTING LISTENERS ---
     boldBtn.addEventListener('click', () => {
         isBold = !isBold;
