@@ -33,38 +33,33 @@ if not os.path.exists(os.path.join(os.getcwd(), UPLOAD_FOLDER)):
     os.makedirs(os.path.join(os.getcwd(), UPLOAD_FOLDER))
 
 # Εάν το περιβάλλον είναι Render (παραγωγή), βάζουμε CORS για WebSockets
-# ΚΩΔΙΚΑΣ ΠΡΟΣΘΗΚΗΣ Ή ΑΝΤΙΚΑΤΑΣΤΑΣΗΣ ΣΤΟ server.py
-
-# 1. Παίρνουμε το Redis URL από τις μεταβλητές περιβάλλοντος του Render
-REDIS_URL = os.environ.get('REDIS_URL')
 
 # ΚΩΔΙΚΑΣ ΠΡΟΣΘΗΚΗΣ Ή ΑΝΤΙΚΑΤΑΣΤΑΣΗΣ ΣΤΟ server.py
-
-# 1. Παίρνουμε το Redis URL από τις μεταβλητές περιβάλλοντος του Render
-REDIS_URL = os.environ.get('REDIS_URL')
 
 # --- ΡΥΘΜΙΣΗ REDIS/SOCKETIO (Οριστική) ---
 REDIS_URL = os.environ.get('REDIS_URL')
 
 if REDIS_URL:
+    # Η λογική για τον Render (Αντικατάσταση rediss:// και απενεργοποίηση SSL)
     if REDIS_URL.startswith('rediss://'):
-        # 1. ΑΝΤΙΚΑΤΑΣΤΑΣΗ: rediss:// -> redis:// για να δουλέψει το redis-py
         message_queue_url = REDIS_URL.replace('rediss://', 'redis://')
         
-        # 2. ΟΡΙΣΜΟΣ: Χρησιμοποιούμε message_queue_options για να παρακάμψουμε το SSL.
         socketio = SocketIO(
             app, 
             message_queue=message_queue_url, 
             async_mode='gevent',
-            message_queue_options={'ssl_verify': False} # <--- ΤΟ ΣΩΣΤΟ ΚΛΕΙΔΙ
+            # Απενεργοποιούμε το SSL check για να δουλέψει ο Render Redis
+            message_queue_options={'ssl_verify': False} 
         )
     else:
         # Για απλή σύνδεση (redis://)
         socketio = SocketIO(app, message_queue=REDIS_URL, async_mode='gevent')
 else:
-    # Fallback για τοπική λειτουργία
-    socketio = SocketIO(app, async_mode='gevent')
-
+    # **ΑΥΤΟ ΕΙΝΑΙ ΤΟ ΚΛΕΙΔΙ ΓΙΑ ΤΟ ConnectionRefusedError**
+    # Αν το REDIS_URL δεν υπάρχει, βάζουμε message_queue=None 
+    # για να χρησιμοποιήσουμε τον in-memory manager και να *αποφύγουμε*
+    # την αυτόματη σύνδεση στο localhost:6379.
+    socketio = SocketIO(app, async_mode='gevent', message_queue=None)
 # --- WEB PAGES ROUTES (Frontend) ---
 
 @app.route('/')
