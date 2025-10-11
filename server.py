@@ -1,7 +1,7 @@
 import os
 import json
 from flask import Flask, send_from_directory, request, jsonify, url_for, session, redirect
-from flask_session import Session # ΝΕΟ IMPORT
+from flask_session import Session 
 from flask_socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -14,16 +14,16 @@ app.config["SECRET_KEY"] = os.environ.get('SECRET_KEY', 'default_fallback_secret
 app.config["SESSION_TYPE"] = "filesystem" 
 app.config["SESSION_PERMANENT"] = False
 
-Session(app) # Αρχικοποίηση Session
+Session(app) 
 
 # Ρύθμιση φακέλου upload
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Δημιουργία φακέλου αν δεν υπάρχει (με exist_ok=True για το FileExistsError)
+# Δημιουργία φακέλου αν δεν υπάρχει
 os.makedirs(os.path.join(os.getcwd(), UPLOAD_FOLDER), exist_ok=True)
 
-# Ρύθμιση SocketIO
+# Ρύθμιση SocketIO (Ο Gunicorn θα παρέχει τον gevent worker)
 socketio = SocketIO(app)
 
 # --- MOCK USER DATABASE (Δοκιμαστικοί Χρήστες & Ρόλοι) ---
@@ -43,14 +43,12 @@ def login():
     password = data.get('password')
 
     if username in USERS and USERS[username]['password'] == password:
-        # Επιτυχής σύνδεση: αποθήκευση στο session
         session['logged_in'] = True
         session['username'] = username
         session['role'] = USERS[username]['role']
         session['display_name'] = USERS[username]['display_name']
         return jsonify({'message': 'Login successful', 'redirect': '/'}), 200
     else:
-        # Αποτυχία σύνδεσης
         return jsonify({'error': 'Invalid credentials'}), 401
 
 @app.route('/logout', methods=['POST'])
@@ -77,26 +75,23 @@ def check_login():
 
 @app.route('/login.html')
 def serve_login():
-    # Αν είναι ήδη συνδεδεμένος, τον στέλνουμε στο chat
     if session.get('logged_in'):
         return redirect(url_for('serve_chat'))
     return send_from_directory('.', 'login.html')
 
 @app.route('/')
 def serve_chat():
-    # Ελέγχουμε αν ο χρήστης είναι συνδεδεμένος. Αν όχι, τον στέλνουμε στο login.
     if not session.get('logged_in'):
         return redirect(url_for('serve_login'))
-    # Εξυπηρέτηση του chat.html
     return send_from_directory('.', 'chat.html')
 
-# --- API ROUTES (Upload) ---
+# --- API ROUTES (Upload & Settings) ---
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if not session.get('logged_in'):
         return jsonify({'error': 'Unauthorized'}), 401
-
+    # Χρησιμοποιούμε 'file' (όπως στο frontend)
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
     
@@ -119,25 +114,32 @@ def upload_file():
         
     return jsonify({'error': 'Upload failed'}), 500
 
+@app.route('/api/settings')
+def get_settings():
+    # Επιστρέφουμε τις ρυθμίσεις για το frontend
+    return jsonify({
+        "app_title": "Chatbox",
+        "message_opacity": 0.85,
+        "input_row_opacity": 0.90,
+        "top_bar_opacity": 0.95,
+        "default_font_color": '#E0E0E0',
+        "allow_gif_searches": 'true' 
+    })
+
 
 # --- WEBSOCKET EVENT HANDLERS (SocketIO) ---
 
 @socketio.on('connect')
 def handle_connect():
     if not session.get('logged_in'):
-        # Αν ο χρήστης δεν είναι συνδεδεμένος, απορρίπτουμε τη σύνδεση WebSocket
-        print('Unauthorized WebSocket connection attempt.')
         return False
-
     display_name = session.get('display_name', 'Guest')
     emit('userStatus', {'displayName': display_name, 'status': 'connected'}, broadcast=True) 
-    print(f'Client connected: {display_name}')
 
 @socketio.on('disconnect')
 def handle_disconnect():
     display_name = session.get('display_name', 'Guest')
     emit('userStatus', {'displayName': display_name, 'status': 'disconnected'}, broadcast=True)
-    print(f'Client disconnected: {display_name}')
 
 @socketio.on('message')
 def handle_message(message_content_json_string):
@@ -145,10 +147,11 @@ def handle_message(message_content_json_string):
         return 
 
     try:
-        data = json.loads(message_content_json_string)
+        # Αναμένουμε το απλό JSON payload: {text: "...", isBold: true, isItalic: true, ...}
+        data = json.loads(message_content_json_string) 
     except json.JSONDecodeError:
-        print(f"Received invalid JSON message: {message_content_json_string}")
-        return
+        # Fallback για plain text ή αν σταλθεί απλά το URL
+        data = {'text': message_content_json_string}
         
     # ΑΝΑΚΤΗΣΗ ΔΕΔΟΜΕΝΩΝ ΑΠΟ ΤΟ SESSION
     display_name = session.get('display_name', 'Guest')
@@ -165,12 +168,12 @@ def handle_message(message_content_json_string):
         'displayName': display_name,
         'message': message_body, 
         'timestamp': datetime.utcnow().isoformat(),
-        'role': user_role, # Χρησιμοποιούμε τον πραγματικό ρόλο
+        'role': user_role, 
         'isBold': data.get('isBold', False),
+        'isItalic': data.get('isItalic', False), # ✅ ΠΡΟΣΘΗΚΗ isItalic
         'color': data.get('color', '#E0E0E0')
     }
     
-    # Στέλνουμε το μήνυμα πίσω σε όλους
     emit('message', message_data, broadcast=True)
 
 
