@@ -436,10 +436,12 @@
 
         await loadAndApplySettings();
 
-        socket = io({
-             transports: ['websocket'],
-             upgrade: false
-        }); 
+         (ΠΡΟΣΘΗΚΗ QUERY STRING)
+socket = io({
+     query: { display_name: currentUserName }, // Περνάμε το όνομα που πήραμε από το /check_login
+     transports: ['websocket'],
+     upgrade: false
+});
         
         // Initialize sound toggle state
         document.getElementById('soundToggle').checked = soundEnabled;
