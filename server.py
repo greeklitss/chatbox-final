@@ -9,7 +9,8 @@ from datetime import datetime
 
 # 2. ΟΡΙΣΜΟΣ ΤΟΥ FLASK APP (app)
 # --- Ρυθμίσεις Εφαρμογής ---
-app = Flask(__name__, static_folder='.') 
+app = Flask(__name__) 
+
 
 # 3. ΡΥΘΜΙΣΗ ΦΑΚΕΛΟΥ UPLOAD (app.config['UPLOAD_FOLDER']...)
 # ...

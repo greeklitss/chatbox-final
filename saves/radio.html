@@ -1,0 +1,332 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+	<meta name="viewport" content="initial-scale=1, maximum-scale=1"/>
+
+	
+
+	<title>Ultimate Radio Player</title>
+
+	
+
+	<!--  Import required css and js files  -->
+
+	<link rel="stylesheet" type="text/css"  href="content/global.css"/>
+
+	<script type="text/javascript" src="java/FWDURP.js"></script>
+
+	
+
+	<style> 
+
+		body{
+
+			background-color:#333;
+
+		}
+
+		
+
+		#myDiv{
+
+			margin:auto;
+
+			margin-top:40px;
+
+		}
+
+	</style>
+
+	
+
+	<script type="text/javascript">
+
+	
+
+		FWDURPUtils.onReady(function(){
+
+			new FWDURP({
+
+				//main settings
+
+				instanceName:"player1",
+
+				parentId:"myDiv",
+
+				playlistsId:"playlists",
+
+				mainFolderPath:"content",
+
+				skinPath:"modern_skin_dark",
+
+				useDeepLinking:"yes",
+
+				addKeyboardSupport:"yes",
+
+				proxyCors:"",
+
+				privatePassword:"428c841430ea18a70f7b06525d4b748a",
+
+				useVectorIcons:"no",
+
+				useHEXColorsForSkin:"no",
+
+				normalHEXButtonsColor:"#FF0000",
+
+				normalHEXButtonsColor2:"#888888",
+
+				rightClickContextMenu:"developer",
+
+				showButtonsToolTips:"yes",
+
+				initializeOnlyWhenVisible:"no",
+
+				useProxy:"yes",
+
+				autoPlay:"no",
+
+				maxWidth:901,
+
+				volume:20,
+
+				toolTipsButtonsHideDelay:1.5,
+
+				defaultThumbnail:"content/thumbnails/default.png",
+
+				toolTipsButtonsBackgroundColor:"#FFFFFF",
+
+				toolTipsButtonFontColor:"#000000",
+
+				//controller settings
+
+				showNextAndPrevButtons:"no",
+
+				showThumbnail:"yes",
+
+				showVolumeButton:"yes",
+
+				showInfoButton:"yes",
+
+				showShareButton:"no",
+
+				expandBackground:"no",
+
+				titleColor:"#FFFFFF",
+
+				timeColor:"#888888",
+
+				//controller align and size settings (described in detail in the documentation!)
+
+				controllerHeight:46,
+
+				startSpaceBetweenButtons:15,
+
+				spaceBetweenButtons:15,
+
+				separatorOffsetOutSpace:9,
+
+				separatorOffsetInSpace:9,
+
+				equlizerOffsetLeft:1,
+
+				//playlist window settings
+
+				showPlaylistButtonAndPlaylist:"no",
+
+				showPlaylistByDefault:"no",
+
+				randomizePlaylist:"no",
+
+				thumbnailSelectedType:"opacity",
+
+				showSearchBar:"yes",
+
+				startAtRandomTrack:"no",
+
+				startAtTrack:0,
+
+				buttonsMargins:15,
+
+				thumbnailMaxWidth:350, 
+
+				thumbnailMaxHeight:350,
+
+				horizontalSpaceBetweenThumbnails:40,
+
+				verticalSpaceBetweenThumbnails:40,
+
+				inputSearchTextOffsetTop:1,
+
+				searchInputColor:"#999999",
+
+				//history settings
+
+				showHisotryButtonAndHisotry:"yes",
+
+				showHisotryByDefault:"yes",
+
+				showHistoryNumbers:"yes",
+
+				playlistBackgroundColor:"#000000",
+
+				playlistItemHeight:33,
+
+				nrOfVisiblePlaylistItems:6,
+
+				trackTitleOffsetLeft:10,
+
+				//playback rate / speed
+
+				playbackRateCloseButtonMargin:7,
+
+				showPlaybackRateButton:"no",
+
+				defaultPlaybackRate:1, //min - 0.5 / max - 3
+
+				playbackRateWindowTextColor:"#FFFFFF",
+
+				//password window
+
+				borderColor:"#333333",
+
+				secondaryLabelsColor:"#a1a1a1",
+
+				textColor:"#5a5a5a",
+
+				inputBackgroundColor:"#000000",
+
+				inputColor:"#FFFFFF",
+
+				inputSearchOffsetLeft:0,
+
+				//visualizer
+
+				useVisualizer:'yes',
+
+				visualizerRandomPreset:"no",
+
+				visualizerPreset:"bars1",
+
+				visualizerColor:["#C751FC", "#C751FC", "#C751FC", "#C751FC", "#666666"],
+
+				visualizerCapColor: "#FFFFFF",
+
+				//popup settings
+
+				showPopupButton:"yes",
+
+				popupWindowBackgroundColor:"#878787",
+
+				popupWindowWidth:901,
+
+				popupWindowHeight:286,
+
+				//login
+
+                playIfLoggedIn:"no",
+
+                playIfLoggedInMessage:"Please <a href='https://google.com' target='_blank'>login</a> to access this station."
+
+			});
+
+		})
+
+		
+
+		function buyCustomFunction(){
+
+			alert("The buy button can open a custom link or a custom javascript function.");
+
+		}
+
+	</script>
+
+</head>
+
+
+
+<body>
+
+
+
+	<!-- player holder -->
+
+	<div id="myDiv"></div>
+
+	
+
+	<!--  Playlists -->
+
+	<ul id="playlists" style="display:none;" >
+
+		<li data-title="" data-playlist-thumbnail-path="content/thumbnails/large1.jpg" data-source="https://sp2.streams.ovh:8080/" data-type="shoutcast">
+
+			<p class="fwdurp-categories-title"><span class="fwdurp-header">Title: </span><span class="fwdurp-title"></span></p>
+
+			<p class="fwdurp-categories-type"><span class="fwdurp-header">Type: </span>SHOUTCAST</p>
+
+			<p class="fwdurp-categories-description"><span class="fwdurp-header">Description: </span>ShoutCast server V2. Play history, current playing song title and thumbnail artwork is updated while the station runs.</p>
+
+		</li>
+
+
+
+		<li data-title="Top Radio" data-playlist-thumbnail-path="content/thumbnails/large3.jpg" data-source="http://str.topradio.be/" data-type="icecast">
+
+			<p class="fwdurp-categories-title"><span class="fwdurp-header">Title: </span><span class="fwdurp-title">Top Radio</span></p>
+
+			<p class="fwdurp-categories-type"><span class="fwdurp-header">Type: </span>ICEACAST</p>
+
+			<p class="fwdurp-categories-description"><span class="fwdurp-header">Description: </span>IceCast server V2. Current playing song title and thumbnail artwork is updated while the station runs.</p>
+
+		</li>
+
+		
+
+		<li data-title="Around the World in a Tea Daze - <span class='fwdurp-title-active'>mp3 file</span>" data-playlist-thumbnail-path="content/thumbnails/large4.jpg" data-source="content/mp3/01.mp3" data-type="normal" data-controler-thumbnail-path="content/thumbnails/brian.jpg">
+
+			<p class="fwdurp-categories-title"><span class="fwdurp-header">Title: </span><span class="fwdurp-title">Around the World in a Tea Daze</span></p>
+
+			<p class="fwdurp-categories-type"><span class="fwdurp-header">Type: </span>MP3</p>
+
+			<p class="fwdurp-categories-description"><span class="fwdurp-header">Description: </span>URP can play mp3 files as well, but it's main purpose is to play / stream ShoutCast / IceCast servers.</p>
+
+		</li>
+
+
+
+		<li data-title="" data-playlist-thumbnail-path="content/thumbnails/large1.jpg" data-source="https://sp2.streams.ovh:8080/" data-type="shoutcast" data-is-private="yes">
+
+			<p class="fwdurp-categories-title"><span class="fwdurp-header">Title: </span><span class="fwdurp-title"></span></p>
+
+			<p class="fwdurp-categories-type"><span class="fwdurp-header">Type: </span>SHOUTCAST</p>
+
+			<p class="fwdurp-categories-description"><span class="fwdurp-header">Description: </span>ShoutCast server V2. Play history, current playing song title and thumbnail artwork is updated while the station runs.</p>
+
+		</li>
+
+
+
+		<li data-title="Around the World in a Tea Daze - mp3 file" data-playlist-thumbnail-path="content/thumbnails/large4.jpg" data-source="content/mp3/01.mp3" data-type="normal" data-controler-thumbnail-path="content/thumbnails/brian.jpg" data-play-if-logged-in="yes">
+
+			<p class="fwdurp-categories-title"><span class="fwdurp-header">Title: </span><span class="fwdurp-title">Around the World in a Tea Daze</span></p>
+
+			<p class="fwdurp-categories-type"><span class="fwdurp-header">Type: </span>MP3</p>
+
+			<p class="fwdurp-categories-description"><span class="fwdurp-header">Description: </span>URP can play mp3 files as well, but it's main purpose is to play / stream ShoutCast / IceCast servers.</p>
+
+		</li>
+
+	</ul>
+
+
+
+	</body>
+
+</html>
