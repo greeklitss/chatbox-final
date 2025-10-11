@@ -1,6 +1,7 @@
 
 Flask
 flask-socketio
+Flask-Session
 gunicorn 
 eventlet 
 python-engineio

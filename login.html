@@ -1,152 +1,129 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login</title>
+    <title>Login - Chatbox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
+            font-family: 'Roboto', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            flex-direction: column;
+            background-color: #1F2937; 
+            color: #E5E7EB;
         }
-        .container {
-            background-color: #fff;
-            padding: 20px 40px;
+        .login-box {
+            background-color: #374151; 
+            padding: 40px;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
             text-align: center;
-            width: 350px;
         }
-        h2 {
+        .login-box h2 {
             margin-bottom: 20px;
-            color: #1c1e21;
+            color: #64FFDA; 
         }
-        .login-btn, .form-btn {
-            display: block;
+        .login-box input[type="text"],
+        .login-box input[type="password"] {
             width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #fff;
-            text-decoration: none;
-            text-align: center;
-            cursor: pointer;
-            margin-bottom: 15px;
-        }
-        .google-btn {
-            background-color: #4285F4;
-        }
-        .facebook-btn {
-            background-color: #1877F2;
-        }
-        .form-btn {
-            background-color: #28a745;
-        }
-        .google-btn:hover {
-            background-color: #357ae8;
-        }
-        .facebook-btn:hover {
-            background-color: #1562c9;
-        }
-        .form-btn:hover {
-            background-color: #218838;
-        }
-        input[type="text"], input[type="password"] {
-            width: calc(100% - 22px);
             padding: 10px;
             margin-bottom: 15px;
-            border: 1px solid #dddfe2;
-            border-radius: 6px;
+            border: 1px solid #4B5563;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #4B5563;
+            color: #E5E7EB;
         }
-        .divider {
-            margin: 20px 0;
-            border-bottom: 1px solid #dadde1;
-            line-height: 0.1em;
-            text-align: center;
+        .login-box button {
+            width: 100%;
+            padding: 10px;
+            background-color: #64FFDA;
+            color: #1F2937;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
         }
-        .divider span {
-            background: #fff;
-            padding: 0 10px;
-            font-size: 14px;
-            color: #606770;
+        .login-box button:hover {
+            background-color: #10B981;
         }
-        .hidden-form {
-            display: none;
+        #error-message {
+            color: #EF4444;
+            margin-top: 10px;
+        }
+        .instructions {
             margin-top: 20px;
+            font-size: 0.8em;
+            color: #ccc;
+            text-align: left;
+        }
+        .instructions p {
+            margin: 5px 0;
+        }
+        .instructions strong {
+            color: #64FFDA;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Είσοδος στο Chat</h2>
-        <a href="/auth/google" class="login-btn google-btn">Σύνδεση με Google</a>
-        <a href="/auth/facebook" class="login-btn facebook-btn">Σύνδεση με Facebook</a>
-        
-        <div class="divider"><span>ή</span></div>
-
-        <form id="adminLoginForm" action="/direct-login" method="POST">
-            <h3>Σύνδεση Διαχειριστή</h3>
-            <input type="text" name="username" placeholder="Όνομα Χρήστη" required>
-            <input type="password" name="password" placeholder="Κωδικός" required>
-            <button type="submit" class="form-btn">Σύνδεση</button>
-        </form>
-
-        <div class="divider"><span>ή</span></div>
-
-        <button id="showCreateFormBtn" class="form-btn" style="background-color: #007bff;">Δημιουργία Νέου Χρήστη</button>
-        <div id="createUserFormContainer" class="hidden-form">
-            <h3>Δημιουργία Νέου Χρήστη</h3>
-            <form id="createUserForm">
-                <input type="text" id="newUsername" placeholder="Όνομα Χρήστη" required>
-                <input type="password" id="newPassword" placeholder="Κωδικός" required>
-                <input type="text" id="newDisplayName" placeholder="Εμφανιζόμενο Όνομα" required>
-                <button type="submit" class="form-btn">Δημιουργία</button>
-            </form>
-            <p id="message" style="color: red;"></p>
-        </div>
+<div class="login-box">
+    <h2>Login to Chatbox</h2>
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button id="loginButton">Login</button>
+    <div id="error-message"></div>
+    <div class="instructions">
+        <p>Δοκιμαστικοί Χρήστες:</p>
+        <p>Admin: <strong>admin</strong> / 123</p>
+        <p>User: <strong>user1</strong> / 123</p>
     </div>
+</div>
 
-    <script>
-        document.getElementById('showCreateFormBtn').addEventListener('click', function() {
-            const formContainer = document.getElementById('createUserFormContainer');
-            formContainer.style.display = formContainer.style.display === 'block' ? 'none' : 'block';
-        });
+<script>
+    const loginButton = document.getElementById('loginButton');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const errorMessage = document.getElementById('error-message');
 
-        document.getElementById('createUserForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const username = document.getElementById('newUsername').value;
-            const password = document.getElementById('newPassword').value;
-            const displayName = document.getElementById('newDisplayName').value;
-            const messageEl = document.getElementById('message');
+    loginButton.addEventListener('click', async () => {
+        const username = usernameInput.value;
+        const password = passwordInput.value;
 
-            try {
-                const response = await fetch('/create-user', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, displayName })
-                });
+        try {
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
 
-                const text = await response.text();
-                if (response.ok) {
-                    messageEl.style.color = 'green';
-                    messageEl.textContent = 'Ο χρήστης δημιουργήθηκε επιτυχώς!';
-                    document.getElementById('createUserForm').reset();
-                } else {
-                    messageEl.style.color = 'red';
-                    messageEl.textContent = text || 'Σφάλμα κατά τη δημιουργία χρήστη.';
-                }
-            } catch (error) {
-                messageEl.style.color = 'red';
-                messageEl.textContent = 'Σφάλμα δικτύου.';
-                console.error('Error:', error);
+            const result = await response.json();
+
+            if (response.ok) {
+                // Επιτυχής σύνδεση, ανακατεύθυνση στο chat
+                window.location.href = result.redirect; 
+            } else {
+                errorMessage.textContent = result.error || 'Login failed. Try again.';
             }
-        });
-    </script>
+        } catch (error) {
+            console.error('Login error:', error);
+            errorMessage.textContent = 'Network error during login.';
+        }
+    });
+
+    // Επιτρέπει το Login με Enter
+    passwordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            loginButton.click();
+        }
+    });
+</script>
 </body>
 </html>

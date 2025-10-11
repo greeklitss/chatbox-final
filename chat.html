@@ -30,7 +30,7 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            background-color: rgba(0, 0, 0, 0.7); /* Ελαφρύ σκούρο φόντο πάνω στην εικόνα */
+            background-color: rgba(0, 0, 0, 0.7); 
         }
 
         /* --- TOP BAR --- */
@@ -39,7 +39,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 20px;
-            background-color: #1F2937; /* Σκούρο μπλε/γκρι */
+            background-color: #1F2937; 
             color: #F9FAFB;
             border-bottom: 2px solid #64FFDA;
             flex-shrink: 0;
@@ -52,7 +52,7 @@
         }
         
         #top-bar button {
-            background-color: #374151; /* Πιο σκούρο από το bar */
+            background-color: #374151; 
             color: #F9FAFB;
             border: none;
             padding: 8px 15px;
@@ -88,14 +88,14 @@
 
         .message.self {
             align-self: flex-end;
-            background-color: #3B82F6; /* Μπλε για δικά μας */
+            background-color: #3B82F6; 
             color: white;
             border-bottom-right-radius: 0;
         }
 
         .message.other {
             align-self: flex-start;
-            background-color: #4B5563; /* Γκρι για τους άλλους */
+            background-color: #4B5563; 
             color: #E5E7EB;
             border-bottom-left-radius: 0;
         }
@@ -110,7 +110,12 @@
 
         .message-sender {
             font-weight: bold;
-            color: #64FFDA; /* Χρώμα για το όνομα */
+            color: #64FFDA; 
+        }
+        
+        /* Στυλ για τον Admin */
+        .message-sender.admin {
+            color: #FF6464; /* Κόκκινο για Admin */
         }
         
         .message-content {
@@ -145,7 +150,7 @@
             line-height: 20px;
         }
 
-        #sendButton, #uploadButton, #exportPdfButton, #settingsButton {
+        #sendButton, #uploadButton, #exportPdfButton, #settingsButton, #adminPanelButton {
             background-color: #64FFDA;
             color: #1F2937;
             border: none;
@@ -156,9 +161,19 @@
             margin-left: 5px;
         }
 
-        #sendButton:hover, #uploadButton:hover, #exportPdfButton:hover, #settingsButton:hover {
+        #sendButton:hover, #uploadButton:hover, #exportPdfButton:hover, #settingsButton:hover, #adminPanelButton:hover {
             background-color: #10B981;
         }
+        
+        #adminPanelButton {
+            background-color: #FF6464; /* Κόκκινο για Admin Panel */
+            color: white;
+        }
+        
+        #adminPanelButton:hover {
+            background-color: #CC0000;
+        }
+
 
         #format-controls {
             display: flex;
@@ -198,6 +213,7 @@
     <div id="top-bar">
         <h1>Chatbox</h1>
         <div>
+            <button id="adminPanelButton" title="Admin Panel" style="display:none;"><i class="fas fa-user-shield"></i> Admin</button>
             <button id="settingsButton" title="Settings"><i class="fas fa-cog"></i></button>
             <button id="logoutButton">Logout</button>
         </div>
@@ -224,8 +240,54 @@
 </div>
 
 <script>
-    // ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε το socket.io client library
-    const socket = io(); // Συνδέεται αυτόματα στο host που σερβίρει το chat.html
+    let socket = null;
+    let currentUserRole = null;
+    let currentUserName = null;
+
+    // --- UTILITIES ---
+    
+    async function initializeChat() {
+        const response = await fetch('/check_login');
+        if (!response.ok) {
+            // Αν δεν είναι συνδεδεμένος, τον στέλνουμε στο login (αν δεν το έχει κάνει ήδη το Flask)
+            window.location.href = '/login.html';
+            return;
+        }
+        
+        const userData = await response.json();
+        currentUserRole = userData.role;
+        currentUserName = userData.display_name;
+
+        // Εμφάνιση του Admin Panel αν ο ρόλος είναι 'admin'
+        if (currentUserRole === 'admin') {
+            document.getElementById('adminPanelButton').style.display = 'inline-block';
+        }
+
+        // Σύνδεση στο WebSocket αφού έχουμε τα δεδομένα του χρήστη
+        socket = io(); 
+        
+        // --- SOCKETIO EVENTS ---
+        socket.on('connect', () => {
+            console.log(`Συνδέθηκε στο chat ως: ${currentUserName}`);
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Αποσυνδέθηκε από το chat');
+        });
+
+        socket.on('message', (data) => {
+            displayMessage(data);
+        });
+        
+        socket.on('userStatus', (data) => {
+            displayMessage({
+                displayName: data.displayName,
+                message: data.status === 'connected' ? 'joined the chat.' : 'left the chat.',
+                timestamp: new Date().toISOString(), 
+                role: 'system' 
+            });
+        });
+    }
 
     const chatbox = document.getElementById('chatbox');
     const messageInput = document.getElementById('messageInput');
@@ -236,126 +298,90 @@
     const fileUpload = document.getElementById('fileUpload');
     const logoutButton = document.getElementById('logoutButton');
     const exportPdfButton = document.getElementById('exportPdfButton');
-    const settingsButton = document.getElementById('settingsButton'); // ΝΕΟ
+    const settingsButton = document.getElementById('settingsButton'); 
+    const adminPanelButton = document.getElementById('adminPanelButton'); // ΝΕΟ
     
     let isBold = false;
     
-    // --- SOCKETIO EVENTS ---
-
-    socket.on('connect', () => {
-        console.log('Συνδέθηκε στο chat');
-    });
-
-    socket.on('disconnect', () => {
-        console.log('Αποσυνδέθηκε από το chat');
-        displayMessage({ 
-            displayName: 'System', 
-            message: 'Connection lost. Reconnecting...', 
-            timestamp: new Date().toISOString(), 
-            role: 'system' 
-        });
-    });
-
-    socket.on('message', (data) => {
-        displayMessage(data);
-    });
-    
-    socket.on('userStatus', (data) => {
-        displayMessage({
-            displayName: data.displayName,
-            message: data.status === 'connected' ? 'joined the chat.' : 'left the chat.',
-            timestamp: new Date().toISOString(), 
-            role: 'system' 
-        });
-        console.log(`User status: ${data.displayName} is ${data.status}`);
-    });
-    
-    // --- UTILITIES ---
-    
     function displayMessage(data) {
-        // ... (Ο κώδικας για την εμφάνιση μηνυμάτων παραμένει ο ίδιος)
-        if (data.message) {
-             const messageElement = document.createElement('div');
-             messageElement.className = 'message other';
-             // Προσωρινό ID για λόγους εμφάνισης/διαχείρισης (όχι ασφάλειας)
-             messageElement.id = `msg-${data.messageId}`; 
+        if (!data.message) return;
 
-             const senderSpan = document.createElement('span');
-             senderSpan.className = 'message-sender';
-             senderSpan.style.color = data.role === 'system' ? 'yellow' : '#64FFDA';
-             
-             // Εμφανίζουμε το όνομα
-             const nameText = document.createTextNode(data.displayName);
-             senderSpan.appendChild(nameText);
-             
-             // Πλήρες timestamp
-             const date = new Date(data.timestamp);
-             const timeString = date.toLocaleString('el-GR', { 
-                year: 'numeric', 
-                month: 'numeric', 
-                day: 'numeric', 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit' 
-             });
-             const timeText = document.createTextNode(` [${timeString}]: `);
-             
-             const contentContainer = document.createElement('div');
-             contentContainer.className = 'message-header';
+        const isSelf = data.displayName === currentUserName; 
 
-             const messageText = document.createElement('p');
-             messageText.className = 'message-content';
-             messageText.style.fontWeight = data.isBold ? 'bold' : 'normal';
-             messageText.style.color = data.color || '#E0E0E0';
-             
-             const text = data.message;
-             
-             // Έλεγχος για URL (εικόνες/links)
-             const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const messageElement = document.createElement('div');
+        messageElement.className = `message ${isSelf ? 'self' : 'other'}`;
+        
+        const senderSpan = document.createElement('span');
+        senderSpan.className = 'message-sender';
+        
+        // ΧΡΗΣΗ ΡΟΛΟΥ ΓΙΑ STYLING:
+        if (data.role === 'admin') {
+            senderSpan.classList.add('admin');
+        } else if (data.role === 'system') {
+            senderSpan.style.color = 'yellow';
+        }
+        
+        const nameText = document.createTextNode(data.displayName);
+        senderSpan.appendChild(nameText);
+        
+        const date = new Date(data.timestamp);
+        const timeString = date.toLocaleString('el-GR', { 
+           year: 'numeric', 
+           month: 'numeric', 
+           day: 'numeric', 
+           hour: '2-digit', 
+           minute: '2-digit', 
+           second: '2-digit' 
+        });
+        const timeText = document.createTextNode(` [${timeString}]: `);
+        
+        const contentContainer = document.createElement('div');
+        contentContainer.className = 'message-header';
 
-             if (urlRegex.test(text)) {
-                 messageText.innerHTML = text.replace(urlRegex, function(url) {
-                     // Αν είναι εικόνα (gif, jpg, png, κλπ), την εμφανίζουμε
-                     if (/\.(gif|jpe?g|png|webp)$/i.test(url)) {
-                         return `<img src="${url}" alt="image attachment" style="max-width: 200px;">`;
-                     }
-                     // Αλλιώς, εμφανίζουμε hyperlink
-                     return `<a href="${url}" target="_blank" style="color: #64FFDA; text-decoration: underline;">${url}</a>`;
-                 });
-             } else {
-                 messageText.innerHTML = text.replace(/\n/g, '<br>');
-             }
-             
-             contentContainer.appendChild(messageText);
+        const messageText = document.createElement('p');
+        messageText.className = 'message-content';
+        // ΧΡΗΣΗ FORMATTING:
+        messageText.style.fontWeight = data.isBold ? 'bold' : 'normal';
+        messageText.style.color = data.color || '#E0E0E0';
+        
+        const text = data.message;
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
 
-             senderSpan.appendChild(timeText);
-             
-             contentContainer.prepend(senderSpan);
-             messageElement.appendChild(contentContainer);
-             
-             chatbox.appendChild(messageElement);
-             chatbox.scrollTop = chatbox.scrollHeight;
-        } 
+        if (urlRegex.test(text)) {
+            messageText.innerHTML = text.replace(urlRegex, function(url) {
+                if (/\.(gif|jpe?g|png|webp)$/i.test(url)) {
+                    return `<img src="${url}" alt="image attachment" style="max-width: 200px;">`;
+                }
+                return `<a href="${url}" target="_blank" style="color: #64FFDA; text-decoration: underline;">${url}</a>`;
+            });
+        } else {
+            messageText.innerHTML = text.replace(/\n/g, '<br>');
+        }
+        
+        contentContainer.appendChild(messageText);
+        senderSpan.appendChild(timeText);
+        contentContainer.prepend(senderSpan);
+        messageElement.appendChild(contentContainer);
+        
+        chatbox.appendChild(messageElement);
+        chatbox.scrollTop = chatbox.scrollHeight;
     }
     
     function sendMessage() {
+        if (!socket) return;
+        
         const text = messageInput.value.trim();
         if (text === '') return;
 
-        // Συγκέντρωση δεδομένων μορφοποίησης
         const messageFormat = {
             text: text,
             isBold: isBold,
             color: colorPicker.value
         };
         
-        // ΔΙΟΡΘΩΣΗ: Στέλνουμε το stringified JSON κατευθείαν στον SocketIO event 'message'
         socket.emit('message', JSON.stringify(messageFormat));
 
-        // Καθαρισμός του πεδίου εισαγωγής
         messageInput.value = '';
-        
-        // Επαναφορά της μορφοποίησης (προαιρετικό)
         isBold = false;
         boldButton.classList.remove('active');
         messageInput.style.fontWeight = 'normal';
@@ -378,18 +404,24 @@
         messageInput.style.fontWeight = isBold ? 'bold' : 'normal';
     });
 
-    // ΝΕΟ: Listener για το κουμπί Ρυθμίσεων
     settingsButton.addEventListener('click', () => {
         alert('Settings panel will be implemented here!'); 
     });
     
-    // Listener για το Logout
+    adminPanelButton.addEventListener('click', () => {
+        alert('Admin panel functionality will be here!');
+        // Μπορείτε να ανακατευθύνετε: window.location.href = '/admin';
+    });
+
     logoutButton.addEventListener('click', async () => {
         try {
             const response = await fetch('/logout', { method: 'POST' });
+            const result = await response.json();
+            
             if (response.ok) {
-                alert('Logged out successfully. Reloading page.');
-                window.location.reload(); 
+                alert('Logged out successfully.');
+                // Ανακατεύθυνση στο login page
+                window.location.href = result.redirect || '/login.html'; 
             } else {
                 alert('Logout failed.');
             }
@@ -399,16 +431,10 @@
         }
     });
     
-    // Listener για το Export to PDF
     exportPdfButton.addEventListener('click', () => {
         alert('PDF Export functionality coming soon!');
-        // const { jsPDF } = window.jspdf;
-        // const doc = new jsPDF();
-        // ... (logic for exporting chatbox content)
-        // doc.save("chat_history.pdf");
     });
 
-    // Listener για το File Upload
     uploadButton.addEventListener('click', () => {
         fileUpload.click();
     });
@@ -429,14 +455,9 @@
             const result = await response.json();
             
             if (response.ok) {
-                // Στέλνουμε το URL του ανεβασμένου αρχείου στο chat
                 const fileMessage = {
-                    url: result.url,
-                    isBold: false, // Formatting doesn't apply to files
-                    color: '#E0E0E0'
+                    url: result.url
                 };
-                
-                // ΔΙΟΡΘΩΣΗ: Στέλνουμε το JSON stringified payload
                 socket.emit('message', JSON.stringify(fileMessage));
             } else {
                 alert(`Upload failed: ${result.error}`);
@@ -446,9 +467,12 @@
             alert('An error occurred during file upload.');
         }
         
-        // Καθαρισμός του input για να μπορεί να ανεβάσει το ίδιο αρχείο ξανά
         fileUpload.value = ''; 
     });
+    
+    // ΕΚΚΙΝΗΣΗ CHAT
+    initializeChat();
+
 </script>
 </body>
 </html>
