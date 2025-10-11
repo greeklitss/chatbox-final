@@ -12,7 +12,7 @@
     <style>
         /* --- GLOBAL & STRUCTURE --- */
         :root {
-            --primary-accent: #FF5733; /* Ζωντανό Πορτοκαλί/Κόκκινο */
+            --primary-accent: #FF5733; /* Ζωντανό Πορτοκαλί/Κόκκινο (Radio Vibe) */
             --secondary-accent: #FFC300; /* Χαρούμενο Κίτρινο */
             --text-color: #E0E0E0;
             --dark-bg: rgba(18, 18, 18, 0.95);
@@ -28,7 +28,7 @@
             background-color: #ccf5f5; 
             color: var(--text-color);
 	        background-image: url('static/akoyme_background.png'); 
-            background-size: 100% 100%; 
+            background-size: 100% 100%; /* Responsive Background */
             background-attachment: fixed;
             background-repeat: no-repeat;
         }
@@ -56,7 +56,7 @@
             justify-content: space-between;
             align-items: center;
             background-color: var(--dark-bg); 
-            box-shadow: 0 2px 8px rgba(255, 87, 51, 0.4); /* Χρωματιστή σκιά */
+            box-shadow: 0 2px 8px rgba(255, 87, 51, 0.4); 
             z-index: 10;
         }
         
@@ -78,7 +78,7 @@
 
         #top-bar button:hover {
             color: var(--secondary-accent);
-            transform: scale(1.1); /* Effect */
+            transform: scale(1.1); 
         }
         
         /* --- MESSAGE INPUT ROW --- */
@@ -109,7 +109,7 @@
         }
         
         #messageInput:focus {
-            border-color: var(--primary-accent); /* Ζωντανό focus */
+            border-color: var(--primary-accent); 
         }
 
         #messageInputRow button {
@@ -117,7 +117,7 @@
             color: #121212;
             border: none;
             padding: 10px 15px;
-            border-radius: 8px; /* Πιο στρογγυλεμένα */
+            border-radius: 8px; 
             cursor: pointer;
             font-weight: bold;
             transition: background-color 0.2s, transform 0.2s;
@@ -126,12 +126,20 @@
 
         #messageInputRow button:hover {
             background-color: var(--secondary-accent);
-            transform: translateY(-2px); /* Εφέ "bounce" */
+            transform: translateY(-2px); 
         }
         
         /* --- MESSAGE STYLES --- */
         .message-element {
+            display: flex;
             margin-bottom: 5px; 
+            align-items: flex-start;
+            position: relative; 
+            justify-content: flex-start; 
+        }
+        
+        .message-element.self {
+             justify-content: flex-end; 
         }
 
         .message-content-container {
@@ -142,25 +150,28 @@
         }
         
         .sender-info {
-            font-size: 0.9em; /* Ελαφρώς μεγαλύτερο */
-            color: var(--secondary-accent); /* Χαρούμενο κίτρινο */
+            font-size: 0.9em; 
+            color: var(--secondary-accent); 
             font-weight: bold;
             text-shadow: 1px 1px 3px #000; 
+            display: block; 
+            margin-bottom: 3px;
         }
         
         /* Admin-Specific Styling */
         .sender-info.admin {
-            color: #FF5555; /* Κόκκινο για admin */
+            color: #FF5555; 
         }
         
         .message-content {
-            font-size: 1.1em; /* Μεγαλύτερο κείμενο */
+            font-size: 1.1em; 
             text-shadow: 1px 1px 3px #000; 
+            display: block; 
         }
 
         /* --- IMAGE MESSAGE STYLES (GIFS/FILES) --- */
         .message-content-container img {
-            max-width: 300px; /* Μεγαλύτερο μέγεθος για GIF */
+            max-width: 300px; 
             height: auto;
             border-radius: 8px;
             display: block;
@@ -173,11 +184,44 @@
              transform: scale(1.02);
              box-shadow: 0 4px 15px rgba(255, 87, 51, 0.6);
         }
+        
+        /* Avatar placeholder (ΝΕΟ) */
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #4CAF50; /* Default color */
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            color: white;
+            margin-right: 10px;
+            flex-shrink: 0;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            /* Εφαρμόστε το margin/position ανάλογα αν το βάλετε αριστερά/δεξιά */
+        }
+        
+        .message-element.self .avatar {
+            margin-right: 0;
+            margin-left: 10px;
+            order: 2; /* Το avatar να είναι δεξιά για τα δικά μου μηνύματα */
+        }
 
         /* --- FORMATTING BUTTONS --- */
+        #formatting-buttons {
+             display: flex;
+             gap: 5px;
+             margin-right: 10px;
+             align-items: center;
+        }
+        
         #formatting-buttons button {
+            padding: 8px;
             background-color: #333;
             color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
             transition: background-color 0.2s, color 0.2s;
         }
 
@@ -186,34 +230,49 @@
             color: #121212;
         }
 
-        #formatting-buttons button:hover:not(.active) {
-            background-color: #555;
-            color: var(--secondary-accent);
-        }
-        
-        /* --- MODALS (GIPHY/EMOJI) --- */
+        /* --- MODALS --- */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); }
         .modal-content { 
             background-color: #1f1f1f; 
+            margin: 10% auto; 
+            padding: 20px; 
             border: 2px solid var(--primary-accent); 
+            width: 80%; 
+            max-width: 500px;
+            border-radius: 8px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5); 
+            max-height: 80vh; 
+            display: flex; 
+            flex-direction: column; 
         }
         
-        .giphy-grid img:hover { 
-            box-shadow: 0 0 10px var(--primary-accent); 
+        /* Emoji Grid Styles */
+        .emoji-grid {
+             display: grid;
+             grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); 
+             gap: 5px; 
+             overflow-y: auto; 
+             padding-top: 10px; 
+             text-align: center;
+        }
+        
+        .emoji-item {
+            font-size: 28px; 
+            cursor: pointer;
+            transition: transform 0.1s;
         }
 
-        /* Emoji Grid Styles */
-        .emoji-item {
-            font-size: 28px; /* Μεγαλύτερα emojis */
-        }
     </style>
 </head>
 <body>
+    
+    <audio id="chatSound" src="static/chat_notification.mp3" preload="auto"></audio> 
 
     <div class="container">
         <div id="top-bar">
             <h1><i class="fas fa-headphones-alt"></i> Web Radio Chat</h1>
             <div>
-                 <button id="adminPanelButton" title="Admin Panel" style="display:none;"><i class="fas fa-user-shield"></i> Admin</button>
+                 <button id="settingsBtn" title="Settings"><i class="fas fa-cog"></i> Settings</button> <button id="adminPanelButton" title="Admin Panel" style="display:none;"><i class="fas fa-user-shield"></i> Admin</button>
                 <button id="logoutButton"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </div>
@@ -225,7 +284,7 @@
             <div id="formatting-buttons">
                 <button id="boldBtn" title="Bold"><i class="fas fa-bold"></i></button>
                 <button id="italicBtn" title="Italic"><i class="fas fa-italic"></i></button> 
-                <button id="emoticonBtn" title="Emoticons"><i class="far fa-smile"></i></button>
+                <button id="urlBtn" title="Insert URL"><i class="fas fa-link"></i></button> <button id="emoticonBtn" title="Emoticons"><i class="far fa-smile"></i></button>
                 <button id="color-picker-btn" title="Text Color">
                     <i class="fas fa-palette"></i>
                     <input type="color" id="colorPicker" value="#E0E0E0">
@@ -236,7 +295,7 @@
 
             <div id="media-buttons">
                 <button id="giphyBtn" title="Giphy Search"><i class="fas fa-gift"></i></button>
-                <button id="pdfBtn" title="Export PDF" style="display:none;"><i class="fas fa-file-pdf"></i></button> </div>
+            </div>
             
             <input type="file" id="fileInput" accept="image/*" style="display: none;">
             <button id="attachFileBtn" title="Attach Image"><i class="fas fa-paperclip"></i></button>
@@ -248,13 +307,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Search GIPHY</h2>
-                <span class="close-btn" onclick="document.getElementById('giphyModal').style.display='none'" style="background:none; color:white; font-size:1.5em; cursor: pointer;">&times;</span>
+                <span class="close-btn" onclick="document.getElementById('giphyModal').style.display='none'" style="position: absolute; top: 10px; right: 20px; font-size: 1.5em; cursor: pointer;">&times;</span>
             </div>
             <div style="display: flex; margin-bottom: 15px;">
                 <input type="text" id="giphySearchInput" class="giphy-search-input" placeholder="Search GIFs...">
                 <button id="searchGiphyBtn">Search</button>
             </div>
-            <div class="giphy-grid" id="giphyGrid">
+            <div class="giphy-grid" id="giphyGrid" style="overflow-y: auto;">
                 </div>
         </div>
     </div>
@@ -270,13 +329,39 @@
         </div>
     </div>
 
+    <div id="settingsModal" class="modal">
+        <div class="modal-content" style="max-width: 450px; margin-top: 10%;">
+             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2><i class="fas fa-cogs"></i> Ρυθμίσεις Χρήστη</h2>
+                <button class="close-btn" onclick="document.getElementById('settingsModal').style.display='none'" style="background:none; color:white; font-size:1.5em; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <h3><i class="fas fa-user-circle"></i> Avatar</h3>
+                <input type="text" id="avatarInput" placeholder="URL εικόνας ή αρχικά (π.χ. JS)" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #555; background-color: #333; color: white;">
+                <button onclick="saveAvatarSettings()" style="margin-top: 10px; width: 100%; background-color: #4CAF50;">Αποθήκευση Avatar</button>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h3><i class="fas fa-volume-up"></i> Ήχος Chat</h3>
+                <label style="display: block; margin-bottom: 10px;">
+                    <input type="checkbox" id="soundToggle" checked> Ενεργοποίηση ήχου ειδοποίησης μηνυμάτων
+                </label>
+                <p style="font-size: 0.8em; color: #aaa;">(Βεβαιωθείτε ότι έχετε το αρχείο `static/chat_notification.mp3` στο server)</p>
+            </div>
+        </div>
+    </div>
+
 
 <script>
     let socket = null;
     let currentUserRole = null;
     let currentUserName = null;
     let appSettings = {}; 
+    let userAvatarSetting = localStorage.getItem('userAvatar') || 'JS'; // Default Avatar
+    let soundEnabled = localStorage.getItem('soundEnabled') === 'false' ? false : true;
     
+    // Ενημερωμένη λίστα Emojis για Web Radio Vibe
     const EMOJI_LIST = [
         '🎧', '🎶', '🎤', '📻', '💃', '🕺', '🥳', '🎉', '🎁', '🎂', '🍻', '🥂', '🍾', '🔥', '💖', '🌟', '🤣', '😂', '😊', '😍', '😎', '👍', '🙏', '🙌', '👏', '🎵', '🎹', '🎸', '🥁', '🎺', '🎷', '😇', '😈', '🤯', '🤩', '😘', '🤪'
     ];
@@ -305,24 +390,28 @@
              upgrade: false
         }); 
         
+        // Initialize sound toggle state
+        document.getElementById('soundToggle').checked = soundEnabled;
+        document.getElementById('avatarInput').value = userAvatarSetting;
+
         // --- SOCKETIO EVENTS ---
         socket.on('connect', () => {
             console.log(`Συνδέθηκε στο chat ως: ${currentUserName}`);
         });
 
-        socket.on('disconnect', () => {
-            console.log('Αποσυνδέθηκε από το chat');
-        });
-
         socket.on('message', (data) => {
             displayMessage(data);
+            if (soundEnabled && data.displayName !== currentUserName) {
+                 // Play sound only for messages from others
+                 document.getElementById('chatSound').play().catch(e => console.log("Sound play prevented."));
+            }
         });
         
         socket.on('userStatus', (data) => {
              if (data.displayName !== currentUserName) { 
                 displayMessage({
                     displayName: data.displayName,
-                    message: JSON.stringify({ text: data.status === 'connected' ? 'joined the party! 🎉' : 'faded out. 📻' }),
+                    message: `{"text": "${data.status === 'connected' ? 'joined the party! 🎉' : 'faded out. 📻'}"}`,
                     timestamp: new Date().toISOString(), 
                     role: 'system' 
                 });
@@ -337,25 +426,6 @@
             const response = await fetch('/api/settings');
             if (!response.ok) { throw new Error('Failed to fetch settings'); }
             appSettings = await response.json();
-            
-            document.title = appSettings.app_title || "Web Radio Chat";
-            document.body.style.color = appSettings.default_font_color || '#E0E0E0';
-            
-            const BASE_COLOR_TOP_BAR = '18, 18, 18'; 
-            const BASE_COLOR_INPUT_ROW = '31, 31, 31'; 
-            
-            // Χρησιμοποιούμε CSS Variables για τα χρώματα, αλλά διατηρούμε την opacity από τις ρυθμίσεις
-            const topBar = document.getElementById('top-bar');
-            if (topBar) topBar.style.backgroundColor = `rgba(${BASE_COLOR_TOP_BAR}, ${appSettings.top_bar_opacity || 0.95})`;
-
-            const inputRow = document.getElementById('messageInputRow');
-            if (inputRow) inputRow.style.backgroundColor = `rgba(${BASE_COLOR_INPUT_ROW}, ${appSettings.input_row_opacity || 0.90})`;
-            
-            const giphyButton = document.getElementById('giphyBtn');
-            if (giphyButton) {
-                giphyButton.style.display = appSettings.allow_gif_searches === 'true' ? 'flex' : 'none';
-            }
-
         } catch (error) {
             console.error('Error applying settings:', error);
             appSettings = { allow_gif_searches: 'true', default_font_color: '#E0E0E0' }; // Default fallback
@@ -369,6 +439,7 @@
     const logoutButton = document.getElementById('logoutButton');
     const boldBtn = document.getElementById('boldBtn');
     const italicBtn = document.getElementById('italicBtn');
+    const urlBtn = document.getElementById('urlBtn'); // ΝΕΟ
     const emoticonBtn = document.getElementById('emoticonBtn');
     const colorPicker = document.getElementById('colorPicker');
     const attachFileBtn = document.getElementById('attachFileBtn');
@@ -378,9 +449,11 @@
     const searchGiphyBtn = document.getElementById('searchGiphyBtn');
     const giphySearchInput = document.getElementById('giphySearchInput');
     const giphyGrid = document.getElementById('giphyGrid');
-    const adminPanelButton = document.getElementById('adminPanelButton');
     const emojiModal = document.getElementById('emojiModal'); 
     const emojiGrid = document.getElementById('emojiGrid'); 
+    const settingsBtn = document.getElementById('settingsBtn'); // ΝΕΟ
+    const settingsModal = document.getElementById('settingsModal'); // ΝΕΟ
+    const soundToggle = document.getElementById('soundToggle');
 
 
     let isBold = false;
@@ -458,9 +531,42 @@
         messageInput.style.fontStyle = isItalic ? 'italic' : 'normal';
     });
     
+    // ΝΕΟ: URL Button Logic
+    urlBtn.addEventListener('click', () => {
+        const url = prompt("Εισάγετε το URL:");
+        if (url) {
+            const currentText = messageInput.value;
+            // Προσθέτουμε το URL στο τέλος (θα αναγνωριστεί ως link στο displayMessage)
+            messageInput.value = currentText + ' ' + url;
+            messageInput.focus();
+        }
+    });
+    
     emoticonBtn.addEventListener('click', () => {
         emojiModal.style.display = 'block';
     });
+    
+    // Ρυθμίσεις Modal
+    settingsBtn.addEventListener('click', () => {
+        // Ενημέρωση της τιμής του input με την τρέχουσα ρύθμιση
+        document.getElementById('avatarInput').value = localStorage.getItem('userAvatar') || '';
+        document.getElementById('soundToggle').checked = soundEnabled;
+        settingsModal.style.display = 'block';
+    });
+    
+    // Λογική Sound Toggle
+    soundToggle.addEventListener('change', () => {
+        soundEnabled = soundToggle.checked;
+        localStorage.setItem('soundEnabled', soundEnabled);
+    });
+    
+    function saveAvatarSettings() {
+        const avatarValue = document.getElementById('avatarInput').value.trim();
+        userAvatarSetting = avatarValue;
+        localStorage.setItem('userAvatar', avatarValue);
+        settingsModal.style.display = 'none';
+        alert('Οι ρυθμίσεις αποθηκεύτηκαν! Το Avatar θα ενημερωθεί στα επόμενα μηνύματα.');
+    }
     
     function renderEmojis() {
         emojiGrid.innerHTML = '';
@@ -522,15 +628,24 @@
     giphyBtn.addEventListener('click', () => {
         if (appSettings.allow_gif_searches === 'true') { 
             giphyModal.style.display = 'block';
-            searchGiphy(); 
+            giphySearchInput.value = '';
+            giphyGrid.innerHTML = ''; // Clear previous results
+            searchGiphy(); // Show trending by default
         } else {
             alert('Η αναζήτηση GIF είναι απενεργοποιημένη από τον διαχειριστή.');
         }
     });
     
+    // Fix: Close Modals when clicking outside
     window.addEventListener('click', (event) => {
-        if (event.target === giphyModal || event.target === emojiModal) {
-            event.target.style.display = 'none';
+        if (event.target === giphyModal) {
+            giphyModal.style.display = 'none';
+        }
+        if (event.target === emojiModal) {
+            emojiModal.style.display = 'none';
+        }
+        if (event.target === settingsModal) {
+            settingsModal.style.display = 'none';
         }
     });
     
@@ -566,6 +681,7 @@
                 img.alt = gif.title;
                 
                 img.addEventListener('click', () => {
+                    // Στέλνουμε το GIF URL
                     sendMessage(img.src, true); 
                     giphyModal.style.display = 'none';
                 });
@@ -579,17 +695,47 @@
         }
     }
     
+    // --- Avatar Generator Function ---
+    function createAvatarElement(displayName, avatarSetting) {
+        const avatar = document.createElement('div');
+        avatar.classList.add('avatar');
+        
+        // 1. Έλεγχος για URL εικόνας
+        if (avatarSetting && avatarSetting.match(/^(http|https):\/\/[^ "]+$/)) {
+            avatar.style.backgroundImage = `url('${avatarSetting}')`;
+            avatar.style.backgroundSize = 'cover';
+            avatar.style.backgroundColor = 'transparent';
+            avatar.textContent = '';
+        } 
+        // 2. Έλεγχος για αρχικά
+        else if (avatarSetting && avatarSetting.length <= 3) {
+            avatar.textContent = avatarSetting.toUpperCase();
+            // generate random color based on initials for better differentiation
+            const hash = avatarSetting.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const color = `hsl(${hash % 360}, 70%, 50%)`;
+            avatar.style.backgroundColor = color;
+        }
+        // 3. Default: Αρχικό του ονόματος
+        else {
+             const initials = displayName.charAt(0).toUpperCase();
+             avatar.textContent = initials;
+             const hash = displayName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+             const color = `hsl(${hash % 360}, 70%, 50%)`;
+             avatar.style.backgroundColor = color;
+        }
+
+        return avatar;
+    }
+    
     // --- DISPLAY MESSAGE FUNCTION ---
     function displayMessage(data) {
+             // System messages
              if (data.role === 'system') {
                  try {
                      const systemText = JSON.parse(data.message).text;
                      const systemMsg = document.createElement('div');
                      systemMsg.textContent = `${data.displayName} ${systemText}`;
-                     systemMsg.style.textAlign = 'center';
-                     systemMsg.style.color = 'var(--secondary-accent)';
-                     systemMsg.style.fontStyle = 'italic';
-                     systemMsg.style.textShadow = '1px 1px 2px #000';
+                     // ... (System styling)
                      chatbox.appendChild(systemMsg);
                      chatbox.scrollTop = chatbox.scrollHeight;
                      return;
@@ -600,14 +746,18 @@
              const messageElement = document.createElement('div');
              messageElement.classList.add('message-element');
              
-             // Προσθήκη self/other class
-             if (data.displayName === currentUserName) {
+             const isSelf = data.displayName === currentUserName;
+             if (isSelf) {
                  messageElement.classList.add('self');
-                 messageElement.style.textAlign = 'right';
-             } else {
-                 messageElement.style.textAlign = 'left';
              }
              
+             // --- AVATAR ---
+             // Εδώ πρέπει να βρούμε το σωστό avatar setting. Προσωρινά, χρησιμοποιούμε του τρέχοντος χρήστη για τον εαυτό μας
+             // Και default για τους άλλους (σε πραγματικό chat θα ερχόταν από το backend)
+             const avatarToUse = isSelf ? userAvatarSetting : data.displayName.charAt(0).toUpperCase(); 
+             const avatarElement = createAvatarElement(data.displayName, avatarToUse);
+             
+             // --- MESSAGE CONTAINER ---
              const contentContainer = document.createElement('div');
              contentContainer.classList.add('message-content-container');
              
@@ -620,45 +770,27 @@
              senderSpan.appendChild(nameSpan);
 
              let text = data.message;
-             let format = {};
              
-             // Εδώ λαμβάνουμε τα formatting props απευθείας από το data του backend.
-             format.isBold = data.isBold;
-             format.isItalic = data.isItalic;
-             format.color = data.color;
-
              const messageText = document.createElement('span');
              messageText.classList.add('message-content');
              
              // ΕΦΑΡΜΟΓΗ ΜΟΡΦΟΠΟΙΗΣΗΣ
-             if (format.isBold) { messageText.style.fontWeight = 'bold'; }
-             if (format.isItalic) { messageText.style.fontStyle = 'italic'; } 
-             if (format.color && format.color !== (appSettings.default_font_color || '#E0E0E0')) { messageText.style.color = format.color; } 
+             if (data.isBold) { messageText.style.fontWeight = 'bold'; }
+             if (data.isItalic) { messageText.style.fontStyle = 'italic'; } 
+             if (data.color) { messageText.style.color = data.color; } 
              
              
              const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
              
              if (text.match(urlRegex)) {
-                 let imageFound = false;
-                 
                  messageText.innerHTML = text.replace(urlRegex, function(url) {
                      // Αν είναι εικόνα/GIF/Video, την εμφανίζουμε (η λογική για τα gif)
                      if (/\.(gif|jpe?g|png|webp|mp4|webm|mov)$/i.test(url) || url.includes('giphy.com')) {
-                         imageFound = true;
-                         // Για GIPHY URLS, τα εμφανίζουμε ως εικόνα
                          return `<img src="${url}" alt="media attachment">`;
                      }
                      // Αλλιώς, εμφανίζουμε hyperlink
                      return `<a href="${url}" target="_blank" style="color: var(--secondary-accent); text-decoration: underline; text-shadow: none;">${url}</a>`;
                  });
-                 
-                 // Αν βρέθηκε εικόνα, την τοποθετούμε απευθείας, αλλιώς εμφανίζουμε το κείμενο
-                 if (imageFound) {
-                     // Δεν προσθέτουμε το κείμενο, μόνο την εικόνα
-                 } else {
-                     // Αν δεν βρέθηκε εικόνα αλλά βρέθηκε URL, εμφανίζουμε το link
-                     messageText.innerHTML = messageText.innerHTML.replace(/\n/g, '<br>');
-                 }
              } else {
                  messageText.innerHTML = text.replace(/\n/g, '<br>');
              }
@@ -675,6 +807,9 @@
              senderSpan.appendChild(timeText);
              
              contentContainer.prepend(senderSpan);
+             
+             // --- ΤΟΠΟΘΕΤΗΣΗ ---
+             messageElement.appendChild(avatarElement); // Προσθέτουμε το avatar
              messageElement.appendChild(contentContainer);
              
              chatbox.appendChild(messageElement);
