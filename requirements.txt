@@ -1,12 +1,8 @@
 
 Flask
 flask-socketio
-Flask-Session
-gunicorn 
-eventlet 
 python-engineio
 python-socketio
-gevent
-gevent-websocket
-redis
-eventlet  
+gunicorn
+gevent          # Διατήρησε το gevent
+Flask-Session   # Για τους ρόλους και τη σύνδεση
