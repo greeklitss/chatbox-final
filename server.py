@@ -389,7 +389,6 @@ def handle_disconnect():
 
 
 # --- ADMIN PANEL ROUTES ---
-# server.py
 
 # ... (υπάρχοντα imports) ...
 
@@ -439,6 +438,45 @@ def set_user_role():
         else:
             return jsonify({'success': False, 'message': 'User not found.'}), 404
 
+# server.py
+
+# ... (υπάρχων κώδικας, μετά το set_user_role) ...
+
+# --- SETTINGS ROUTES (ΟΜΑΔΑ 3 - ΑΣΠΡΟ) ---
+@app.route('/settings/set_avatar_url', methods=['POST'])
+def set_avatar_url():
+    """Επιτρέπει στον χρήστη να αλλάξει το avatar του μέσω URL (μέσω AJAX)."""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Not logged in.'}), 401
+    
+    data = request.get_json()
+    new_url = data.get('avatar_url')
+    
+    if not new_url:
+        return jsonify({'success': False, 'message': 'Missing URL.'}), 400
+
+    user_id = session['user_id']
+    with app.app_context():
+        # Guests (GUEST-...) δεν έχουν πεδίο στη βάση, οπότε δεν το αποθηκεύουμε.
+        if session.get('role') == 'guest':
+            # Για guests, απλά επιστρέφουμε επιτυχία (το JS θα το διαχειριστεί τοπικά αν χρειαστεί)
+             return jsonify({'success': True, 'message': 'Avatar URL set for this session.'})
+             
+        user = db.session.get(User, user_id)
+        if user:
+            user.avatar_url = new_url
+            db.session.commit()
+            
+            # 🚨 ΝΕΟ: Ενημερώνουμε όλους μέσω SocketIO για την αλλαγή avatar
+            socketio.emit('user_avatar_updated', {
+                'user_id': user.id,
+                'avatar_url': new_url
+            }, room='chat')
+            
+            return jsonify({'success': True, 'message': 'Avatar URL updated.'})
+        else:
+            return jsonify({'success': False, 'message': 'User not found.'}), 404
+            
 
 # --- MAIN EXECUTION ---
 if __name__ == '__main__':
