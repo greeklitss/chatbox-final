@@ -251,7 +251,9 @@ def authorize_google():
     try:
         # 1. Παίρνουμε το token και τα user info
         token = oauth.google.authorize_access_token()
-        user_info = oauth.google.parse_id_token(token)
+       nonce = session.pop('nonce', None)
+user_info = oauth.google.parse_id_token(token, nonce=nonce)
+
     except MismatchingStateError:
         # Εάν χαθεί το state (π.χ. λόγω λάθους SAMESITE cookie), τον στέλνουμε πίσω
         return redirect(url_for('login'))
