@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
     <title>AkoY Me</title>
 	
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,461 +11,490 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
- 
-    /* 🚨 ΟΡΙΣΤΙΚΗ ΔΙΟΡΘΩΣΗ ΓΙΑ ΔΙΑΦΑΝΕΙΑ (Transparency Fixes) */
-    
-    /* 1. Για τη λίστα των online χρηστών */
-    /* ΠΡΟΣΘΗΚΗ: #user-list-panel */
-    #online-list, .online-users-container, .sidebar, #user-list-panel { 
-        background: none !important; /* Κάνει το φόντο διαφανές */
-        border: none !important;     /* Αφαιρεί τυχόν περιγράμματα */
-        box-shadow: none !important;
-    }
-    
-    /* 2. Για τον player/χρήστη (Αφαίρεση του σκούρου φόντου) */
-    /* ΠΡΟΣΘΗΚΗ: #header και #radio-player-container */
-    .player-container, .user-info-panel, .chat-header, #header, #radio-player-container {
-        background: none !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-  
-        /* --- GLOBAL & STRUCTURE --- */ 
-        :root { 
-            --primary-accent: #FF0066; /* Hot Pink/Magenta (Neon) */ 
-            --secondary-accent: #39FF14; /* Neon Green */ 
-            --text-color: #F0F0F0; 
-            --link-color: #64FFDA;
+        /* 🚨 ΝΕΟ: Χαρούμενο & Φωτεινό Θέμα (Coral/Blue) */
+        :root {
+            --primary-color: #f7797d;    /* Φωτεινό Ροζ/Κοραλί */
+            --secondary-color: #3b5998;  /* Ζωντανό Μπλε */
+            --text-color: #1c1c30;       /* Σκούρο κείμενο */
+            --background-color: #f0f2f5; /* Ανοιχτό Γκρι/Λευκό φόντο */
+            --chatbox-bg: #FFFFFF;       /* Καθαρό λευκό chatbox */
+            --message-self-bg: #d2e3f8;  /* Ανοιχτό Μπλε (Δικά μου μηνύματα) */
+            --message-other-bg: #fdfd96; /* Ανοιχτό Κίτρινο (Άλλων μηνύματα) */
+            --link-color: #3b5998;
         }
 
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #121212;
-            color: var(--text-color);
-            margin: 0;
-            padding-top: 120px; 
-            background-image: url("{{ url_for('static', filename='akoyme_background.png') }}"); 
-            background-size: cover; 
-            background-attachment: fixed; 
-            background-position: center;
+            display: flex;
             height: 100vh;
-            overflow: hidden; 
+            margin: 0;
+            background-color: var(--background-color); 
+            color: var(--text-color);
+            overflow: hidden; /* Αποτρέπει το scrolling του body */
         }
-        
-        .container {
-            width: 100%; 
-            height: calc(100% - 140px); 
+
+        /* ------------------ Sidebar (User List) ------------------ */
+        .sidebar {
+            width: 250px;
+            background-color: var(--chatbox-bg);
+            padding: 15px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            position: relative;
+            overflow-y: auto;
+            border-right: 1px solid #ddd;
         }
 
-        /* 🚨 ΝΕΑ CSS ΓΙΑ ΤΟΥΣ ΡΟΛΟΥΣ */
-        .role-owner { 
-            color: #FFD700; /* Gold */
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); 
-        }
-        .role-admin {
-            color: #FF4500; /* Red-Orange */
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(255, 69, 0, 0.5);
-        }
-        .role-user, .role-guest {
-            color: var(--text-color); /* Default White/F0F0F0 */
-            font-weight: normal;
+        .user-info {
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
         }
 
-        /* --- HEADER & RADIO PLAYER STYLES --- */
-        #header { 
+        .user-info img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 5px;
+            border: 2px solid var(--primary-color);
+        }
+
+        .user-info h3 {
+            margin: 5px 0 0;
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+        }
+
+        .user-info p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #777;
+        }
+
+        .sidebar h4 {
+            margin-top: 0;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--primary-color);
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        #online-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        #online-list li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+            color: var(--text-color);
+            transition: background-color 0.1s;
+        }
+        
+        #online-list li:hover {
+            background-color: #f0f0f0;
+        }
+
+        #online-list li.online::before {
+            content: '•';
+            color: #39FF14; /* Neon Green */
+            font-size: 1.5rem;
+            line-height: 0.5;
+            margin-right: 5px;
+        }
+        
+        #online-list .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 8px;
+            border: 1px solid #ccc;
+        }
+        
+        .user-role-admin { color: var(--primary-color); font-weight: bold; }
+        .user-role-owner { color: #FF0066; font-weight: bold; }
+        .user-role-guest { color: #888; font-style: italic; }
+
+        /* ------------------ Main Chat Area ------------------ */
+        .chat-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background-color);
+        }
+
+        /* ------------------ Header ------------------ */
+        .chat-header {
+            background-color: var(--chatbox-bg);
+            color: var(--secondary-color);
+            padding: 10px 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .chat-header .header-controls button {
+            background-color: var(--secondary-color);
+            color: white; 
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+        
+        .chat-header .header-controls button:hover {
+            background-color: var(--primary-color);
+        }
+
+        /* ------------------ Message Container ------------------ */
+        #message-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background-color);
+        }
+
+        .message-box {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .message-box .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+            flex-shrink: 0;
+            border: 2px solid var(--primary-color);
+        }
+        
+        .message-content {
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 70%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .message-info {
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+
+        .message-info .username {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .message-text {
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        /* Μηνύματα του εαυτού μας */
+        .message-self {
+            justify-content: flex-end;
+        }
+
+        .message-self .message-content {
+            background-color: var(--message-self-bg);
+            color: var(--text-color);
+            border-bottom-right-radius: 0;
+        }
+        
+        .message-self .avatar {
+            order: 2; /* Αλλάζει τη σειρά για να είναι ο avatar δεξιά */
+            margin-right: 0;
+            margin-left: 10px;
+        }
+
+        .message-self .message-info {
+            text-align: right;
+        }
+
+        /* Μηνύματα των άλλων */
+        .message-other .message-content {
+            background-color: var(--message-other-bg);
+            color: var(--text-color);
+            border-bottom-left-radius: 0;
+        }
+
+        /* ------------------ Chat Footer (Input Area) ------------------ */
+        .chat-footer {
+            display: flex;
+            padding: 10px;
+            background-color: var(--chatbox-bg);
+            border-top: 1px solid #ddd;
+            align-items: center; /* Ευθυγράμμιση στο κέντρο */
+        }
+
+        /* 🚨 ΔΙΟΡΘΩΣΗ ΚΟΥΜΠΙΩΝ: Μεγαλύτερα και πιο ορατά */
+        .chat-footer button {
+            background-color: var(--primary-color);
+            color: white; 
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px; /* Αύξηση του padding για μεγαλύτερη επιφάνεια */
+            cursor: pointer;
+            font-size: 1.2rem; /* Μεγαλύτερο εικονίδιο */
+            margin-left: 5px;
+            transition: background-color 0.2s;
+            line-height: 1; 
+            height: 40px; /* Σταθερό ύψος για ευθυγράμμιση */
+        }
+        
+        .chat-footer button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        #message-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
+            margin-right: 5px;
+            font-size: 16px;
+            max-height: 80px; /* Μέγιστο ύψος για textarea */
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        /* BBCode Styles */
+        .message-text b, .message-text strong { color: var(--secondary-color); }
+        .message-text u { text-decoration-color: var(--primary-color); }
+        .message-text a { color: var(--link-color); text-decoration: none; font-weight: bold;}
+        .message-text a:hover { text-decoration: underline; }
+        .message-text font { display: inline; } /* Για σωστή εμφάνιση του [color] */
+        .message-text img.message-image { max-width: 100%; height: auto; display: block; margin: 5px 0; border-radius: 5px; }
+        
+        /* Modal for Settings */
+        .modal {
+            display: none; 
             position: fixed; 
-            top: 0; 
-            left: 0; 
+            z-index: 10; 
+            left: 0;
+            top: 0;
             width: 100%; 
-            background-color: rgba(20, 20, 20, 0.95); 
-            padding: 10px 20px; 
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            z-index: 20; 
-            border-bottom: 1px solid var(--primary-accent); 
-            height: 50px; 
-            box-sizing: border-box; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
+            padding-top: 60px;
         }
 
-	#radio-player-container {
-        position: fixed; 
-        top: 50px; 
-        left: 0;
-        width: 100%;
- /* 🚨 ΝΕΑ STYLES ΓΙΑ CUSTOM RADIO PLAYER */
-    #radio-player-container {
-        /* ... (κρατάμε τις fixed ρυθμίσεις) ... */
-        height: 65px; 
-        padding: 5px 0; 
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; 
+            max-width: 500px;
+            border-radius: 10px;
+            color: var(--text-color);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
         
-        display: flex; /* Αλλαγή σε flex */
-        flex-direction: row; /* Χειριστήρια δίπλα-δίπλα */
-        align-items: center; 
-        justify-content: space-between; /* Κατανομή χώρου */
-        padding: 0 20px;
-    }
-    
-    /* Το default audio component το κρύβουμε */
-    #audio-stream {
-        display: none !important;
-    }
-
-    /* Styles για τα custom κουμπιά */
-    #player-controls button {
-        background: none;
-        border: none;
-        color: var(--secondary-accent); /* Neon Green */
-        font-size: 1.8em;
-        cursor: pointer;
-        padding: 0 10px;
-        transition: color 0.2s, text-shadow 0.2s;
-    }
-
-    #player-controls button:hover {
-        color: white;
-        text-shadow: 0 0 10px var(--secondary-accent);
-    }
-    
-    /* Styles για τον Volume Slider */
-    #volume-slider {
-        -webkit-appearance: none;
-        width: 80px;
-        height: 5px;
-        background: #333;
-        border-radius: 5px;
-        outline: none;
-        transition: opacity .2s;
-    }
-
-    #volume-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 15px;
-        height: 15px;
-        border-radius: 50%;
-        background: var(--secondary-accent);
-        cursor: pointer;
-        box-shadow: 0 0 5px var(--secondary-accent);
-    }
-
-    /* Styles για τα Metadata */
-    .radio-metadata {
-        flex-grow: 1; /* Παίρνει τον υπόλοιπο χώρο */
-        height: 45px; 
-        line-height: 45px; 
-        margin: 0 20px; 
-        border: 1px solid var(--secondary-accent); 
-        box-shadow: 0 0 5px var(--secondary-accent);
-        text-align: center; 
-        background-color: rgba(0, 0, 0, 0.5); 
-        overflow: hidden;
-    }
-    
-    .metadata-text {
-        /* Χρησιμοποιείται για το scrolling effect (αν εφαρμοστεί) */
-        color: var(--secondary-accent); 
-        font-size: 1.1em; 
-        font-weight: bold;
-        display: inline-block;
-        animation: scrollMetadata 20s linear infinite; /* Ενδεικτικό animation */
-        height: 85px; 
-        background-color: rgba(0, 0, 0, 0.9); 
-        z-index: 1000; 
-        padding: 5px 0; 
-        box-sizing: border-box;
-        border-bottom: 2px solid var(--primary-accent);
+        .modal-content input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
         
-        display: flex;
-        flex-direction: column;
-        align-items: center; 
-        justify-content: center;
-    }
-    
-    /* Styling για το Audio Player */
-    #audio-stream {
-        width: 90%; 
-        /* Πειραματικό: Δοκιμή χρωματισμού */
-        filter: invert(1) hue-rotate(180deg) saturate(3); 
-        border: 1px solid var(--secondary-accent);
-        background-color: #333; 
-        border-radius: 4px;
-        box-shadow: 0 0 5px var(--secondary-accent);
-    }
-
-    .radio-metadata {
-        width: 90%; 
-        height: 30px; 
-        margin-top: 5px; 
-        overflow: hidden; 
-        white-space: nowrap; 
-        border: 1px solid var(--secondary-accent); 
-        box-shadow: 0 0 5px var(--secondary-accent);
-        text-align: center; 
-        line-height: 30px; 
-        background-color: rgba(0, 0, 0, 0.5); 
-    }
-
-    .metadata-text {
-        color: var(--secondary-accent); 
-        font-size: 1.0em; 
-        font-weight: bold;
-        display: inline-block;
-    }
-
-    #header h1 { 
-        margin: 0; 
-        color: var(--secondary-accent); 
-        font-size: 1.5em; 
-        text-shadow: 0 0 5px rgba(57, 255, 20, 0.5); 
-    }
-
-    #chat-container {
-        margin-right: 250px; 
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        /* 🚨 ΝΕΟ: Εσωτερικό container για τα μηνύματα */
-        padding: 10px;
-        background-color: transparent; 
-        border-radius: 8px;
-        margin-bottom: 10px;
-    }
-    
-    /* 🚨 ΝΕΟ: Το container που εμφανίζει τα μηνύματα */
-    #message-container { 
-        flex-grow: 1;
-        overflow-y: auto;
-        padding: 5px; 
-        height: 100%;
-    }
-
-    #user-list-panel {
-        position: fixed;
-        top: 125px; 
-        right: 20px;
-        width: 220px;
-        height: calc(100vh - 150px); 
-        background-color: #1f1f1f;
-        border: 1px solid #333;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        padding: 10px;
-        overflow-y: auto;
-        z-index: 10;
-    }
-
+        .modal-content button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            float: right;
+        }
         
-    #input-area {
-        display: flex;
-        padding: 10px;
-        margin-right: 250px; 
-        background-color: rgba(20, 20, 20, 0.8);
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: calc(100% - 250px); 
-        box-sizing: border-box;
-        border-top: 1px solid var(--primary-accent);
-    }
-    
-    /* Styles for buttons and input area */
-    #input-area button, #header button {
-        background-color: #333;
-        color: var(--primary-accent);
-        border: 1px solid var(--primary-accent);
-        padding: 8px 12px;
-        margin: 0 5px;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s, box-shadow 0.3s;
-    }
+        .modal-content button:hover {
+             background-color: var(--secondary-color);
+        }
 
-    #message-input {
-        flex-grow: 1;
-        padding: 8px;
-        border: 1px solid #555;
-        border-radius: 5px;
-        background-color: #2b2b2b;
-        color: var(--text-color);
-        resize: none;
-        box-sizing: border-box;
-        margin-right: 5px;
-    }
     </style>
 </head>
-
 <body>
-    
-    <header id="header">
-        <h1>AkoY Me</h1>
-        <div id="user-info">
-            <div id="user-actions">
-                <button id="settings-button" title="Settings" style="margin-left: 10px;" onclick="document.getElementById('settings-modal').style.display='block';"><i class="fas fa-cog"></i></button>
-                
-                <button id="admin-button" style="display: none; margin-left: 10px;" onclick="window.location.href='/admin_panel'">Admin</button>
-                <button id="logout-button" style="margin-left: 10px;" onclick="window.location.href='/logout'"><i class="fas fa-sign-out-alt"></i> Logout</button>
-            </div>
-        </div>
-    </header>
 
-    <div id="radio-player-container">
-    <audio id="audio-stream" preload="none" src="https://uk24freenew.listen2myradio.com/live.mp3?typeportmount=s1_9254_stream_554111378">
-        Ο browser σας δεν υποστηρίζει το στοιχείο audio.
-    </audio>
-    
-    <div id="player-controls">
-        <button id="play-pause-button" title="Play/Pause"><i class="fas fa-play"></i></button>
-        <button id="mute-unmute-button" title="Mute/Unmute"><i class="fas fa-volume-up"></i></button>
-        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3">
-    </div>
-    
-    <div class="radio-metadata">
-        <span id="metadata-scroller" class="metadata-text">
-            📻 Playing Akoy Me - Radio Chatbox
-        </span>
-    </div>
-</div>
-    
-    <div class="container">
-        <div id="user-list-panel">
-            <h3>Users</h3>
-            </div>
-        
-        <div id="chat-container">
-             <div id="message-container">
-                {% for message in messages %}
-                <div class="message">
-                    <span class="role-{{ message.user.role }}" style="font-weight: 700;">{{ message.user.display_name }}</span> 
-                    <span style="color: #bbb;">[{{ message.timestamp.strftime('%H:%M:%S') }}]:</span> 
-                    {{ message.text | safe }} 
-                </div>
-                {% endfor %}
-            </div>
+    <audio id="audio-stream" preload="none" src="{{ stream_url }}" loop></audio>
+
+    <div class="sidebar">
+        <div class="user-info">
+            <img src="{{ user.avatar_url }}" alt="Avatar" id="my-avatar">
+            <h3 id="my-display-name">{{ user.display_name }}</h3>
+            <p>Role: <span id="my-role" class="user-role-{{ user.role }}">{{ user.role.upper() }}</span></p>
         </div>
         
-    </div>
-    
-    <div id="input-area">
-        <button id="bold-button" title="Bold (Ctrl+B)"><i class="fas fa-bold"></i></button>
-        <button id="italic-button" title="Italic (Ctrl+I)"><i class="fas fa-italic"></i></button>
-        <button id="underline-button" title="Underline (Ctrl+U)"><i class="fas fa-underline"></i></button> 
-        <button id="url-button" title="Insert Link (URL)"><i class="fas fa-link"></i></button> 
-        <button id="gif-button" title="Insert GIF"><i class="fas fa-gift"></i></button> 
-        
-        <button id="color-picker-button" title="Text Color"><i class="fas fa-palette"></i></button>
-        <input type="color" id="color-input" value="#FFFFFF" style="display: none;">
-        <button id="emoticon-button" title="Emoticons"><i class="fas fa-smile"></i></button>
-        
-        <textarea id="message-input" placeholder="Type your message..." rows="1"></textarea>
-        <button id="send-button" title="Send (Enter)"><i class="fas fa-paper-plane"></i></button>
-    </div>
-    
-    <div id="settings-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:rgba(20, 20, 20, 0.98); padding:25px; border-radius:10px; z-index:9999; border: 1px solid var(--secondary-accent); box-shadow: 0 0 15px var(--secondary-accent); width: 300px;">
-        
-        <h3><i class="fas fa-cog"></i> Settings</h3>
-        
-        <div id="settings-user">
-            <h4>Sound Control</h4>
+        <div class="header-controls" style="margin-bottom: 20px; display: flex; flex-direction: column;">
             <div style="margin-bottom: 10px;">
-                <label for="volume-control"><i class="fas fa-volume-up"></i> Radio Volume:</label>
-                <input type="range" id="volume-control" min="0" max="1" step="0.01" value="0.3" oninput="document.getElementById('audio-stream').volume = this.value;">
-                <label style="display: block;"><input type="checkbox" id="toggle-sound"> Enable Chat Sounds (Check to disable)</label>
+                <button id="toggle-audio-stream" title="Toggle Radio/Audio" style="width: 100%; margin-left: 0;">
+                    <i class="fas fa-volume-mute"></i> Radio
+                </button>
             </div>
             
-            <h4>Change Avatar (URL)</h4>
-            <form id="avatar-url-form" style="display: flex; flex-direction: column;">
-                <input type="text" id="avatar-url-input" placeholder="Paste image URL" required style="padding: 8px; margin-bottom: 10px; background-color: #333; color: var(--text-color); border: 1px solid #555;">
-                <button type="submit">Set Avatar</button>
-            </form>
-        </div>
-        
-        <div id="settings-admin" style="display: none;">
-            <hr style="border-color: var(--primary-accent);">
-            <h4><i class="fas fa-user-shield"></i> Admin Tools (Red)</h4>
-            <button class="admin-tool-button" id="ban-user-button">Ban User (TBD)</button>
-            <button class="admin-tool-button" id="change-username-button">Change Username (TBD)</button>
-            <button class="admin-tool-button" id="clear-shoutbox-button">Clear Shoutbox (TBD)</button>
+            <div style="display: flex; justify-content: space-between;">
+                 <button id="settings-button" title="Settings" style="flex-grow: 1; margin-left: 0; margin-right: 5px;">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+                <button id="admin-button" title="Admin Panel" style="flex-grow: 1; margin-left: 5px; display: none;">
+                    <i class="fas fa-user-shield"></i> Admin
+                </button>
+            </div>
         </div>
 
-        <div id="settings-owner" style="display: none;">
-            <hr style="border-color: #FFD700;">
-            <h4><i class="fas fa-crown"></i> Owner Tools (Gold)</h4>
-            <p>Full access is granted through the Admin Panel button.</p>
-        </div>
+        <h4>Online Users (<span id="online-count">0</span>)</h4>
+        <ul id="online-list">
+            </ul>
         
-        <button onclick="document.getElementById('settings-modal').style.display='none'" style="margin-top: 20px;">Close Settings</button>
+        <button onclick="window.location.href='/logout'" style="background-color: #888; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+
+    <div class="chat-area">
+        <div class="chat-header">
+            <h2>AkoY Me Chat</h2>
+            <div class="header-controls">
+                <button id="toggle-sound" title="Toggle Notification Sound"><i class="fas fa-bell-slash"></i></button>
+                <button id="export-button" title="Export Chat to PDF"><i class="fas fa-file-pdf"></i></button>
+            </div>
+        </div>
+
+        <div id="message-container">
+            {% for message in messages %}
+                <div class="message-box message-other">
+                    <img src="{{ message.author.avatar_url or url_for('static', filename='default-avatar.png') }}" alt="Avatar" class="avatar">
+                    <div class="message-content">
+                        <div class="message-info">
+                            <span class="username user-role-{{ message.author.role }}">{{ message.author.display_name }}</span>
+                            <span class="timestamp">{{ message.timestamp.strftime('%H:%M:%S') }}</span>
+                        </div>
+                        <div class="message-text">{{ message.text | safe }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+
+        <div class="chat-footer">
+            <button id="bold-button" title="Bold [b]"><i class="fas fa-bold"></i></button>
+            <button id="italic-button" title="Italic [i]"><i class="fas fa-italic"></i></button>
+            <button id="underline-button" title="Underline [u]"><i class="fas fa-underline"></i></button>
+            <button id="url-button" title="Link [url]"><i class="fas fa-link"></i></button>
+            <button id="gif-button" title="GIF/Image [gif]"><i class="fas fa-image"></i></button>
+            
+            <button id="color-picker-button" title="Text Color [color=...]"><i class="fas fa-palette"></i></button>
+            <input type="color" id="color-input" value="#FF0000" style="display: none;">
+            <button id="emoticon-button" title="Emoticons"><i class="fas fa-smile"></i></button>
+            
+            <textarea id="message-input" placeholder="Type your message..." rows="1"></textarea>
+            <button id="send-button" title="Send (Enter)"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+    
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-settings">&times;</span>
+            <h2>User Settings</h2>
+            
+            <label for="avatar-url-input">Change Avatar URL:</label>
+            <input type="text" id="avatar-url-input" placeholder="Paste image URL (e.g., from Imgur, Google Photos)">
+            <button id="save-avatar-button">Save Avatar</button>
+            
+            <p style="clear: both; padding-top: 40px; font-size: 0.9rem; color: #555;">Note: If you logged in with Google, changing the URL here will override the default Google image.</p>
+        </div>
     </div>
     
     <script>
-       // static/js/main.js (Προσθήκη στο DOMContentLoaded)
-
-document.addEventListener('DOMContentLoaded', () => {
-    // ... (Υπάρχων κώδικας για SocketIO, chat, κλπ.) ...
-
-    // --- 🚨 ΝΕΑ ΛΟΓΙΚΗ ΓΙΑ CUSTOM PLAYER UI ---
-    const audio = document.getElementById('audio-stream');
-    const playPauseButton = document.getElementById('play-pause-button');
-    const muteUnmuteButton = document.getElementById('mute-unmute-button');
-    const volumeSlider = document.getElementById('volume-slider');
-
-    if (audio) {
-        audio.volume = 0.3; 
-        
-        // 1. Play/Pause Logic
-        playPauseButton.addEventListener('click', () => {
-            if (audio.paused) {
-                audio.load(); // Ξαναφορτώνει για να ξεκινήσει αν ήταν paused/stopped
-                audio.play().catch(e => console.error("Play failed:", e));
-                playPauseButton.innerHTML = '<i class="fas fa-pause"></i>';
-            } else {
-                audio.pause();
-                playPauseButton.innerHTML = '<i class="fas fa-play"></i>';
+        // JS logic for modals and checking admin role
+        document.addEventListener('DOMContentLoaded', () => {
+            const audio = document.getElementById('audio-stream');
+            
+            if (audio) {
+                // Ρύθμιση της έντασης στην αρχή
+                audio.volume = 0.3; 
+                audio.load();
             }
-        });
+            
+            // --- ΕΛΕΓΧΟΣ ΡΟΛΟΥ ΧΡΗΣΤΗ ΓΙΑ ΤΟ ADMIN BUTTON ---\r\n
+            const currentUserRole = "{{ user.role }}";
+            const adminButton = document.getElementById('admin-button');
+            const settingsButton = document.getElementById('settings-button');
+            const settingsModal = document.getElementById('settings-modal');
+            const closeSettingsButton = document.getElementById('close-settings');
 
-        // 2. Mute/Unmute Logic
-        muteUnmuteButton.addEventListener('click', () => {
-            audio.muted = !audio.muted;
-            if (audio.muted) {
-                muteUnmuteButton.innerHTML = '<i class="fas fa-volume-off"></i>';
-            } else {
-                muteUnmuteButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+            if (adminButton && (currentUserRole === 'admin' || currentUserRole === 'owner')) {
+                adminButton.style.display = 'inline-block'; 
+                
+                adminButton.addEventListener('click', () => {
+                    // ΣΗΜΑΝΤΙΚΟ: Βεβαιωθείτε ότι το admin_panel.html είναι έτοιμο!
+                    window.location.href = '/admin';
+                });
             }
-        });
-
-        // 3. Volume Slider Logic
-        volumeSlider.addEventListener('input', () => {
-            audio.volume = volumeSlider.value;
-            if (audio.volume > 0) {
-                audio.muted = false;
-                muteUnmuteButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-            } else {
-                audio.muted = true;
-                muteUnmuteButton.innerHTML = '<i class="fas fa-volume-off"></i>';
+            
+            if(settingsButton) {
+                settingsButton.addEventListener('click', () => {
+                    // Πληρώνουμε το τρέχον avatar URL στο input
+                    document.getElementById('avatar-url-input').value = document.getElementById('my-avatar').src;
+                    settingsModal.style.display = 'block';
+                });
             }
-        });
-        
-        // 4. Update the slider from the audio volume
-        volumeSlider.value = audio.volume; 
-    }
-    // ----------------------------------------------------
 
-    // ... (Υπόλοιπος κώδικας για chat, κουμπιά κλπ.) ...
-});
+            if(closeSettingsButton) {
+                 closeSettingsButton.addEventListener('click', () => {
+                    settingsModal.style.display = 'none';
+                });
+            }
+
+            // Κλείσιμο modal όταν πατάει έξω από το modal
+            window.addEventListener('click', (event) => {
+                if (event.target == settingsModal) {
+                    settingsModal.style.display = "none";
+                }
+            });
+            
             // --------------------------------------------------------
             
-            // 🚨 Λογική για το Avatar URL Form
-            const avatarUrlForm = document.getElementById('avatar-url-form');
-            if (avatarUrlForm) {
-                avatarUrlForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
+            // Logic για την αποθήκευση του avatar URL
+            const saveAvatarButton = document.getElementById('save-avatar-button');
+            if(saveAvatarButton) {
+                saveAvatarButton.addEventListener('click', async () => {
                     const urlInput = document.getElementById('avatar-url-input');
                     const newUrl = urlInput.value.trim();
                     
@@ -481,8 +510,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             const result = await response.json();
                             if (result.success) {
                                 alert(result.message);
+                                // Κλείνουμε το modal
                                 document.getElementById('settings-modal').style.display='none';
-                                // Εδώ θα ενημερωθεί η λίστα χρηστών μέσω του socket event 'user_avatar_updated'
+                                // 🚨 Η ενημέρωση του avatar στην οθόνη θα γίνει στο main.js 
+                                // μέσω του SocketIO event 'user_avatar_updated'.
                             } else {
                                 alert('Error: ' + result.message);
                             }
