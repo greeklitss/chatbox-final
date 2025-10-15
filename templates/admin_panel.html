@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Panel - Chat Control</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #0f0f1d;
+            color: #E0E0E0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #1c1c30;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 0, 100, 0.5);
+        }
+        h1 {
+            color: #39FF14;
+            text-align: center;
+            border-bottom: 2px solid #FF0066;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #2a2a47;
+            border-radius: 8px;
+        }
+        .section h2 {
+            color: #FF0066;
+            margin-top: 0;
+        }
+        .logout-btn {
+            background: #FF0066;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+            float: right;
+            margin-left: 10px;
+        }
+        .logout-btn:hover { background: #ff4d94; }
+        
+        /* General List Styles */
+        .user-list { list-style: none; padding: 0; }
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #3a3a5a;
+        }
+        .user-info span { margin-right: 15px; }
+        .user-info .role-owner { color: #FFD700; }
+        .user-info .role-admin { color: #39FF14; }
+        .user-info .role-user { color: #aaaaaa; }
+
+        .action-btn {
+            background: #4285F4;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 0.9em;
+        }
+        .action-btn.red { background: #d9534f; }
+        .action-btn.save-btn { background: #39FF14; color: black; }
+        .action-btn:hover:not(:disabled) { opacity: 0.8; }
+        .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Settings Form Styles */
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #3a3a5a;
+        }
+        .setting-item label {
+            flex-grow: 1;
+            font-weight: bold;
+        }
+        .setting-item input[type="text"], .setting-item input[type="color"], .setting-item select {
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        /* Emoticon Form Styles */
+        #emoticon-add-form input {
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" style="float: left; color: #39FF14; text-decoration: none; font-weight: bold; margin-top: 15px;">
+            <i class="fas fa-chevron-left"></i> Πίσω στο Chat
+        </a>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Αποσύνδεση
+        </button>
+        <h1><i class="fas fa-tools"></i> Owner/Admin Control Panel</h1>
+
+        <div class="section">
+            <h2><i class="fas fa-cog"></i> Ρυθμίσεις Εφαρμογής</h2>
+            <div id="settings-container">
+                <div style="text-align: center;">Loading settings...</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2><i class="fas fa-laugh"></i> Διαχείριση Emoticons</h2>
+            
+            <div id="emoticon-add-form" style="margin-bottom: 20px; padding: 15px; background: #3a3a5a; border-radius: 5px;">
+                <h3><i class="fas fa-plus-circle"></i> Add New Emoticon</h3>
+                <label for="new_emo_code">Code (π.χ., :cool:):</label>
+                <input type="text" id="new_emo_code" style="width: 150px; margin-right: 10px;">
+                <label for="new_emo_url">Image URL:</label>
+                <input type="text" id="new_emo_url" style="width: 350px; margin-right: 10px;">
+                <button class="action-btn save-btn" onclick="addNewEmoticon()">Add</button>
+            </div>
+
+            <h3>Existing Emoticons</h3>
+            <ul id="emoticon-list-container" class="user-list">
+                <li style="text-align: center;">Loading emoticons...</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-users"></i> Διαχείριση Χρηστών</h2>
+            <ul id="user-list-container" class="user-list">
+                <li style="text-align: center;">Loading users...</li>
+            </ul>
+        </div>
+        
+        <p style="clear: both; text-align: center; margin-top: 50px; color: #aaa;">Current User Role: <span id="current_user_role">Loading...</span></p>
+    </div>
+
+    <script>
+        let currentUserId = null;
+        let currentUserRole = null;
+        
+        async function logout() {
+            try {
+                const response = await fetch('/logout', { method: 'POST' });
+                const data = await response.json();
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    window.location.href = '/login'; 
+                }
+            } catch (error) {
+                console.error('Logout failed:', error);
+                window.location.href = '/login'; 
+            }
+        }
+        
+        // --- 1. SETTINGS LOGIC ---
+        async function loadSettings() {
+            const container = document.getElementById('settings-container');
+            container.innerHTML = 'Loading settings...';
+            try {
+                const response = await fetch('/api/settings');
+                if (!response.ok) throw new Error('Failed to fetch settings');
+                const settings = await response.json();
+                
+                container.innerHTML = '';
+                
+                // chat_background_url
+                createSettingItem(container, 'chat_background_url', settings['chat_background_url'], 'Chat Background URL', 'text');
+                
+                // default_font_color
+                createSettingItem(container, 'default_font_color', settings['default_font_color'], 'Default Font Color', 'color');
+                
+                // max_message_length
+                createSettingItem(container, 'max_message_length', settings['max_message_length'], 'Max Message Length (chars)', 'text');
+                
+                // allow_gif_searches
+                createSettingItem(container, 'allow_gif_searches', settings['allow_gif_searches'], 'Allow GIF Searches', 'select', ['true', 'false']);
+
+
+            } catch (error) {
+                container.innerHTML = `<p style="color:red;">Error loading settings: ${error.message}</p>`;
+            }
+        }
+        
+        function createSettingItem(container, key, value, label, type, options = []) {
+            const item = document.createElement('div');
+            item.classList.add('setting-item');
+            
+            const labelEl = document.createElement('label');
+            labelEl.setAttribute('for', key);
+            labelEl.textContent = label;
+            item.appendChild(labelEl);
+
+            let inputEl;
+            if (type === 'select' && options.length > 0) {
+                inputEl = document.createElement('select');
+                options.forEach(optionValue => {
+                    const option = document.createElement('option');
+                    option.value = optionValue;
+                    option.textContent = optionValue.toUpperCase();
+                    if (optionValue === value) option.selected = true;
+                    inputEl.appendChild(option);
+                });
+            } else {
+                inputEl = document.createElement('input');
+                inputEl.type = type;
+                inputEl.value = value;
+                if (type === 'text' && key === 'max_message_length') {
+                    inputEl.setAttribute('type', 'number');
+                    inputEl.setAttribute('min', '1');
+                }
+            }
+            inputEl.id = key;
+            inputEl.name = key;
+            item.appendChild(inputEl);
+            
+            const saveBtn = document.createElement('button');
+            saveBtn.classList.add('action-btn', 'save-btn');
+            saveBtn.textContent = 'Save';
+            saveBtn.onclick = () => saveSetting(key, inputEl.value);
+            item.appendChild(saveBtn);
+
+            container.appendChild(item);
+        }
+        
+        async function saveSetting(key, value) {
+            try {
+                const response = await fetch('/admin/update_setting', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key, value })
+                });
+                
+                if (!response.ok) throw new Error('Failed to save setting');
+                
+                alert(`Setting ${key} updated successfully!`);
+            } catch (error) {
+                alert(`ERROR: Could not save ${key}. Check console.`);
+                console.error('Error saving setting:', error);
+            }
+        }
+
+        // --- 2. USER MANAGEMENT LOGIC ---
+        async function loadUsers() {
+            const container = document.getElementById('user-list-container');
+            container.innerHTML = 'Loading users...';
+            try {
+                const response = await fetch('/api/users');
+                if (!response.ok) throw new Error('Failed to fetch users');
+                const users = await response.json();
+                renderUserList(users);
+            } catch (error) {
+                container.innerHTML = `<p style="color:red;">Error loading users: ${error.message}</p>`;
+            }
+        }
+        
+        function renderUserList(users) {
+            const container = document.getElementById('user-list-container');
+            container.innerHTML = '';
+            
+            users.forEach(user => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('user-item');
+
+                const infoDiv = document.createElement('div');
+                infoDiv.classList.add('user-info');
+                
+                const roleClass = `role-${user.role}`;
+                const isCurrent = user.id === currentUserId;
+                const isOwner = user.role === 'owner';
+
+                infoDiv.innerHTML = `
+                    <span style="font-size:1.1em; margin-right: 20px;">${user.display_name} ${isCurrent ? '(You)' : ''}</span> 
+                    <span class="${roleClass}">(${user.role.toUpperCase()})</span>
+                    <span style="font-size:0.9em; color:#888;">${user.email}</span>
+                `;
+
+                const actionsDiv = document.createElement('div');
+                
+                // Δημιουργία drop-down για αλλαγή ρόλου
+                const selectRole = document.createElement('select');
+                selectRole.id = `role-select-${user.id}`;
+                selectRole.style.marginRight = '10px';
+
+                ['user', 'admin', 'owner'].forEach(role => {
+                    // Ο Owner μπορεί να αλλάξει ρόλους, εκτός από τον δικό του
+                    // Ο Admin μπορεί να αλλάξει μόνο σε User/Admin (όχι Owner), εκτός από τον δικό του ρόλο
+                    if (isCurrent && role !== user.role) return; // Ο χρήστης δεν μπορεί να αλλάξει τον δικό του ρόλο
+                    if (isOwner && role !== user.role && currentUserRole !== 'owner') return; // Μόνο ο Owner μπορεί να αλλάξει ρόλο σε άλλον Owner
+
+                    if (role === 'owner' && currentUserRole !== 'owner' && user.role !== 'owner') {
+                         return; // Admin δεν μπορεί να κάνει promotion σε Owner
+                    }
+                    
+                    const option = document.createElement('option');
+                    option.value = role;
+                    option.textContent = role.toUpperCase();
+                    if (role === user.role) option.selected = true;
+                    selectRole.appendChild(option);
+                });
+                
+                // Disable logic
+                selectRole.disabled = isCurrent || (isOwner && currentUserRole !== 'owner');
+
+                actionsDiv.appendChild(selectRole);
+
+                // Save Role Button
+                const roleButton = document.createElement('button');
+                roleButton.classList.add('action-btn');
+                roleButton.textContent = 'Update Role';
+                roleButton.onclick = () => updateUserRole(user.id, user.display_name, document.getElementById(`role-select-${user.id}`).value);
+                roleButton.disabled = selectRole.disabled;
+                actionsDiv.appendChild(roleButton);
+                
+                // Ban Button
+                const banButton = document.createElement('button');
+                banButton.classList.add('action-btn', 'red');
+                banButton.textContent = 'Ban';
+                banButton.onclick = () => banUser(user.id, user.display_name);
+                banButton.disabled = isCurrent || isOwner;
+                actionsDiv.appendChild(banButton);
+
+                listItem.appendChild(infoDiv);
+                listItem.appendChild(actionsDiv);
+                container.appendChild(listItem);
+            });
+        }
+        
+        // PLACEHOLDER: Εδώ θα πρέπει να υλοποιηθούν τα πραγματικά POST routes
+        async function updateUserRole(userId, userName, newRole) {
+            alert(`ACTION: User ${userName} role changed to ${newRole}. (API route /admin/update_role needed)`);
+            loadUsers(); 
+        }
+
+        async function banUser(userId, userName) {
+            if (confirm(`Are you sure you want to BAN ${userName}?`)) {
+                 alert(`ACTION: User ${userName} banned. (API route /admin/ban_user needed)`);
+                 loadUsers();
+            }
+        }
+
+
+        // --- 3. EMOTICON MANAGEMENT LOGIC ---
+
+        async function loadEmoticons() {
+            const container = document.getElementById('emoticon-list-container');
+            container.innerHTML = 'Loading emoticons...';
+            try {
+                const response = await fetch('/admin/emoticons');
+                if (!response.ok) throw new Error('Failed to fetch emoticons');
+                const emoticons = await response.json();
+                renderEmoticonList(emoticons);
+            } catch (error) {
+                container.innerHTML = `<p style="color:red;">Error loading emoticons: ${error.message}</p>`;
+            }
+        }
+
+        function renderEmoticonList(emoticons) {
+            const container = document.getElementById('emoticon-list-container');
+            container.innerHTML = '';
+            
+            emoticons.forEach(emo => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('user-item');
+                listItem.style.opacity = emo.is_active ? 1 : 0.5;
+                listItem.style.filter = emo.is_active ? 'none' : 'grayscale(100%)';
+
+                const infoDiv = document.createElement('div');
+                infoDiv.innerHTML = `
+                    <span style="font-size:1.1em; margin-right: 20px;">${emo.code}</span> 
+                    <img src="${emo.url}" alt="${emo.code}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 10px;">
+                    <span style="font-size:0.9em; color:#888;">${emo.url}</span>
+                    <span style="font-weight: bold; margin-left: 15px; color: ${emo.is_active ? '#39FF14' : '#FF0066'};">${emo.is_active ? 'ACTIVE' : 'DISABLED'}</span>
+                `;
+
+                const actionsDiv = document.createElement('div');
+                
+                // Toggle Button
+                const toggleButton = document.createElement('button');
+                toggleButton.classList.add('action-btn');
+                toggleButton.classList.add(emo.is_active ? 'red' : 'save-btn');
+                toggleButton.textContent = emo.is_active ? 'Disable' : 'Enable';
+                toggleButton.onclick = () => toggleEmoticon(emo.id);
+                actionsDiv.appendChild(toggleButton);
+
+                listItem.appendChild(infoDiv);
+                listItem.appendChild(actionsDiv);
+                container.appendChild(listItem);
+            });
+        }
+
+        async function addNewEmoticon() {
+            const code = document.getElementById('new_emo_code').value.trim();
+            const url = document.getElementById('new_emo_url').value.trim();
+            
+            if (!code || !url) {
+                alert('Please fill in both code and URL.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/admin/emoticon/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, url })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to add emoticon.');
+                }
+                
+                document.getElementById('new_emo_code').value = '';
+                document.getElementById('new_emo_url').value = '';
+                alert('Emoticon added successfully!');
+                loadEmoticons(); 
+            } catch (error) {
+                alert(`ERROR: ${error.message}`);
+                console.error('Error adding emoticon:', error);
+            }
+        }
+
+        async function toggleEmoticon(id) {
+             try {
+                const response = await fetch('/admin/emoticon/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+
+                if (!response.ok) throw new Error('Failed to toggle emoticon.');
+                
+                loadEmoticons(); 
+            } catch (error) {
+                alert(`ERROR: Could not toggle emoticon. Check console.`);
+                console.error('Error toggling emoticon:', error);
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', async () => {
+             // 1. Έλεγχος ρόλου & ID
+             try {
+                const response = await fetch('/check_login');
+                if (!response.ok) throw new Error('Not logged in or session expired.');
+                
+                const userData = await response.json();
+                currentUserId = userData.id;
+                currentUserRole = userData.role;
+                document.getElementById('current_user_role').textContent = currentUserRole.toUpperCase();
+             } catch (error) {
+                 alert('Authentication Error: Redirecting to login.');
+                 window.location.href = '/login';
+                 return;
+             }
+
+             // 2. Φόρτωση ρυθμίσεων
+             await loadSettings();
+             
+             // 3. Φόρτωση Emoticons
+             await loadEmoticons();
+
+             // 4. Φόρτωση χρηστών
+             await loadUsers();
+        });
+    </script>
+</body>
+</html>

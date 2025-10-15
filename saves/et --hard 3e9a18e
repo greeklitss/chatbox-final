@@ -1,0 +1,79 @@
+[33m4d0f313[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Final fix: Added all Passport strategies (auth/google), corrected bcrypt typo, and ensured all endpoints are present.
+[33m3e9a18e[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m95fac89[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33mcdde223[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m43081b6[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m812587c[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m0b1b6f7[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33mb862e7b[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m05254ca[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m15acd7b[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m9da4a47[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33mdb58df5[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m358bc44[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m6e954f7[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33me172003[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m375d96c[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m2063c58[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m14a0d59[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33me12b50c[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33mafa7655[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33mf59cfa7[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m0225dc6[m ΔΙΟΡΘΩΣΗ εμφανισης
+[33m04dac78[m ΔΙΟΡΘΩΣΗ ΦΟΝΤΟΥ
+[33m5d232b5[m ΔΙΟΡΘΩΣΗ ΦΟΝΤΟΥ
+[33mbdf5cd3[m ΔΙΟΡΘΩΣΗ ΦΟΝΤΟΥ
+[33mab57080[m ΔΙΟΡΘΩΣΗ ΦΟΝΤΟΥ
+[33m1cf8461[m ΔΙΟΡΘΩΣΗ ΦΟΝΤΟΥ
+[33md500a4a[m ΔΙΟΡΘΩΣΗ ΦΟΝΤΟΥ
+[33me31c918[m ΔΙΟΡΘΩΣΗ ΦΟΝΤΟΥ
+[33mc9aaa75[m ΔΙΟΡΘΩΣΗ ΦΟΝΤΟΥ
+[33mba89a05[m ΔΙΟΡΘΩΣΗ ΦΟΝΤΟΥ
+[33m884a7c9[m ΔΙΟΡΘΩΣΗ ΦΟΝΤΟΥ
+[33m26e490e[m ΔΙΟΡΘΩΣΗ ΦΟΝΤΟΥ
+[33me8f20ed[m ΔΙΟΡΘΩΣΗ ΦΟΝΤΟΥ
+[33m5182395[m ΔΙΟΡΘΩΣΗ ΣΤΟΝ ΚΩΔΙΚΑ
+[33m99ceb5f[m ΔΙΟΡΘΩΣΗ ΣΤΟΝ ΚΩΔΙΚΑ
+[33m58e7a57[m ΔΙΟΡΘΩΣΗ ΣΤΥΛ
+[33m3f77278[m ΔΙΟΡΘΩΣΗ ΣΤΥΛ
+[33mcd4436d[m ΔΙΟΡΘΩΣΗ ΣΤΥΛ
+[33m497b0ce[m ΔΙΟΡΘΩΣΗ ΣΤΥΛ
+[33m43d05cc[m ΔΙΟΡΘΩΣΗ ΣΤΥΛ
+[33m5e1a453[m ΔΙΟΡΘΩΣΗ ΣΤΥΛ
+[33ma9c1486[m ΔΙΟΡΘΩΣΗ ΣΤΥΛ
+[33mb29e744[m Προσθήκη passport-local
+[33m3b2b629[m Προσθήκη passport-local
+[33m7516b93[m Προσθήκη passport-local
+[33m3df3514[m Προσθήκη passport-local
+[33m01c7411[m Προσθήκη passport-local
+[33m0068cf2[m Προσθήκη passport-local
+[33ma4805bd[m feat: Add passport-facebook package
+[33mcbd001e[m feat: Add passport-facebook package
+[33m965c335[m feat: Add passport-facebook package
+[33m782dca8[m feat: Add passport-facebook package
+[33mae7f184[m feat: Add passport-facebook package
+[33m4c8b569[m feat: Add passport-facebook package
+[33me890878[m feat: Add passport-facebook package
+[33m62b139e[m feat: Add passport-facebook package
+[33me6613d0[m feat: Add passport-facebook package
+[33m0c34b1b[m feat: Add passport-facebook package
+[33m1043f53[m Final code from troubleshooting
+[33m9f4a3a2[m Final code from troubleshooting
+[33mab0650b[m Final code from troubleshooting
+[33m3cef0a4[m Final code from troubleshooting
+[33m87de0bf[m Final code from troubleshooting
+[33m9f48b2f[m Final code from troubleshooting
+[33m7e11d69[m Final code from troubleshooting
+[33mf2a00d1[m Final code from troubleshooting
+[33mdf1628f[m Final code from troubleshooting
+[33m29ec3a3[m Final code from troubleshooting
+[33m83ce05d[m Automated database table creation
+[33mb35e36c[m Added error logging for database
+[33m53eabb5[m Added error logging for database
+[33ma4daf56[m Fixed WebSocket URL
+[33m7b1c6ed[m Fixed WebSocket URL for sync
+[33m170f7cd[m Direct message display fix
+[33m1b79d54[m Added PostgreSQL database
+[33meb1dd8b[m Direct message display fix
+[33m5fd7bdd[m Direct message display fix
+[33m4aa4805[m Initial clean commit

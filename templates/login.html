@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - Chatbox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* 🚨 Neon Styles */
+        :root { 
+            --primary-accent: #FF0066; /* Hot Pink/Magenta (Neon) */ 
+            --secondary-accent: #39FF14; /* Neon Green */ 
+            --text-color: #F0F0F0; 
+            --box-bg: #1f1f1f;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            
+            /* Background */
+            background-color: #121212; 
+            background-image: url("{{ url_for('static', filename='akoyme_background.png') }}"); 
+            background-size: cover; 
+            background-position: center;
+            background-attachment: fixed;
+            
+            color: var(--text-color);
+        }
+        
+        h1 {
+            color: var(--primary-accent);
+            text-shadow: 0 0 10px var(--primary-accent);
+            margin-bottom: 20px;
+        }
+
+        .login-box {
+            background-color: rgba(31, 31, 31, 0.9); /* Σχεδόν μαύρο με διαφάνεια */
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), 0 0 20px var(--primary-accent);
+            width: 350px;
+            max-width: 90%;
+            text-align: center;
+        }
+        
+        input[type="email"], input[type="password"], input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid var(--secondary-accent);
+            border-radius: 5px;
+            box-sizing: border-box;
+            background-color: #2b2b2b;
+            color: var(--text-color);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focus {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 8px var(--primary-accent);
+            outline: none;
+        }
+
+        .login-button, .google-button, .guest-button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .login-button {
+            background-color: var(--primary-accent);
+            color: #1f1f1f;
+        }
+
+        .login-button:hover {
+            background-color: #FF3399;
+            box-shadow: 0 0 15px var(--primary-accent);
+        }
+
+        .google-button {
+            background-color: #4285F4; /* Google Blue */
+            color: white;
+        }
+
+        .google-button:hover {
+            background-color: #5B9AFF;
+            box-shadow: 0 0 15px #4285F4;
+        }
+        
+        /* 🚨 ΝΕΟ: Στυλ για το Guest Button */
+        .guest-button {
+            background-color: #333; 
+            color: var(--secondary-accent);
+            border: 1px solid var(--secondary-accent); 
+        }
+        
+        .guest-button:hover {
+            background-color: var(--secondary-accent);
+            color: #1f1f1f;
+            box-shadow: 0 0 15px var(--secondary-accent);
+        }
+
+        .or-separator {
+            margin: 20px 0;
+            color: #aaa;
+            position: relative;
+        }
+
+        .or-separator::before, .or-separator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background-color: #444;
+        }
+
+        .or-separator::before {
+            left: 0;
+        }
+
+        .or-separator::after {
+            right: 0;
+        }
+        
+        #error-message {
+            color: var(--secondary-accent); 
+            text-shadow: 0 0 5px var(--secondary-accent);
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        /* Style for the tabs */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #444;
+        }
+
+        .tab-button {
+            flex-grow: 1;
+            padding: 10px;
+            cursor: pointer;
+            background-color: #2b2b2b;
+            color: #ddd;
+            border: none;
+            border-radius: 5px 5px 0 0;
+            transition: background-color 0.3s;
+        }
+
+        .tab-button.active {
+            background-color: var(--primary-accent);
+            color: #1f1f1f;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="login-box">
+    <h1>Akoy Me Chat</h1>
+    
+    <div class="tabs">
+        <button class="tab-button active" onclick="showTab('login')">Login</button>
+        <button class="tab-button" onclick="showTab('signup')">Sign Up</button>
+    </div>
+
+    <div id="login-tab" class="tab-content active">
+        <input type="email" id="login-email" placeholder="Email" required>
+        <input type="password" id="login-password" placeholder="Password" required>
+        
+        <button id="login-button" class="login-button">Login</button>
+        <div id="login-error-message" class="error-message"></div>
+    </div>
+    
+    <div id="signup-tab" class="tab-content">
+        <input type="text" id="signup-username" placeholder="Display Name" required>
+        <input type="email" id="signup-email" placeholder="Email" required>
+        <input type="password" id="signup-password" placeholder="Password" required>
+        
+        <button id="signup-button" class="login-button">Sign Up</button>
+        <div id="signup-error-message" class="error-message"></div>
+    </div>
+    
+    <div class="or-separator">OR</div>
+
+    <a href="{{ url_for('login_google') }}">
+        <button class="google-button">
+            <i class="fab fa-google"></i> Login with Google
+        </button>
+    </a>
+    
+    <form action="{{ url_for('login_guest') }}" method="POST">
+        <button type="submit" class="guest-button">
+            <i class="fas fa-ghost"></i> Σύνδεση ως Επισκέπτης (Guest)
+        </button>
+    </form>
+    
+</div>
+
+<script>
+    // --- Tab Switching Logic ---
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        document.getElementById(`${tabId}-tab`).classList.add('active');
+        document.querySelector(`.tab-button[onclick*='${tabId}']`).classList.add('active');
+    }
+    
+    // Default to show login tab
+    document.addEventListener('DOMContentLoaded', () => {
+        showTab('login');
+    });
+
+    // --- Local Login Logic ---
+    const loginButton = document.getElementById('login-button');
+    const loginEmailInput = document.getElementById('login-email');
+    const loginPasswordInput = document.getElementById('login-password');
+    const loginErrorMessage = document.getElementById('login-error-message');
+
+    if (loginButton) {
+        loginButton.addEventListener('click', async () => {
+            const email = loginEmailInput.value;
+            const password = loginPasswordInput.value;
+            loginErrorMessage.textContent = '';
+
+            try {
+                // 🚨 ΣΗΜΑΝΤΙΚΟ: Η σωστή route για τοπικό login είναι το /api/v1/login
+                const response = await fetch('/api/v1/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email, password: password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    window.location.href = result.redirect; 
+                } else {
+                    loginErrorMessage.textContent = result.error || 'Login failed. Try again.';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                loginErrorMessage.textContent = 'Network error during login.';
+            }
+        });
+        
+        // Επιτρέπει το Login με Enter
+        loginPasswordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                loginButton.click();
+            }
+        });
+    }
+    
+    // --- Local Sign Up Logic ---
+    const signupButton = document.getElementById('signup-button');
+    const signupUsernameInput = document.getElementById('signup-username');
+    const signupEmailInput = document.getElementById('signup-email');
+    const signupPasswordInput = document.getElementById('signup-password');
+    const signupErrorMessage = document.getElementById('signup-error-message');
+
+    if (signupButton) {
+        signupButton.addEventListener('click', async () => {
+            const username = signupUsernameInput.value;
+            const email = signupEmailInput.value;
+            const password = signupPasswordInput.value;
+            signupErrorMessage.textContent = '';
+
+            try {
+                // 🚨 ΣΗΜΑΝΤΙΚΟ: Η σωστή route για τοπικό sign up είναι το /api/v1/sign_up
+                const response = await fetch('/api/v1/sign_up', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username: username, email: email, password: password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    signupErrorMessage.textContent = result.message || 'Registration successful!';
+                    signupErrorMessage.style.color = 'var(--primary-accent)';
+                    // Αυτόματη αλλαγή στο login tab μετά την επιτυχή εγγραφή
+                    showTab('login'); 
+                } else {
+                    signupErrorMessage.textContent = result.error || 'Sign up failed. Try again.';
+                    signupErrorMessage.style.color = 'var(--secondary-accent)';
+                }
+            } catch (error) {
+                console.error('Sign up error:', error);
+                signupErrorMessage.textContent = 'Network error during registration.';
+            }
+        });
+        
+        // Επιτρέπει το Sign Up με Enter
+        signupPasswordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                signupButton.click();
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

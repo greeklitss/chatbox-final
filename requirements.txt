@@ -1,0 +1,12 @@
+
+Flask
+Flask-SocketIO
+python-socketio
+python-engineio
+Flask-SQLAlchemy
+Flask-Session
+Authlib
+gunicorn
+eventlet
+psycopg2-binary 
+requests
