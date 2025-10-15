@@ -251,13 +251,16 @@ def authorize_google():
     try:
         # 1. Παίρνουμε το token και τα user info
         token = oauth.google.authorize_access_token()
-       nonce = session.pop('nonce', None)
-user_info = oauth.google.parse_id_token(token, nonce=nonce)
+        
+        # 🚨 ΔΙΟΡΘΩΣΗ: Προσθήκη nonce και σωστό διάστημα (indentation)
+        nonce = session.pop('nonce', None) 
+        user_info = oauth.google.parse_id_token(token, nonce=nonce)
 
     except MismatchingStateError:
         # Εάν χαθεί το state (π.χ. λόγω λάθους SAMESITE cookie), τον στέλνουμε πίσω
         return redirect(url_for('login'))
     except OAuthError as e:
+        # Χειρισμός άλλων OAuth σφαλμάτων
         print(f"OAuth Error: {e}")
         return redirect(url_for('login'))
 
@@ -265,6 +268,8 @@ user_info = oauth.google.parse_id_token(token, nonce=nonce)
     email = user_info.get('email')
     display_name = user_info.get('name')
     avatar_url = user_info.get('picture')
+
+    # ... Ο υπόλοιπος κώδικας σας για την εύρεση/δημιουργία χρήστη ...
 
     with app.app_context():
         # 3. Αναζήτηση χρήστη στη βάση δεδομένων
