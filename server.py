@@ -7,6 +7,8 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from functools import wraps
+from werkzeug.middleware.proxy_fix import ProxyFix # 🚨 ΝΕΟ IMPORT: Προσθέστε αυτή τη γραμμή
+
 
 # --- ΒΙΒΛΙΟΘΗΚΕΣ ΓΙΑ DB & AUTH ---
 from flask_sqlalchemy import SQLAlchemy
@@ -27,6 +29,7 @@ oauth = OAuth()
 # --- Ρυθμίσεις Εφαρμογής & Flask App ---
 # Χρησιμοποιούμε τη default ρύθμιση για templates/static folders.
 app = Flask(__name__) 
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1) 
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", 'a_default_secret_key_for_local_dev')
 
 # --- Ρυθμίσεις Βάσης Δεδομένων ---
@@ -49,6 +52,8 @@ app.config["SESSION_TYPE"] = "sqlalchemy"
 app.config["SESSION_SQLALCHEMY"] = db
 app.config["SESSION_SQLALCHEMY_TABLE"] = "sessions"
 app.config['SESSION_COOKIE_SECURE'] = True # Απαραίτητο για https/Render
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax' # 🚨 ΠΡΟΣΘΗΚΗ: Αυτό διορθώνει το OAuth redirect issue
+
 
 # --- Αρχικοποίηση Extensions ---
 db.init_app(app)
@@ -227,7 +232,7 @@ def authorize_google():
         return redirect(url_for('chat'))
     return redirect(url_for('login'))
 
-@app.route('/login/guest')
+@app.route('/login/guest', methods=['GET', 'POST']) # 🚨 ΔΙΟΡΘΩΣΗ: Προσθέτουμε POST
 def login_guest():
     """Δημιουργεί ένα guest session."""
     guest_id = 'GUEST-' + str(uuid.uuid4())
@@ -235,7 +240,6 @@ def login_guest():
     session['display_name'] = f'Guest-{guest_id[:4]}'
     session['role'] = 'guest'
     return redirect(url_for('chat'))
-
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
