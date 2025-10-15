@@ -32,383 +32,251 @@ app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", 'a_default_secret_key_fo
 # --- Ρυθμίσεις Βάσης Δεδομένων ---
 database_url = os.environ.get("DATABASE_URL")
 if database_url and database_url.startswith("postgres://"):
-    # Αντικατάσταση του postgres:// με postgresql:// για συμβατότητα με SQLAlchemy
     database_url = database_url.replace("postgres://", "postgresql://", 1)
-    
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///local_db.sqlite'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'postgresql://user:password@localhost/chatboxdb'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# 🚨 Ρυθμίσεις για Session σε SQL DB (Διορθωμένες για Render/HTTPS)
-app.config['SESSION_TYPE'] = 'sqlalchemy' 
-app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions' 
-app.config['SESSION_PERMANENT'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
-app.config['SESSION_COOKIE_SECURE'] = True      # Τα cookies αποστέλλονται μόνο μέσω HTTPS (Απαραίτητο για Render)
-app.config['SESSION_COOKIE_SAMESITE'] = 'None'   # 🚨 ΔΙΟΡΘΩΣΗ: Αλλάχτηκε από 'Lax' σε 'None' για συμβατότητα με Google OAuth redirect
-# 🚨 ΚΡΙΣΙΜΗ & ΟΡΙΣΤΙΚΗ ΔΙΟΡΘΩΣΗ: Περνάμε το αντικείμενο 'db' στο Flask-Session configuration
-app.config['SESSION_SQLALCHEMY'] = db 
+# --- Ρυθμίσεις Google OAuth ---
+app.config['GOOGLE_CLIENT_ID'] = os.environ.get("GOOGLE_CLIENT_ID", "YOUR_CLIENT_ID")
+app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get("GOOGLE_CLIENT_SECRET", "YOUR_CLIENT_SECRET")
+# Η διαδρομή αυτή πρέπει να είναι καταχωρημένη στο Google Cloud Console
+GOOGLE_REDIRECT_URI = 'https://chatbox-final.onrender.com/login/google/authorize'
 
+# --- Ρυθμίσεις Session ---
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "sqlalchemy"
+app.config["SESSION_SQLALCHEMY"] = db
+app.config["SESSION_SQLALCHEMY_TABLE"] = "sessions"
+app.config['SESSION_COOKIE_SECURE'] = True # Απαραίτητο για https/Render
 
-# --- ΣΥΝΔΕΣΗ ΤΩΝ EXTENSIONS ΜΕ ΤΗΝ ΕΦΑΡΜΟΓΗ (Application Factory Pattern) ---
-db.init_app(app) # 1. Συνδέουμε το SQLAlchemy
-sess.init_app(app) # 2. Συνδέουμε το Session
+# --- Αρχικοποίηση Extensions ---
+db.init_app(app)
+sess.init_app(app)
+oauth.init_app(app)
 
-# 3. Συνδέουμε το OAuth
-oauth.init_app(app) 
+# --- Ρυθμίσεις SocketIO ---
+socketio = SocketIO(app, manage_session=False, cors_allowed_origins="*") 
 
-# Google config
+# --- Ρυθμίσεις OAuth Clients ---
 oauth.register(
     name='google',
-    client_id=os.environ.get("GOOGLE_CLIENT_ID"),
-    client_secret=os.environ.get("GOOGLE_CLIENT_SECRET"),
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_id=app.config['GOOGLE_CLIENT_ID'],
+    client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+    access_token_url='https://accounts.google.com/o/oauth2/token',
+    access_token_params=None,
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    authorize_params=None,
+    api_base_url='https://www.googleapis.com/oauth2/v1/',
     client_kwargs={'scope': 'openid email profile'},
-    redirect_uri=os.environ.get("GOOGLE_REDIRECT_URI")
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration'
 )
 
-
-# --- FLASK-SOCKETIO ---
-# 4. Συνδέουμε το SocketIO
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet') 
-
-# --- MODELS ---
+# --- Database Models ---
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
+    google_id = db.Column(db.String(100), unique=True, nullable=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    display_name = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    display_name = db.Column(db.String(100), nullable=False)
-    role = db.Column(db.String(50), default='user') # guest, user, admin, owner
-    password_hash = db.Column(db.String(256), nullable=True) # Για local login
-    avatar_url = db.Column(db.String(256), nullable=True)
-    is_active = db.Column(db.Boolean, default=True)
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        if self.password_hash:
-            return check_password_hash(self.password_hash, password)
-        return False
+    role = db.Column(db.String(20), default='user', nullable=False) # Roles: 'user', 'admin', 'owner'
+    avatar_url = db.Column(db.String(255), nullable=True)
+    # last_seen = db.Column(db.DateTime, default=datetime.utcnow) # Για online list
 
 class Setting(db.Model):
     __tablename__ = 'setting'
-    id = db.Column(db.String(50), primary_key=True)
-    key = db.Column(db.String(100), unique=True, nullable=False)
-    value = db.Column(db.String(50), nullable=False)
+    key = db.Column(db.String(50), primary_key=True)
+    value = db.Column(db.String(255), nullable=False)
 
 class Emoticon(db.Model):
     __tablename__ = 'emoticon'
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(10), unique=True, nullable=False)
-    url = db.Column(db.String(256), nullable=False)
-    is_active = db.Column(db.Boolean, default=True)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    image_url = db.Column(db.String(255), nullable=False)
+
+# 🚨 ΝΕΟ: Μοντέλο για το Ιστορικό Μηνυμάτων
+class Message(db.Model):
+    __tablename__ = 'message'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    text = db.Column(db.String(2000), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship to get user details easily
+    user = db.relationship('User', backref='messages')
 
 
-# --- HELPER CLASS/FUNCTION ΓΙΑ GUEST LOGIN ---
-class GuestUser:
-    """Προσωρινή κλάση που μιμείται τη δομή του User για τους επισκέπτες."""
-    def __init__(self, user_id, display_name):
-        self.id = user_id
-        self.display_name = display_name
-        self.role = 'guest'
-        self.avatar_url = None
-        self.color = '#AAAAAA' # Default γκρι χρώμα για guests
-        self.is_active = True
-
-def get_current_user_or_guest():
-    """
-    Ανακτά τον χρήστη από τη βάση δεδομένων ή δημιουργεί ένα προσωρινό 
-    αντικείμενο GuestUser αν η συνεδρία έχει role 'guest'.
-    """
-    user_id = session.get('user_id')
-    role = session.get('role')
-
-    if role == 'guest' and user_id:
-        # Retrieve display_name from session for guests
-        display_name = session.get('display_name', f"Guest-{user_id.split('-')[-1]}")
-        return GuestUser(user_id, display_name)
-
-    elif user_id:
-        # Regular user, fetch from DB
-        return db.session.get(User, user_id)
-
-    return None
-
-# --- HELPER FUNCTIONS ---
+# --- Utility Functions ---
 def requires_role(*roles):
-    """Decorator που ελέγχει αν ο χρήστης έχει έναν από τους απαιτούμενους ρόλους."""
+    """Decorator για έλεγχο ρόλου."""
     def wrapper(f):
         @wraps(f)
-        def decorated(*args, **kwargs):
-            if 'user_id' not in session:
-                return redirect(url_for('login'))
-            
-            with app.app_context():
-                user = get_current_user_or_guest() # 🚨 Χρήση helper function
-                if user and user.role in roles:
-                    return f(*args, **kwargs)
-                
-            return jsonify({'error': 'Unauthorized or Insufficient Role'}), 403
-        return decorated
+        def decorated_function(*args, **kwargs):
+            if session.get('role') not in roles:
+                return jsonify({'message': 'Access denied.'}), 403
+            return f(*args, **kwargs)
+        return decorated_function
     return wrapper
 
+def login_required(f):
+    """Decorator για έλεγχο σύνδεσης."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
-# --- ROUTES ---
+def get_current_user_or_guest():
+    """Επιστρέφει το αντικείμενο User ή ένα ψεύτικο Guest object."""
+    user_id = session.get('user_id')
+    user_role = session.get('role', 'guest')
+    
+    if user_role == 'guest' or not user_id:
+        class GuestUser:
+            id = session.get('user_id', 'GUEST-' + str(uuid.uuid4()))
+            display_name = session.get('display_name', 'Guest')
+            role = 'guest'
+            avatar_url = url_for('static', filename='default_avatar.png')
+        session['user_id'] = GuestUser.id
+        session['role'] = GuestUser.role
+        session['display_name'] = GuestUser.display_name
+        return GuestUser
+    
+    with app.app_context():
+        return db.session.get(User, user_id)
 
+# --- Routes ---
 @app.route('/')
 def index():
+    if 'user_id' in session:
+        return redirect(url_for('chat'))
     return redirect(url_for('login'))
 
 @app.route('/login')
 def login():
-    if 'user_id' in session:
+    # Εάν ο χρήστης είναι ήδη συνδεδεμένος, πήγαινε στο chat
+    if 'user_id' in session and session.get('role') != 'guest':
         return redirect(url_for('chat'))
-    return render_template('login.html')
-
-@app.route('/chat')
-def chat():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
     
-    with app.app_context():
-        user = get_current_user_or_guest() # 🚨 ΝΕΑ ΧΡΗΣΗ: Υποστήριξη Guest
-        current_settings = {s.key: s.value for s in Setting.query.all()}
-        
-    return render_template('chat.html', user=user, current_settings=current_settings)
-
-
-# --- LOCAL LOGIN (Η ΣΩΣΤΗ ΔΙΑΔΡΟΜΗ ΓΙΑ ΣΥΝΔΕΣΗ) ---
-@app.route('/api/v1/login', methods=['POST']) 
-def local_login():
-    """Διαχειρίζεται την τοπική σύνδεση χρήστη."""
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
+    # Επιτρέπει τη σύνδεση ως guest
+    guest_user = get_current_user_or_guest()
     
-    if not email or not password:
-        return jsonify({'error': 'Missing email or password.'}), 400 
-    
-    with app.app_context():
-        user = User.query.filter_by(email=email).first()
+    return render_template('login.html', guest_user=guest_user)
 
-        if user and user.check_password(password):
-            session['user_id'] = user.id
-            session['role'] = user.role
-            session['display_name'] = user.display_name # Προσθήκη display_name για συνέπεια
-            return jsonify({'success': True, 'redirect': url_for('chat')})
-        else:
-            return jsonify({'error': 'Invalid credentials'}), 401
-
-# --- LOCAL SIGN UP (Η ΜΟΝΗ & ΣΩΣΤΗ ΔΙΑΔΡΟΜΗ ΓΙΑ ΕΓΓΡΑΦΗ) ---
-@app.route('/api/v1/sign_up', methods=['POST'])
-def local_sign_up():
-    """Διαχειρίζεται την τοπική εγγραφή χρήστη."""
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
-    display_name = data.get('username')     
-    
-    # 1. Έλεγχος για ελλιπή στοιχεία
-    if not email or not password or not display_name:
-        return jsonify({'error': 'Missing email, password, or display name.'}), 400
-
-    with app.app_context():
-        # 2. Έλεγχος αν ο χρήστης υπάρχει
-        if User.query.filter_by(email=email).first():
-            return jsonify({'error': 'User with this email already exists.'}), 409
-
-        # 3. Δημιουργία νέου χρήστη
-        try:
-            new_user = User(
-                email=email,
-                display_name=display_name,
-                role='user' 
-            )
-            new_user.set_password(password)
-            
-            db.session.add(new_user)
-            db.session.commit()
-            
-            # Επιτυχία: Επιστρέφουμε μήνυμα επιτυχίας
-            return jsonify({'success': True, 'message': 'User created successfully. You can now log in.'}), 201
-
-        except Exception as e:
-            db.session.rollback()
-            print(f"Database error during sign up: {e}") 
-            return jsonify({'error': 'An internal server error occurred during registration.'}), 500
-
-# --- GOOGLE AUTH ROUTES ---
-
+# --- Google OAuth Handlers ---
 @app.route('/login/google')
 def login_google():
-    # Χρησιμοποιεί το GOOGLE_REDIRECT_URI που ορίστηκε στο περιβάλλοντος
-    return oauth.google.authorize_redirect(redirect_uri=os.environ.get("GOOGLE_REDIRECT_URI"))
+    """Ξεκινά τη διαδικασία Google OAuth."""
+    # Κρίσιμο: Περνάμε το σωστό redirect_uri (πρέπει να ταιριάζει με το Google Cloud Console)
+    return oauth.google.authorize_redirect(GOOGLE_REDIRECT_URI) 
 
-# 🚨 ΔΙΟΡΘΩΣΗ: ΠΛΗΡΗΣ ΛΟΓΙΚΗ ΓΙΑ ΤΟ GOOGLE CALLBACK
-@app.route('/login/google/authorize') 
+@app.route('/login/google/authorize')
 def authorize_google():
-    """Διαχειρίζεται την επιστροφή από το Google OAuth και συνδέει τον χρήστη."""
+    """Λαμβάνει τον κωδικό εξουσιοδότησης από το Google."""
     try:
-        # 1. Παίρνουμε το token και τα user info
         token = oauth.google.authorize_access_token()
-        
-        # 🚨 ΔΙΟΡΘΩΣΗ: Προσθήκη nonce και σωστό διάστημα (indentation)
-        nonce = session.pop('nonce', None) 
-        user_info = oauth.google.parse_id_token(token, nonce=nonce)
-
-    except MismatchingStateError:
-        # Εάν χαθεί το state (π.χ. λόγω λάθους SAMESITE cookie), τον στέλνουμε πίσω
+    except MismatchingStateError as e:
+        print(f"Mismatching State Error: {e}")
         return redirect(url_for('login'))
     except OAuthError as e:
-        # Χειρισμός άλλων OAuth σφαλμάτων
-        print(f"OAuth Error: {e}")
+        print(f"OAuth Error during token retrieval: {e}")
+        return redirect(url_for('login'))
+    except Exception as e:
+        print(f"An unexpected error occurred during authorization: {e}")
         return redirect(url_for('login'))
 
-    # 2. Επεξεργασία επιτυχούς σύνδεσης
-    email = user_info.get('email')
-    display_name = user_info.get('name')
-    avatar_url = user_info.get('picture')
 
-    # ... Ο υπόλοιπος κώδικας σας για την εύρεση/δημιουργία χρήστη ...
+    if token:
+        user_info = oauth.google.parse_id_token(token)
+        google_id = user_info['sub']
+        email = user_info['email']
+        display_name = user_info.get('name', email.split('@')[0])
+        username = email.split('@')[0]
+        
+        with app.app_context():
+            user = db.session.execute(db.select(User).filter_by(google_id=google_id)).scalar_one_or_none()
+            
+            if user is None:
+                # Δημιουργία νέου χρήστη
+                user = User(
+                    google_id=google_id,
+                    username=username,
+                    display_name=display_name,
+                    email=email,
+                    role='user',
+                    avatar_url=user_info.get('picture')
+                )
+                db.session.add(user)
+                try:
+                    db.session.commit()
+                except IntegrityError:
+                    db.session.rollback()
+                    # Εάν το email υπάρχει ήδη, συνδέουμε τον google_id
+                    user = db.session.execute(db.select(User).filter_by(email=email)).scalar_one()
+                    user.google_id = google_id
+                    db.session.commit()
+            
+            # Ενημέρωση Session
+            session['user_id'] = user.id
+            session['display_name'] = user.display_name
+            session['role'] = user.role
+            session['is_google_user'] = True
 
-    with app.app_context():
-        # 3. Αναζήτηση χρήστη στη βάση δεδομένων
-        user = User.query.filter_by(email=email).first()
-
-        if user is None:
-            # 4. Εγγραφή νέου χρήστη
-            user = User(
-                email=email,
-                display_name=display_name,
-                role='user', # Default role
-                avatar_url=avatar_url,
-            )
-            db.session.add(user)
-            try:
-                db.session.commit()
-            except IntegrityError:
-                db.session.rollback()
-                # Εάν αποτύχει η εγγραφή (π.χ. λόγω unique constraint), τον στέλνουμε πίσω
-                return redirect(url_for('login'))
-
-
-        # 5. Ορισμός Session (για υπάρχοντα ή νέο χρήστη)
-        session['user_id'] = user.id
-        session['role'] = user.role
-        session['display_name'] = user.display_name
-        # 6. Τελική ανακατεύθυνση στο chat
         return redirect(url_for('chat'))
+    return redirect(url_for('login'))
 
-
-# --- GUEST LOGIN ROUTE ---
-@app.route('/login/guest', methods=['POST'])
+@app.route('/login/guest')
 def login_guest():
-    """Συνδέει τον χρήστη ως προσωρινός επισκέπτης (guest)."""
-    # Δημιουργία μοναδικού, μη-DB user ID και ονόματος
-    guest_uuid = f"GUEST-{uuid.uuid4().hex[:8]}"
-    display_name = f"Guest-{uuid.uuid4().hex[:4].upper()}"
-
-    # Ορισμός session variables
-    session.clear() 
-    session['user_id'] = guest_uuid
+    """Δημιουργεί ένα guest session."""
+    guest_id = 'GUEST-' + str(uuid.uuid4())
+    session['user_id'] = guest_id
+    session['display_name'] = f'Guest-{guest_id[:4]}'
     session['role'] = 'guest'
-    session['display_name'] = display_name 
-    
     return redirect(url_for('chat'))
 
-
-# --- LOGOUT ---
 @app.route('/logout')
 def logout():
-    session.clear() 
+    session.pop('user_id', None)
+    session.pop('display_name', None)
+    session.pop('role', None)
+    session.pop('is_google_user', None)
     return redirect(url_for('login'))
 
 
-# --- SOCKETIO EVENTS ---
+# --- Chat & Core Routes ---
+@app.route('/chat')
+@login_required
+def chat():
+    """Φορτώνει τη σελίδα chat και το ιστορικό μηνυμάτων."""
+    
+    user = None
+    messages = []
+    
+    with app.app_context():
+        # Παίρνουμε τον χρήστη/guest
+        user = get_current_user_or_guest() 
+        current_settings = {s.key: s.value for s in Setting.query.all()}
+        
+        # 🚨 ΚΡΙΣΙΜΟ: Φόρτωση των τελευταίων 100 μηνυμάτων (μόνο για registered users)
+        if user and user.role != 'guest':
+            messages = db.session.query(Message)\
+                         .join(User, Message.user_id == User.id)\
+                         .order_by(Message.timestamp.desc())\
+                         .limit(100).all()
+            messages.reverse() # Αντιστρέφουμε για να είναι σωστή η σειρά
 
-@socketio.on('connect')
-def handle_connect():
-    """Διαχειρίζεται τη σύνδεση ενός χρήστη στο SocketIO."""
-    if 'user_id' in session:
-        with app.app_context():
-            user = get_current_user_or_guest() # 🚨 ΑΛΛΑΓΗ ΕΔΩ: Υποστήριξη Guest
-            if user:
-                # Χρησιμοποιούμε το user.id ως όνομα δωματίου για το προσωπικό κανάλι του χρήστη
-                # και τους βάζουμε στο γενικό δωμάτιο 'chat'
-                join_room('chat') 
-                print(f"User {user.display_name} ({user.id}) connected and joined 'chat' room.")
-                
-                # Ενημέρωση του χρήστη ότι συνδέθηκε
-                emit('status', {'msg': f'Welcome, {user.display_name}. You are connected to the chat.'})
-                
-                # Ενημέρωση όλων (εκτός από τον ίδιο) ότι συνδέθηκε
-                emit('status', {'msg': f'{user.display_name} has joined the room.'}, room='chat', include_self=False)
-            else:
-                print("Session found, but user not found in DB. Disconnecting.")
-                # Αν δεν βρεθεί ο χρήστης, αποσυνδέουμε το socket
-                return False 
-    else:
-        # Αν δεν υπάρχει session, δεν επιτρέπουμε τη σύνδεση SocketIO
-        print("Unauthenticated user tried to connect to SocketIO. Disconnecting.")
-        return False
-
-
-@socketio.on('send_message')
-def handle_message(data):
-    """Λαμβάνει ένα μήνυμα από έναν χρήστη και το στέλνει σε όλους τους άλλους."""
-    if 'user_id' in session and 'message' in data:
-        with app.app_context():
-            user = get_current_user_or_guest() # 🚨 ΑΛΛΑΓΗ ΕΔΩ: Υποστήριξη Guest
-            if user:
-                message_text = data['message']
-                # 🚨 ΝΕΟ: Λαμβάνουμε το format.
-                message_format = data.get('format', {}) 
-                
-                # Εκπομπή του μηνύματος σε όλους στο δωμάτιο 'chat'
-                emit('new_message', {
-                    'user_id': user.id,
-                    'user': user.display_name,
-                    'message': message_text,
-                    'format': message_format, # 🚨 ΝΕΟ: Περιλαμβάνουμε το format
-                    'timestamp': datetime.now().strftime('%H:%M:%S')
-                }, room='chat')
-                
-                print(f"Message from {user.display_name}: {message_text}")
-@socketio.on('disconnect')
-def handle_disconnect():
-    """Διαχειρίζεται την αποσύνδεση ενός χρήστη."""
-    if 'user_id' in session:
-        with app.app_context():
-            user = get_current_user_or_guest() # 🚨 ΑΛΛΑΓΗ ΕΔΩ: Υποστήριξη Guest
-            if user:
-                leave_room('chat')
-                print(f"User {user.display_name} ({user.id}) disconnected.")
-                
-                # Ενημέρωση όλων ότι αποσυνδέθηκε
-                emit('status', {'msg': f'{user.display_name} has left the room.'}, room='chat', include_self=False)# ...
+    if user:
+        return render_template('chat.html', user=user, messages=messages, current_settings=current_settings)
+    
+    return redirect(url_for('login')) 
 
 
-# --- ADMIN PANEL ROUTES ---
-
-# ... (υπάρχοντα imports) ...
-
-@app.route('/check_login')
-def check_login():
-    """
-    Ελέγχει αν υπάρχει ενεργή συνεδρία χρήστη.
-    Χρησιμοποιείται από το client-side JS (π.χ., admin_panel.html) για έλεγχο.
-    """
-    if 'user_id' in session:
-        # Επιστρέφει επιτυχία αν υπάρχει user_id στη session
-        return jsonify({'logged_in': True, 'user_id': session['user_id']}), 200
-    else:
-        # Επιστρέφει αποτυχία αν ο χρήστης δεν είναι συνδεδεμένος
-        return jsonify({'logged_in': False}), 401 # 401 Unauthorized
-
+# --- Admin Routes ---
 @app.route('/admin_panel')
 @requires_role('owner', 'admin')
 def admin_panel():
-    """Εμφανίζει το βασικό Admin Panel με τη λίστα των χρηστών."""
     with app.app_context():
         # Παίρνουμε όλους τους χρήστες 
         users = User.query.all()
@@ -438,11 +306,7 @@ def set_user_role():
         else:
             return jsonify({'success': False, 'message': 'User not found.'}), 404
 
-# server.py
-
-# ... (υπάρχων κώδικας, μετά το set_user_role) ...
-
-# --- SETTINGS ROUTES (ΟΜΑΔΑ 3 - ΑΣΠΡΟ) ---
+# --- Settings Routes (ΟΜΑΔΑ 3 - ΑΣΠΡΟ) ---
 @app.route('/settings/set_avatar_url', methods=['POST'])
 def set_avatar_url():
     """Επιτρέπει στον χρήστη να αλλάξει το avatar του μέσω URL (μέσω AJAX)."""
@@ -457,9 +321,7 @@ def set_avatar_url():
 
     user_id = session['user_id']
     with app.app_context():
-        # Guests (GUEST-...) δεν έχουν πεδίο στη βάση, οπότε δεν το αποθηκεύουμε.
         if session.get('role') == 'guest':
-            # Για guests, απλά επιστρέφουμε επιτυχία (το JS θα το διαχειριστεί τοπικά αν χρειαστεί)
              return jsonify({'success': True, 'message': 'Avatar URL set for this session.'})
              
         user = db.session.get(User, user_id)
@@ -467,7 +329,7 @@ def set_avatar_url():
             user.avatar_url = new_url
             db.session.commit()
             
-            # 🚨 ΝΕΟ: Ενημερώνουμε όλους μέσω SocketIO για την αλλαγή avatar
+            # Ενημερώνουμε όλους μέσω SocketIO για την αλλαγή avatar
             socketio.emit('user_avatar_updated', {
                 'user_id': user.id,
                 'avatar_url': new_url
@@ -478,8 +340,58 @@ def set_avatar_url():
             return jsonify({'success': False, 'message': 'User not found.'}), 404
             
 
+# --- SocketIO Events ---
+@socketio.on('join')
+def handle_join(data):
+    """Χειρίζεται το join ενός χρήστη στο chat room."""
+    user = get_current_user_or_guest()
+    # join_room('chat')
+    # print(f"{user.display_name} has joined the chat.")
+    # emit('status', {'msg': f'{user.display_name} has entered the room.'}, room='chat')
+
+@socketio.on('send_message')
+def handle_message(data):
+    """Λαμβάνει ένα μήνυμα από έναν χρήστη, το αποθηκεύει και το στέλνει σε όλους τους άλλους."""
+    if 'user_id' not in session or 'message' not in data:
+        return
+        
+    user_id = session['user_id']
+    user_role = session.get('role', 'guest')
+    display_name = session.get('display_name', 'Guest')
+    message_text = data['message']
+    
+    # 🚨 1. Αποθήκευση του μηνύματος (μόνο για registered users)
+    if user_role != 'guest':
+        try:
+            with app.app_context():
+                user_instance = db.session.get(User, user_id)
+                if not user_instance:
+                    return # Μην σώζεις αν δεν υπάρχει χρήστης
+                
+                new_message = Message(
+                    user_id=user_id, 
+                    text=message_text,
+                    timestamp=datetime.now()
+                )
+                db.session.add(new_message)
+                db.session.commit()
+        except Exception as e:
+            print(f"Error saving message: {e}") 
+            
+    # 🚨 2. Εκπομπή του μηνύματος στους clients (για εμφάνιση και ήχο)
+    emit('new_message', {
+        'message': message_text,
+        'username': display_name,
+        'role': user_role, # ΚΡΙΣΙΜΟ: Στέλνουμε το ρόλο για χρωματισμό
+        'timestamp': datetime.now().strftime('%H:%M:%S')
+    }, broadcast=True)
+    
+    print(f"Message from {display_name} ({user_role}): {message_text}")
+
+
 # --- MAIN EXECUTION ---
 if __name__ == '__main__':
-    # 🚨 Η κλήση db_setup_check(app) αφαιρέθηκε, γίνεται πλέον από το db_init.py
-    print("Starting Flask/SocketIO Server...")
-    socketio.run(app, debug=True, host='0.0.0.0', port=os.environ.get('PORT', 5000))
+    with app.app_context():
+        db.create_all()
+    # Χρησιμοποιήστε socketio.run(app) αντί για app.run() όταν χρησιμοποιείτε SocketIO
+    socketio.run(app, debug=True)

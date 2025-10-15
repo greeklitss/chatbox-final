@@ -60,6 +60,22 @@
             position: relative;
         }
 
+        /* 🚨 ΝΕΑ CSS ΓΙΑ ΤΟΥΣ ΡΟΛΟΥΣ */
+        .role-owner { 
+            color: #FFD700; /* Gold */
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); 
+        }
+        .role-admin {
+            color: #FF4500; /* Red-Orange */
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 69, 0, 0.5);
+        }
+        .role-user, .role-guest {
+            color: var(--text-color); /* Default White/F0F0F0 */
+            font-weight: normal;
+        }
+
         /* --- HEADER & RADIO PLAYER STYLES --- */
         #header { 
             position: fixed; 
@@ -83,7 +99,83 @@
         top: 50px; 
         left: 0;
         width: 100%;
+ /* 🚨 ΝΕΑ STYLES ΓΙΑ CUSTOM RADIO PLAYER */
+    #radio-player-container {
+        /* ... (κρατάμε τις fixed ρυθμίσεις) ... */
         height: 65px; 
+        padding: 5px 0; 
+        
+        display: flex; /* Αλλαγή σε flex */
+        flex-direction: row; /* Χειριστήρια δίπλα-δίπλα */
+        align-items: center; 
+        justify-content: space-between; /* Κατανομή χώρου */
+        padding: 0 20px;
+    }
+    
+    /* Το default audio component το κρύβουμε */
+    #audio-stream {
+        display: none !important;
+    }
+
+    /* Styles για τα custom κουμπιά */
+    #player-controls button {
+        background: none;
+        border: none;
+        color: var(--secondary-accent); /* Neon Green */
+        font-size: 1.8em;
+        cursor: pointer;
+        padding: 0 10px;
+        transition: color 0.2s, text-shadow 0.2s;
+    }
+
+    #player-controls button:hover {
+        color: white;
+        text-shadow: 0 0 10px var(--secondary-accent);
+    }
+    
+    /* Styles για τον Volume Slider */
+    #volume-slider {
+        -webkit-appearance: none;
+        width: 80px;
+        height: 5px;
+        background: #333;
+        border-radius: 5px;
+        outline: none;
+        transition: opacity .2s;
+    }
+
+    #volume-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: var(--secondary-accent);
+        cursor: pointer;
+        box-shadow: 0 0 5px var(--secondary-accent);
+    }
+
+    /* Styles για τα Metadata */
+    .radio-metadata {
+        flex-grow: 1; /* Παίρνει τον υπόλοιπο χώρο */
+        height: 45px; 
+        line-height: 45px; 
+        margin: 0 20px; 
+        border: 1px solid var(--secondary-accent); 
+        box-shadow: 0 0 5px var(--secondary-accent);
+        text-align: center; 
+        background-color: rgba(0, 0, 0, 0.5); 
+        overflow: hidden;
+    }
+    
+    .metadata-text {
+        /* Χρησιμοποιείται για το scrolling effect (αν εφαρμοστεί) */
+        color: var(--secondary-accent); 
+        font-size: 1.1em; 
+        font-weight: bold;
+        display: inline-block;
+        animation: scrollMetadata 20s linear infinite; /* Ενδεικτικό animation */
+        height: 85px; 
         background-color: rgba(0, 0, 0, 0.9); 
         z-index: 1000; 
         padding: 5px 0; 
@@ -134,16 +226,23 @@
         text-shadow: 0 0 5px rgba(57, 255, 20, 0.5); 
     }
 
-    .role-owner { 
-        color: #FFD700; 
-        font-weight: bold;
-        text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); 
-    }
-        
     #chat-container {
         margin-right: 250px; 
         display: flex;
         flex-direction: column;
+        height: 100%;
+        /* 🚨 ΝΕΟ: Εσωτερικό container για τα μηνύματα */
+        padding: 10px;
+        background-color: transparent; 
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    
+    /* 🚨 ΝΕΟ: Το container που εμφανίζει τα μηνύματα */
+    #message-container { 
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 5px; 
         height: 100%;
     }
 
@@ -162,14 +261,6 @@
         z-index: 10;
     }
 
-    #chatbox {
-        flex-grow: 1;
-        overflow-y: auto;
-        padding: 10px;
-        background-color: transparent; 
-        border-radius: 8px;
-        margin-bottom: 10px;
-    }
         
     #input-area {
         display: flex;
@@ -225,16 +316,22 @@
     </header>
 
     <div id="radio-player-container">
-        <audio id="audio-stream" controls preload="none" src="https://uk24freenew.listen2myradio.com/live.mp3?typeportmount=s1_9254_stream_554111378">
-            Ο browser σας δεν υποστηρίζει το στοιχείο audio.
-        </audio>
-        
-        <div class="radio-metadata">
-            <span id="metadata-scroller" class="metadata-text">
-                [Metadata Placeholder]
-            </span>
-        </div>
-    </div> 
+    <audio id="audio-stream" preload="none" src="https://uk24freenew.listen2myradio.com/live.mp3?typeportmount=s1_9254_stream_554111378">
+        Ο browser σας δεν υποστηρίζει το στοιχείο audio.
+    </audio>
+    
+    <div id="player-controls">
+        <button id="play-pause-button" title="Play/Pause"><i class="fas fa-play"></i></button>
+        <button id="mute-unmute-button" title="Mute/Unmute"><i class="fas fa-volume-up"></i></button>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3">
+    </div>
+    
+    <div class="radio-metadata">
+        <span id="metadata-scroller" class="metadata-text">
+            📻 Playing Akoy Me - Radio Chatbox
+        </span>
+    </div>
+</div>
     
     <div class="container">
         <div id="user-list-panel">
@@ -242,7 +339,15 @@
             </div>
         
         <div id="chat-container">
-            <div id="chatbox"></div>
+             <div id="message-container">
+                {% for message in messages %}
+                <div class="message">
+                    <span class="role-{{ message.user.role }}" style="font-weight: 700;">{{ message.user.display_name }}</span> 
+                    <span style="color: #bbb;">[{{ message.timestamp.strftime('%H:%M:%S') }}]:</span> 
+                    {{ message.text | safe }} 
+                </div>
+                {% endfor %}
+            </div>
         </div>
         
     </div>
@@ -250,7 +355,11 @@
     <div id="input-area">
         <button id="bold-button" title="Bold (Ctrl+B)"><i class="fas fa-bold"></i></button>
         <button id="italic-button" title="Italic (Ctrl+I)"><i class="fas fa-italic"></i></button>
-        <button id="underline-button" title="Underline (Ctrl+U)"><i class="fas fa-underline"></i></button> <button id="url-button" title="Insert Link (URL)"><i class="fas fa-link"></i></button> <button id="gif-button" title="Insert GIF"><i class="fas fa-gift"></i></button> <button id="color-picker-button" title="Text Color"><i class="fas fa-palette"></i></button>
+        <button id="underline-button" title="Underline (Ctrl+U)"><i class="fas fa-underline"></i></button> 
+        <button id="url-button" title="Insert Link (URL)"><i class="fas fa-link"></i></button> 
+        <button id="gif-button" title="Insert GIF"><i class="fas fa-gift"></i></button> 
+        
+        <button id="color-picker-button" title="Text Color"><i class="fas fa-palette"></i></button>
         <input type="color" id="color-input" value="#FFFFFF" style="display: none;">
         <button id="emoticon-button" title="Emoticons"><i class="fas fa-smile"></i></button>
         
@@ -267,7 +376,7 @@
             <div style="margin-bottom: 10px;">
                 <label for="volume-control"><i class="fas fa-volume-up"></i> Radio Volume:</label>
                 <input type="range" id="volume-control" min="0" max="1" step="0.01" value="0.3" oninput="document.getElementById('audio-stream').volume = this.value;">
-                <label style="display: block;"><input type="checkbox" id="toggle-sound"> Enable Chat Sounds (TBD)</label>
+                <label style="display: block;"><input type="checkbox" id="toggle-sound"> Enable Chat Sounds (Check to disable)</label>
             </div>
             
             <h4>Change Avatar (URL)</h4>
@@ -295,35 +404,64 @@
     </div>
     
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const audio = document.getElementById('audio-stream');
-            
-            if (audio) {
-                // 🚨 Αυτό κάνει το preload του stream πιο άμεσο και ρυθμίζει την ένταση.
-                // Ο χρήστης πρέπει να πατήσει το Play για να ακούσει.
-                audio.volume = 0.3; 
-                audio.load(); // Εξασφαλίζει ότι το stream είναι έτοιμο για αναπαραγωγή
-            }
-            
-            // --- ΕΛΕΓΧΟΣ ΡΟΛΟΥ ΧΡΗΣΤΗ ΓΙΑ ΤΑ ΚΟΥΜΠΙΑ ---
-            const currentUserRole = "{{ user.role }}";
-            const adminButton = document.getElementById('admin-button');
-            const settingsAdminDiv = document.getElementById('settings-admin');
-            const settingsOwnerDiv = document.getElementById('settings-owner');
+       // static/js/main.js (Προσθήκη στο DOMContentLoaded)
 
-            if (currentUserRole === 'owner') {
-                adminButton.style.display = 'inline-block';
-                // Εμφάνιση Owner/Admin εργαλείων στο Modal
-                if (settingsAdminDiv) settingsAdminDiv.style.display = 'block';
-                if (settingsOwnerDiv) settingsOwnerDiv.style.display = 'block';
-            } else if (currentUserRole === 'admin') {
-                adminButton.style.display = 'inline-block';
-                // Εμφάνιση μόνο Admin εργαλείων στο Modal
-                if (settingsAdminDiv) settingsAdminDiv.style.display = 'block';
+document.addEventListener('DOMContentLoaded', () => {
+    // ... (Υπάρχων κώδικας για SocketIO, chat, κλπ.) ...
+
+    // --- 🚨 ΝΕΑ ΛΟΓΙΚΗ ΓΙΑ CUSTOM PLAYER UI ---
+    const audio = document.getElementById('audio-stream');
+    const playPauseButton = document.getElementById('play-pause-button');
+    const muteUnmuteButton = document.getElementById('mute-unmute-button');
+    const volumeSlider = document.getElementById('volume-slider');
+
+    if (audio) {
+        audio.volume = 0.3; 
+        
+        // 1. Play/Pause Logic
+        playPauseButton.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.load(); // Ξαναφορτώνει για να ξεκινήσει αν ήταν paused/stopped
+                audio.play().catch(e => console.error("Play failed:", e));
+                playPauseButton.innerHTML = '<i class="fas fa-pause"></i>';
+            } else {
+                audio.pause();
+                playPauseButton.innerHTML = '<i class="fas fa-play"></i>';
             }
+        });
+
+        // 2. Mute/Unmute Logic
+        muteUnmuteButton.addEventListener('click', () => {
+            audio.muted = !audio.muted;
+            if (audio.muted) {
+                muteUnmuteButton.innerHTML = '<i class="fas fa-volume-off"></i>';
+            } else {
+                muteUnmuteButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+            }
+        });
+
+        // 3. Volume Slider Logic
+        volumeSlider.addEventListener('input', () => {
+            audio.volume = volumeSlider.value;
+            if (audio.volume > 0) {
+                audio.muted = false;
+                muteUnmuteButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+            } else {
+                audio.muted = true;
+                muteUnmuteButton.innerHTML = '<i class="fas fa-volume-off"></i>';
+            }
+        });
+        
+        // 4. Update the slider from the audio volume
+        volumeSlider.value = audio.volume; 
+    }
+    // ----------------------------------------------------
+
+    // ... (Υπόλοιπος κώδικας για chat, κουμπιά κλπ.) ...
+});
             // --------------------------------------------------------
             
-            // 🚨 ΝΕΟ: Λογική για το Avatar URL Form (ΟΜΑΔΑ 3)
+            // 🚨 Λογική για το Avatar URL Form
             const avatarUrlForm = document.getElementById('avatar-url-form');
             if (avatarUrlForm) {
                 avatarUrlForm.addEventListener('submit', async (e) => {
@@ -343,10 +481,8 @@
                             const result = await response.json();
                             if (result.success) {
                                 alert(result.message);
-                                // Κλείνουμε το modal
                                 document.getElementById('settings-modal').style.display='none';
-                                // 🚨 ΣΗΜΕΙΩΣΗ: Η ενημέρωση του avatar στην οθόνη θα γίνει στο main.js 
-                                // μέσω του SocketIO event 'user_avatar_updated'.
+                                // Εδώ θα ενημερωθεί η λίστα χρηστών μέσω του socket event 'user_avatar_updated'
                             } else {
                                 alert('Error: ' + result.message);
                             }
