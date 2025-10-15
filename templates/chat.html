@@ -11,6 +11,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
+ 
+    /* 🚨 ΔΙΟΡΘΩΣΕΙΣ ΓΙΑ ΔΙΑΦΑΝΕΙΑ (Transparency Fixes) */
+    
+    /* 1. Για τη λίστα των online χρηστών */
+    /* Χρησιμοποιήστε τους selectors που αντιστοιχούν στην "online category" */
+    #online-list, .online-users-container, .sidebar { 
+        background: none !important; /* Κάνει το φόντο διαφανές */
+        border: none !important;     /* Αφαιρεί τυχόν περιγράμματα */
+    }
+    
+    /* 2. Για τον player/χρήστη (Αφαίρεση του πράσινου φόντου) */
+    /* Χρησιμοποιήστε τους selectors που αντιστοιχούν στον "player" */
+    .player-container, .user-info-panel, .chat-header {
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+  
         /* --- GLOBAL & STRUCTURE --- */ 
         :root { 
             --primary-accent: #FF0066; /* Hot Pink/Magenta (Neon) */ 
