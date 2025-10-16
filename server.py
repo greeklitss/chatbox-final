@@ -57,7 +57,7 @@ app.config["SESSION_USE_SIGNER"] = True # Συνιστάται
 
 # 🚨 ΚΡΙΣΙΜΗ & ΟΡΙΣΤΙΚΗ ΔΙΟΡΘΩΣΗ: Περνάμε το αντικείμενο 'db' στο Flask-Session configuration
 app.config['SESSION_SQLALCHEMY'] = db 
-
+with app.app_context():
 
 # --- ΣΥΝΔΕΣΗ ΤΩΝ EXTENSIONS ΜΕ ΤΗΝ ΕΦΑΡΜΟΓΗ (Application Factory Pattern) ---
 db.init_app(app) # 1. Συνδέουμε το SQLAlchemy
