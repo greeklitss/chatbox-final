@@ -73,7 +73,16 @@ oauth.register(
 
 # --- FLASK-SOCKETIO ---
 # 4. Συνδέουμε το SocketIO
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet') 
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+socketio = SocketIO(
+    app, 
+    cors_allowed_origins="*", 
+    async_mode='eventlet', 
+    # 🚨 ΝΕΑ ΠΡΟΣΘΗΚΗ: Βοηθάει με τους Load Balancers
+    path='/socket.io/', 
+    transports=['websocket', 'polling'] 
+)
+
 
 # --- MODELS ---
 class User(db.Model):
@@ -84,7 +93,8 @@ class User(db.Model):
     role = db.Column(db.String(50), default='user') # guest, user, admin, owner
     password_hash = db.Column(db.String(256), nullable=True) # Για local login
     avatar_url = db.Column(db.String(256), nullable=True)
-    last_seen = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc)) # 🚨 ΠΡΟΣΘΗΚΗ & ΔΙΟΡΘΩΣΗ
+    last_seen = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc)) 
+# 🚨 ΠΡΟΣΘΗΚΗ & ΔΙΟΡΘΩΣΗ
     is_active = db.Column(db.Boolean, default=True)
 
     def set_password(self, password):
@@ -425,7 +435,7 @@ def check_login():
         return jsonify({'logged_in': False}), 401 # 401 Unauthorized
 
 @app.route('/admin_panel')
-@requires_role('owner', 'admin')
+# @requires_role('owner', 'admin')
 def admin_panel():
     """Εμφανίζει το βασικό Admin Panel με τη λίστα των χρηστών."""
     with app.app_context():

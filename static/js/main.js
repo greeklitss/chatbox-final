@@ -6,7 +6,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageInput = document.getElementById('message-input');
     const sendButton = document.getElementById('send-button');
     const colorInput = document.getElementById('color-input');
+  // 2. ΣΥΝΔΕΣΗ ΚΟΥΜΠΙΩΝ - ΑΥΤΟ ΠΡΕΠΕΙ ΝΑ ΠΡΟΣΤΕΘΕΙ
+    if (sendButton) {
+        sendButton.onclick = function(e) {
+            e.preventDefault();
+            // ... λογική αποστολής μηνύματος
+        };
+    }   
 
+ // 3. ΛΟΓΙΚΗ SOCKETIO - ΑΥΤΟ ΠΡΕΠΕΙ ΝΑ ΠΡΟΣΤΕΘΕΙ
+    socket.on('connect', () => {
+        console.log('Connected to chat server!');
+    });
+    
     // 🚨 1. ΗΧΟΣ ΜΗΝΥΜΑΤΟΣ
     const notificationSound = new Audio('/static/sounds/notification.mp3'); // Υποθέτουμε ότι υπάρχει αυτό το αρχείο
     notificationSound.volume = 0.5;
