@@ -2,6 +2,9 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const socket = io();
+        path: '/socket.io/' 
+    });
+
     const chatbox = document.getElementById('chatbox');
     const messageInput = document.getElementById('message-input');
     const sendButton = document.getElementById('send-button');
