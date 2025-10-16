@@ -29,6 +29,7 @@ oauth = OAuth()
 # Χρησιμοποιούμε τη default ρύθμιση για templates/static folders.
 app = Flask(__name__) 
 # 🚨 ΚΡΙΣΙΜΗ ΠΡΟΣΘΗΚΗ: ΕΦΑΡΜΟΓΗ PROXYFIX για το Render
+
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1) 
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", 'a_default_secret_key_for_local_dev')
 
@@ -43,12 +44,17 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///local_db.sqli
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # 🚨 Ρυθμίσεις για Session σε SQL DB (Διορθωμένες για Render/HTTPS)
+
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_TYPE'] = 'sqlalchemy' 
 app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions' 
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.config['SESSION_COOKIE_SECURE'] = True      # Τα cookies αποστέλλονται μόνο μέσω HTTPS (Απαραίτητο για Render)
-app.config['SESSION_COOKIE_SAMESITE'] = 'None'   # 🚨 ΔΙΟΡΘΩΣΗ: Αλλάχτηκε από 'Lax' σε 'None' για συμβατότητα με Google OAuth redirect
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'   # 🚨 ΔΙΟΡΘΩΣΗ: Αλλάχτηκε από 'None' σε 'Lax' για συμβατότητα με Google OAuth redirect
+app.config["SESSION_USE_SIGNER"] = True # Συνιστάται
+
 # 🚨 ΚΡΙΣΙΜΗ & ΟΡΙΣΤΙΚΗ ΔΙΟΡΘΩΣΗ: Περνάμε το αντικείμενο 'db' στο Flask-Session configuration
 app.config['SESSION_SQLALCHEMY'] = db 
 
