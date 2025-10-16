@@ -5,10 +5,11 @@ import time
 from flask import Flask, send_from_directory, request, jsonify, url_for, redirect, session, render_template
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.utils import secure_filename
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 
 # --- ΒΙΒΛΙΟΘΗΚΕΣ ΓΙΑ DB & AUTH ---
+from werkzeug.middleware.proxy_fix import ProxyFix 
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
 from werkzeug.security import generate_password_hash, check_password_hash 
@@ -27,7 +28,10 @@ oauth = OAuth()
 # --- Ρυθμίσεις Εφαρμογής & Flask App ---
 # Χρησιμοποιούμε τη default ρύθμιση για templates/static folders.
 app = Flask(__name__) 
+# 🚨 ΚΡΙΣΙΜΗ ΠΡΟΣΘΗΚΗ: ΕΦΑΡΜΟΓΗ PROXYFIX για το Render
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1) 
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", 'a_default_secret_key_for_local_dev')
+
 
 # --- Ρυθμίσεις Βάσης Δεδομένων ---
 database_url = os.environ.get("DATABASE_URL")
@@ -80,6 +84,7 @@ class User(db.Model):
     role = db.Column(db.String(50), default='user') # guest, user, admin, owner
     password_hash = db.Column(db.String(256), nullable=True) # Για local login
     avatar_url = db.Column(db.String(256), nullable=True)
+    last_seen = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc)) # 🚨 ΠΡΟΣΘΗΚΗ & ΔΙΟΡΘΩΣΗ
     is_active = db.Column(db.Boolean, default=True)
 
     def set_password(self, password):
@@ -89,6 +94,14 @@ class User(db.Model):
         if self.password_hash:
             return check_password_hash(self.password_hash, password)
         return False
+
+class Message(db.Model):
+    __tablename__ = 'message'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc)) # 🚨 ΔΙΟΡΘΩΣΗ: Με timezone.utc
+    user = db.relationship('User', backref='messages')
 
 class Setting(db.Model):
     __tablename__ = 'setting'
@@ -354,26 +367,32 @@ def handle_connect():
 
 
 @socketio.on('send_message')
-def handle_message(data):
-    """Λαμβάνει ένα μήνυμα από έναν χρήστη και το στέλνει σε όλους τους άλλους."""
-    if 'user_id' in session and 'message' in data:
-        with app.app_context():
-            user = get_current_user_or_guest() # 🚨 ΑΛΛΑΓΗ ΕΔΩ: Υποστήριξη Guest
-            if user:
-                message_text = data['message']
-                # 🚨 ΝΕΟ: Λαμβάνουμε το format.
-                message_format = data.get('format', {}) 
-                
-                # Εκπομπή του μηνύματος σε όλους στο δωμάτιο 'chat'
-                emit('new_message', {
-                    'user_id': user.id,
-                    'user': user.display_name,
-                    'message': message_text,
-                    'format': message_format, # 🚨 ΝΕΟ: Περιλαμβάνουμε το format
-                    'timestamp': datetime.now().strftime('%H:%M:%S')
-                }, room='chat')
-                
-                print(f"Message from {user.display_name}: {message_text}")
+def handle_send_message(data):
+    # ...
+    
+    # 🚨 1. Αποθήκευση του μηνύματος
+    if user_role != 'guest':
+        try:
+            with app.app_context():
+                # ...
+                new_message = Message(
+                    user_id=user_id, 
+                    text=message_text,
+                    # 🚨 ΤΡΟΠΟΠΟΙΩ: Χρησιμοποιώ timezone.utc
+                    timestamp=datetime.now(timezone.utc) 
+                )
+                db.session.add(new_message)
+                db.session.commit()
+        except Exception as e:
+            print(f"Error saving message: {e}") 
+            
+   # 🚨 2. Εκπομπή του μηνύματος στους clients (για εμφάνιση και ήχο)
+    emit('new_message', {
+        'message': message_text,
+        'username': display_name,
+        'role': user_role, # ΚΡΙΣΙΜΟ: Στέλνουμε το ρόλο για χρωματισμό
+        'timestamp': datetime.now().strftime('%H:%M:%S')  # <-- ΑΥΤΗ ΕΙΝΑΙ Η ΓΡΑΜΜΗ 484
+    }, broadcast=True)
 @socketio.on('disconnect')
 def handle_disconnect():
     """Διαχειρίζεται την αποσύνδεση ενός χρήστη."""
