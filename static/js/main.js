@@ -1,31 +1,32 @@
 // static/js/main.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    const socket = io();
-        path: '/socket.io/' 
+    // 1. 🟢 ΣΩΣΤΗ ΣΥΝΔΕΣΗ SOCKETIO (Με το path μέσα στην κλήση)
+    const socket = io({
+        path: '/socket.io/' // Το path είναι μέσα στο io({})
     });
-
+    
+    // 2. 🟢 ΟΛΑ ΤΑ ΣΤΟΙΧΕΙΑ ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ ΕΔΩ ΜΕΣΑ
     const chatbox = document.getElementById('chatbox');
     const messageInput = document.getElementById('message-input');
     const sendButton = document.getElementById('send-button');
     const colorInput = document.getElementById('color-input');
-  // 2. ΣΥΝΔΕΣΗ ΚΟΥΜΠΙΩΝ - ΑΥΤΟ ΠΡΕΠΕΙ ΝΑ ΠΡΟΣΤΕΘΕΙ
+    
+    // 3. ΣΥΝΔΕΣΗ ΚΟΥΜΠΙΩΝ
     if (sendButton) {
         sendButton.onclick = function(e) {
             e.preventDefault();
-            // ... λογική αποστολής μηνύματος
         };
-    }   
-
- // 3. ΛΟΓΙΚΗ SOCKETIO - ΑΥΤΟ ΠΡΕΠΕΙ ΝΑ ΠΡΟΣΤΕΘΕΙ
+    }
+});
+    // 4. 🟢 ΟΛΗ Η ΛΟΓΙΚΗ SOCKETIO (ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ ΕΔΩ!)
     socket.on('connect', () => {
         console.log('Connected to chat server!');
     });
     
     // 🚨 1. ΗΧΟΣ ΜΗΝΥΜΑΤΟΣ
-    const notificationSound = new Audio('/static/sounds/notification.mp3'); // Υποθέτουμε ότι υπάρχει αυτό το αρχείο
+    const notificationSound = new Audio('/static/sounds/notification.mp3');
     notificationSound.volume = 0.5;
-
     // 🚨 2. ΧΕΙΡΙΣΜΟΣ ΝΕΟΥ ΜΗΝΥΜΑΤΟΣ
     socket.on('new_message', function(data) {
         const messageDiv = document.createElement('div');
