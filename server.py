@@ -439,7 +439,7 @@ def check_login():
         return jsonify({'logged_in': False}), 401 # 401 Unauthorized
 
 @app.route('/admin_panel')
-# @requires_role('owner', 'admin')
+@requires_role('owner', 'admin')
 def admin_panel():
     """Εμφανίζει το βασικό Admin Panel με τη λίστα των χρηστών."""
     with app.app_context():
