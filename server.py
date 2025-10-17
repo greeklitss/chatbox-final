@@ -496,10 +496,11 @@ def get_settings():
     
     return jsonify(settings_data)
 
+
+
 @app.route('/api/admin/set_setting', methods=['POST'])
-@requires_role('owner') # Μόνο ο Owner μπορεί να αλλάξει ρυθμίσεις
+@requires_role('owner') 
 def set_setting():
-    """Επιτρέπει στον Owner να ορίσει/αλλάξει μια ρύθμιση (π.χ. feature toggle)."""
     data = request.get_json()
     key = data.get('key')
     value = data.get('value')
@@ -508,27 +509,31 @@ def set_setting():
         return jsonify({'success': False, 'error': 'Missing key or value'}), 400
 
     try:
-
-    with app.app_context():
-        # Χρησιμοποιούμε db.session.get() με βάση το primary key 'key'
-           setting = db.session.execute(
+        # Όλες οι γραμμές εδώ έχουν μία εσοχή
+        with app.app_context():
+            # Αναζήτηση ρύθμισης
+            setting = db.session.execute(
                 db.select(Setting).filter_by(key=key)
-            ).scalar_one_or_none()        
-    if setting:
-            setting.value = value
-        else:
-            setting = Setting(id=key, key=key, value=value)
-            db.session.add(setting)
-        
-        db.session.commit()
+            ).scalar_one_or_none()
+            
+            if setting:
+                # Ενημέρωση αν υπάρχει
+                setting.value = value
+            else:
+                # Δημιουργία νέας ρύθμισης (με id=key)
+                setting = Setting(id=key, key=key, value=value)
+                db.session.add(setting) 
+                
+            db.session.commit()
+            
+            # Ενημερώνουμε όλους μέσω SocketIO
+            socketio.emit('setting_updated', {'key': key, 'value': value}, room='chat')
 
-        # Ενημερώνουμε όλους για την αλλαγή (π.χ. αλλαγή χρώματος θέματος)
-        socketio.emit('setting_updated', {'key': key, 'value': value}, room='chat')
-
-           return jsonify({'success': True, 'message': f'Setting {key} updated.'})
+            # Αυτή η γραμμή επιστρέφει το επιτυχές αποτέλεσμα
+            return jsonify({'success': True, 'message': f'Setting {key} updated.'})
 
     except Exception as e:
-        # 🚨 ΣΩΣΤΗ ΕΣΟΧΗ για το except block
+        # Όλες οι γραμμές εδώ έχουν μία εσοχή
         db.session.rollback()
         print(f"Error saving setting {key}: {e}")
         return jsonify({'success': False, 'error': 'Internal server error during save.'}), 500
