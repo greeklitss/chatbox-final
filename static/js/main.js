@@ -88,9 +88,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (msg) {
                 socket.emit('message', { msg: msg });
                 messageInput.value = '';
-            }
-        });
-    }
+           }
+        }); // 🟢 ΠΡΟΣΘΗΚΗ: Κλείνει το addEventListener
+    } // 🟢 Κλείνει το if (sendButton)
+
 
     // Γ. Keydown Listener
     messageInput.addEventListener('keydown', (e) => {
