@@ -1,258 +1,243 @@
 <html>
 <head>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
-    <title>AkoY Me</title>
-	
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+    <title>AkoY Me Chat</title>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
- 
-    /* 🚨 ΔΙΟΡΘΩΣΕΙΣ ΓΙΑ ΔΙΑΦΑΝΕΙΑ (Transparency Fixes) */
-    
-    /* 1. Για τη λίστα των online χρηστών */
-    /* Χρησιμοποιήστε τους selectors που αντιστοιχούν στην "online category" */
-    #online-list, .online-users-container, .sidebar { 
-        background: none !important; /* Κάνει το φόντο διαφανές */
-        border: none !important;     /* Αφαιρεί τυχόν περιγράμματα */
-    }
-    
-    /* 2. Για τον player/χρήστη (Αφαίρεση του πράσινου φόντου) */
-    /* Χρησιμοποιήστε τους selectors που αντιστοιχούν στον "player" */
-    .player-container, .user-info-panel, .chat-header {
-        background: none !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-  
-        /* --- GLOBAL & STRUCTURE --- */ 
+        /* 🚨 NEW FUNKY POP THEME */
         :root { 
-            --primary-accent: #FF0066; /* Hot Pink/Magenta (Neon) */ 
-            --secondary-accent: #39FF14; /* Neon Green */ 
-            --text-color: #F0F0F0; 
-            --link-color: #64FFDA;
+            --primary-color: #FF0066;      /* Hot Pink/Magenta */
+            --secondary-color: #00FFCC;    /* Bright Cyan/Turquoise */
+            --background-color: #FFEBEB;   /* Very Pale Pink Background */
+            --chatbox-bg: #FFFFFF;         /* White Chat Area */
+            --input-bg: #FFFFFF;
+            --border-color: #FF77A9;       /* Medium Pink Border */
+            --text-color: #333333;
+            --button-color: #FFCC00;      /* Yellow/Gold Accent */
+            --shadow-light: 0 5px 15px rgba(255, 0, 102, 0.4);
+            --bubble-radius: 25px;
+
+            /* Προσαρμογή των παλιών ονομάτων μεταβλητών για το Radio Player CSS */
+            --primary-accent: var(--primary-color);
+            --secondary-accent: var(--secondary-color);
         }
 
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #121212;
+            background-color: var(--background-color); 
             color: var(--text-color);
             margin: 0;
-            padding-top: 120px; 
-            background-image: url("{{ url_for('static', filename='akoyme_background.png') }}"); 
-            background-size: cover; 
-            background-attachment: fixed; 
-            background-position: center;
-            height: 100vh;
-            overflow: hidden; 
+            padding: 20px;
+            /* 🚨 ΚΡΙΣΙΜΟ: Προσθήκη padding-top για το σταθερό header και τον player */
+            padding-top: calc(50px + 65px + 10px); /* header (50) + player (65) + margin */
         }
-        
-        .container {
-            width: 100%; 
-            height: calc(100% - 140px); 
+
+        /* --- HEADER & RADIO PLAYER STYLES (Προσαρμοσμένα στο Funky Theme) --- */
+        #header {	
+            position: fixed;	
+            top: 0;	
+            left: 0;	
+            width: 100%;	
+            /* Χρησιμοποιούμε primary color με διαφάνεια */
+            background-color: rgba(255, 0, 102, 0.95); 
+            padding: 10px 20px;	
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            display: flex;	
+            justify-content: space-between;	
+            align-items: center;	
+            z-index: 1000;	
+            border-bottom: 2px solid var(--secondary-accent);	
+            height: 50px;	
+            box-sizing: border-box;	
+        }
+        #header h1 {	
+            margin: 0;	
+            color: var(--secondary-accent);	
+            font-size: 1.5em;	
+            /* Νέα σκιά που ταιριάζει στο θέμα */
+            text-shadow: 0 0 5px var(--secondary-color);	
+            letter-spacing: 2px;
+        }
+
+        #radio-player-container {
+            position: fixed;	
+            top: 70px; /* 50px header + 20px padding (πρέπει να ήταν 50px + 20px) */
+            left: 0;
+            width: 100%;
+            height: 65px;	
+            background-color: rgba(0, 0, 0, 0.9);	
+            z-index: 999;	
+            padding: 5px 0;	
+            box-sizing: border-box;
+            border-bottom: 2px solid var(--primary-accent);
+            
             display: flex;
             flex-direction: column;
-            position: relative;
+            align-items: center;	
+            justify-content: center;
+        }
+        
+        /* Styling για το Audio Player */
+        #audio-stream {
+            width: 90%;	
+            /* Προσαρμογή: Αφαιρούμε το 'invert(1) hue-rotate(180deg) saturate(3)'
+            γιατί ταίριαζε στο σκούρο θέμα. Το αφήνουμε default ή εφαρμόζουμε απλή σκιά. */
+            filter: none;
+            border: 1px solid var(--secondary-accent);
+            background-color: #333;	
+            border-radius: 4px;
+            box-shadow: 0 0 5px var(--secondary-accent);
         }
 
-        /* --- HEADER & RADIO PLAYER STYLES --- */
-        #header { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            background-color: rgba(20, 20, 20, 0.95); 
-            padding: 10px 20px; 
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            z-index: 20; 
-            border-bottom: 1px solid var(--primary-accent); 
-            height: 50px; 
-            box-sizing: border-box; 
+        .radio-metadata {
+            width: 90%;	
+            height: 30px;	
+            margin-top: 5px;	
+            overflow: hidden;	
+            white-space: nowrap;	
+            border: 1px solid var(--secondary-accent);	
+            box-shadow: 0 0 5px var(--secondary-accent);
+            text-align: center;	
+            line-height: 30px;	
+            background-color: rgba(0, 0, 0, 0.5);	
         }
 
-	#radio-player-container {
-        position: fixed; 
-        top: 50px; 
-        left: 0;
-        width: 100%;
-        height: 65px; 
-        background-color: rgba(0, 0, 0, 0.9); 
-        z-index: 1000; 
-        padding: 5px 0; 
-        box-sizing: border-box;
-        border-bottom: 2px solid var(--primary-accent);
+        .metadata-text {
+            color: var(--secondary-accent);	
+            font-size: 1.0em;	
+            font-weight: bold;
+            display: inline-block;
+        }
+        /* --- ΤΕΛΟΣ HEADER/RADIO STYLES --- */
+
+
+        /* Container και Chatbox Styles */
+        .chat-container {
+            max-width: 1000px;
+            height: 95vh;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            background-color: transparent;
+        }
+
+        #chatbox {
+            flex-grow: 1;
+            overflow-y: auto;
+            border: 3px solid var(--border-color);
+            background-color: var(--chatbox-bg); 
+            border-radius: var(--bubble-radius);
+            box-shadow: var(--shadow-light);
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        /* Input Area Styles */
+        #input-area {
+            background-color: var(--input-bg);
+            border: 3px solid var(--border-color);
+            border-radius: var(--bubble-radius);
+            padding: 10px;
+            display: flex;
+            align-items: flex-end;
+            box-shadow: var(--shadow-light);
+        }
+
+        /* Input/Textarea */
+        #message-input {
+            flex-grow: 1;
+            border: none;
+            resize: none;
+            font-size: 1em;
+            padding: 8px;
+            margin: 0 10px;
+            background-color: transparent;
+            color: var(--text-color);
+        }
+        #message-input:focus {
+            outline: none;
+        }
+
+        /* Button Styling (Funky Look) */
+        #input-area button {
+            background-color: var(--button-color);
+            color: var(--text-color); 
+            border: none;
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 0 3px;
+            transition: all 0.2s;
+        }
+        #input-area button:hover {
+            background-color: var(--primary-color);
+            color: #FFFFFF;
+            transform: scale(1.1);
+        }
+
+        /* Username Colors */
+        .role-owner { color: var(--primary-color); font-weight: 900; }
+        .role-admin { color: var(--secondary-color); font-weight: 700; }
         
-        display: flex;
-        flex-direction: column;
-        align-items: center; 
-        justify-content: center;
-    }
-    
-    /* Styling για το Audio Player */
-    #audio-stream {
-        width: 90%; 
-        /* Πειραματικό: Δοκιμή χρωματισμού */
-        filter: invert(1) hue-rotate(180deg) saturate(3); 
-        border: 1px solid var(--secondary-accent);
-        background-color: #333; 
-        border-radius: 4px;
-        box-shadow: 0 0 5px var(--secondary-accent);
-    }
-
-    .radio-metadata {
-        width: 90%; 
-        height: 30px; 
-        margin-top: 5px; 
-        overflow: hidden; 
-        white-space: nowrap; 
-        border: 1px solid var(--secondary-accent); 
-        box-shadow: 0 0 5px var(--secondary-accent);
-        text-align: center; 
-        line-height: 30px; 
-        background-color: rgba(0, 0, 0, 0.5); 
-    }
-
-    .metadata-text {
-        color: var(--secondary-accent); 
-        font-size: 1.0em; 
-        font-weight: bold;
-        display: inline-block;
-    }
-
-    #header h1 { 
-        margin: 0; 
-        color: var(--secondary-accent); 
-        font-size: 1.5em; 
-        text-shadow: 0 0 5px rgba(57, 255, 20, 0.5); 
-    }
-
-    .role-owner { 
-        color: #FFD700; 
-        font-weight: bold;
-        text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); 
-    }
-        
-    #chat-container {
-        margin-right: 250px; 
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-
-    #user-list-panel {
-        position: fixed;
-        top: 125px; 
-        right: 20px;
-        width: 220px;
-        height: calc(100vh - 150px); 
-        background-color: #1f1f1f;
-        border: 1px solid #333;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        padding: 10px;
-        overflow-y: auto;
-        z-index: 10;
-    }
-
-    #chatbox {
-        flex-grow: 1;
-        overflow-y: auto;
-        padding: 10px;
-        background-color: transparent; 
-        border-radius: 8px;
-        margin-bottom: 10px;
-    }
-        
-    #input-area {
-        display: flex;
-        padding: 10px;
-        margin-right: 250px; 
-        background-color: rgba(20, 20, 20, 0.8);
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: calc(100% - 250px); 
-        box-sizing: border-box;
-        border-top: 1px solid var(--primary-accent);
-    }
-    
-    /* Styles for buttons and input area */
-    #input-area button, #header button {
-        background-color: #333;
-        color: var(--primary-accent);
-        border: 1px solid var(--primary-accent);
-        padding: 8px 12px;
-        margin: 0 5px;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s, box-shadow 0.3s;
-    }
-
-    #message-input {
-        flex-grow: 1;
-        padding: 8px;
-        border: 1px solid #555;
-        border-radius: 5px;
-        background-color: #2b2b2b;
-        color: var(--text-color);
-        resize: none;
-        box-sizing: border-box;
-        margin-right: 5px;
-    }
+        /* 🚨 Transparency Fixes (αν χρειάζονται) */
+        #online-list, .online-users-container, .sidebar { 
+            background: none !important;
+            border: none !important;
+        }
     </style>
 </head>
-
 <body>
-    
-    <header id="header">
-        <h1>AkoY Me</h1>
-        <div id="user-info">
-            <div id="user-actions">
-                <button id="admin-button" style="display: none; margin-left: 10px;" onclick="window.location.href='/admin_panel'">Admin</button>
-                <button id="logout-button" style="margin-left: 10px;" onclick="window.location.href='/logout'"><i class="fas fa-sign-out-alt"></i> Logout</button>
-            </div>
-        </div>
-    </header>
-
-    <div id="radio-player-container">
-        <audio id="audio-stream" controls preload="none" src="https://uk24freenew.listen2myradio.com/live.mp3?typeportmount=s1_9254_stream_554111378">
-            Ο browser σας δεν υποστηρίζει το στοιχείο audio.
-        </audio>
-        
-        <div class="radio-metadata">
-            <span id="metadata-scroller" class="metadata-text">
-                [Metadata Placeholder]
-            </span>
-        </div>
-    </div> 
-    
-    <div class="container">
-        <div id="user-list-panel">
-            <h3>Users</h3>
-            </div>
-        
-        <div id="chat-container">
-            <div id="chatbox"></div>
-        </div>
-        
+<div id="header">
+    <h1>AkoY Me Chat</h1>
+    <div>
+        <button id="admin-button" onclick="window.location.href='/admin_panel'" style="display: none; margin-right: 10px;">
+            <i class="fas fa-user-shield"></i> Admin Panel
+        </button>
+        <button onclick="window.location.href='/logout'"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </div>
+</div>
+
+<div id="radio-player-container">
+    <audio id="audio-stream" controls preload="none">
+        <source src="YOUR_RADIO_STREAM_URL_HERE" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <div class="radio-metadata">
+        <span class="metadata-text" id="current-metadata">Αναμονή για πληροφορίες εκπομπής...</span>
+    </div>
+</div>
+
+<div class="chat-container">
+    
+    <div id="chatbox">
+        </div>
     
     <div id="input-area">
-        <button id="bold-button" title="Bold (Ctrl+B)"><i class="fas fa-bold"></i></button>
-        <button id="italic-button" title="Italic (Ctrl+I)"><i class="fas fa-italic"></i></button>
+        <button id="bold-button" title="Bold [b]"><i class="fas fa-bold"></i></button>
+        <button id="italic-button" title="Italic [i]"><i class="fas fa-italic"></i></button>
+        <button id="underline-button" title="Underline [u]"><i class="fas fa-underline"></i></button>
+        
+        <button id="url-button" title="Link [url]"><i class="fas fa-link"></i></button>
+        <button id="gif-button" title="GIF/Image Embed"><i class="fas fa-image"></i></button>
+        
         <button id="color-picker-button" title="Text Color"><i class="fas fa-palette"></i></button>
-        <input type="color" id="color-input" value="#FFFFFF" style="display: none;">
-        <button id="emoticon-button" title="Emoticons"><i class="fas fa-smile"></i></button>
+        <input type="color" id="color-input" value="#FF0066" style="display: none;">
+        
+        <button id="emoticon-button" title="Emoticons"><i class="fas fa-smile-wink"></i></button>
         
         <textarea id="message-input" placeholder="Type your message..." rows="1"></textarea>
+        
         <button id="send-button" title="Send (Enter)"><i class="fas fa-paper-plane"></i></button>
     </div>
+    
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -260,9 +245,8 @@
             
             if (audio) {
                 // 🚨 Αυτό κάνει το preload του stream πιο άμεσο και ρυθμίζει την ένταση.
-                // Ο χρήστης πρέπει να πατήσει το Play για να ακούσει.
                 audio.volume = 0.3; 
-                audio.load(); // Εξασφαλίζει ότι το stream είναι έτοιμο για αναπαραγωγή
+                audio.load();
             }
             
             // --- ΕΛΕΓΧΟΣ ΡΟΛΟΥ ΧΡΗΣΤΗ ΓΙΑ ΤΟ ADMIN BUTTON ---
@@ -275,6 +259,6 @@
             // --------------------------------------------------------
         });
     </script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</div>
 </body>
 </html>
