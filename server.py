@@ -98,7 +98,6 @@ class User(db.Model):
     password_hash = db.Column(db.String(256), nullable=True) # Για local login
     avatar_url = db.Column(db.String(256), nullable=True)
     last_seen = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc)) 
-# 🚨 ΠΡΟΣΘΗΚΗ & ΔΙΟΡΘΩΣΗ
     is_active = db.Column(db.Boolean, default=True)
 
     def set_password(self, password):
@@ -114,15 +113,14 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     text = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc)) # 🚨 ΔΙΟΡΘΩΣΗ: Με timezone.utc
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc)) 
     user = db.relationship('User', backref='messages')
 
-# 🚨 ΔΙΟΡΘΩΜΕΝΟ SETTING MODEL
+# 🚨 ΔΙΟΡΘΩΜΕΝΟ SETTING MODEL: Χρησιμοποιεί το 'key' ως PK και μεγαλύτερο 'value' field
 class Setting(db.Model):
     __tablename__ = 'setting'
-    # 🚨 ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε το 'key' ως Primary Key (standard για key-value store)
     key = db.Column(db.String(100), primary_key=True)
-    value = db.Column(db.String(256), nullable=False) # Αυξάνουμε το μέγεθος του value
+    value = db.Column(db.String(256), nullable=False) # Αυξάνουμε το μέγεθος
 
 class Emoticon(db.Model):
     __tablename__ = 'emoticon'
@@ -200,7 +198,7 @@ def chat():
     
     with app.app_context():
         user = get_current_user_or_guest() # 🚨 ΝΕΑ ΧΡΗΣΗ: Υποστήριξη Guest
-        # 🚨 Τώρα φορτώνουμε τα settings μέσω API, οπότε δεν χρειάζεται να τα περάσουμε εδώ
+        # 🚨 ΔΙΟΡΘΩΣΗ: Αφαιρούμε την ανάγνωση ρυθμίσεων από εδώ, θα γίνεται μέσω AJAX/API
         # current_settings = {s.key: s.value for s in Setting.query.all()}
         
     return render_template('chat.html', user=user) # Αφαιρέθηκε το current_settings
@@ -474,7 +472,7 @@ def set_user_role():
         else:
             return jsonify({'success': False, 'message': 'User not found.'}), 404
 
-# --- ΝΕΕΣ SETTINGS ROUTES ΓΙΑ ΤΟ ADMIN PANEL ---
+# --- ΝΕΕΣ SETTINGS ROUTES ΓΙΑ ΤΟ ADMIN PANEL (ΕΠΑΝΑΦΕΡΟΝΤΑΙ) ---
 
 @app.route('/api/settings', methods=['GET'])
 def get_settings():
@@ -484,8 +482,7 @@ def get_settings():
         try:
             settings = db.session.execute(db.select(Setting)).scalars().all()
         except ProgrammingError:
-            # Αν ο πίνακας δεν υπάρχει ακόμα
-            settings = [] 
+            settings = [] # Αν ο πίνακας δεν υπάρχει
             
         for setting in settings:
             # Μετατρέπουμε τα strings 'True'/'False' σε booleans (ή κρατάμε το string)
@@ -511,7 +508,6 @@ def set_setting():
         return jsonify({'success': False, 'error': 'Missing key or value'}), 400
 
     with app.app_context():
-        # Χρησιμοποιούμε merge ή upsert λογική
         # Χρησιμοποιούμε db.session.get() με βάση το primary key 'key'
         setting = db.session.get(Setting, key)
         if setting:
