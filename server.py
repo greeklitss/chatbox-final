@@ -117,11 +117,12 @@ class Message(db.Model):
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc)) # 🚨 ΔΙΟΡΘΩΣΗ: Με timezone.utc
     user = db.relationship('User', backref='messages')
 
+# 🚨 ΔΙΟΡΘΩΜΕΝΟ SETTING MODEL
 class Setting(db.Model):
     __tablename__ = 'setting'
-    id = db.Column(db.String(50), primary_key=True)
-    key = db.Column(db.String(100), unique=True, nullable=False)
-    value = db.Column(db.String(50), nullable=False)
+    # 🚨 ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε το 'key' ως Primary Key (standard για key-value store)
+    key = db.Column(db.String(100), primary_key=True)
+    value = db.Column(db.String(256), nullable=False) # Αυξάνουμε το μέγεθος του value
 
 class Emoticon(db.Model):
     __tablename__ = 'emoticon'
@@ -199,9 +200,10 @@ def chat():
     
     with app.app_context():
         user = get_current_user_or_guest() # 🚨 ΝΕΑ ΧΡΗΣΗ: Υποστήριξη Guest
-        current_settings = {s.key: s.value for s in Setting.query.all()}
+        # 🚨 Τώρα φορτώνουμε τα settings μέσω API, οπότε δεν χρειάζεται να τα περάσουμε εδώ
+        # current_settings = {s.key: s.value for s in Setting.query.all()}
         
-    return render_template('chat.html', user=user, current_settings=current_settings)
+    return render_template('chat.html', user=user) # Αφαιρέθηκε το current_settings
 
 
 # --- LOCAL LOGIN (Η ΣΩΣΤΗ ΔΙΑΔΡΟΜΗ ΓΙΑ ΣΥΝΔΕΣΗ) ---
@@ -382,13 +384,18 @@ def handle_connect():
 
 @socketio.on('send_message')
 def handle_send_message(data):
-    # ...
+    user_id = session.get('user_id')
+    user_role = session.get('role')
+    display_name = session.get('display_name', 'System')
+    message_text = data.get('msg')
     
+    if not user_id or not message_text:
+        return # Δεν επιτρέπουμε μηνύματα χωρίς αναγνωριστικό ή κείμενο
+
     # 🚨 1. Αποθήκευση του μηνύματος
     if user_role != 'guest':
         try:
             with app.app_context():
-                # ...
                 new_message = Message(
                     user_id=user_id, 
                     text=message_text,
@@ -405,8 +412,9 @@ def handle_send_message(data):
         'message': message_text,
         'username': display_name,
         'role': user_role, # ΚΡΙΣΙΜΟ: Στέλνουμε το ρόλο για χρωματισμό
-        'timestamp': datetime.now().strftime('%H:%M:%S')  # <-- ΑΥΤΗ ΕΙΝΑΙ Η ΓΡΑΜΜΗ 484
+        'timestamp': datetime.now().strftime('%H:%M:%S')  
     }, broadcast=True)
+
 @socketio.on('disconnect')
 def handle_disconnect():
     """Διαχειρίζεται την αποσύνδεση ενός χρήστη."""
@@ -418,25 +426,20 @@ def handle_disconnect():
                 print(f"User {user.display_name} ({user.id}) disconnected.")
                 
                 # Ενημέρωση όλων ότι αποσυνδέθηκε
-                emit('status', {'msg': f'{user.display_name} has left the room.'}, room='chat', include_self=False)# ...
+                emit('status', {'msg': f'{user.display_name} has left the room.'}, room='chat', include_self=False)
 
 
-# --- ADMIN PANEL ROUTES ---
-
-# ... (υπάρχοντα imports) ...
+# --- ADMIN PANEL & SETTINGS ROUTES ---
 
 @app.route('/check_login')
 def check_login():
-    """
-    Ελέγχει αν υπάρχει ενεργή συνεδρία χρήστη.
-    Χρησιμοποιείται από το client-side JS (π.χ., admin_panel.html) για έλεγχο.
-    """
+    """Ελέγχει αν υπάρχει ενεργή συνεδρία χρήστη."""
     if 'user_id' in session:
         # Επιστρέφει επιτυχία αν υπάρχει user_id στη session
-        return jsonify({'logged_in': True, 'user_id': session['user_id']}), 200
+        return jsonify({'logged_in': True, 'user_id': session['user_id'], 'role': session.get('role')}), 200
     else:
         # Επιστρέφει αποτυχία αν ο χρήστης δεν είναι συνδεδεμένος
-        return jsonify({'logged_in': False}), 401 # 401 Unauthorized
+        return jsonify({'logged_in': False}), 401 
 
 @app.route('/admin_panel')
 @requires_role('owner', 'admin')
@@ -471,9 +474,59 @@ def set_user_role():
         else:
             return jsonify({'success': False, 'message': 'User not found.'}), 404
 
-# server.py
+# --- ΝΕΕΣ SETTINGS ROUTES ΓΙΑ ΤΟ ADMIN PANEL ---
 
-# ... (υπάρχων κώδικας, μετά το set_user_role) ...
+@app.route('/api/settings', methods=['GET'])
+def get_settings():
+    """Παρέχει όλες τις ρυθμίσεις στο frontend (για Admin Panel & Chat)."""
+    settings_data = {}
+    with app.app_context():
+        try:
+            settings = db.session.execute(db.select(Setting)).scalars().all()
+        except ProgrammingError:
+            # Αν ο πίνακας δεν υπάρχει ακόμα
+            settings = [] 
+            
+        for setting in settings:
+            # Μετατρέπουμε τα strings 'True'/'False' σε booleans (ή κρατάμε το string)
+            if setting.value.lower() == 'true':
+                val = True
+            elif setting.value.lower() == 'false':
+                val = False
+            else:
+                val = setting.value
+            settings_data[setting.key] = val
+    
+    return jsonify(settings_data)
+
+@app.route('/api/admin/set_setting', methods=['POST'])
+@requires_role('owner') # Μόνο ο Owner μπορεί να αλλάξει ρυθμίσεις
+def set_setting():
+    """Επιτρέπει στον Owner να ορίσει/αλλάξει μια ρύθμιση (π.χ. feature toggle)."""
+    data = request.get_json()
+    key = data.get('key')
+    value = data.get('value')
+
+    if not key or value is None:
+        return jsonify({'success': False, 'error': 'Missing key or value'}), 400
+
+    with app.app_context():
+        # Χρησιμοποιούμε merge ή upsert λογική
+        # Χρησιμοποιούμε db.session.get() με βάση το primary key 'key'
+        setting = db.session.get(Setting, key)
+        if setting:
+            setting.value = value
+        else:
+            setting = Setting(key=key, value=value)
+            db.session.add(setting)
+        
+        db.session.commit()
+        
+        # Ενημερώνουμε όλους για την αλλαγή (π.χ. αλλαγή χρώματος θέματος)
+        socketio.emit('setting_updated', {'key': key, 'value': value}, room='chat')
+
+        return jsonify({'success': True, 'message': f'Setting {key} updated.'})
+
 
 # --- SETTINGS ROUTES (ΟΜΑΔΑ 3 - ΑΣΠΡΟ) ---
 @app.route('/settings/set_avatar_url', methods=['POST'])
