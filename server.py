@@ -506,6 +506,7 @@ def set_setting():
 
     if not key or value is None:
         return jsonify({'success': False, 'error': 'Missing key or value'}), 400
+
     try:
 
     with app.app_context():
@@ -524,14 +525,13 @@ def set_setting():
         # Ενημερώνουμε όλους για την αλλαγή (π.χ. αλλαγή χρώματος θέματος)
         socketio.emit('setting_updated', {'key': key, 'value': value}, room='chat')
 
-        return jsonify({'success': True, 'message': f'Setting {key} updated.'})
+           return jsonify({'success': True, 'message': f'Setting {key} updated.'})
 
     except Exception as e:
+        # 🚨 ΣΩΣΤΗ ΕΣΟΧΗ για το except block
         db.session.rollback()
-        # Εμφάνιση του πραγματικού σφάλματος στην κονσόλα του server
         print(f"Error saving setting {key}: {e}")
         return jsonify({'success': False, 'error': 'Internal server error during save.'}), 500
-
         
 # --- SETTINGS ROUTES (ΟΜΑΔΑ 3 - ΑΣΠΡΟ) ---
 @app.route('/settings/set_avatar_url', methods=['POST'])
