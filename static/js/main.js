@@ -98,5 +98,5 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             sendButton.click();
         }
-    });
+
 });
