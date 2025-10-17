@@ -51,7 +51,18 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('status', (data) => {
         displayStatus(data);
     });
+// ... μέσα στο document.addEventListener('DOMContentLoaded', ...)
+
+socket.on('setting_updated', function(data) {
+    console.log(`Setting updated: ${data.key} = ${data.value}`);
     
+    if (data.key === 'theme_color') {
+        document.documentElement.style.setProperty('--primary-accent', data.value);
+    }
+    // Προσθέστε εδώ λογική για οποιεσδήποτε άλλες ρυθμίσεις (π.χ., font_size)
+});
+    
+
     // 5. ΛΕΙΤΟΥΡΓΙΑ FORMATTING (BBCode)
     function applyFormatting(tag, placeholder) {
         const value = messageInput.value;
