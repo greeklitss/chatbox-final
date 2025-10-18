@@ -498,6 +498,8 @@ def get_settings():
 
 
 
+# server.py (περίπου γραμμή 505)
+
 @app.route('/api/admin/set_setting', methods=['POST'])
 @requires_role('owner') 
 def set_setting():
@@ -508,32 +510,27 @@ def set_setting():
     if not key or value is None:
         return jsonify({'success': False, 'error': 'Missing key or value'}), 400
 
-    try:
-        # Όλες οι γραμμές εδώ έχουν μία εσοχή
-        with app.app_context():
-            # Αναζήτηση ρύθμισης
+    try: # <--- Γραμμή 510
+        with app.app_context(): # <--- Γραμμή 512 (Πρέπει να έχει μία εσοχή από το 'try')
+            # 2η εσοχή: Λογική μέσα στο app_context
             setting = db.session.execute(
                 db.select(Setting).filter_by(key=key)
             ).scalar_one_or_none()
             
             if setting:
-                # Ενημέρωση αν υπάρχει
                 setting.value = value
             else:
-                # Δημιουργία νέας ρύθμισης (με id=key)
                 setting = Setting(id=key, key=key, value=value)
                 db.session.add(setting) 
                 
             db.session.commit()
             
-            # Ενημερώνουμε όλους μέσω SocketIO
             socketio.emit('setting_updated', {'key': key, 'value': value}, room='chat')
 
-            # Αυτή η γραμμή επιστρέφει το επιτυχές αποτέλεσμα
             return jsonify({'success': True, 'message': f'Setting {key} updated.'})
 
-    except Exception as e:
-        # Όλες οι γραμμές εδώ έχουν μία εσοχή
+    except Exception as e: # <--- Πρέπει να είναι στην ίδια εσοχή με το 'try'
+        # 2η εσοχή: Λογική μέσα στο except
         db.session.rollback()
         print(f"Error saving setting {key}: {e}")
         return jsonify({'success': False, 'error': 'Internal server error during save.'}), 500
