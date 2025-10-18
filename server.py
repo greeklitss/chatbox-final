@@ -125,7 +125,7 @@ class Setting(db.Model):
     value = db.Column(db.String(255), nullable=True) # Μπορεί να αποθηκεύει 'True'/'False' ως string
 
     def __repr__(self):
-        return f"<Setting {self.key}: {self.value}>
+        return f"<Setting {self.key}: {self.value}>"
 
 class Emoticon(db.Model):
     __tablename__ = 'emoticon'
