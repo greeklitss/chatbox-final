@@ -81,7 +81,9 @@ oauth.register(
 socketio = SocketIO(
     app, 
     cors_allowed_origins="*", 
-    async_mode='eventlet', 
+    async_mode='eventlet',
+# 🚨 ΚΡΙΣΙΜΟ: ΠΡΟΣΘΕΣΤΕ ΑΥΤΗ ΤΗ ΓΡΑΜΜΗ
+    manage_session=False, 
     # 🚨 ΝΕΑ ΠΡΟΣΘΗΚΗ: Βοηθάει με τους Load Balancers
     path='/socket.io/', 
     transports=['websocket', 'polling'] 
