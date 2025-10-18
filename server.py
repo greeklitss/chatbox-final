@@ -120,9 +120,12 @@ class Message(db.Model):
 
 # 🚨 ΔΙΟΡΘΩΜΕΝΟ SETTING MODEL: Χρησιμοποιεί το 'key' ως PK και μεγαλύτερο 'value' field
 class Setting(db.Model):
-    __tablename__ = 'setting'
-    key = db.Column(db.String(100), primary_key=True)
-    value = db.Column(db.String(256), nullable=False) # Αυξάνουμε το μέγεθος
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(80), unique=True, nullable=False)
+    value = db.Column(db.String(255), nullable=True) # Μπορεί να αποθηκεύει 'True'/'False' ως string
+
+    def __repr__(self):
+        return f"<Setting {self.key}: {self.value}>
 
 class Emoticon(db.Model):
     __tablename__ = 'emoticon'
@@ -482,40 +485,44 @@ def get_settings():
 # server.py (περίπου γραμμή 505)
 
 @app.route('/api/admin/set_setting', methods=['POST'])
-@requires_role('owner') 
+@requires_role('owner', 'admin') # 🚨 Βεβαιωθείτε ότι ο ρόλος σας είναι σωστός
 def set_setting():
     data = request.get_json()
     key = data.get('key')
     value = data.get('value')
-
+    
     if not key or value is None:
-        return jsonify({'success': False, 'error': 'Missing key or value'}), 400
+        return jsonify({'success': False, 'error': 'Missing key or value.'}), 400
 
-    try: # <--- Γραμμή 510
-        with app.app_context(): # <--- Γραμμή 512 (Πρέπει να έχει μία εσοχή από το 'try')
-            # 2η εσοχή: Λογική μέσα στο app_context
-            setting = db.session.execute(
-                db.select(Setting).filter_by(key=key)
-            ).scalar_one_or_none()
+    try:
+        with app.app_context():
+            # 1. Προσπαθούμε να βρούμε την υπάρχουσα ρύθμιση
+            # Χρησιμοποιούμε text() για ευκολότερο συμβατό SQL
+            stmt = text("SELECT id, value FROM setting WHERE key = :key").bindparams(key=key)
+            result = db.session.execute(stmt).fetchone()
             
-            if setting:
-                setting.value = value
+            if result:
+                # 2. Αν υπάρχει, την ενημερώνουμε (UPDATE)
+                update_stmt = text("UPDATE setting SET value = :value WHERE key = :key").bindparams(value=value, key=key)
+                db.session.execute(update_stmt)
             else:
-                setting = Setting(id=key, key=key, value=value)
-                db.session.add(setting) 
-                
+                # 3. Αν δεν υπάρχει, την εισάγουμε (INSERT)
+                insert_stmt = text("INSERT INTO setting (key, value) VALUES (:key, :value)").bindparams(key=key, value=value)
+                db.session.execute(insert_stmt)
+            
+            # 4. Ολοκληρώνουμε τη συναλλαγή
             db.session.commit()
             
+            # 5. Ενημερώνουμε όλους τους συνδεδεμένους χρήστες για την αλλαγή
             socketio.emit('setting_updated', {'key': key, 'value': value}, room='chat')
-
+            
             return jsonify({'success': True, 'message': f'Setting {key} updated.'})
 
-    except Exception as e: # <--- Πρέπει να είναι στην ίδια εσοχή με το 'try'
-        # 2η εσοχή: Λογική μέσα στο except
+    except Exception as e:
         db.session.rollback()
-        print(f"Error saving setting {key}: {e}")
-        return jsonify({'success': False, 'error': 'Internal server error during save.'}), 500
-        
+        # 🚨 ΚΑΤΑΓΡΑΦΗ ΛΑΘΟΥΣ: Αυτό θα εμφανιστεί στα logs του Render
+        print(f"Database Error setting {key}: {e}") 
+        return jsonify({'success': False, 'error': 'Internal database error during save.'}), 500        
 # --- SETTINGS ROUTES (ΟΜΑΔΑ 3 - ΑΣΠΡΟ) ---
 @app.route('/settings/set_avatar_url', methods=['POST'])
 def set_avatar_url():
