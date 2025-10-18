@@ -353,79 +353,58 @@ def logout():
 
 # --- SOCKETIO EVENTS ---
 
+# server.py (Προσθήκη στο τέλος του αρχείου, πριν το if __name__ == '__main__':)
+
 @socketio.on('connect')
 def handle_connect():
-    """Διαχειρίζεται τη σύνδεση ενός χρήστη στο SocketIO."""
-    if 'user_id' in session:
-        with app.app_context():
-            user = get_current_user_or_guest() # 🚨 ΑΛΛΑΓΗ ΕΔΩ: Υποστήριξη Guest
-            if user:
-                # Χρησιμοποιούμε το user.id ως όνομα δωματίου για το προσωπικό κανάλι του χρήστη
-                # και τους βάζουμε στο γενικό δωμάτιο 'chat'
-                join_room('chat') 
-                print(f"User {user.display_name} ({user.id}) connected and joined 'chat' room.")
-                
-                # Ενημέρωση του χρήστη ότι συνδέθηκε
-                emit('status', {'msg': f'Welcome, {user.display_name}. You are connected to the chat.'})
-                
-                # Ενημέρωση όλων (εκτός από τον ίδιο) ότι συνδέθηκε
-                emit('status', {'msg': f'{user.display_name} has joined the room.'}, room='chat', include_self=False)
-            else:
-                print("Session found, but user not found in DB. Disconnecting.")
-                # Αν δεν βρεθεί ο χρήστης, αποσυνδέουμε το socket
-                return False 
-    else:
-        # Αν δεν υπάρχει session, δεν επιτρέπουμε τη σύνδεση SocketIO
-        print("Unauthenticated user tried to connect to SocketIO. Disconnecting.")
-        return False
+    # Αυτό εκτελείται μόλις ο client συνδεθεί, αλλά δεν μπαίνει ακόμα στο chat room.
+    print(f'Client connected: {request.sid}')
 
-
-@socketio.on('send_message')
-def handle_send_message(data):
-    user_id = session.get('user_id')
-    user_role = session.get('role')
-    display_name = session.get('display_name', 'System')
-    message_text = data.get('msg')
+@socketio.on('join')
+def on_join():
+    """Χειρισμός σύνδεσης στο κύριο chat room."""
+    # Κάνουμε τον χρήστη join στο 'chat' room για να λαμβάνει μηνύματα
+    join_room('chat') 
     
-    if not user_id or not message_text:
-        return # Δεν επιτρέπουμε μηνύματα χωρίς αναγνωριστικό ή κείμενο
+    # 🚨 Ενημερώνουμε όλους ότι συνδέθηκε ο χρήστης
+    if session.get('username'):
+        username = session['username']
+        # Ενημερώνουμε τους άλλους, αλλά όχι τον ίδιο (include_self=False)
+        emit('status_message', {'msg': f'{username} joined the chat.'}, 
+             room='chat', include_self=False)
+    
+    print(f"{session.get('username')} joined room 'chat'")
+    # (Εδώ θα έπρεπε να καλείται μια συνάρτηση για την ενημέρωση online list)
 
-    # 🚨 1. Αποθήκευση του μηνύματος
-    if user_role != 'guest':
-        try:
-            with app.app_context():
-                new_message = Message(
-                    user_id=user_id, 
-                    text=message_text,
-                    # 🚨 ΤΡΟΠΟΠΟΙΩ: Χρησιμοποιώ timezone.utc
-                    timestamp=datetime.now(timezone.utc) 
-                )
-                db.session.add(new_message)
-                db.session.commit()
-        except Exception as e:
-            print(f"Error saving message: {e}") 
-            
-   # 🚨 2. Εκπομπή του μηνύματος στους clients (για εμφάνιση και ήχο)
-    emit('new_message', {
-        'message': message_text,
-        'username': display_name,
-        'role': user_role, # ΚΡΙΣΙΜΟ: Στέλνουμε το ρόλο για χρωματισμό
-        'timestamp': datetime.now().strftime('%H:%M:%S')  
-    }, broadcast=True)
-
+@socketio.on('message')
+def handle_message(data):
+    """Χειρισμός incoming μηνυμάτων και εκπομπή τους."""
+    user_id = session.get('user_id')
+    username = session.get('username')
+    
+    if not user_id or not username:
+        return # Δεν επιτρέπουμε μηνύματα χωρίς ταυτότητα
+        
+    msg = data.get('msg')
+    
+    # 🚨 ΕΚΠΟΜΠΗ: Στέλνουμε το μήνυμα πίσω σε ΟΛΟΥΣ τους χρήστες στο 'chat' room
+    # Το 'message' event θα το διαχειριστεί ο client (main.js)
+    emit('message', {
+        'user_id': user_id,
+        'username': username,
+        'msg': msg,
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    }, room='chat')
+    
 @socketio.on('disconnect')
 def handle_disconnect():
-    """Διαχειρίζεται την αποσύνδεση ενός χρήστη."""
-    if 'user_id' in session:
-        with app.app_context():
-            user = get_current_user_or_guest() # 🚨 ΑΛΛΑΓΗ ΕΔΩ: Υποστήριξη Guest
-            if user:
-                leave_room('chat')
-                print(f"User {user.display_name} ({user.id}) disconnected.")
-                
-                # Ενημέρωση όλων ότι αποσυνδέθηκε
-                emit('status', {'msg': f'{user.display_name} has left the room.'}, room='chat', include_self=False)
-
+    """Χειρισμός αποσύνδεσης χρήστη."""
+    username = session.get('username', 'A Guest')
+    leave_room('chat')
+    
+    # 🚨 Ενημερώνουμε όλους ότι αποσυνδέθηκε ο χρήστης
+    emit('status_message', {'msg': f'{username} left the chat.'}, room='chat')
+    print(f'Client disconnected: {request.sid}')
 
 # --- ADMIN PANEL & SETTINGS ROUTES ---
 
