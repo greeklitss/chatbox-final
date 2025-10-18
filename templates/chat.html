@@ -32,7 +32,7 @@
             margin: 0;
             padding: 20px;
             /* 🚨 ΔΙΟΡΘΩΣΗ: Προσθήκη ΕΙΚΟΝΑΣ ΦΟΝΤΟΥ */
-            background-color: #121212; /* Fallback dark color */
+            background-color: transparent !important; /* Βεβαιώνει ότι δεν υπάρχει καμία επικάλυψη */
             background-image: url("{{ url_for('static', filename='akoyme_background.png') }}"); 
             background-size: cover; 
             background-position: center;
@@ -73,7 +73,7 @@
             left: 0;
             width: 100%;
             height: 65px;	
-            background-color: rgba(0, 0, 0, 0.9);	
+            background-color: transparent !important;	
             z-index: 999;	
             padding: 5px 0;	
             box-sizing: border-box;
@@ -131,7 +131,7 @@
             overflow-y: auto;
             border: 3px solid var(--border-color);
             /* 🚨 ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε ανοιχτό φόντο με ελαφριά διαφάνεια ώστε να φαίνεται η εικόνα φόντου */
-            background-color: rgba(255, 255, 255, 0.95); 
+            background-color: transparent !important; 
             border-radius: var(--bubble-radius);
             box-shadow: var(--shadow-light);
             padding: 15px;
