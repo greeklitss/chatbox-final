@@ -361,27 +361,20 @@ def logout():
 
 # --- SOCKETIO EVENTS ---
 
+# server.py (Τοποθετήστε το στη θέση του υπάρχοντος @socketio.on('connect'))
+
 @socketio.on('connect')
 def handle_connect():
-    """
-    Χειρισμός σύνδεσης SocketIO.
-    🚨 ΚΡΙΣΙΜΟ: Επαναφορτώνει τη συνεδρία (Session) χρησιμοποιώντας το ID που στέλνει ο client.
-    """
+    # 🚨 1. Πιάνουμε το session_id που έστειλε το main.js
     s_id = request.args.get('session_id')
     
+    # 🚨 2. ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Φορτώνουμε τη session από το session_id
     if s_id:
-        # 🚨 Αυτά τα δύο βήματα επαναφέρουν τη συνεδρία από τη βάση (Flask-Session)
         session.sid = s_id
         session.load()
         
-        # Πλέον το session.get('username') είναι διαθέσιμο
-        print(f"SOCKETIO CONNECT: Session re-loaded for user {session.get('username')} (ID: {s_id})")
-    else:
-        print(f"SOCKETIO CONNECT: Client connected {request.sid}. No session ID provided. Relying on cookies.")
-    
-    # Αυτό εκτελείται μόλις ο client συνδεθεί, αλλά δεν μπαίνει ακόμα στο chat room.
-    print(f'Client connected: {request.sid}') User ID: {session.get("user_id")}')
-
+    # 🚨 3. ΔΙΟΡΘΩΣΗ SYNTAX ERROR: Όλο το κείμενο είναι μέσα στο print()
+    print(f'Client connected: {request.sid}, User ID: {session.get("user_id")}')
 
 @socketio.on('join')
 def on_join():
