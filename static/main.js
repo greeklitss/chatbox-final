@@ -1,27 +1,34 @@
 // static/js/main.js - ΟΡΙΣΤΙΚΑ ΔΙΟΡΘΩΜΕΝΟ
 
 document.addEventListener('DOMContentLoaded', () => {
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`); 
-    if (parts.length === 2) return parts.pop().split(';').shift();
-}
 
-// 🚨 1. Ανάκτηση του session ID (το όνομα του cookie είναι 'session')
-const sessionId = getCookie('session'); 
-
-
-// 2. 🟢 ΣΩΣΤΗ ΣΥΝΔΕΣΗ SOCKETIO 
-const socket = io({
-    path: '/socket.io/',
-    // 🚨 ΚΡΙΣΙΜΟ: Στέλνουμε το session ID στον server
-    query: {
-        session_id: sessionId 
+    // 🚨 1. ΛΟΓΙΚΗ ΑΝΑΚΤΗΣΗΣ COOKIE (ΠΡΙΝ ΤΗ ΣΥΝΔΕΣΗ SOCKET)
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`); 
+        if (parts.length === 2) return parts.pop().split(';').shift();
     }
-});
+    const sessionId = getCookie('session'); // Ανάκτηση του session ID (το όνομα του cookie είναι 'session')
+
+    // 🚨 2. ΣΩΣΤΗ ΣΥΝΔΕΣΗ SOCKETIO (ΜΕΤΑ ΤΟ SESSION ID)
+    const socket = io({
+        path: '/socket.io/',
+        // ΚΡΙΣΙΜΟ: Στέλνουμε το session ID στον server
+        query: {
+            session_id: sessionId 
+        }
+    });
+    
+    // 3. ΟΡΙΣΜΟΣ ΣΤΟΙΧΕΙΩΝ DOM (ΤΩΡΑ ΕΙΝΑΙ ΠΡΟΣΒΑΣΙΜΑ)
+    const chatbox = document.getElementById('chatbox');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    const colorInput = document.getElementById('color-input'); // <-- ΔΕΝ ΕΙΝΑΙ ΠΛΕΟΝ UNDEFINED
+    const notificationSound = new Audio('/static/sounds/notification.mp3');
+    notificationSound.volume = 0.5;
 
     // ----------------------------------------------------
-    // 3. 🟢 ΟΛΗ Η ΛΟΓΙΚΗ SOCKETIO ΕΙΝΑΙ ΕΔΩ ΜΕΣΑ
+    // 4. 🟢 ΟΛΗ Η ΛΟΓΙΚΗ SOCKETIO ΕΙΝΑΙ ΕΔΩ ΜΕΣΑ
     // ----------------------------------------------------
 
     // Σύνδεση με τον Server
@@ -56,7 +63,7 @@ const socket = io({
     });
 
     // ----------------------------------------------------
-    // 4. 🟢 ΛΕΙΤΟΥΡΓΙΑ ΚΟΥΜΠΙΩΝ / ΦΟΡΜΑΣ
+    // 5. 🟢 ΛΕΙΤΟΥΡΓΙΑ ΚΟΥΜΠΙΩΝ / ΦΟΡΜΑΣ
     // ----------------------------------------------------
 
     // Λειτουργία μορφοποίησης κειμένου

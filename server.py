@@ -10,7 +10,7 @@ from functools import wraps
 
 # --- ΒΙΒΛΙΟΘΗΚΕΣ ΓΙΑ DB & AUTH ---
 from werkzeug.middleware.proxy_fix import ProxyFix 
-from sqlalchemy import select # 🚨 ΠΡΟΣΘΕΣΤΕ ΑΥΤΟ
+from sqlalchemy import select 
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
 from werkzeug.security import generate_password_hash, check_password_hash 
@@ -106,7 +106,7 @@ class User(db.Model):
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password):
+    def check_password(self, password, check_password_hash=check_password_hash):
         if self.password_hash:
             return check_password_hash(self.password_hash, password)
         return False
@@ -361,10 +361,6 @@ def logout():
 
 # --- SOCKETIO EVENTS ---
 
-# ... (Υπόλοιπος κώδικας του server.py)
-
-# --- SOCKETIO EVENTS ---
-
 @socketio.on('connect')
 def handle_connect():
     """
@@ -397,13 +393,15 @@ def on_join():
          return
          
     # Κάνουμε τον χρήστη join στο 'chat' room για να λαμβάνει μηνύματα
-    join_room('chat')  
+    join_room('chat') 
     
     # 🚨 Ενημερώνουμε όλους ότι συνδέθηκε ο χρήστης
-    username = session['username']
-    # Ενημερώνουμε τους άλλους, αλλά όχι τον ίδιο (include_self=False)
-    emit('status_message', {'msg': f'{username} joined the chat.'},  
-         room='chat', include_self=False)
+    # Χρησιμοποιούμε session.get('display_name') αντί για 'username' για συνέπεια
+    username = session.get('display_name')
+    if username:
+        # Ενημερώνουμε τους άλλους, αλλά όχι τον ίδιο (include_self=False)
+        emit('status_message', {'msg': f'{username} joined the chat.'}, 
+             room='chat', include_self=False)
     
     print(f"{username} joined room 'chat'")
     # (Εδώ θα έπρεπε να καλείται μια συνάρτηση για την ενημέρωση online list)
@@ -413,9 +411,9 @@ def on_join():
 @socketio.on('message')
 def handle_message(data):
     # 🚨 ΠΡΟΣΩΡΙΝΗ ΑΛΛΑΓΗ ΓΙΑ DEBUGGING 🚨
-    # Αυτό είναι το debugging code που λειτουργούσε προσωρινά
+    # Αφήνουμε το debugging code, αλλά χρησιμοποιούμε display_name για συνέπεια
     user_id = session.get('user_id', 'TEST_ID')
-    username = session.get('username', 'DEBUGGER')
+    username = session.get('display_name', 'DEBUGGER')
     role = session.get('role', 'user')
     # ----------------------------------------
     
@@ -435,8 +433,7 @@ def handle_message(data):
     
     # 🚨 Ελέγξτε τα logs του Render: Αν εμφανιστεί αυτό, το μήνυμα φεύγει από τον client.
     print(f"DEBUG: Server received and emitted message from {username}: {msg}")
-    
-# ... (Υπόλοιπος κώδικας του server.py)# --- ADMIN PANEL & SETTINGS ROUTES ---
+# --- ADMIN PANEL & SETTINGS ROUTES ---
 
 @app.route('/check_login')
 def check_login():
