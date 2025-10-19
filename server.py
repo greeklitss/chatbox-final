@@ -361,19 +361,23 @@ def logout():
 
 # --- SOCKETIO EVENTS ---
 
-# server.py (Τοποθετήστε το στη θέση του υπάρχοντος @socketio.on('connect'))
-
 @socketio.on('connect')
 def handle_connect():
-    # 🚨 1. Πιάνουμε το session_id που έστειλε το main.js
+    # 1. Παίρνουμε το session_id
     s_id = request.args.get('session_id')
     
-    # 🚨 2. ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Φορτώνουμε τη session από το session_id
+    # 2. Φορτώνουμε τη session χωρίς τη μη-υποστηριζόμενη μέθοδο .load()
     if s_id:
-        session.sid = s_id
-        session.load()
+        # Ορίζουμε το session ID
+        session.sid = s_id 
         
-    # 🚨 3. ΔΙΟΡΘΩΣΗ SYNTAX ERROR: Όλο το κείμενο είναι μέσα στο print()
+        # Αναγκάζουμε την SQL-Session να φορτώσει τα δεδομένα
+        # Καλώντας ένα κλειδί (π.χ., 'user_id')
+        session.get('user_id') 
+        
+        # Μαρκάρουμε τη session ως τροποποιημένη για να γίνει refresh/αποθήκευση
+        session.modified = True 
+        
     print(f'Client connected: {request.sid}, User ID: {session.get("user_id")}')
 
 @socketio.on('join')
