@@ -1,17 +1,9 @@
-// static/js/main.js - ΟΡΙΣΤΙΚΑ ΔΙΟΡΘΩΜΕΝΟ
+// static/js/main.js - ΤΕΛΙΚΗ ΔΙΟΡΘΩΣΗ ΓΙΑ BBCODE ΚΑΙ ΝΕΟ UI
 
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // --- ΒΑΣΙΚΕΣ ΜΕΤΑΒΛΗΤΕΣ DOM ---
-    const chatbox = document.getElementById('chat-messages');
-    const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-button');
-    const colorInput = document.getElementById('color-input');
-    const socket = io(); // Σύνδεση με τον SocketIO server
-    
-    // --- HELPER FUNCTIONS ---
 
-    // 🚨 ΝΕΟ: BBCode Parser Function - Απαραίτητο για εμφάνιση [b], [color]
+    // --- HELPER FUNCTIONS (BBCode Parser) ---
+    // 🚨 1. ΠΛΗΡΗΣ BBCode Parser - ΚΡΙΣΙΜΟ για τη μορφοποίηση κειμένου
     function parseBBCode(text) {
         if (!text) return '';
         
@@ -24,28 +16,32 @@ document.addEventListener('DOMContentLoaded', () => {
         // 3. [color=#hex] -> <span style="color:#hex;">
         text = text.replace(/\[color=(#[0-9a-fA-F]{3,6})\](.*?)\[\/color\]/gs, '<span style="color:$1;">$2</span>');
     
-        // 4. [url] -> <a> 
+        // 4. [url] -> <a> (Εάν χρησιμοποιείται)
         text = text.replace(/\[url=(.*?)\](.*?)\[\/url\]/gs, '<a href="$1" target="_blank">$2</a>');
         
-        // 5. [img] -> <img> (Εμφάνιση εικόνων)
+        // 5. [img] -> <img> (Εάν χρησιμοποιείται)
         text = text.replace(/\[img\](.*?)\[\/img\]/gsi, '<img src="$1" alt="Image" style="max-width:100%; height:auto;">');
 
         return text;
     }
 
-    // 🚨 ΔΙΟΡΘΩΜΕΝΟ: Προσθήκη μηνύματος στο chat (χρησιμοποιεί τη νέα δομή HTML/CSS)
-    function addMessageToChat(msg) {
+    // --- HELPER FUNCTIONS (Message Renderer) ---
+    // 🚨 2. ΕΠΑΝΑΓΡΑΦΗ: Εμφάνιση μηνύματος με τη νέα δομή του chat.html
+    function appendMessage(msg) {
+        // Ελέγχουμε αν το chatbox υπάρχει
+        if (!chatbox) return; 
+
         const messageContainer = document.createElement('div');
         messageContainer.className = 'message-container';
         
         // --- Avatar ---
         const avatar = document.createElement('img');
         avatar.className = 'avatar';
-        // Χρησιμοποιούμε είτε το avatar_url που έρχεται με το μήνυμα, είτε ένα default
-        avatar.src = msg.avatar_url || '{{ url_for("static", filename="default_avatar.png") }}';
+        // Προσοχή: Επειδή είναι JS αρχείο, δεν μπορούμε να χρησιμοποιήσουμε url_for. Υποθέτουμε ότι το default είναι στο /static/default_avatar.png
+        avatar.src = msg.avatar_url || '/static/default_avatar.png';
         avatar.alt = `${msg.username}'s avatar`;
 
-        // --- Content ---
+        // --- Content Wrapper ---
         const messageContentDiv = document.createElement('div');
         messageContentDiv.className = 'message-content';
         messageContentDiv.classList.add(msg.role || 'user'); // Προσθήκη κλάσης ρόλου
@@ -60,17 +56,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const timestampSpan = document.createElement('span');
         timestampSpan.className = 'timestamp';
-        // Μορφοποίηση ώρας σε μορφή [9:51:26 μ.μ.]
-        timestampSpan.textContent = `[${new Date(msg.timestamp).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}]`;
+        const date = msg.timestamp ? new Date(msg.timestamp) : new Date();
+        timestampSpan.textContent = `[${date.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}]`;
 
         messageHeader.appendChild(usernameSpan);
         messageHeader.appendChild(timestampSpan);
         
-        // Box (Το κείμενο του μηνύματος)
+        // Message Box (Το κείμενο)
         const messageBox = document.createElement('div');
         messageBox.className = 'message-box';
         // 🚨 ΚΡΙΣΙΜΟ: Εφαρμογή του BBCode Parser
-        messageBox.innerHTML = parseBBCode(msg.content || msg.message); 
+        messageBox.innerHTML = parseBBCode(msg.content || msg.message || msg.msg); 
 
         // Δόμηση του μηνύματος
         messageContentDiv.appendChild(messageHeader);
@@ -83,50 +79,107 @@ document.addEventListener('DOMContentLoaded', () => {
         chatbox.scrollTop = chatbox.scrollHeight;
     }
 
-    // --- BBCODE/FORMATTING LOGIC ---
+
+    // --- ΒΑΣΙΚΕΣ ΜΕΤΑΒΛΗΤΕΣ DOM ---
+    // 🚨 3. ΔΙΟΡΘΩΣΗ: Το ID του chat area στο HTML είναι 'chat-messages'
+    const chatbox = document.getElementById('chat-messages'); 
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    const colorInput = document.getElementById('color-input'); 
+    const audioStream = document.getElementById('audio-stream'); // Το ράδιο
+    
+    // --- ΛΟΓΙΚΗ COOKIE/SOCKETIO ---
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`); 
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+    const sessionId = getCookie('session');
+
+    // 🚨 4. ΣΩΣΤΗ ΣΥΝΔΕΣΗ SOCKETIO
+    const socket = io({
+        path: '/socket.io/',
+        query: {
+             session_id: sessionId 
+        }
+    });
+    
+    // --- ΛΟΓΙΚΗ AUDIO ---
+    if (audioStream) {
+        audioStream.volume = 0.3; 
+        audioStream.load();
+        // Το Play πρέπει να γίνει από τον χρήστη, αλλά το volume είναι ρυθμισμένο.
+    }
+    
+    // ----------------------------------------------------
+    // 5. 🟢 ΛΟΓΙΚΗ SOCKETIO
+    // ----------------------------------------------------
+
+    socket.on('connect', () => {
+        console.log('Connected to chat server!');
+        socket.emit('join'); 
+    });
+    
+    // Listener για νέα μηνύματα
+    socket.on('message', function(data) {
+        appendMessage(data);
+    });
+    
+    // Listener για το ιστορικό μηνυμάτων
+    socket.on('history', function(messages) {
+        if (chatbox) chatbox.innerHTML = ''; // Καθαρισμός πριν τη φόρτωση
+        messages.forEach(msg => {
+            appendMessage(msg);
+        });
+        console.log(`Loaded ${messages.length} messages of history.`);
+    });
+    
+    // Listener για status messages (π.χ. 'User joined')
+    socket.on('status_message', function(data) {
+        appendMessage({
+             username: 'System', 
+             msg: data.msg, 
+             role: 'system', 
+             timestamp: new Date()
+        });
+    });
+
+
+    // ----------------------------------------------------
+    // 6. 🟢 ΛΕΙΤΟΥΡΓΙΑ ΚΟΥΜΠΙΩΝ / ΦΟΡΜΑΣ
+    // ----------------------------------------------------
+
     function applyFormatting(tag, placeholder) {
+        // Λογική μορφοποίησης κειμένου (παραμένει σωστή)
         const start = messageInput.selectionStart;
         const end = messageInput.selectionEnd;
-        const currentText = messageInput.value;
-        let prefix, suffix, newSelectionStart, newSelectionEnd;
+        const value = messageInput.value;
+
+        let selectedText = value.substring(start, end);
+        if (!selectedText) {
+            selectedText = placeholder;
+        }
         
-        if (tag.includes('=')) { // Για [color=#hex]
-            prefix = '[' + tag + ']';
-            suffix = '[/color]';
-        } else { // Για [b], [i]
-            prefix = `[${tag}]`;
-            suffix = `[/${tag}]`;
-        }
+        // Ειδικός χειρισμός για [color]
+        const prefix = tag.startsWith('color=') ? `[${tag}]` : `[${tag}]`;
+        const suffix = tag.startsWith('color=') ? `[/color]` : `[/${tag.replace('color=', '').split(' ')[0]}]`; // Διορθωμένο suffix
 
-        if (start === end) {
-            // Δεν έχει επιλεγεί κείμενο: εισάγει το placeholder
-            const newText = currentText.substring(0, start) + prefix + placeholder + suffix + currentText.substring(end);
-            messageInput.value = newText;
-            newSelectionStart = start + prefix.length;
-            newSelectionEnd = newSelectionStart + placeholder.length;
-        } else {
-            // Έχει επιλεγεί κείμενο: εφαρμόζει το tag
-            const selectedText = currentText.substring(start, end);
-            const newText = currentText.substring(0, start) + prefix + selectedText + suffix + currentText.substring(end);
-            messageInput.value = newText;
-            newSelectionStart = start;
-            newSelectionEnd = start + prefix.length + selectedText.length + suffix.length;
-        }
-
-        // Επαναφορά του focus και της επιλογής
+        const newText = value.substring(0, start) + 
+                        prefix + selectedText + suffix + 
+                        value.substring(end);
+        
+        messageInput.value = newText;
         messageInput.focus();
-        messageInput.selectionStart = newSelectionStart;
-        messageInput.selectionEnd = newSelectionEnd;
+        // Επαναφορά cursor στη θέση που πρέπει
+        messageInput.selectionStart = start + prefix.length; 
+        messageInput.selectionEnd = messageInput.selectionStart + selectedText.length;
     }
 
-    // --- EVENT HANDLERS ---
+    // Handlers για τα κουμπιά
+    if (document.getElementById('bold-button')) document.getElementById('bold-button').onclick = () => applyFormatting('b', 'bold text');
+    if (document.getElementById('italic-button')) document.getElementById('italic-button').onclick = () => applyFormatting('i', 'italic text');
     
-    // Handlers για τα κουμπιά μορφοποίησης
-    document.getElementById('bold-button').onclick = () => applyFormatting('b', 'bold text');
-    document.getElementById('italic-button').onclick = () => applyFormatting('i', 'italic text');
-    
-    // Color Picker Logic
-    document.getElementById('color-picker-button').onclick = () => {
+    if (document.getElementById('color-picker-button')) document.getElementById('color-picker-button').onclick = () => {
         if (colorInput) colorInput.click();
     };
 
@@ -134,87 +187,38 @@ document.addEventListener('DOMContentLoaded', () => {
         applyFormatting('color=' + colorInput.value, 'colored text');
     };
     
-    // 🚨 Υποθέτουμε ότι το gif-button και emoticon-button θα έχουν δική τους λογική αργότερα
-    
     // ΛΕΙΤΟΥΡΓΙΑ ΑΠΟΣΤΟΛΗΣ (Send Button)
     if (sendButton) {
-        sendButton.addEventListener('click', (e) => {
-            e.preventDefault();
+        const sendMessage = () => {
             const msg = messageInput.value.trim();
             if (msg) {
                 socket.emit('message', { msg: msg });
                 messageInput.value = '';
-                // Αυτόματη προσαρμογή ύψους μετά την αποστολή
+                // Αυτόματη προσαρμογή ύψους
                 messageInput.style.height = 'auto'; 
             }
-        });
-    }
-
-    // Λειτουργία αποστολής με Enter
-    if (messageInput) {
-        messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault(); // Αποτρέπει τη νέα γραμμή
-                sendButton.click();
-            }
-        });
-        
-        // Αυτόματη προσαρμογή ύψους του textarea
-        messageInput.addEventListener('input', () => {
-            messageInput.style.height = 'auto';
-            messageInput.style.height = (messageInput.scrollHeight) + 'px';
-        });
-    }
-    
-    // --- SOCKETIO LISTENERS ---
-
-    // Λήψη ιστορικού
-    socket.on('history', (messages) => {
-        chatbox.innerHTML = '';
-        messages.forEach(msg => addMessageToChat(msg));
-    });
-
-    // Λήψη νέου μηνύματος
-    socket.on('message', (data) => {
-        addMessageToChat(data);
-    });
-    
-    // Λήψη ενημέρωσης avatar (εάν υπάρχει)
-    socket.on('user_avatar_updated', (data) => {
-        // Εδώ μπορείτε να προσθέσετε λογική για να ενημερώνει όλα τα avatars του χρήστη στο chat
-        console.log(`User ${data.user_id} avatar updated to ${data.avatar_url}`);
-        // Για την ώρα, αφήνουμε την επόμενη φόρτωση του ιστορικού να το ενημερώσει.
-    });
-    
-    // --- ΛΟΓΙΚΗ LOGOUT ---
-    const logoutButton = document.getElementById('logout-button');
-    if (logoutButton) {
-        logoutButton.onclick = () => {
-            window.location.href = '/logout'; 
         };
-    }
-    
-    // --- ΛΟΓΙΚΗ PROFILE ---
-    const profileButton = document.getElementById('profile-button');
-    if (profileButton) {
-        profileButton.onclick = () => {
-            window.location.href = '/settings'; 
-        };
-    }
-    
-    // --- ΛΟΓΙΚΗ EXPORT ---
-    // (Χρειάζεται υλοποίηση export PDF αργότερα)
-    const exportButton = document.getElementById('export-button');
-    if (exportButton) {
-        exportButton.onclick = () => {
-            alert('Export functionality coming soon!');
-        };
-    }
-    
-    // --- ΛΟΓΙΚΗ ΕΚΚΙΝΗΣΗΣ ---
-    // Ζητάμε το ιστορικό με τη σύνδεση
-    socket.on('connect', () => {
-        socket.emit('request_history');
-    });
 
+        sendButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            sendMessage();
+        });
+
+        // Λειτουργία αποστολής με Enter
+        if (messageInput) {
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // Αυτόματη προσαρμογή ύψους του textarea
+            messageInput.addEventListener('input', () => {
+                messageInput.style.height = 'auto';
+                // Περιορισμός στο μέγιστο ύψος (π.χ. 100px)
+                messageInput.style.height = (Math.min(messageInput.scrollHeight, 100)) + 'px';
+            });
+        }
+    }
 });
