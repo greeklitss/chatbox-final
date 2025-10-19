@@ -542,12 +542,7 @@ def set_avatar_url():
             
             return jsonify({'success': True, 'message': 'Avatar URL updated.'})
         else:
-            return jsonify({'success': False, 'message': 'User not found.'}), 404
-# ... (Τέλος των @app.route ή άλλων συναρτήσεων)
-@app.route('/settings/set_avatar_url', methods=['POST'])
-def set_avatar_url():
-    # ... (code)
-    pass
+            return jsonify({'success': False, 'message': 'User not found.'}), 40
             
 
 # --- ΠΡΟΣΘΗΚΗ: ΚΡΙΣΙΜΟΣ ΕΛΕΓΧΟΣ ΔΗΜΙΟΥΡΓΙΑΣ ΒΑΣΗΣ ---
