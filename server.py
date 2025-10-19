@@ -380,7 +380,7 @@ def handle_connect():
         print(f"SOCKETIO CONNECT: Client connected {request.sid}. No session ID provided. Relying on cookies.")
     
     # Αυτό εκτελείται μόλις ο client συνδεθεί, αλλά δεν μπαίνει ακόμα στο chat room.
-    print(f'Client connected: {request.sid}')
+    print(f'Client connected: {request.sid}') User ID: {session.get("user_id")}')
 
 
 @socketio.on('join')
