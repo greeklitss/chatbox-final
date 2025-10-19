@@ -543,9 +543,29 @@ def set_avatar_url():
             return jsonify({'success': True, 'message': 'Avatar URL updated.'})
         else:
             return jsonify({'success': False, 'message': 'User not found.'}), 404
+# ... (Τέλος των @app.route ή άλλων συναρτήσεων)
+@app.route('/settings/set_avatar_url', methods=['POST'])
+def set_avatar_url():
+    # ... (code)
+    pass
             
+
+# --- ΠΡΟΣΘΗΚΗ: ΚΡΙΣΙΜΟΣ ΕΛΕΓΧΟΣ ΔΗΜΙΟΥΡΓΙΑΣ ΒΑΣΗΣ ---
+# Εκτελείται όταν φορτώνεται η εφαρμογή (ακόμα και από gunicorn/Render)
+with app.app_context():
+    # Δημιουργεί όλους τους πίνακες (User, Message, Setting κ.λπ.) αν δεν υπάρχουν
+    db.create_all() 
+    
+    # 🚨 Εάν έχετε τις συναρτήσεις αρχικοποίησης ρυθμίσεων/emoticons, προσθέστε τις εδώ:
+    # initialize_settings() 
+    # initialize_emoticons() 
+    
+    # Αυτός ο κώδικας θα εκτελεστεί μία φορά στην εκκίνηση του service
+    # και θα διορθώσει το UndefinedTable.
+
 
 # --- MAIN EXECUTION ---
 if __name__ == '__main__':
+    # 🚨 Η κλήση db_setup_check(app) αφαιρέθηκε, γίνεται πλέον από το db_init.py
     print("Starting Flask/SocketIO Server...")
     socketio.run(app, debug=True, host='0.0.0.0', port=os.environ.get('PORT', 5000))
