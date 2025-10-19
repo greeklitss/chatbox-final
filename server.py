@@ -401,36 +401,70 @@ def on_join():
              room='chat', include_self=False)
     
     print(f"{username} joined room 'chat'")
+# 🚨 ΚΡΙΣΙΜΟ: Φόρτωση Ιστορικού Μηνυμάτων από τη βάση
+    with app.app_context():
+        # Παίρνουμε τα τελευταία 100 μηνύματα
+        recent_messages = db.session.execute(
+            db.select(Message)
+            .order_by(Message.timestamp.desc())
+            .limit(100)
+        ).scalars().all()
+        
+        recent_messages.reverse() # Αντιστροφή για σωστή σειρά
+        
+        history_data = [
+            {
+                'username': msg.username,
+                'msg': msg.content,
+                'timestamp': msg.timestamp.isoformat(),
+                'role': msg.role,
+                'user_id': msg.user_id 
+            }
+            for msg in recent_messages
+        ]
+        
+        # Στέλνουμε το ιστορικό ΜΟΝΟ στον χρήστη που μόλις συνδέθηκε
+        emit('history', history_data, room=request.sid)
     # (Εδώ θα έπρεπε να καλείται μια συνάρτηση για την ενημέρωση online list)
 
-# server.py (Μέσα στο @socketio.on('message'))
 
 @socketio.on('message')
 def handle_message(data):
-    # 🚨 ΠΡΟΣΩΡΙΝΗ ΑΛΛΑΓΗ ΓΙΑ DEBUGGING 🚨
-    # Αφήνουμε το debugging code, αλλά χρησιμοποιούμε display_name για συνέπεια
-    user_id = session.get('user_id', 'TEST_ID')
-    username = session.get('display_name', 'DEBUGGER')
+    # 1. 🚨 ΔΙΟΡΘΩΣΗ: Αφαιρούμε τα 'TEST_ID' και 'DEBUGGER'
+    user_id = session.get('user_id')
+    username = session.get('display_name')
     role = session.get('role', 'user')
-    # ----------------------------------------
-    
+     
+    # Αν ο χρήστης δεν βρεθεί (πρέπει να έχει διορθωθεί με το session.load()), απλά αγνοούμε.
+    if not user_id or not username:
+        return
+     
     msg = data.get('msg')
-    
     if not msg:
         return
 
-    # 🚨 ΕΚΠΟΜΠΗ: Στέλνουμε το μήνυμα πίσω σε ΟΛΟΥΣ τους χρήστες στο 'chat' room
+    # 2. 🚨 ΚΡΙΣΙΜΟ: Αποθήκευση του μηνύματος στη βάση δεδομένων (για να "το κρατάει στη μνήμη")
+    with app.app_context():
+        new_message = Message(
+            user_id=user_id,
+            username=username,
+            role=role,
+            content=msg,
+            timestamp=datetime.now(timezone.utc)
+        )
+        db.session.add(new_message)
+        db.session.commit() # Αποθηκεύει το μήνυμα
+        
+    # 3. Εκπομπή: Στέλνουμε το μήνυμα πίσω σε ΟΛΟΥΣ τους χρήστες στο 'chat' room
     emit('message', {
         'user_id': user_id,
         'username': username,
         'msg': msg,
         'timestamp': datetime.now(timezone.utc).isoformat(),
-        'role': role # Πρέπει να στέλνετε και το role για να λειτουργεί το main.js
+        'role': role
     }, room='chat')
     
-    # 🚨 Ελέγξτε τα logs του Render: Αν εμφανιστεί αυτό, το μήνυμα φεύγει από τον client.
-    print(f"DEBUG: Server received and emitted message from {username}: {msg}")
-# --- ADMIN PANEL & SETTINGS ROUTES ---
+    print(f"DEBUG: Server received and emitted message from {username}: {msg}")# --- ADMIN PANEL & SETTINGS ROUTES ---
 
 @app.route('/check_login')
 def check_login():
