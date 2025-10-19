@@ -382,36 +382,39 @@ def on_join():
     print(f"{session.get('username')} joined room 'chat'")
     # (Εδώ θα έπρεπε να καλείται μια συνάρτηση για την ενημέρωση online list)
 
+# server.py (Μέσα στο @socketio.on('message'))
+
 @socketio.on('message')
 def handle_message(data):
-    """Χειρισμός incoming μηνυμάτων και εκπομπή τους."""
-    user_id = session.get('user_id')
-    username = session.get('username')
+    # 🚨 ΠΡΟΣΩΡΙΝΗ ΑΛΛΑΓΗ ΓΙΑ DEBUGGING 🚨
+    # Σχολιάστε όλο τον έλεγχο συνεδρίας:
+    # user_id = session.get('user_id')
+    # username = session.get('username')
+    # if not user_id or not username:
+    #     return
     
-    if not user_id or not username:
-        return # Δεν επιτρέπουμε μηνύματα χωρίς ταυτότητα
-        
+    # 🟢 Θέστε προσωρινές σταθερές τιμές:
+    user_id = session.get('user_id', 'TEST_ID')
+    username = session.get('username', 'DEBUGGER')
+    role = session.get('role', 'user')
+    # ----------------------------------------
+    
     msg = data.get('msg')
     
+    if not msg:
+        return
+
     # 🚨 ΕΚΠΟΜΠΗ: Στέλνουμε το μήνυμα πίσω σε ΟΛΟΥΣ τους χρήστες στο 'chat' room
-    # Το 'message' event θα το διαχειριστεί ο client (main.js)
     emit('message', {
         'user_id': user_id,
         'username': username,
         'msg': msg,
-        'timestamp': datetime.now(timezone.utc).isoformat()
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'role': role # Πρέπει να στέλνετε και το role για να λειτουργεί το main.js
     }, room='chat')
     
-@socketio.on('disconnect')
-def handle_disconnect():
-    """Χειρισμός αποσύνδεσης χρήστη."""
-    username = session.get('username', 'A Guest')
-    leave_room('chat')
-    
-    # 🚨 Ενημερώνουμε όλους ότι αποσυνδέθηκε ο χρήστης
-    emit('status_message', {'msg': f'{username} left the chat.'}, room='chat')
-    print(f'Client disconnected: {request.sid}')
-
+    # 🚨 Ελέγξτε τα logs του Render: Αν εμφανιστεί αυτό, το μήνυμα φεύγει από τον client.
+    print(f"DEBUG: Server received and emitted message from {username}: {msg}")
 # --- ADMIN PANEL & SETTINGS ROUTES ---
 
 @app.route('/check_login')
