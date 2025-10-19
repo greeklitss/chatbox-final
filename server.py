@@ -10,6 +10,7 @@ from functools import wraps
 
 # --- ΒΙΒΛΙΟΘΗΚΕΣ ΓΙΑ DB & AUTH ---
 from werkzeug.middleware.proxy_fix import ProxyFix 
+from sqlalchemy import select # 🚨 ΠΡΟΣΘΕΣΤΕ ΑΥΤΟ
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
 from werkzeug.security import generate_password_hash, check_password_hash 
@@ -481,16 +482,9 @@ def get_settings():
     return jsonify(settings_data)
 
 
-
-# server.py (περίπου γραμμή 505)
-
-@app.route('/api/admin/set_setting', methods=['POST'])
-# server.py (γύρω στη συνάρτηση set_setting)
-
 @app.route('/api/admin/set_setting', methods=['POST'])
 @requires_role('owner', 'admin')
 def set_setting():
-    # ... (code to get key and value)
     data = request.get_json()
     key = data.get('key')
     value = data.get('value')
@@ -500,29 +494,27 @@ def set_setting():
 
     try:
         with app.app_context():
-            # Χρησιμοποιούμε το ORM για να βρούμε ή να δημιουργήσουμε τη ρύθμιση
-            setting = db.session.execute(db.select(Setting).filter_by(key=key)).scalar_one_or_none()
+            # 🚨 1. Βρίσκουμε την υπάρχουσα ρύθμιση χρησιμοποιώντας SQLAlchemy 2.0 select/scalar
+            stmt = select(Setting).filter_by(key=key)
+            setting = db.session.scalar(stmt)
             
             if setting:
-                # Ενημέρωση (Update)
                 setting.value = value
             else:
-                # Δημιουργία (Insert)
                 new_setting = Setting(key=key, value=value)
                 db.session.add(new_setting)
             
             db.session.commit()
             
-            # Ενημέρωση client
             socketio.emit('setting_updated', {'key': key, 'value': value}, room='chat')
             
             return jsonify({'success': True, 'message': f'Setting {key} updated.'})
 
     except Exception as e:
         db.session.rollback()
-        # 🚨 ΚΑΤΑΓΡΑΦΗ ΛΑΘΟΥΣ: Ελέγξτε τα logs του Render για αυτό το μήνυμα
         print(f"FATAL DB ERROR IN SETTING: {e}") 
         return jsonify({'success': False, 'error': 'Internal database error during save.'}), 500
+
 # --- SETTINGS ROUTES (ΟΜΑΔΑ 3 - ΑΣΠΡΟ) ---
 @app.route('/settings/set_avatar_url', methods=['POST'])
 def set_avatar_url():
