@@ -1,18 +1,24 @@
 // static/js/main.js - ΟΡΙΣΤΙΚΑ ΔΙΟΡΘΩΜΕΝΟ
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. ΣΩΣΤΗ ΣΥΝΔΕΣΗ SOCKETIO 
-    const socket = io({
-        path: '/socket.io/'
-    });
-    
-    // 2. ΟΡΙΣΜΟΣ ΣΤΟΙΧΕΙΩΝ DOM (ΕΔΩ ΕΙΝΑΙ ΠΡΟΣΒΑΣΙΜΑ)
-    const chatbox = document.getElementById('chatbox');
-    const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-button');
-    const colorInput = document.getElementById('color-input');
-    const notificationSound = new Audio('/static/sounds/notification.mp3');
-    notificationSound.volume = 0.5;
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`); 
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+// 🚨 1. Ανάκτηση του session ID (το όνομα του cookie είναι 'session')
+const sessionId = getCookie('session'); 
+
+
+// 2. 🟢 ΣΩΣΤΗ ΣΥΝΔΕΣΗ SOCKETIO 
+const socket = io({
+    path: '/socket.io/',
+    // 🚨 ΚΡΙΣΙΜΟ: Στέλνουμε το session ID στον server
+    query: {
+        session_id: sessionId 
+    }
+});
 
     // ----------------------------------------------------
     // 3. 🟢 ΟΛΗ Η ΛΟΓΙΚΗ SOCKETIO ΕΙΝΑΙ ΕΔΩ ΜΕΣΑ

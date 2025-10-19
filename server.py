@@ -121,9 +121,11 @@ class Message(db.Model):
 
 # 🚨 ΔΙΟΡΘΩΜΕΝΟ SETTING MODEL: Χρησιμοποιεί το 'key' ως PK και μεγαλύτερο 'value' field
 class Setting(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    __tablename__ = 'setting'
+    # 🚨 ΚΡΙΣΙΜΟ: Πρέπει να είναι έτσι ορισμένο
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True) 
     key = db.Column(db.String(80), unique=True, nullable=False)
-    value = db.Column(db.String(255), nullable=True) # Μπορεί να αποθηκεύει 'True'/'False' ως string
+    value = db.Column(db.String(255))
 
     def __repr__(self):
         return f"<Setting {self.key}: {self.value}>"
@@ -359,27 +361,51 @@ def logout():
 
 # --- SOCKETIO EVENTS ---
 
-# server.py (Προσθήκη στο τέλος του αρχείου, πριν το if __name__ == '__main__':)
+# ... (Υπόλοιπος κώδικας του server.py)
+
+# --- SOCKETIO EVENTS ---
 
 @socketio.on('connect')
 def handle_connect():
+    """
+    Χειρισμός σύνδεσης SocketIO.
+    🚨 ΚΡΙΣΙΜΟ: Επαναφορτώνει τη συνεδρία (Session) χρησιμοποιώντας το ID που στέλνει ο client.
+    """
+    s_id = request.args.get('session_id')
+    
+    if s_id:
+        # 🚨 Αυτά τα δύο βήματα επαναφέρουν τη συνεδρία από τη βάση (Flask-Session)
+        session.sid = s_id
+        session.load()
+        
+        # Πλέον το session.get('username') είναι διαθέσιμο
+        print(f"SOCKETIO CONNECT: Session re-loaded for user {session.get('username')} (ID: {s_id})")
+    else:
+        print(f"SOCKETIO CONNECT: Client connected {request.sid}. No session ID provided. Relying on cookies.")
+    
     # Αυτό εκτελείται μόλις ο client συνδεθεί, αλλά δεν μπαίνει ακόμα στο chat room.
     print(f'Client connected: {request.sid}')
+
 
 @socketio.on('join')
 def on_join():
     """Χειρισμός σύνδεσης στο κύριο chat room."""
+    
+    # 🚨 Ελέγχουμε αν η συνεδρία φορτώθηκε επιτυχώς από το handle_connect
+    if not session.get('user_id'):
+         print(f"ERROR: Client tried to join but session not loaded.")
+         return
+         
     # Κάνουμε τον χρήστη join στο 'chat' room για να λαμβάνει μηνύματα
-    join_room('chat') 
+    join_room('chat')  
     
     # 🚨 Ενημερώνουμε όλους ότι συνδέθηκε ο χρήστης
-    if session.get('username'):
-        username = session['username']
-        # Ενημερώνουμε τους άλλους, αλλά όχι τον ίδιο (include_self=False)
-        emit('status_message', {'msg': f'{username} joined the chat.'}, 
-             room='chat', include_self=False)
+    username = session['username']
+    # Ενημερώνουμε τους άλλους, αλλά όχι τον ίδιο (include_self=False)
+    emit('status_message', {'msg': f'{username} joined the chat.'},  
+         room='chat', include_self=False)
     
-    print(f"{session.get('username')} joined room 'chat'")
+    print(f"{username} joined room 'chat'")
     # (Εδώ θα έπρεπε να καλείται μια συνάρτηση για την ενημέρωση online list)
 
 # server.py (Μέσα στο @socketio.on('message'))
@@ -387,13 +413,7 @@ def on_join():
 @socketio.on('message')
 def handle_message(data):
     # 🚨 ΠΡΟΣΩΡΙΝΗ ΑΛΛΑΓΗ ΓΙΑ DEBUGGING 🚨
-    # Σχολιάστε όλο τον έλεγχο συνεδρίας:
-    # user_id = session.get('user_id')
-    # username = session.get('username')
-    # if not user_id or not username:
-    #     return
-    
-    # 🟢 Θέστε προσωρινές σταθερές τιμές:
+    # Αυτό είναι το debugging code που λειτουργούσε προσωρινά
     user_id = session.get('user_id', 'TEST_ID')
     username = session.get('username', 'DEBUGGER')
     role = session.get('role', 'user')
@@ -415,7 +435,8 @@ def handle_message(data):
     
     # 🚨 Ελέγξτε τα logs του Render: Αν εμφανιστεί αυτό, το μήνυμα φεύγει από τον client.
     print(f"DEBUG: Server received and emitted message from {username}: {msg}")
-# --- ADMIN PANEL & SETTINGS ROUTES ---
+    
+# ... (Υπόλοιπος κώδικας του server.py)# --- ADMIN PANEL & SETTINGS ROUTES ---
 
 @app.route('/check_login')
 def check_login():
@@ -485,19 +506,16 @@ def get_settings():
     return jsonify(settings_data)
 
 
+# server.py (set_setting function)
+
 @app.route('/api/admin/set_setting', methods=['POST'])
 @requires_role('owner', 'admin')
 def set_setting():
-    data = request.get_json()
-    key = data.get('key')
-    value = data.get('value')
+    # ... (code for key, value)
     
-    if not key or value is None:
-        return jsonify({'success': False, 'error': 'Missing key or value.'}), 400
-
     try:
         with app.app_context():
-            # 🚨 1. Βρίσκουμε την υπάρχουσα ρύθμιση χρησιμοποιώντας SQLAlchemy 2.0 select/scalar
+            # 1. Βρίσκουμε την υπάρχουσα ρύθμιση
             stmt = select(Setting).filter_by(key=key)
             setting = db.session.scalar(stmt)
             
@@ -507,17 +525,17 @@ def set_setting():
                 new_setting = Setting(key=key, value=value)
                 db.session.add(new_setting)
             
+            # 🚨 ΚΡΙΣΙΜΗ ΕΠΙΣΤΡΟΦΗ: Χρησιμοποιούμε commit, αν αποτύχει, πρέπει να φτιάξετε τη βάση
             db.session.commit()
             
-            socketio.emit('setting_updated', {'key': key, 'value': value}, room='chat')
-            
+            # ... (Emit and return success)
             return jsonify({'success': True, 'message': f'Setting {key} updated.'})
 
     except Exception as e:
         db.session.rollback()
+        # 🚨 ΑΝ ΔΕΙΤΕ ΞΑΝΑ ΤΟ NOT NULL VIOLATION, ΠΡΕΠΕΙ ΝΑ ΚΑΘΑΡΙΣΕΤΕ ΤΗ ΒΑΣΗ
         print(f"FATAL DB ERROR IN SETTING: {e}") 
         return jsonify({'success': False, 'error': 'Internal database error during save.'}), 500
-
 # --- SETTINGS ROUTES (ΟΜΑΔΑ 3 - ΑΣΠΡΟ) ---
 @app.route('/settings/set_avatar_url', methods=['POST'])
 def set_avatar_url():
