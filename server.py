@@ -462,7 +462,6 @@ emit('new_message', {
     }, room='chat')    
     print(f"DEBUG: Server received and emitted message from {username}: {msg}")
 
-
 # --- ADMIN PANEL & SETTINGS ROUTES (Διορθωμένες) ---
 
 @app.route('/check_login')
