@@ -1,4 +1,4 @@
-// static/js/main.js - ΠΛΗΡΩΣ ΔΙΟΡΘΩΜΕΝΟ ΓΙΑ CHAT FUNCTIONALITY
+
 
 // Υποθέτουμε ότι η συνάρτηση parseBBCode(text) υπάρχει έξω από το DOMContentLoaded
 function parseBBCode(text) {
