@@ -1,5 +1,4 @@
-<!DOCTYPE html> 
-<html lang="el">
+<html>
 <head>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
     <title>AkoY Me Chat</title>
@@ -8,181 +7,74 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <style>
-        /* 🚨 NEW FUNKY POP THEME */
-        :root { 
-            --primary-color: #FF0066;      /* Hot Pink/Magenta */
-            --secondary-color: #00FFCC;    /* Bright Cyan/Turquoise */
-            --box-bg: #FFFFFF;             /* White Chat Area */
-            --input-bg: #FFFFFF;
-            --border-color: #FF77A9;       /* Medium Pink Border */
-            --text-color: #333333;
-            --button-color: #FFCC00;      /* Yellow/Gold Accent */
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            height: 100vh;
-        }
-
-        .header-bar {
-            /* ... (το δικό σας header style) ... */
-        }
-
-        .main-content-wrapper {
-            display: flex;
-            flex-grow: 1;
-            max-height: 100%;
-        }
-        
-        /* --- CHAT AREA --- */
-        .chat-area {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background-color: var(--box-bg);
-            border-right: 1px solid var(--border-color);
-        }
-
-        /* 🚨 ΚΡΙΣΙΜΟ: Ο container για τα μηνύματα */
-        .messages-container {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 10px;
-            scroll-behavior: smooth;
-        }
-
-        .chat-message {
-            margin-bottom: 5px;
-            padding: 5px 0;
-            border-bottom: 1px dotted #eee;
-            word-wrap: break-word;
-        }
-        
-        .message-avatar {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            margin-right: 5px;
-            vertical-align: middle;
-        }
-
-        .role-user { color: #333333; }
-        .role-admin { color: var(--primary-color); font-weight: bold; }
-        .role-owner { color: var(--secondary-color); font-weight: bolder; }
-        .role-guest { color: #888888; }
-
-
-        /* --- ONLINE USERS PANEL --- */
-        .online-users-container {
-            width: 250px; /* Μικρότερο panel */
-            min-width: 150px;
-            background-color: #ffffff;
-            border-left: 1px solid var(--border-color);
-            padding: 10px;
-            overflow-y: auto;
-        }
-        
-        .online-users-container h3 {
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 5px;
-            margin-top: 0;
-            font-size: 1.1em;
-        }
-
-        .online-users-container ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .online-users-container ul li {
-            padding: 5px 0;
-            display: flex;
-            align-items: center;
-            font-size: 0.9em;
-            cursor: pointer;
-            border-bottom: 1px dotted #eee;
-        }
-
-        .user-avatar-list {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-        
-        .role-badge {
-            margin-left: auto;
-            font-size: 0.7em;
-            color: #aaa;
-        }
-        
-        /* ... (Ο υπόλοιπος κώδικας CSS) ... */
-
-        
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
 </head>
+
 <body>
+    
+    <div class="header-tools">
+        
+        <audio id="audio-stream" src="{{ url_for('static', filename='music/lofi-stream.mp3') }}" controls loop preload="auto">
+            Your browser does not support the audio element.
+        </audio>
 
-<div class="header-bar">
-    <div class="header-left">
-        <a href="/chat" class="logo">AkoY Me</a>
-        </div>
-    <div class="header-right">
-        <button id="admin-button" style="display: none;">Admin Panel</button>
-        <span>{{ user.username }} ({{ user.role.upper() }})</span>
-        <a href="/logout">Logout</a>
+        <button id="admin-button" title="Admin Panel" style="display:none;"><i class="fas fa-tools"></i> Admin</button>
+        
+        <button id="notification-volume-button" title="Notification Sound ON/OFF"><i class="fas fa-bell"></i></button>
     </div>
-</div>
 
-<div class="main-content-wrapper">
-
-    <div class="chat-area">
-        <div id="chatbox" class="messages-container"> 
+    <div class="chat-container">
+        
+        <div class="chat-box" id="chat-box"> 
             </div>
 
-        <div class="message-input-bar">
-            <button id="bold-button" title="Bold [b]"><i class="fas fa-bold"></i></button>
-            <button id="italic-button" title="Italic [i]"><i class="fas fa-italic"></i></button>
-            <button id="underline-button" title="Underline [u]"><i class="fas fa-underline"></i></button>
-            <button id="gif-button" title="GIF/Image Embed [img]"><i class="fas fa-image"></i></button>
-            
-            <button id="color-picker-button" title="Text Color [color=#hex]"><i class="fas fa-palette"></i></button>
-            <input type="color" id="color-input" value="#FF0066" style="display: none;">
-            
-            <button id="emoticon-button" title="Emoticons"><i class="fas fa-smile-wink"></i></button>
-            
-            <textarea id="message-input" placeholder="Type your message..." rows="1"></textarea>
-            
-            <button id="send-button" title="Send (Enter)"><i class="fas fa-paper-plane"></i></button>
-        </div>
+        <div class="online-users-list" id="online-users-list">
+            <h4>Online Users (<span id="online-users-count">0</span>)</h4>
+            </div>
     </div>
     
-    <div id="online-users-panel" class="online-users-container">
-        <div class="panel-header">
-            <h3>Online Users (<span id="online-users-count">0</span>)</h3> 
-        </div>
-        <ul id="online-users-list">
-            </ul>
+    <div class="message-input-area">
+        
+        <button id="bold-button" title="Bold [b]"><i class="fas fa-bold"></i></button>
+        <button id="italic-button" title="Italic [i]"><i class="fas fa-italic"></i></button>
+        <button id="underline-button" title="Underline [u]"><i class="fas fa-underline"></i></button>
+        <button id="gif-button" title="GIF/Image Embed"><i class="fas fa-image"></i></button>
+        
+        <button id="color-picker-button" title="Text Color"><i class="fas fa-palette"></i></button>
+        <input type="color" id="color-input" value="#FF0066" style="display: none;">
+        
+        <button id="emoticon-button" title="Emoticons"><i class="fas fa-smile-wink"></i></button>
+        
+        <textarea id="message-input" placeholder="Type your message..." rows="1"></textarea>
+        
+        <button id="send-button" title="Send (Enter)"><i class="fas fa-paper-plane"></i></button>
     </div>
     
-</div>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    
+    <script>
+        // Αυτή η λογική ΠΡΕΠΕΙ να μείνει εδώ για να έχει πρόσβαση στο {{ user.role }} του Flask
+        document.addEventListener('DOMContentLoaded', () => {
+            const audio = document.getElementById('audio-stream');
+            
+            // Ρύθμιση έντασης του Web Radio
+            if (audio) {
+                audio.volume = 0.3; 
+            }
+            
+            // ΕΛΕΓΧΟΣ ΡΟΛΟΥ ΧΡΗΣΤΗ ΓΙΑ ΤΟ ADMIN BUTTON
+            const currentUserRole = "{{ user.role }}"; // Παίρνουμε τον ρόλο από το Flask
+            const adminButton = document.getElementById('admin-button');
 
-<script src="{{ url_for('static', filename='main.js') }}"></script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // ... (Ο υπόλοιπος κώδικας DOMContentLoaded) ...
-    });
-</script>
+            if (adminButton && (currentUserRole === 'admin' || currentUserRole === 'owner')) {
+                adminButton.style.display = 'inline-block';
+                adminButton.addEventListener('click', () => {
+                    window.location.href = '/admin'; // Ανακατεύθυνση στο Admin Panel
+                });
+            }
+        });
+    </script>
 </body>
 </html>
