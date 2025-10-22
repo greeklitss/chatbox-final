@@ -2,6 +2,11 @@ import os
 import json
 import uuid
 import time
+
+# Λεξικό για τη διαχείριση ενεργών χρηστών {user_id: username/data}
+active_users = {}
+
+
 from flask import Flask, send_from_directory, request, jsonify, url_for, redirect, session, render_template
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.utils import secure_filename
