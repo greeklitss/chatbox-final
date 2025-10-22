@@ -453,7 +453,7 @@ def handle_message(data):
         db.session.commit()
         
     # 3. Εκπομπή: Στέλνουμε το μήνυμα πίσω
-emit('new_message', { 
+    emit('new_message', { 
         'user_id': user_id,
         'username': username,
         'msg': msg,
