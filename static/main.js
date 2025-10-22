@@ -1,5 +1,3 @@
-
-
 // Υποθέτουμε ότι η συνάρτηση parseBBCode(text) υπάρχει έξω από το DOMContentLoaded
 function parseBBCode(text) {
     if (!text) return '';
@@ -69,25 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
         chatbox.scrollTop = chatbox.scrollHeight;
     }
 
-    // Νέα συνάρτηση: Φόρτωση Ιστορικού Μηνυμάτων
-    async function loadMessageHistory() {
-        if (!chatbox) return;
-        try {
-            const response = await fetch('/api/v1/messages');
-            if (!response.ok) {
-                throw new Error('Failed to load message history.');
-            }
-            const history = await response.json();
-            
-            // Προσθέτουμε τα μηνύματα στο chatbox
-            history.forEach(data => {
-                appendMessage(data); 
-            });
-            chatbox.scrollTop = chatbox.scrollHeight; // Σκρολάρισμα στο κάτω μέρος
-        } catch (error) {
-            console.error('Error loading history:', error);
-        }
-    }
+    // 🚨 ΑΦΑΙΡΕΘΗΚΕ: Η συνάρτηση loadMessageHistory() αφαιρέθηκε. 
+    // Η φόρτωση του ιστορικού γίνεται πλέον μέσω SocketIO event 'history'.
     
     // Νέα συνάρτηση: Ενημέρωση Λίστας Online Χρηστών
     function updateActiveUsersList(users) {
@@ -109,8 +90,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // --- SOCKET.IO EVENTS ---
+    // --- SOCKET.IO EVENTS (ΔΙΟΡΘΩΜΕΝΑ) ---
     
+    // 🚨 ΔΙΟΡΘΩΣΗ: Λήψη Ιστορικού Μηνυμάτων (το server.py το στέλνει στο 'join' event)
+    socket.on('history', (messages) => {
+        if (!chatbox) return;
+        // Καθαρίζουμε το chatbox πριν φορτώσουμε το ιστορικό
+        chatbox.innerHTML = ''; 
+        
+        // Προσθέτουμε τα μηνύματα στο chatbox
+        messages.forEach(appendMessage); 
+        
+        chatbox.scrollTop = chatbox.scrollHeight; // Σκρολάρισμα στο κάτω μέρος
+    });
+
     // 🚨 2. Λήψη νέου μηνύματος (για να εμφανίζεται στο chatbox)
     socket.on('new_message', function(data) {
         appendMessage(data); 
@@ -118,18 +111,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 🚨 3. Ενημέρωση λίστας ενεργών χρηστών (για να εμφανίζονται οι Online)
     socket.on('update_active_users', function(users) {
+        // Ενημέρωση της λίστας
         updateActiveUsersList(users);
+        
         // Προαιρετικό: Εμφάνιση αριθμού χρηστών
         const countElement = document.getElementById('online-users-count');
         if (countElement) {
-             countElement.textContent = users.length;
+            countElement.textContent = users.length;
         }
     });
 
+    // 🚨 ΚΡΙΣΙΜΟ: Στέλνουμε το 'join' event μόλις συνδεθεί το socket
+    socket.on('connect', () => {
+        console.log('Socket connected. Requesting chat join and history...');
+        socket.emit('join'); // Αυτό ενεργοποιεί τη φόρτωση ιστορικού από τον server
+    });
+
+
     // --- DOM EVENT LISTENERS & INITIAL CALLS ---
     
-    // 🚨 4. Φόρτωση Ιστορικού κατά την εκκίνηση
-    loadMessageHistory(); 
+    // 🚨 ΑΦΑΙΡΕΘΗΚΕ: Η κλήση loadMessageHistory() αφαιρέθηκε από εδώ.
     
     
     // --- ΛΟΓΙΚΗ ΑΠΟΣΤΟΛΗΣ ΜΗΝΥΜΑΤΟΣ ---
