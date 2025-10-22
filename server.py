@@ -459,8 +459,10 @@ emit('new_message', {
         'msg': msg,
         'timestamp': datetime.now(timezone.utc).isoformat(),
         'role': role
-    }, room='chat')    
+    }, room='chat')
+
     print(f"DEBUG: Server received and emitted message from {username}: {msg}")
+
 
 # --- ADMIN PANEL & SETTINGS ROUTES (Διορθωμένες) ---
 
