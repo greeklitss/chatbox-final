@@ -453,14 +453,13 @@ def handle_message(data):
         db.session.commit()
         
     # 3. Εκπομπή: Στέλνουμε το μήνυμα πίσω
-    emit('message', {
+emit('new_message', { 
         'user_id': user_id,
         'username': username,
         'msg': msg,
         'timestamp': datetime.now(timezone.utc).isoformat(),
         'role': role
-    }, room='chat')
-    
+    }, room='chat')    
     print(f"DEBUG: Server received and emitted message from {username}: {msg}")
 
 
