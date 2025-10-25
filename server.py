@@ -35,10 +35,18 @@ app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", 'a_default_secret_key_fo
 
 # --- Ρυθμίσεις Βάσης Δεδομένων ---
 database_url = os.environ.get("DATABASE_URL")
-if database_url and database_url.startswith("postgres://"):
-    # Αντικατάσταση του postgres:// με postgresql:// για συμβατότητα με SQLAlchemy
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
-    
+
+if database_url:
+    # 1. Αντικατάσταση του postgres:// με postgresql:// για συμβατότητα με SQLAlchemy
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+        
+    # 🚨 2. ΚΡΙΣΙΜΟ: Προσθήκη της παραμέτρου SSL
+    if "sslmode=require" not in database_url:
+        # Χρησιμοποιεί & αν υπάρχουν άλλες παράμετροι ή ? αν είναι η πρώτη
+        separator = '&' if '?' in database_url else '?'
+        database_url = f"{database_url}{separator}sslmode=require"
+        
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///local_db.sqlite'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
