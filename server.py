@@ -123,7 +123,8 @@ class Message(db.Model):
     role = db.Column(db.String(50), nullable=False, default='user') 
 
     content = db.Column(db.Text, nullable=False) 
-    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc)) 
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    color = db.Column(db.String(7), nullable=True, default='#FFFFFF')
 
 # 🚨 ΔΙΟΡΘΩΣΗ: Προσθέτουμε πίσω τη στήλη 'description'
 class Setting(db.Model):
@@ -455,15 +456,13 @@ def handle_message(data):
             return
 
         # 2. Αποθήκευση μηνύματος
-        # ΠΡΟΣΟΧΗ: Το μοντέλο σας Message δεν έχει στήλη 'color',
-        # οπότε την αγνοώ προς το παρόν για να μη βγάλει σφάλμα.
-        # Αν προσθέσετε στήλη 'color' στο Message, πρέπει να το βάλετε εδώ.
         new_message = Message(
             user_id=user.id,
             username=user.display_name, 
             role=user.role,       
             content=msg_content,     
             timestamp=datetime.now(timezone.utc)
+            color=color # 👈 Αποθηκεύεται το χρώμα
         )
         db.session.add(new_message)
         db.session.commit()
@@ -476,7 +475,7 @@ def handle_message(data):
         'timestamp': datetime.now(timezone.utc).isoformat(),
         'role': user.role,
         # 🚨 ΚΡΙΣΙΜΟ: ΕΠΙΣΤΡΕΦΟΥΜΕ ΤΟ AVATAR ΚΑΙ ΤΟ ΧΡΩΜΑ
-        'avatar_url': user.avatar_url, 
+        'avatar_url': user.avatar_url if hasattr(user, 'avatar_url') else '/static/default_avatar.png', # 👈 Προστέθηκε
         'color': color 
     }, room='chat')
 
