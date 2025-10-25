@@ -35,14 +35,14 @@ function parseBBCode(text) {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    const chatbox = document.getElementById('chat-box'); 
+    const chatbox = document.getElementById('chat-messages'); // 👍 ΔΙΟΡΘΩΣΗ!
     const messageInput = document.getElementById('message-input');
     const sendButton = document.getElementById('send-button');
     const colorInput = document.getElementById('color-input'); 
     const notificationButton = document.getElementById('notification-volume-button'); 
     
     // Χρησιμοποιούμε σωστό path για Render
-    const socket = io({ path: '/socket.io/' }); 
+    const socket = io('https://chatbox-final.onrender.com');
     
     // HELPER: Προσθήκη μηνύματος στο UI
     function appendMessage(msg) {
