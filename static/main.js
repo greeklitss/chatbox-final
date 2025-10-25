@@ -67,7 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const usernameSpan = document.createElement('span');
         usernameSpan.className = 'username';
         usernameSpan.textContent = msg.username;
-
+    
+    // 🚨 ΕΦΑΡΜΟΓΗ ΧΡΩΜΑΤΟΣ ΣΤΟ USERNAME
+        if (msg.color) {
+           usernameSpan.style.color = msg.color; 
+    }
         const timestampSpan = document.createElement('span');
         timestampSpan.className = 'timestamp';
         const date = msg.timestamp ? new Date(msg.timestamp) : new Date();
