@@ -33,24 +33,22 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", 'a_default_secret_key_for_local_dev')
 
 
-# --- Ρυθμίσεις Βάσης Δεδομένων ---
+# --- Ρυθμίσεις Βάσης Δεδομένων (ΔΙΟΡΘΩΜΕΝΟ) ---
 database_url = os.environ.get("DATABASE_URL")
 
 if database_url:
-    # 1. Αντικατάσταση του postgres:// με postgresql:// για συμβατότητα με SQLAlchemy
+    # 1. Αντικατάσταση του postgres:// με postgresql://
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
         
-    # 🚨 2. ΚΡΙΣΙΜΟ: Προσθήκη της παραμέτρου SSL
+    # 🚨 2. ΚΡΙΣΙΜΟ: Προσθήκη της παραμέτρου SSL (διορθώνει το "SSL connection has been closed unexpectedly")
     if "sslmode=require" not in database_url:
-        # Χρησιμοποιεί & αν υπάρχουν άλλες παράμετροι ή ? αν είναι η πρώτη
+        # Χρησιμοποιεί & αν υπάρχουν άλλες παράμετροι (όπως το options=-csearch_path) ή ? αν είναι η πρώτη
         separator = '&' if '?' in database_url else '?'
         database_url = f"{database_url}{separator}sslmode=require"
         
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///local_db.sqlite'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# 🚨 Ρυθμίσεις για Session σε SQL DB (Διορθωμένες για Render/HTTPS)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False# 🚨 Ρυθμίσεις για Session σε SQL DB (Διορθωμένες για Render/HTTPS)
 
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
