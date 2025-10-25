@@ -193,7 +193,7 @@ def requires_role(*roles):
         return decorated
     return wrapper
 
-# 🚨 ΑΡΧΙΚΟΠΟΙΗΣΗ ΡΥΘΜΙΣΕΩΝ & EMOTICONS (Έλειπαν και προκαλούσαν σφάλματα)
+# 🚨 ΑΡΧΙΚΟΠΟΙΗΣΗ ΡΥΘΜΙΣΕΩΝ & EMOTICONS (Έλειψαν και προκαλούσαν σφάλματα)
 def initialize_settings():
     """Δημιουργεί default ρυθμίσεις αν δεν υπάρχουν."""
     with app.app_context():
@@ -448,38 +448,39 @@ def handle_message(data):
     if not msg_content:
         return
 
-    # 1. Βρίσκουμε τον χρήστη για να πάρουμε όλα τα στοιχεία του
+    # 🚨 ΚΡΙΣΙΜΟ: ΌΛΗ η λογική που αφορά τη βάση (user, message, emit) ΠΡΕΠΕΙ να είναι εδώ
     with app.app_context():
-        # Χρησιμοποιούμε τον helper για να χειριστούμε και τους Guests
+        # 1. Βρίσκουμε τον χρήστη για να πάρουμε όλα τα στοιχεία του
         user = get_current_user_or_guest() 
         if not user:
             return
 
-        # 2. Αποθήκευση μηνύματος
+        # 2. Αποθήκευση μηνύματος (ΔΙΟΡΘΩΣΗ: Προστέθηκε κόμμα)
         new_message = Message(
             user_id=user.id,
             username=user.display_name, 
             role=user.role,       
             content=msg_content,     
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc), # <-- ΚΡΙΣΙΜΟ: ΠΡΟΣΤΕΘΗΚΕ ΚΟΜΜΑ
             color=color # 👈 Αποθηκεύεται το χρώμα
         )
         db.session.add(new_message)
         db.session.commit()
             
-    # 3. Εκπομπή: Στέλνουμε το μήνυμα πίσω (Μαζί με τα κρίσιμα data)
-    emit('new_message', { 
-        'user_id': user_id,
-        'username': user.display_name,
-        'msg': msg_content,
-        'timestamp': datetime.now(timezone.utc).isoformat(),
-        'role': user.role,
-        # 🚨 ΚΡΙΣΙΜΟ: ΕΠΙΣΤΡΕΦΟΥΜΕ ΤΟ AVATAR ΚΑΙ ΤΟ ΧΡΩΜΑ
-        'avatar_url': user.avatar_url if hasattr(user, 'avatar_url') else '/static/default_avatar.png', # 👈 Προστέθηκε
-        'color': color 
-    }, room='chat')
+        # 3. Εκπομπή: Στέλνουμε το μήνυμα πίσω (Μαζί με τα κρίσιμα data)
+        # 🚨 ΔΙΟΡΘΩΣΗ: Τώρα είναι ΜΕΣΑ στο app_context για να αποφύγουμε το DetachedInstanceError.
+        emit('new_message', { 
+            'user_id': user.id,
+            'username': user.display_name,
+            'msg': msg_content,
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'role': user.role,
+            # ΚΡΙΣΙΜΟ: ΕΠΙΣΤΡΕΦΟΥΜΕ ΤΟ AVATAR ΚΑΙ ΤΟ ΧΡΩΜΑ
+            'avatar_url': user.avatar_url if hasattr(user, 'avatar_url') else '/static/default_avatar.png', 
+            'color': color 
+        }, room='chat')
 
-    print(f"DEBUG: Server received and emitted message from {user.display_name}: {msg_content}")
+        print(f"DEBUG: Server received and emitted message from {user.display_name}: {msg_content}")
 
 # --- ADMIN PANEL & SETTINGS ROUTES (Διορθωμένες) ---
 
