@@ -436,39 +436,51 @@ def on_join():
 @socketio.on('message')
 def handle_message(data):
     user_id = session.get('user_id')
-    username = session.get('display_name')
-    role = session.get('role', 'user')
-     
-    if not user_id or not username:
+    
+    if not user_id:
         return
-     
-    msg = data.get('msg')
-    if not msg:
+    
+    # 🚨 ΝΕΟ: Παίρνουμε το χρώμα που έστειλε το main.js
+    msg_content = data.get('msg')
+    color = data.get('color') 
+
+    if not msg_content:
         return
 
-    # 🚨 ΚΡΙΣΙΜΟ: Αποθήκευση του μηνύματος στη βάση δεδομένων
+    # 1. Βρίσκουμε τον χρήστη για να πάρουμε όλα τα στοιχεία του
     with app.app_context():
+        # Χρησιμοποιούμε τον helper για να χειριστούμε και τους Guests
+        user = get_current_user_or_guest() 
+        if not user:
+            return
+
+        # 2. Αποθήκευση μηνύματος
+        # ΠΡΟΣΟΧΗ: Το μοντέλο σας Message δεν έχει στήλη 'color',
+        # οπότε την αγνοώ προς το παρόν για να μη βγάλει σφάλμα.
+        # Αν προσθέσετε στήλη 'color' στο Message, πρέπει να το βάλετε εδώ.
         new_message = Message(
-            user_id=user_id,
-            username=username, 
-            role=role,         
-            content=msg,       
+            user_id=user.id,
+            username=user.display_name, 
+            role=user.role,       
+            content=msg_content,     
             timestamp=datetime.now(timezone.utc)
         )
         db.session.add(new_message)
         db.session.commit()
-        
-    # 3. Εκπομπή: Στέλνουμε το μήνυμα πίσω
+            
+    # 3. Εκπομπή: Στέλνουμε το μήνυμα πίσω (Μαζί με τα κρίσιμα data)
     emit('new_message', { 
         'user_id': user_id,
-        'username': username,
-        'msg': msg,
+        'username': user.display_name,
+        'msg': msg_content,
         'timestamp': datetime.now(timezone.utc).isoformat(),
-        'role': role
+        'role': user.role,
+        # 🚨 ΚΡΙΣΙΜΟ: ΕΠΙΣΤΡΕΦΟΥΜΕ ΤΟ AVATAR ΚΑΙ ΤΟ ΧΡΩΜΑ
+        'avatar_url': user.avatar_url, 
+        'color': color 
     }, room='chat')
 
-    print(f"DEBUG: Server received and emitted message from {username}: {msg}")
-
+    print(f"DEBUG: Server received and emitted message from {user.display_name}: {msg_content}")
 
 # --- ADMIN PANEL & SETTINGS ROUTES (Διορθωμένες) ---
 

@@ -123,7 +123,51 @@ document.addEventListener('DOMContentLoaded', () => {
         notificationButton.querySelector('i').classList.add(isNotificationSoundEnabled ? 'fa-bell' : 'fa-bell-slash');
     }
 
-    // [.... ΚΩΔΙΚΑΣ applyFormatting & EVENT LISTENERS ΓΙΑ BOLD, COLOR, SEND BUTTON ...]
+    // --- ΣΥΝΑΡΤΗΣΗ ΑΠΟΣΤΟΛΗΣ ΜΗΝΥΜΑΤΟΣ ---
+    function sendMessage() {
+        // Υποθέτουμε ότι το messageInput ορίστηκε σωστά στην κορυφή του DOMContentLoaded
+        const content = messageInput.value.trim(); 
+        if (!content) return; // Αποφυγή κενών μηνυμάτων
+        
+        // Υποθέτουμε ότι το colorInput ορίστηκε σωστά
+        const selectedColor = colorInput ? colorInput.value : ''; 
+        
+        const messageData = {
+            'msg': content,
+            'color': selectedColor,
+        };
+
+        try {
+            // Αυτή η γραμμή στέλνει το μήνυμα στον server (server.py)
+            socket.emit('message', messageData); 
+            messageInput.value = ''; // Καθαρισμός πεδίου εισαγωγής
+        } catch (e) {
+            console.error("Socket emit failed. Is the connection open?", e);
+        }
+    }
+
+    // --- ΛΕΙΤΟΥΡΓΙΑ ΚΟΥΜΠΙΩΝ / ΦΟΡΜΑΣ (ΣΥΝΕΧΕΙΑ) ---
+
+    // 1. Event Listener για το κουμπί Αποστολής (ID: send-button)
+    if (sendButton) {
+        sendButton.addEventListener('click', sendMessage);
+        console.log("Send button listener attached."); // Ελέγξτε αυτό στην Console!
+    } else {
+        console.error("Element with ID 'send-button' not found.");
+    }
+
+    // 2. Event Listener για το Enter στο πεδίο εισαγωγής (ID: message-input)
+    if (messageInput) {
+        messageInput.addEventListener('keydown', function(event) {
+            // Πατάμε Enter, αλλά όχι Shift+Enter
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Αποτρέπει τη νέα γραμμή
+                sendMessage();
+            }
+        });
+    }
+
+// ... (εδώ συνεχίζει το τελικό }); του DOMContentLoaded)
     // (Αυτός ο κώδικας υποτίθεται ότι είναι ήδη σωστός στην τελευταία σας έκδοση του main.js)
     
 });
