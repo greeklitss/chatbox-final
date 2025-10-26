@@ -1,6 +1,7 @@
-// static/main.js - FINAL & COMPLETE VERSION
+// static/main.js - ΟΡΙΣΤΙΚΗ & ΛΕΙΤΟΥΡΓΙΚΗ ΕΚΔΟΣΗ ΓΙΑ ΤΟ CHAT
 
 let isNotificationSoundEnabled = true;
+let selectedColor = '#FF0066'; // Default χρώμα μηνύματος
 
 // 1. ΣΥΝΑΡΤΗΣΗ ΗΧΟΥ ΕΙΔΟΠΟΙΗΣΗΣ
 function playNotificationSound() {
@@ -23,13 +24,13 @@ function parseBBCode(text) {
     text = text.replace(/\[i\](.*?)\[\/i\]/gs, '<em>$1</em>');
     text = text.replace(/\[u\](.*?)\[\/u\]/gs, '<u>$1</u>'); 
     text = text.replace(/\[color=(#[0-9a-fA-F]{3,6})\](.*?)\[\/color\]/gs, '<span style="color:$1;">$2</span>');
-    text = text.replace(/\[url=(.*?)\](.*?)\[\/url\]/gs, '<a href="$1" target="_blank">$2</a>');
-    text = text.replace(/\[img\](.*?)\[\/img\]/gsi, '<img src="$1" alt="User Image" style="max-width:100%; height:auto;">');
+    text = text.replace(/\[url=(.*?)\](.*?)\[\/url\]/gs, '<a href="$1" target="_blank">${$2}</a>');
+    text = text.replace(/\[img\](.*?)\[\/img\]/gsi, '<img src="$1" alt="User Image" style="max-width:100%; height:auto; display: block; margin-top: 5px;">');
     
     // Καθαρισμός τυχόν tags που δεν υποστηρίζονται
     text = text.replace(/\[\/?(emoticon)[^\]]*\]/g, ''); 
     
-    // 🚨 ΝΕΟ: ΠΛΟΥΣΙΑ ONLINE EMOTICONS (Twemoji CDN)
+    // ΠΛΟΥΣΙΑ ONLINE EMOTICONS (Twemoji CDN)
     text = text.replace(/:joy:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f602.png" alt=":joy:" class="emoticon-img">');
     text = text.replace(/:smiley:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f603.png" alt=":smiley:" class="emoticon-img">');
     text = text.replace(/:wink:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f609.png" alt=":wink:" class="emoticon-img">');
@@ -46,7 +47,7 @@ function parseBBCode(text) {
     text = text.replace(/:thumbsup:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f44d.png" alt=":thumbsup:" class="emoticon-img">');
     text = text.replace(/:clap:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f44f.png" alt=":clap:" class="emoticon-img">');
     
-    // 🚨 ΝΕΟ: ΑΥΤΟΜΑΤΗ URL/LINK ΑΝΙΧΝΕΥΣΗ
+    // ΑΥΤΟΜΑΤΗ URL/LINK ΑΝΙΧΝΕΥΣΗ (Μόνο αν δεν είναι ήδη μέσα σε [url] ή [img])
     const urlRegex = /(?<!href="|src=")(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
     text = text.replace(urlRegex, (match) => {
         return `<a href="${match}" target="_blank">${match}</a>`;
@@ -55,11 +56,63 @@ function parseBBCode(text) {
     return text;
 }
 
-// 3. ΣΥΝΑΡΤΗΣΗ ΠΡΟΣΘΗΚΗΣ ΜΗΝΥΜΑΤΟΣ
+// 3. ΣΥΝΑΡΤΗΣΗ ΠΡΟΣΘΗΚΗΣ ΜΗΝΥΜΑΤΟΣ (ΚΡΙΣΙΜΗ ΓΙΑ ΤΗΝ ΕΜΦΑΝΙΣΗ)
 function appendMessage(msg, chatbox) {
-    // ... (Ο δικός σας κώδικας για appendMessage) ...
-}
+    if (!msg.msg && !msg.system) return;
 
+    // Ελέγχουμε αν είναι μήνυμα συστήματος
+    if (msg.system) {
+        const date = new Date();
+        const timeString = date.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+
+        const systemElement = document.createElement('div');
+        systemElement.classList.add('message');
+        systemElement.classList.add('system-message');
+        systemElement.innerHTML = `<span class="timestamp">${timeString}</span> <span class="system-text">${msg.msg}</span>`;
+        chatbox.appendChild(systemElement);
+        return;
+    }
+    
+    // Εμφάνιση ώρας/ημερομηνίας
+    let date;
+    if (msg.timestamp) {
+        // Χειρισμός ISO String από τον server
+        date = new Date(msg.timestamp);
+    } else {
+        // Χρήση τρέχουσας ώρας αν δεν υπάρχει timestamp
+        date = new Date();
+    }
+    const timeString = date.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+
+    // Κανονικό μήνυμα χρήστη
+    const userColor = msg.color || '#FFFFFF';
+    const avatarUrl = msg.avatar_url || '/static/default_avatar.png'; // Χρησιμοποιήστε default αν δεν υπάρχει
+    const parsedContent = parseBBCode(msg.msg);
+    const roleIcon = msg.role === 'owner' ? '<i class="fas fa-crown owner-icon" title="Owner"></i>' : 
+                     (msg.role === 'admin' ? '<i class="fas fa-shield-alt admin-icon" title="Admin"></i>' : '');
+
+    const messageContainer = document.createElement('div');
+    messageContainer.classList.add('message-container');
+    
+    const messageHTML = `
+        <img src="${avatarUrl}" alt="Avatar" class="avatar">
+        <div class="message-content">
+            <div class="message-header">
+                <span class="username" style="color: ${userColor};">${msg.username} ${roleIcon}</span>
+                <span class="timestamp">${timeString}</span>
+            </div>
+            <div class="message-box">
+                ${parsedContent}
+            </div>
+        </div>
+    `;
+
+    messageContainer.innerHTML = messageHTML;
+    chatbox.appendChild(messageContainer);
+    
+    // Εγγύηση scroll στο κάτω μέρος
+    chatbox.scrollTop = chatbox.scrollHeight;
+}
 
 // --- SOCKET IO & DOM LISTENERS ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -68,41 +121,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageInput = document.getElementById('message-input');
     const sendButton = document.getElementById('send-button');
 
-    // ... (Δήλωση άλλων κουμπιών) ...
+    const boldButton = document.getElementById('bold-button');
+    const italicButton = document.getElementById('italic-button');
+    const underlineButton = document.getElementById('underline-button');
     const emoticonButton = document.getElementById('emoticon-button');
     const emoticonSelector = document.getElementById('emoticon-selector');
     const colorPickerButton = document.getElementById('color-picker-button');
     const colorInput = document.getElementById('color-input');
     const notificationButton = document.getElementById('notification-volume-button');
+    const gifButton = document.getElementById('gif-button'); // Προετοιμασία για το GIF button
 
     // --- SOCKET LISTENERS ---
     socket.on('connect', () => {
         console.log('Connected to server');
-        // Ενημερώνουμε τον server ότι ο χρήστης είναι online
-        socket.emit('user_joined'); 
+        // Ενημερώνουμε τον server ότι ο χρήστης είναι online και ότι πρέπει να τον βάλει στο chat room
+        socket.emit('join'); 
     });
 
+    // Λήψη ιστορικού
     socket.on('history', function(messages) {
         messages.forEach(msg => appendMessage(msg, chatbox)); 
         chatbox.scrollTop = chatbox.scrollHeight;
     });
 
+    // Λήψη νέου μηνύματος
     socket.on('message', function(msg) {
         appendMessage(msg, chatbox);
-        chatbox.scrollTop = chatbox.scrollHeight;
         playNotificationSound();
     });
-
-    // 🚨 ΝΕΟ: ΕΝΗΜΕΡΩΣΗ ΛΙΣΤΑΣ ONLINE ΧΡΗΣΤΩΝ
-    const onlineUsersList = document.getElementById('online-users-list');
     
+    // Λήψη status messages (π.χ., user joined/left)
+    socket.on('status_message', function(data) {
+        appendMessage({...data, system: true}, chatbox);
+    });
+
+    // Ενημέρωση λίστας online χρηστών
+    const onlineUsersList = document.getElementById('online-users-list');
     socket.on('update_online_users', function(data) {
         if (!onlineUsersList) return;
 
-        // Εκκαθάριση και ενημέρωση του τίτλου/counter
         onlineUsersList.innerHTML = '<h4>Online Users (<span id="online-users-count">' + data.count + '</span>)</h4>';
         
-        // Δημιουργία λίστας
         const ul = document.createElement('ul');
         ul.style.listStyle = 'none';
         ul.style.padding = '0';
@@ -110,9 +169,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         data.users.forEach(user => {
             const li = document.createElement('li');
-            li.style.color = user.color || '#FFFFFF'; 
+            li.style.color = user.color || '#AAAAAA'; 
             li.style.marginBottom = '5px';
-            li.innerHTML = `<i class="fas fa-circle" style="font-size: 0.7em; margin-right: 5px; color: ${user.color || '#00bcd4'};"></i>${user.display_name} (${user.role})`;
+            const role_class = user.role === 'owner' ? 'owner-text' : (user.role === 'admin' ? 'admin-text' : '');
+            li.innerHTML = `<i class="fas fa-circle ${role_class}" style="font-size: 0.7em; margin-right: 5px;"></i>${user.display_name} (${user.role})`;
             ul.appendChild(li);
         });
         
@@ -120,52 +180,129 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('online-users-count').textContent = data.count; 
     });
     
-    // --- ΣΥΝΑΡΤΗΣΗ ΑΠΟΣΤΟΛΗΣ ΜΗΝΥΜΑΤΟΣ ---
+    // --- ΣΥΝΑΡΤΗΣΗ ΑΠΟΣΤΟΛΗΣ ΜΗΝΥΜΑΤΟΣ (ΚΡΙΣΙΜΗ ΓΙΑ ΤΗ ΛΕΙΤΟΥΡΓΙΑ) ---
     function sendMessage() {
-        // ... (Ο δικός σας κώδικας sendMessage) ...
+        const msg = messageInput.value.trim();
+        if (msg) {
+            // Εκπέμπουμε το μήνυμα στον server μαζί με το επιλεγμένο χρώμα
+            socket.emit('message', { 
+                msg: msg,
+                color: selectedColor 
+            });
+            messageInput.value = ''; // Καθαρισμός του input
+            messageInput.style.height = 'auto'; // Επαναφορά ύψους
+        }
     }
 
-    // --- DOM EVENT LISTENERS (Κουμπιά) ---
+    // --- DOM EVENT LISTENERS (Κουμπιά & Input) ---
 
-    // ... (Λογική για Bold/Italic/Underline κ.λπ.) ...
+    // 1. Send Button & Enter Key
+    sendButton.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); 
+            sendMessage();
+        }
+    });
+
+    // Αυτόματη προσαρμογή ύψους του textarea
+    messageInput.addEventListener('input', () => {
+        messageInput.style.height = 'auto';
+        messageInput.style.height = (messageInput.scrollHeight) + 'px';
+    });
     
-    // Color Picker Button
-    if (colorPickerButton && colorInput) {
-        colorPickerButton.addEventListener('click', () => {
-            colorInput.click();
-        });
+    // 2. Formatting Buttons Helper
+    function wrapText(tag) {
+        const start = messageInput.selectionStart;
+        const end = messageInput.selectionEnd;
+        const selectedText = messageInput.value.substring(start, end);
+        
+        const newText = `[${tag}]${selectedText}[/${tag}]`;
+        
+        messageInput.value = messageInput.value.substring(0, start) + newText + messageInput.value.substring(end);
+        
+        // Τοποθέτηση του cursor μετά το κλειστό tag
+        const newCursorPos = start + newText.length;
+        messageInput.setSelectionRange(newCursorPos, newCursorPos);
+        messageInput.focus();
     }
+    
+    boldButton.addEventListener('click', () => wrapText('b'));
+    italicButton.addEventListener('click', () => wrapText('i'));
+    underlineButton.addEventListener('click', () => wrapText('u'));
+    
+    // 3. Color Picker
+    colorPickerButton.addEventListener('click', () => {
+        colorInput.click();
+    });
+    colorInput.addEventListener('input', (e) => {
+        selectedColor = e.target.value;
+        // Προαιρετικό: Αλλάξτε το χρώμα του εικονιδίου για οπτική ανατροφοδότηση
+        colorPickerButton.style.color = selectedColor; 
+    });
 
-    // Emoticon Button (Display Toggle)
+    // 4. Emoticon Button (Toggle Display)
     if (emoticonButton && emoticonSelector) {
         emoticonButton.addEventListener('click', () => {
+            // Εναλλαγή εμφάνισης
             emoticonSelector.style.display = emoticonSelector.style.display === 'block' ? 'none' : 'block';
         });
         
-        // Κλείνει ο selector αν κλικάρουμε εκτός
+        // Κλείσιμο selector αν κλικάρουμε εκτός
         document.addEventListener('click', (event) => {
             if (!emoticonButton.contains(event.target) && !emoticonSelector.contains(event.target)) {
                 emoticonSelector.style.display = 'none';
             }
         });
 
-        // 🚨 ΝΕΟ: ΛΟΓΙΚΗ ΕΙΣΑΓΩΓΗΣ EMOTICON
+        // ΛΟΓΙΚΗ ΕΙΣΑΓΩΓΗΣ EMOTICON
         const emoticonGrid = emoticonSelector.querySelector('.emoticon-grid');
         emoticonGrid.addEventListener('click', (event) => {
             if (event.target.tagName === 'IMG') {
                 const code = event.target.dataset.code; 
-                const input = document.getElementById('message-input');
                 
-                // Εισάγουμε τον κωδικό στο textarea
-                input.value += (input.value.length > 0 ? ' ' : '') + code + ' ';
-                input.focus();
+                // Εισάγουμε τον κωδικό στο textarea με κενό
+                messageInput.value += (messageInput.value.length > 0 ? ' ' : '') + code + ' ';
+                messageInput.focus();
                 
-                // Κλείνουμε τον selector
+                // Προσαρμογή ύψους μετά την εισαγωγή
+                messageInput.style.height = 'auto';
+                messageInput.style.height = (messageInput.scrollHeight) + 'px';
+                
                 emoticonSelector.style.display = 'none';
             }
         });
     }
 
-    // Notification Button
-    // ... (Ο δικός σας κώδικας για Notification Button) ...
+    // 5. Notification Button (Volume)
+    if (notificationButton) {
+        notificationButton.addEventListener('click', () => {
+            isNotificationSoundEnabled = !isNotificationSoundEnabled;
+            const icon = notificationButton.querySelector('i');
+            
+            if (isNotificationSoundEnabled) {
+                icon.classList.replace('fa-bell-slash', 'fa-bell');
+                notificationButton.title = 'Notification Sound ON';
+                playNotificationSound(); 
+            } else {
+                icon.classList.replace('fa-bell', 'fa-bell-slash');
+                notificationButton.title = 'Notification Sound OFF';
+            }
+        });
+        // Αρχική ρύθμιση εικονιδίου
+        notificationButton.querySelector('i').classList.add(isNotificationSoundEnabled ? 'fa-bell' : 'fa-bell-slash');
+    }
+    
+    // 6. GIF Button - Απλά προσθέτουμε την κλήση wrapText για [img] για δοκιμή URL
+    if(gifButton){
+        gifButton.addEventListener('click', () => {
+            const imageUrl = prompt("Please paste the full image/GIF URL here:");
+            if (imageUrl) {
+                const imgTag = `[img]${imageUrl}[/img]`;
+                messageInput.value += imgTag;
+                messageInput.focus();
+            }
+        });
+    }
+
 });
