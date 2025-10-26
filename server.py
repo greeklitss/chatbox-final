@@ -41,33 +41,29 @@ if database_url:
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
         
-    # 🚨 2. ΚΡΙΣΙΜΟ: Προσθήκη της παραμέτρου SSL (διορθώνει το "SSL connection has been closed unexpectedly")
+    # 🚨 2. ΚΡΙΣΙΜΟ: Προσθήκη της παραμέτρου SSL
     if "sslmode=require" not in database_url:
-        # Χρησιμοποιεί & αν υπάρχουν άλλες παράμετροι (όπως το options=-csearch_path) ή ? αν είναι η πρώτη
         separator = '&' if '?' in database_url else '?'
         database_url = f"{database_url}{separator}sslmode=require"
         
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///local_db.sqlite'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False# 🚨 Ρυθμίσεις για Session σε SQL DB (Διορθωμένες για Render/HTTPS)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# 🚨 Ρυθμίσεις για Session σε SQL DB
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_TYPE'] = 'sqlalchemy' 
 app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions' 
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
-app.config['SESSION_COOKIE_SECURE'] = True      # Τα cookies αποστέλλονται μόνο μέσω HTTPS (Απαραίτητο για Render)
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'   # ΔΙΟΡΘΩΣΗ: Αλλάχτηκε από 'None' σε 'Lax'
-app.config["SESSION_USE_SIGNER"] = True # Συνιστάται
-
-# ΚΡΙΣΙΜΗ & ΟΡΙΣΤΙΚΗ ΔΙΟΡΘΩΣΗ: Περνάμε το αντικείμενο 'db' στο Flask-Session configuration
+app.config['SESSION_COOKIE_SECURE'] = True      
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'   
+app.config["SESSION_USE_SIGNER"] = True 
 app.config['SESSION_SQLALCHEMY'] = db 
 
 # --- ΣΥΝΔΕΣΗ ΤΩΝ EXTENSIONS ΜΕ ΤΗΝ ΕΦΑΡΜΟΓΗ (Application Factory Pattern) ---
-db.init_app(app) # 1. Συνδέουμε το SQLAlchemy
-sess.init_app(app) # 2. Συνδέουμε το Session
-
-# 3. Συνδέουμε το OAuth
+db.init_app(app) 
+sess.init_app(app) 
 oauth.init_app(app) 
 
 # Google config
@@ -88,20 +84,19 @@ socketio = SocketIO(
     cors_allowed_origins="*", 
     async_mode='eventlet',
     manage_session=False, 
-    # 🚨 ΝΕΑ ΠΡΟΣΘΗΚΗ: Βοηθάει με τους Load Balancers
     path='/socket.io/', 
     transports=['websocket', 'polling'] 
 )
 
 
-# --- DATABASE MODELS (ΤΩΡΑ ΠΛΗΡΗΣ ΛΙΣΤΑ) ---
+# --- DATABASE MODELS ---
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     display_name = db.Column(db.String(100), nullable=False)
     role = db.Column(db.String(50), default='user') # guest, user, admin, owner
-    password_hash = db.Column(db.String(256), nullable=True) # Για local login
+    password_hash = db.Column(db.String(256), nullable=True) 
     avatar_url = db.Column(db.String(256), nullable=True)
     last_seen = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc)) 
     is_active = db.Column(db.Boolean, default=True)
@@ -126,13 +121,12 @@ class Message(db.Model):
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     color = db.Column(db.String(7), nullable=True, default='#FFFFFF')
 
-# 🚨 ΔΙΟΡΘΩΣΗ: Προσθέτουμε πίσω τη στήλη 'description'
 class Setting(db.Model):
     __tablename__ = 'setting'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True) 
     key = db.Column(db.String(80), unique=True, nullable=False)
     value = db.Column(db.String(255))
-    description = db.Column(db.String(255), nullable=True) # <-- ΚΡΙΣΙΜΗ ΠΡΟΣΘΗΚΗ
+    description = db.Column(db.String(255), nullable=True) 
 
     def __repr__(self):
         return f"<Setting {self.key}: {self.value}>"
@@ -165,12 +159,10 @@ def get_current_user_or_guest():
     role = session.get('role')
 
     if role == 'guest' and user_id:
-        # Retrieve display_name from session for guests
         display_name = session.get('display_name', f"Guest-{user_id.split('-')[-1]}")
         return GuestUser(user_id, display_name)
 
     elif user_id:
-        # Regular user, fetch from DB
         return db.session.get(User, user_id)
 
     return None
@@ -185,7 +177,7 @@ def requires_role(*roles):
                 return redirect(url_for('login'))
             
             with app.app_context():
-                user = get_current_user_or_guest() # Χρήση helper function
+                user = get_current_user_or_guest() 
                 if user and user.role in roles:
                     return f(*args, **kwargs)
                 
@@ -193,11 +185,44 @@ def requires_role(*roles):
         return decorated
     return wrapper
 
-# 🚨 ΑΡΧΙΚΟΠΟΙΗΣΗ ΡΥΘΜΙΣΕΩΝ & EMOTICONS (Έλειψαν και προκαλούσαν σφάλματα)
+# 🚨 ΝΕΟ: GLOBAL DATA & ΛΟΓΙΚΗ ONLINE ΧΡΗΣΤΩΝ
+active_sessions = {} # {sid: {'user_id': id, 'display_name': name, 'role': role, 'color': color, 'guest_id': guest_id}}
+
+def get_online_users_data():
+    """Συλλέγει τα δεδομένα των online χρηστών."""
+    users_data = []
+    unique_user_identifiers = set() 
+    
+    for sess_id, user_info in active_sessions.items():
+        identifier = user_info.get('user_id') if user_info.get('user_id') else user_info.get('guest_id')
+        
+        if identifier and identifier not in unique_user_identifiers:
+            unique_user_identifiers.add(identifier)
+            users_data.append({
+                'display_name': user_info.get('display_name', 'Guest'),
+                'role': user_info.get('role', 'guest'),
+                'color': user_info.get('color', '#AAAAAA') 
+            })
+            
+    # Ταξινόμηση: owner/admin στην κορυφή
+    role_order = {'owner': 0, 'admin': 1, 'user': 2, 'guest': 3}
+    users_data.sort(key=lambda x: (role_order.get(x['role'], 99), x['display_name']))
+    
+    return {
+        'count': len(unique_user_identifiers),
+        'users': users_data
+    }
+
+def emit_online_users():
+    """Εκπέμπει την ενημερωμένη λίστα online χρηστών σε όλους."""
+    data = get_online_users_data()
+    socketio.emit('update_online_users', data, room='chat')
+
+
+# 🚨 ΑΡΧΙΚΟΠΟΙΗΣΗ ΡΥΘΜΙΣΕΩΝ & EMOTICONS
 def initialize_settings():
     """Δημιουργεί default ρυθμίσεις αν δεν υπάρχουν."""
     with app.app_context():
-        # Χρησιμοποιούμε το description field τώρα
         default_settings = {
             'chat_name': ('AkoY Me Chat', 'Το όνομα της εφαρμογής chat.'),
             'emoticons_enabled': ('True', 'Ενεργοποίηση/Απενεργοποίηση Emoticons (True/False).'),
@@ -214,11 +239,10 @@ def initialize_settings():
 def initialize_emoticons():
     """Δημιουργεί default emoticons αν δεν υπάρχουν."""
     with app.app_context():
-        # Υποθέτουμε ότι αυτά τα αρχεία εικόνων υπάρχουν στον φάκελο /static/emoticons/
+        # Αυτό το table μπορεί να χρησιμοποιηθεί για Admin Panel Emoticon Management, αν και το front-end χρησιμοποιεί CDN.
         default_emoticons = [
-            (':smile:', '/static/emoticons/smile.png'),
-            (':sad:', '/static/emoticons/sad.png'),
-            (':heart:', '/static/emoticons/heart.png')
+            (':smile:', 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f603.png'),
+            (':heart:', 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2764.png')
         ]
         
         for code, url in default_emoticons:
@@ -288,7 +312,6 @@ def local_sign_up():
             return jsonify({'error': 'User with this email already exists.'}), 409
 
         try:
-            # Ο πρώτος χρήστης που εγγράφεται γίνεται 'owner'
             is_first_user = db.session.execute(db.select(db.func.count(User.id))).scalar() == 0
             role = 'owner' if is_first_user else 'user'
             
@@ -309,17 +332,15 @@ def local_sign_up():
             print(f"Database error during sign up: {e}") 
             return jsonify({'error': 'An internal server error occurred during registration.'}), 500
 
-# --- GOOGLE AUTH ROUTES (Συμπληρωμένες) ---
+# --- GOOGLE AUTH ROUTES ---
 
 @app.route('/login/google')
 def login_google():
-    # Εδώ θα πρέπει να χρησιμοποιείτε το google.authorize_redirect, όπως στο προηγούμενο
     return oauth.google.authorize_redirect(redirect_uri=os.environ.get("GOOGLE_REDIRECT_URI"))
 
 @app.route('/login/google/authorize') 
 def authorize_google():
     try:
-        # Χρησιμοποιούμε το state για να αποφύγουμε CSRF, το nonce για replay attacks
         token = oauth.google.authorize_access_token()
         nonce = session.pop('nonce', None) 
         user_info = oauth.google.parse_id_token(token, nonce=nonce)
@@ -382,35 +403,53 @@ def logout():
 
 @socketio.on('connect')
 def handle_connect():
-    # ΔΙΑΧΕΙΡΙΣΗ SESSION ID ΓΙΑ FLASK-SESSION
     s_id = request.args.get('session_id')
     
     if s_id:
         session.sid = s_id 
-        session.get('user_id') # Φορτώνει τη session
+        session.get('user_id') 
         session.modified = True 
         
     print(f'Client connected: {request.sid}, User ID: {session.get("user_id")}')
 
+
 @socketio.on('join')
 def on_join():
-    """Χειρισμός σύνδεσης στο κύριο chat room και φόρτωση ιστορικού."""
+    """Χειρισμός σύνδεσης στο κύριο chat room, φόρτωση ιστορικού & ενημέρωση online λίστας."""
     
-    if not session.get('user_id'):
+    user_id = session.get('user_id')
+    
+    if not user_id:
          print(f"ERROR: Client tried to join but session not loaded.")
          return
          
     join_room('chat') 
     
+    # 🚨 ΝΕΟ: Ενημέρωση active_sessions & συλλογή δεδομένων
+    with app.app_context():
+        user = get_current_user_or_guest()
+        
+        session_info = {
+            'user_id': user.id if user.role != 'guest' else None,
+            'guest_id': user.id if user.role == 'guest' else None,
+            'display_name': user.display_name,
+            'role': user.role,
+            # Εδώ θα μπορούσαμε να πάρουμε το χρώμα αν το είχαμε αποθηκεύσει στο session/DB
+            'color': user.color if user.role == 'guest' else '#FFFFFF' 
+        }
+        active_sessions[request.sid] = session_info
+
     username = session.get('display_name')
     if username:
-        # Ενημερώνουμε τους άλλους για τη σύνδεση
         emit('status_message', {'msg': f'{username} joined the chat.'}, 
              room='chat', include_self=False)
     
     print(f"{username} joined room 'chat'")
     
-    # ΚΡΙΣΙΜΟ: Φόρτωση Ιστορικού Μηνυμάτων
+    # 🚨 ΚΑΛΕΣΤΕ: Εκπομπή της ενημερωμένης λίστας σε όλους
+    emit_online_users()
+    
+    # Φόρτωση Ιστορικού Μηνυμάτων
     with app.app_context():
         recent_messages = db.session.execute(
             db.select(Message)
@@ -426,12 +465,31 @@ def on_join():
                 'msg': msg.content, 
                 'timestamp': msg.timestamp.isoformat(),
                 'role': msg.role,
-                'user_id': msg.user_id 
+                'user_id': msg.user_id,
+                'color': msg.color # 👈 Προστέθηκε
             }
             for msg in recent_messages
         ]
         
         emit('history', history_data, room=request.sid)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    username = active_sessions.get(request.sid, {}).get('display_name', 'A user')
+    
+    # 🚨 ΝΕΟ: Διαγραφή από active_sessions
+    if request.sid in active_sessions:
+        del active_sessions[request.sid]
+        
+    # 🚨 ΚΑΛΕΣΤΕ: Εκπομπή της ενημερωμένης λίστας σε όλους
+    emit_online_users()
+    
+    # Ενημέρωση των άλλων χρηστών
+    emit('status_message', {'msg': f'{username} left the chat.'}, 
+         room='chat', include_self=False)
+    
+    leave_room('chat')
+    print(f"{username} left the chat (SID: {request.sid})")
 
 
 @socketio.on('message')
@@ -441,48 +499,44 @@ def handle_message(data):
     if not user_id:
         return
     
-    # 🚨 ΝΕΟ: Παίρνουμε το χρώμα που έστειλε το main.js
     msg_content = data.get('msg')
-    color = data.get('color') 
+    # 🚨 ΝΕΟ: Χρησιμοποιούμε default color αν δεν σταλεί
+    color = data.get('color') or '#FFFFFF' 
 
     if not msg_content:
         return
 
-    # 🚨 ΚΡΙΣΙΜΟ: ΌΛΗ η λογική που αφορά τη βάση (user, message, emit) ΠΡΕΠΕΙ να είναι εδώ
     with app.app_context():
-        # 1. Βρίσκουμε τον χρήστη για να πάρουμε όλα τα στοιχεία του
         user = get_current_user_or_guest() 
         if not user:
             return
 
-        # 2. Αποθήκευση μηνύματος (ΔΙΟΡΘΩΣΗ: Προστέθηκε κόμμα)
+        # 🚨 ΔΙΟΡΘΩΣΗ: Σύνταξη και αποθήκευση χρώματος
         new_message = Message(
             user_id=user.id,
             username=user.display_name, 
             role=user.role,       
             content=msg_content,     
-            timestamp=datetime.now(timezone.utc), # <-- ΚΡΙΣΙΜΟ: ΠΡΟΣΤΕΘΗΚΕ ΚΟΜΜΑ
-            color=color # 👈 Αποθηκεύεται το χρώμα
+            timestamp=datetime.now(timezone.utc),
+            color=color 
         )
         db.session.add(new_message)
         db.session.commit()
             
-        # 3. Εκπομπή: Στέλνουμε το μήνυμα πίσω (Μαζί με τα κρίσιμα data)
-        # 🚨 ΔΙΟΡΘΩΣΗ: Τώρα είναι ΜΕΣΑ στο app_context για να αποφύγουμε το DetachedInstanceError.
-        emit('new_message', { 
-            'user_id': user.id,
-            'username': user.display_name,
-            'msg': msg_content,
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'role': user.role,
-            # ΚΡΙΣΙΜΟ: ΕΠΙΣΤΡΕΦΟΥΜΕ ΤΟ AVATAR ΚΑΙ ΤΟ ΧΡΩΜΑ
-            'avatar_url': user.avatar_url if hasattr(user, 'avatar_url') else '/static/default_avatar.png', 
-            'color': color 
-        }, room='chat')
+    # 3. Εκπομπή: Στέλνουμε το μήνυμα πίσω (Μαζί με τα κρίσιμα data)
+    emit('message', { 
+        'user_id': user_id,
+        'username': user.display_name,
+        'msg': msg_content,
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'role': user.role,
+        'avatar_url': user.avatar_url if hasattr(user, 'avatar_url') and user.avatar_url else '/static/default_avatar.png',
+        'color': color 
+    }, room='chat')
 
-        print(f"DEBUG: Server received and emitted message from {user.display_name}: {msg_content}")
+    print(f"DEBUG: Server received and emitted message from {user.display_name}: {msg_content}")
 
-# --- ADMIN PANEL & SETTINGS ROUTES (Διορθωμένες) ---
+# --- ADMIN PANEL & SETTINGS ROUTES ---
 
 @app.route('/check_login')
 def check_login():
@@ -516,13 +570,16 @@ def set_user_role():
             if user.id == session['user_id']:
                  return jsonify({'success': False, 'message': 'Cannot change your own role.'}), 403
             
-            # Έλεγχος: Μόνο ο Owner μπορεί να ορίσει/αφαιρέσει Admin/Owner
             current_user = db.session.get(User, session['user_id'])
             if (new_role in ['owner', 'admin'] or user.role in ['owner', 'admin']) and current_user.role != 'owner':
                 return jsonify({'success': False, 'message': 'Only the owner can manage admin/owner roles.'}), 403
                 
             user.role = new_role
             db.session.commit()
+            
+            # 🚨 ΝΕΟ: Ενημερώνουμε τους online χρήστες για την αλλαγή ρόλου
+            emit_online_users() 
+            
             return jsonify({'success': True, 'message': f'User {user.display_name} role set to {new_role}.'})
         else:
             return jsonify({'success': False, 'message': 'User not found.'}), 404
@@ -532,15 +589,12 @@ def get_settings():
     settings_data = {}
     with app.app_context():
         try:
-            # 🚨 ΔΙΟΡΘΩΣΗ: Πλέον η στήλη 'description' υπάρχει
             settings = db.session.execute(db.select(Setting)).scalars().all()
         except ProgrammingError as e:
-            # Εάν αποτύχει η πρώτη φορά, επιστρέφουμε κενό, αλλά το db_init θα πρέπει να το διορθώσει
             print(f"ProgrammingError fetching settings: {e}")
             settings = [] 
             
         for setting in settings:
-            # Μετατροπή των τιμών True/False σε booleans
             if setting.value.lower() == 'true':
                 val = True
             elif setting.value.lower() == 'false':
@@ -557,7 +611,6 @@ def set_setting():
     data = request.get_json()
     key = data.get('key')
     value = data.get('value')
-    # Το description δεν αλλάζει από το panel, αλλά το χρειαζόμαστε
     
     if not key or value is None:
         return jsonify({'success': False, 'message': 'Missing key or value.'}), 400
@@ -571,7 +624,6 @@ def set_setting():
             if setting:
                 setting.value = value_str
             else:
-                # Εάν η ρύθμιση δεν υπάρχει, την προσθέτουμε με default description
                 new_setting = Setting(key=key, value=value_str, description="Custom setting added by admin.")
                 db.session.add(new_setting)
             
@@ -597,7 +649,6 @@ def set_avatar_url():
 
     user_id = session['user_id']
     with app.app_context():
-        # Guests δεν αποθηκεύουν μόνιμα
         if session.get('role') == 'guest':
              return jsonify({'success': True, 'message': 'Avatar URL set for this session.'})
              
@@ -606,7 +657,6 @@ def set_avatar_url():
             user.avatar_url = new_url
             db.session.commit()
             
-            # 🚨 Ενημέρωση WebSocket για άμεση αλλαγή
             socketio.emit('user_avatar_updated', {
                 'user_id': user.id,
                 'avatar_url': new_url
@@ -618,12 +668,8 @@ def set_avatar_url():
             
 
 # --- ΠΡΟΣΘΗΚΗ: ΚΡΙΣΙΜΟΣ ΕΛΕΓΧΟΣ ΔΗΜΙΟΥΡΓΙΑΣ ΒΑΣΗΣ ---
-# Εκτελείται όταν φορτώνεται η εφαρμογή (ακόμα και από gunicorn/Render)
 with app.app_context():
-    # Δημιουργεί όλους τους πίνακες (User, Message, Setting κ.λπ.) αν δεν υπάρχουν
     db.create_all() 
-    
-    # 🚨 ΚΑΛΟΥΜΕ ΤΙΣ ΣΥΝΑΡΤΗΣΕΙΣ ΑΡΧΙΚΟΠΟΙΗΣΗΣ
     initialize_settings() 
     initialize_emoticons() 
     

@@ -1,50 +1,36 @@
-/* static/style.css - FINAL VERSION (Με Διαφάνεια) */
-
 /* --- 1. ΒΑΣΙΚΟ RESET & ΧΡΩΜΑΤΑ (Theme) --- */
 :root {
-    --primary-color: #ff66aa;    /* Hot Pink */
-    --secondary-color: #00cccc;  /* Bright Cyan */
+    /* Διατηρούμε τα φωτεινά χρώματα: */
+    --primary-color: #ff66aa;    /* Hot Pink (Κύριο) */
+    --secondary-color: #00cccc;  /* Bright Cyan (Δευτερεύον) */
     --text-color: #ffffff;
     --system-color: #ffc107;
-    --border-color: #55595f;
+    --border-color: rgba(255, 255, 255, 0.2); /* Πιο φωτεινό border */
     --avatar-size: 35px;
+    /* Νέα σκούρη/διαφανής βάση */
+    --background-dark: rgba(25, 30, 36, 0.85); /* Σκούρα βάση με διαφάνεια */
+    --input-background: rgba(255, 255, 255, 0.1); /* Ανοιχτό/διαφανές για inputs */
 }
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Roboto', sans-serif;
-}
-
-body {
-    background-color: #1f2328; /* Fallback */
-    color: var(--text-color);
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-    font-size: 16px;
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-}
+/* ... (Ο κώδικας * και body παραμένει ίδιος) ... */
 
 /* --- 2. HEADER & TOOLS (Web Radio, Admin, Volume) --- */
 .header-tools {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between; /* Σπρώχνει τα στοιχεία στα άκρα */
     align-items: center;
     padding: 10px 20px;
-    /* 🚨 ΗΜΙΔΙΑΦΑΝΕΣ ΦΟΝΤΟ */
-    background-color: rgba(31, 35, 40, 0.9); 
-    border-bottom: 1px solid var(--border-color);
+    background-color: var(--background-dark); /* Χρησιμοποιούμε τη νέα μεταβλητή */
+    border-bottom: 2px solid var(--primary-color); /* Πιο έντονο border */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
 }
 
 .header-tools audio {
-    flex-grow: 1;
-    max-width: 500px;
-    margin-right: 20px;
+    flex-grow: 0;
+    max-width: 300px; /* Μικρότερο πλάτος για το player */
+    /* 🚨 ΝΕΟ ΣΤΥΛ ΓΙΑ ΤΟ WEB RADIO PLAYER */
+    border-radius: 5px;
+    background: var(--input-background);
+    padding: 5px;
 }
 
 /* ... (Στυλ κουμπιών Admin/Volume) ... */
@@ -54,71 +40,90 @@ body {
     display: flex;
     flex-grow: 1;
     overflow: hidden;
+    /* 🚨 ΝΕΟ: Εφαρμόζουμε στυλ στο container */
+    width: 95%;
+    max-width: 1200px;
+    margin: 20px auto;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.2); /* Πολύ ελαφριά βάση για να φαίνεται το φόντο */
 }
 
 .chat-box {
     flex-grow: 1;
     padding: 15px;
     overflow-y: auto;
-    /* 🚨 ΔΙΑΦΑΝΕΣ CHATBOX */
-    background-color: transparent; 
+    background-color: transparent; /* Τελείως διαφανές */
 }
 
 .online-users-list {
-    width: 200px;
+    width: 250px; /* Λίγο μεγαλύτερο πλάτος */
     min-width: 200px;
     padding: 15px;
-    /* 🚨 ΗΜΙΔΙΑΦΑΝΕΣ ΦΟΝΤΟ */
-    background-color: rgba(31, 35, 40, 0.85); 
+    background-color: var(--background-dark); 
     border-left: 1px solid var(--border-color);
     overflow-y: auto;
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+.online-users-list h4 {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
 }
 
 /* --- 4. ΣΤΥΛ ΜΗΝΥΜΑΤΟΣ --- */
 .message-container {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 12px;
+    /* ... (Παραμένει ίδιο) ... */
 }
 
 .avatar {
-    width: var(--avatar-size);
-    height: var(--avatar-size);
-    border-radius: 50%;
-    margin-right: 10px;
-    border: 2px solid var(--primary-color);
+    /* ... (Παραμένει ίδιο) ... */
+    border: 2px solid var(--secondary-color); /* Αλλαγή χρώματος border avatar */
 }
 
 .message-box {
-    /* 🚨 ΗΜΙΔΙΑΦΑΝΕΣ ΦΟΝΤΟ ΓΙΑ ΑΝΑΓΝΩΣΙΜΟΤΗΤΑ */
-    background-color: rgba(31, 35, 40, 0.85); 
-    padding: 8px 12px;
-    border-radius: 15px;
+    /* Πιο ανοιχτό/διαφανές φόντο μηνυμάτων για να "αναπνέει" το chat */
+    background-color: rgba(255, 255, 255, 0.15); 
+    color: var(--text-color);
+    padding: 10px 15px;
+    border-radius: 18px;
     border-top-left-radius: 0;
-    /* ... */
+    /* ... (Ο υπόλοιπος κώδικας παραμένει ίδιος) ... */
 }
-
-/* --- 5. ΣΤΥΛ ΡΟΛΩΝ (ΧΡΩΜΑΤΑ) --- */
-.role-mod .username, .role-moderator .username { color: var(--secondary-color); }
-.role-admin .username { color: var(--primary-color); }
-.role-owner .username { color: #FFCC00; }
-.role-system .username { color: var(--system-color); }
 
 /* --- 6. FOOTER & MESSAGE INPUT AREA --- */
 .message-input-area {
     display: flex;
-    align-items: flex-end;
-    padding: 10px 15px;
-    /* 🚨 ΗΜΙΔΙΑΦΑΝΕΣ ΦΟΝΤΟ */
-    background-color: rgba(60, 66, 74, 0.9);
+    align-items: center; /* Αλλάζουμε σε center για καλύτερη στοίχιση */
+    width: 95%;
+    max-width: 1200px;
+    margin: 10px auto 30px auto;
+    padding: 10px;
+    background-color: var(--background-dark); 
+    border-radius: 10px;
     border-top: 1px solid var(--border-color);
 }
 
-#message-input {
-    /* 🚨 ΗΜΙΔΙΑΦΑΝΕΣ ΦΟΝΤΟ INPUT FIELD */
-    background-color: rgba(31, 35, 40, 0.95); 
-    color: var(--text-color);
-    /* ... */
+.message-input-area button {
+    background: var(--primary-color); 
+    transition: background 0.3s, transform 0.1s;
+    font-size: 1.1em;
+    padding: 10px 15px;
+    border-radius: 7px;
 }
 
-/* ... (Ο υπόλοιπος κώδικας για τα κουμπιά) ... */
+.message-input-area button:hover {
+    background: #ff85b8; 
+    transform: translateY(-1px);
+}
+
+#message-input {
+    background-color: var(--input-background); 
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    padding: 10px;
+    resize: none;
+}
