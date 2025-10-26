@@ -44,7 +44,7 @@ body {
     background-color: var(--background-dark); 
     border-bottom: 2px solid var(--primary-color); 
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
-    flex-shrink: 0; /* ΚΡΙΣΙΜΟ: Διασφαλίζει ότι δεν θα "συρρικνωθεί" */
+    flex-shrink: 0; 
 }
 
 .header-tools audio {
@@ -87,7 +87,7 @@ body {
     padding: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
     z-index: 1000; 
-    display: none; /* Κρύβεται αρχικά από το JS */
+    display: none; 
 }
 
 .emoticon-grid {
@@ -110,7 +110,7 @@ body {
 /* --- 3. ΚΥΡΙΟ LAYOUT (Chat + Online List) --- */
 .chat-container {
     display: flex;
-    flex-grow: 1; /* ΚΡΙΣΙΜΟ: Πιάνει τον υπόλοιπο χώρο */
+    flex-grow: 1; 
     overflow: hidden; 
     width: 95%;
     max-width: 1200px;
@@ -118,14 +118,15 @@ body {
     border-radius: 15px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
     background-color: rgba(0, 0, 0, 0.2); 
-    min-height: 0; /* ΚΡΙΣΙΜΟ: Για Flexbox να δουλέψει το overflow */
+    min-height: 0; 
 }
 
+/* 🚨 ΣΗΜΕΙΩΣΗ: Το chat-box στο chat.html έχει ID="chat-messages" και class="chat-box" */
 .chat-box {
     flex-grow: 1;
     padding: 15px;
-    height: 100%; /* ΚΡΙΣΙΜΟ: Για να δουλέψει το overflow */
-    overflow-y: auto; /* 🚨 Η ΛΥΣΗ: ΕΣΩΤΕΡΙΚΟ SCROLL */
+    height: 100%; 
+    overflow-y: auto; 
     background-color: transparent; 
 }
 
@@ -135,10 +136,10 @@ body {
     padding: 15px;
     background-color: var(--background-dark); 
     border-left: 1px solid var(--border-color);
-    overflow-y: auto; /* 🚨 ΕΣΩΤΕΡΙΚΟ SCROLL */
+    overflow-y: auto; 
     border-top-right-radius: 15px;
     border-bottom-right-radius: 15px;
-    height: 100%; /* ΚΡΙΣΙΜΟ: Για να δουλέψει το overflow */
+    height: 100%; 
 }
 
 .online-users-list h4 {
@@ -185,7 +186,7 @@ body {
     height: var(--avatar-size);
     border-radius: 50%;
     margin-right: 10px;
-    border: 2px solid var(--secondary-color); /* Αλλαγή χρώματος border avatar */
+    border: 2px solid var(--secondary-color); 
     flex-shrink: 0;
 }
 
@@ -205,7 +206,6 @@ body {
     font-weight: bold;
     font-size: 1em;
     margin-right: 8px;
-    /* Χρώμα χρήστη από JS/Server */
 }
 
 .owner-icon {
@@ -237,7 +237,7 @@ body {
 }
 
 .message-box strong, .message-box em, .message-box u {
-    font-size: inherit; /* Διασφαλίζει ότι οι εσωτερικές ετικέτες δεν θα αλλάξουν μέγεθος */
+    font-size: inherit; 
 }
 
 .message-box a {
@@ -278,7 +278,8 @@ body {
 /* --- 6. FOOTER & MESSAGE INPUT AREA --- */
 .message-input-area {
     display: flex;
-    align-items: center; 
+    /* 🚨 ΔΙΟΡΘΩΣΗ: Ευθυγράμμιση στο κάτω μέρος για το textarea */
+    align-items: flex-end; 
     width: 95%;
     max-width: 1200px;
     margin: 10px auto 30px auto;
@@ -286,7 +287,15 @@ body {
     background-color: var(--background-dark); 
     border-radius: 10px;
     border-top: 1px solid var(--border-color);
-    flex-shrink: 0; /* ΚΡΙΣΙΜΟ: Διασφαλίζει ότι δεν θα "συρρικνωθεί" */
+    flex-shrink: 0; 
+}
+
+/* Ομάδα των κουμπιών μορφοποίησης (για να είναι πιο compact) */
+.format-tools {
+    display: flex;
+    flex-shrink: 0; /* Διασφαλίζει ότι δεν θα "συρρικνωθούν" τα κουμπιά */
+    align-items: center; 
+    margin-right: 10px;
 }
 
 .format-tools button {
@@ -295,7 +304,8 @@ body {
     color: var(--secondary-color);
     font-size: 1.2em;
     cursor: pointer;
-    margin-right: 10px;
+    margin-right: 5px; /* Μικρότερο margin μεταξύ τους */
+    padding: 5px; /* Μικρότερο padding */
     transition: color 0.2s;
 }
 
@@ -303,9 +313,10 @@ body {
     color: var(--primary-color);
 }
 
+/* Ειδικό στυλ για το Color Picker */
 #color-picker-button {
-    color: #ff66aa; /* Αρχικό χρώμα εικονιδίου */
-    margin-right: 15px;
+    color: #ff66aa; 
+    margin-right: 15px; /* Μεγαλύτερο κενό πριν το input */
 }
 
 #message-input {
@@ -318,7 +329,7 @@ body {
     resize: none;
     margin-right: 10px;
     line-height: 1.4;
-    max-height: 100px; /* Όριο ύψους για το textarea */
+    max-height: 100px; 
     font-size: 1em;
 }
 

@@ -58,11 +58,14 @@ function parseBBCode(text) {
 }
 
 // 3. ΣΥΝΑΡΤΗΣΗ ΠΡΟΣΘΗΚΗΣ ΜΗΝΥΜΑΤΟΣ (ΚΡΙΣΙΜΗ ΓΙΑ ΤΗΝ ΕΜΦΑΝΙΣΗ)
-function appendMessage(msg) { // 🚨 ΔΙΟΡΘΩΣΗ: ΑΦΑΙΡΕΣΑΜΕ ΤΟ chatbox ΩΣ ΟΡΙΣΜΑ
+function appendMessage(msg) { 
     
-    // 🚨 ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε το ΣΩΣΤΟ ID: chat-box
-    const chatbox = document.getElementById('chat-box'); 
-    if (!chatbox) return; 
+    // 🚨 ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε το ΣΩΣΤΟ ID: chat-messages (όπως στο chat.html)
+    const chatbox = document.getElementById('chat-messages'); 
+    if (!chatbox) {
+        console.error("Chatbox element not found (ID: chat-messages)");
+        return; 
+    } 
 
     if (!msg.msg && !msg.system) return;
 
@@ -127,8 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🚨 ΔΙΟΡΘΩΣΗ: ΧΡΗΣΗ transports ΓΙΑ ΣΥΜΒΑΤΟΤΗΤΑ ΜΕ PROXY/RENDER
     const socket = io({ transports: ['websocket', 'polling'] }); 
     
-    // 🚨 ΔΙΟΡΘΩΣΗ: ΧΡΗΣΗ ID chat-box ΑΠΟ ΤΟ HTML
-    const chatbox = document.getElementById('chat-box'); 
+    // 🚨 ΔΙΟΡΘΩΣΗ: ΧΡΗΣΗ ΤΟΥ ΣΩΣΤΟΥ ID: chat-messages
+    const chatbox = document.getElementById('chat-messages'); 
     
     const messageInput = document.getElementById('message-input');
     const sendButton = document.getElementById('send-button');
@@ -143,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const notificationButton = document.getElementById('notification-volume-button');
     const gifButton = document.getElementById('gif-button'); 
     
-    // 🚨 ΕΛΕΓΧΟΣ: selectedColor παίρνει τιμή από το input color
+    // selectedColor παίρνει τιμή από το input color
     let selectedColor = colorInput ? colorInput.value : '#FF0066'; 
 
     // --- SOCKET LISTENERS ---
@@ -155,19 +158,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Λήψη ιστορικού
     socket.on('history', function(messages) {
         if (chatbox) chatbox.innerHTML = ''; // Καθαρισμός
-        messages.forEach(appendMessage); // 🚨 ΔΙΟΡΘΩΣΗ: ΚΑΛΟΥΜΕ ΜΟΝΟ ΤΟ appendMessage(msg)
+        messages.forEach(appendMessage); 
         if (chatbox) chatbox.scrollTop = chatbox.scrollHeight;
     });
 
     // Λήψη νέου μηνύματος
     socket.on('message', function(msg) {
-        appendMessage(msg); // 🚨 ΔΙΟΡΘΩΣΗ: ΚΑΛΟΥΜΕ ΜΟΝΟ ΤΟ appendMessage(msg)
+        appendMessage(msg); 
         playNotificationSound();
     });
     
     // Λήψη status messages (π.χ., user joined/left)
     socket.on('status_message', function(data) {
-        appendMessage({...data, system: true}); // 🚨 ΔΙΟΡΘΩΣΗ: ΚΑΛΟΥΜΕ ΜΟΝΟ ΤΟ appendMessage(msg)
+        appendMessage({...data, system: true}); 
     });
 
     // Ενημέρωση λίστας online χρηστών
