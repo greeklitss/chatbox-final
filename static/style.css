@@ -1,16 +1,15 @@
 /* static/style.css - ΟΡΙΣΤΙΚΗ ΕΚΔΟΣΗ (Με Χαρούμενο Style, Κεντράρισμα & Σταθερό Scroll) */
 
-/* --- 1. ΒΑΣΙΚΟ RESET & ΧΡΩΜΑΤΑ (Theme) --- */
 :root {
-    /* ΧΑΡΟΥΜΕΝΑ ΧΡΩΜΑΤΑ */
-    --primary-color: #ff3399;    /* Έντονο Hot Pink (Owner) */
-    --secondary-color: #00e6e6;  /* Έντονο Bright Cyan (Admin) */
+    /* 🚨 ΝΕΑ ΕΝΤΟΝΑ ΧΑΡΟΥΜΕΝΑ ΧΡΩΜΑΤΑ (NEON) */
+    --primary-color: #ff3399;    /* Έντονο Hot Pink (Owner, Send Button) */
+    --secondary-color: #00e6e6;  /* Έντονο Bright Cyan (Admin, Icons) */
     --default-user-color: #ffffff; /* Default User Text */
     --text-color: #ffffff;
-    --system-color: #ffc107;
+    --system-color: #ffc107;     /* Κίτρινο για System messages */
     --border-color: rgba(255, 255, 255, 0.3);
     --avatar-size: 35px;
-    --background-dark: rgba(20, 25, 30, 0.9); /* Πιο σκούρα βάση με διαφάνεια */
+    --background-dark: rgba(20, 25, 30, 0.9); /* Σκούρα βάση με διαφάνεια */
     --input-background: rgba(255, 255, 255, 0.15); /* Ανοιχτό/διαφανές για inputs */
 }
 
@@ -256,11 +255,10 @@ body {
 }
 
 
-/* --- 6. FOOTER & MESSAGE INPUT AREA --- */
+/* --- 6. FOOTER & MESSAGE INPUT AREA (ΔΙΟΡΘΩΣΗ ΚΟΥΜΠΙΩΝ) --- */
 .message-input-area {
     display: flex;
-    /* ΔΙΟΡΘΩΣΗ: Ευθυγράμμιση στο κάτω μέρος για το textarea */
-    align-items: flex-end; 
+    align-items: flex-end; /* Κρατάμε τα κουμπιά στο κάτω μέρος */
     width: 95%;
     max-width: 1200px;
     margin: 10px auto 30px auto;
@@ -277,28 +275,37 @@ body {
     flex-shrink: 0; 
     align-items: center; 
     margin-right: 10px;
+    padding: 5px 0; /* Δίνει λίγο χώρο πάνω/κάτω */
 }
 
+/* ΝΕΟ: Πιο ορατό στυλ για τα κουμπιά */
 .format-tools button {
     background: none;
     border: none;
-    color: var(--secondary-color);
-    font-size: 1.2em;
+    /* Χρησιμοποιούμε το secondary color, αλλά το κάνουμε πιο φωτεινό */
+    color: var(--secondary-color); 
+    font-size: 1.4em; /* ΑΥΞΗΣΗ ΜΕΓΕΘΟΥΣ: Από 1.2em σε 1.4em */
     cursor: pointer;
-    margin-right: 5px; 
-    padding: 5px; 
-    transition: color 0.2s;
+    margin-right: 8px; /* Μικρή μείωση margin για να χωράνε */
+    padding: 6px; /* ΑΥΞΗΣΗ PADDING: Κάνει το clickable area μεγαλύτερο */
+    transition: color 0.2s, text-shadow 0.2s;
+    /* Προσθήκη ελαφριάς σκιάς για ΝΕΟΝ ΕΦΕ */
+    text-shadow: 0 0 5px rgba(0, 230, 230, 0.7); 
 }
 
 .format-tools button:hover {
     color: var(--primary-color);
+    text-shadow: 0 0 8px var(--primary-color), 0 0 15px var(--primary-color);
 }
 
 /* Ειδικό στυλ για το Color Picker */
 #color-picker-button {
     color: var(--primary-color); 
+    text-shadow: 0 0 5px var(--primary-color); /* Πιο έντονο εφέ */
     margin-right: 15px; 
 }
+
+/* ... Ο υπόλοιπος κώδικας του message-input-area παραμένει ίδιος ... */
 
 #message-input {
     flex-grow: 1;
