@@ -20,26 +20,16 @@ function playNotificationSound() {
 function parseBBCode(text) {
     if (!text) return '';
     
-    // 🚨 ΔΙΟΡΘΩΣΗ: Αφαιρούμε την διπλή escape (\\) για απλούστευση του regex literal.
+    // 1. BBCode Tags (Διορθώνει τα [b], [i], [u], [color])
     text = text.replace(/\[b\](.*?)\[\/b\]/gs, '<strong>$1</strong>');
     text = text.replace(/\[i\](.*?)\[\/i\]/gs, '<em>$1</em>');
     text = text.replace(/\[u\](.*?)\[\/u\]/gs, '<u>$1</u>'); 
-    
-    // Το [size] (Λειτουργεί)
     text = text.replace(/\[size=(\d+)\](.*?)\[\/size\]/gs, '<span style="font-size:$1px;">$2</span>');
-    
-    // Το [color]
     text = text.replace(/\[color=(#[0-9a-fA-F]{3,6})\](.*?)\[\/color\]/gs, '<span style="color:$1;">$2</span>');
-    
-    // [url]
     text = text.replace(/\[url=(.*?)\](.*?)\[\/url\]/gs, '<a href="$1" target="_blank">$2</a>');
-    
-    // [img]
     text = text.replace(/\[img\](.*?)\[\/img\]/gs, '<img src="$1" alt="image" style="max-width:100%; height:auto;">');
-
-    return text;
-}    
-    // ΠΛΟΥΣΙΑ ONLINE EMOTICONS (Twemoji CDN)
+    
+    // 2. ΠΛΟΥΣΙΑ ONLINE EMOTICONS (Τώρα ΕΝΤΟΣ της συνάρτησης!)
     text = text.replace(/:joy:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f602.png" alt=":joy:" class="emoticon-img">');
     text = text.replace(/:smiley:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f603.png" alt=":smiley:" class="emoticon-img">');
     text = text.replace(/:wink:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f609.png" alt=":wink:" class="emoticon-img">');
@@ -56,14 +46,14 @@ function parseBBCode(text) {
     text = text.replace(/:thumbsup:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f44d.png" alt=":thumbsup:" class="emoticon-img">');
     text = text.replace(/:clap:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f44f.png" alt=":clap:" class="emoticon-img">');
     
-    // ΑΥΤΟΜΑΤΗ URL/LINK ΑΝΙΧΝΕΥΣΗ 
+    // 3. ΑΥΤΟΜΑΤΗ URL/LINK ΑΝΙΧΝΕΥΣΗ 
     const urlRegex = /(?<!href="|src=")(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
     text = text.replace(urlRegex, (match) => {
         return `<a href="${match}" target="_blank">${match}</a>`;
     });
 
     return text;
-}
+} // <--- Η ΣΩΣΤΗ ΑΓΚΥΛΗ ΚΛΕΙΣΙΜΑΤΟΣ ΤΗΣ ΣΥΝΑΡΤΗΣΗΣ
 
 // 3. ΣΥΝΑΡΤΗΣΗ ΠΡΟΣΘΗΚΗΣ ΜΗΝΥΜΑΤΟΣ 
 function appendMessage(msg) { 
