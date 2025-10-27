@@ -100,18 +100,18 @@ body {
 
 /* --- 3. ΚΥΡΙΟ LAYOUT (Chat + Online List) --- */
 .chat-container {
-    display: flex;
-    flex-grow: 1; /* ΚΡΙΣΙΜΟ: Πιάνει όλο τον ενδιάμεσο χώρο */
-    overflow: hidden; /* ΚΡΙΣΙΜΟ: Περιορίζει τα παιδιά μέσα */
+    display: flex; /* 🚨 Κάνει τα παιδιά να μπαίνουν δίπλα-δίπλα */
+    flex-direction: row; /* Εγγυάται τη διάταξη σε σειρά (Chat | Users) */
+    flex-grow: 1;
     width: 95%;
     max-width: 1200px;
-    margin: 20px auto 0 auto; 
-    border-radius: 15px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
-    background-color: rgba(0, 0, 0, 0.2); 
-    min-height: 0; /* ΚΡΙΣΙΜΟ: Επιτρέπει στο flex-grow: 1 να λειτουργήσει */
+    margin: 20px auto 0 auto; /* Κεντράρισμα */
+    height: calc(100vh - 170px); /* 🚨 Υπολογίζει το ύψος αφαιρώντας Header/Input */
+    min-height: 500px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden; /* Κρύβει περιττό scroll */
 }
-
 /* ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ ΓΙΑ ΤΟ SCROLL */
 #chat-box {
     flex-grow: 1;
@@ -124,6 +124,8 @@ body {
 .online-users-list {
     width: 250px; 
     min-width: 200px;
+    flex-shrink: 0; /* 🚨 Εμποδίζει τη στήλη να συρρικνωθεί όταν δεν χωράει */
+    flex-grow: 0; /* Εμποδίζει τη στήλη να μεγαλώσει */
     padding: 15px;
     background-color: var(--background-dark); 
     border-left: 1px solid var(--border-color);
@@ -132,6 +134,7 @@ body {
     border-bottom-right-radius: 15px;
     height: 100%; 
 }
+
 
 /* ΣΤΥΛ ΡΟΛΩΝ ΣΤΗ ΛΙΣΤΑ ONLINE */
 .online-users-list h4 {

@@ -1,8 +1,7 @@
 // static/main.js - ΟΡΙΣΤΙΚΗ & ΠΛΗΡΩΣ ΔΙΟΡΘΩΜΕΝΗ ΕΚΔΟΣΗ
-// Περιλαμβάνει: Scroll Fix, BBCode Logic (χωρίς εμφάνιση tags), Color to Text, Role Display.
+// Περιλαμβάνει: Scroll Fix (με παράμετρο), BBCode Logic (σωστή δομή), Color to Text, Role Display.
 
 let isNotificationSoundEnabled = true;
-let selectedColor = '#FF0066'; // Default χρώμα μηνύματος
 
 // 1. ΣΥΝΑΡΤΗΣΗ ΗΧΟΥ ΕΙΔΟΠΟΙΗΣΗΣ
 function playNotificationSound() {
@@ -16,11 +15,11 @@ function playNotificationSound() {
     }
 }
 
-// 2. BBCode Parser 
+// 2. BBCode Parser (ΕΔΩ ΔΙΟΡΘΩΝΕΤΑΙ ΤΟ ΔΟΜΙΚΟ ΛΑΘΟΣ)
 function parseBBCode(text) {
     if (!text) return '';
     
-    // 1. BBCode Tags (Διορθώνει τα [b], [i], [u], [color])
+    // 🚨 ΔΙΟΡΘΩΣΗ: Σωστά regex patterns (όλα εντός της συνάρτησης)
     text = text.replace(/\[b\](.*?)\[\/b\]/gs, '<strong>$1</strong>');
     text = text.replace(/\[i\](.*?)\[\/i\]/gs, '<em>$1</em>');
     text = text.replace(/\[u\](.*?)\[\/u\]/gs, '<u>$1</u>'); 
@@ -28,8 +27,8 @@ function parseBBCode(text) {
     text = text.replace(/\[color=(#[0-9a-fA-F]{3,6})\](.*?)\[\/color\]/gs, '<span style="color:$1;">$2</span>');
     text = text.replace(/\[url=(.*?)\](.*?)\[\/url\]/gs, '<a href="$1" target="_blank">$2</a>');
     text = text.replace(/\[img\](.*?)\[\/img\]/gs, '<img src="$1" alt="image" style="max-width:100%; height:auto;">');
-    
-    // 2. ΠΛΟΥΣΙΑ ONLINE EMOTICONS (Τώρα ΕΝΤΟΣ της συνάρτησης!)
+
+    // ΠΛΟΥΣΙΑ ONLINE EMOTICONS (Τώρα σωστά εντός της συνάρτησης)
     text = text.replace(/:joy:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f602.png" alt=":joy:" class="emoticon-img">');
     text = text.replace(/:smiley:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f603.png" alt=":smiley:" class="emoticon-img">');
     text = text.replace(/:wink:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f609.png" alt=":wink:" class="emoticon-img">');
@@ -46,21 +45,22 @@ function parseBBCode(text) {
     text = text.replace(/:thumbsup:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f44d.png" alt=":thumbsup:" class="emoticon-img">');
     text = text.replace(/:clap:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f44f.png" alt=":clap:" class="emoticon-img">');
     
-    // 3. ΑΥΤΟΜΑΤΗ URL/LINK ΑΝΙΧΝΕΥΣΗ 
+    // ΑΥΤΟΜΑΤΗ URL/LINK ΑΝΙΧΝΕΥΣΗ 
     const urlRegex = /(?<!href="|src=")(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
     text = text.replace(urlRegex, (match) => {
         return `<a href="${match}" target="_blank">${match}</a>`;
     });
 
     return text;
-} // <--- Η ΣΩΣΤΗ ΑΓΚΥΛΗ ΚΛΕΙΣΙΜΑΤΟΣ ΤΗΣ ΣΥΝΑΡΤΗΣΗΣ
+}
 
-// 3. ΣΥΝΑΡΤΗΣΗ ΠΡΟΣΘΗΚΗΣ ΜΗΝΥΜΑΤΟΣ 
-function appendMessage(msg) { 
+// 3. ΣΥΝΑΡΤΗΣΗ ΠΡΟΣΘΗΚΗΣ ΜΗΝΥΜΑΤΟΣ (ΤΩΡΑ ΔΕΧΕΤΑΙ ΤΟ CHATBOX ΩΣ ΠΑΡΑΜΕΤΡΟ)
+function appendMessage(msg, chatbox) { 
     
-    const chatbox = document.getElementById('chat-box'); 
+    // 🚨 ΔΙΟΡΘΩΣΗ: Ελέγχουμε την παράμετρο. Αν λείπει (δεν πρέπει να λείπει τώρα), επιστρέφουμε.
     if (!chatbox) {
-        console.error("Chatbox element not found (ID: chat-box)");
+        // Αυτό το error ΔΕΝ θα έπρεπε να εμφανίζεται πλέον
+        console.error("Chatbox element not found (ID: chat-box)"); 
         return; 
     } 
 
@@ -91,7 +91,6 @@ function appendMessage(msg) {
     const timeString = date.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
 
     // Κανονικό μήνυμα χρήστη
-    // Καθορισμός χρώματος username βάσει ρόλου για εμφάνιση
     let usernameColor = msg.color || 'var(--default-user-color, #FFFFFF)'; 
     if (msg.role === 'owner') {
          usernameColor = 'var(--primary-color, #ff3399)'; 
@@ -131,7 +130,7 @@ function appendMessage(msg) {
 document.addEventListener('DOMContentLoaded', () => {
     
     const socket = io({ transports: ['websocket', 'polling'] }); 
-    const chatbox = document.getElementById('chat-box'); 
+    const chatbox = document.getElementById('chat-box'); // ΕΔΩ ΤΟ ΒΡΙΣΚΕΙ ΣΩΣΤΑ
     const messageInput = document.getElementById('message-input');
     const sendButton = document.getElementById('send-button');
 
@@ -157,21 +156,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Λήψη ιστορικού
     socket.on('history', function(messages) {
         if (chatbox) chatbox.innerHTML = ''; 
-        messages.forEach(appendMessage); 
+        // 🚨 ΚΡΙΣΙΜΗ ΑΛΛΑΓΗ: ΠΕΡΝΑΜΕ ΤΟ CHATBOX ΩΣ ΠΑΡΑΜΕΤΡΟ
+        messages.forEach(m => appendMessage(m, chatbox)); 
         if (chatbox) chatbox.scrollTop = chatbox.scrollHeight;
     });
 
     // Λήψη νέου μηνύματος
     socket.on('message', function(msg) {
-        appendMessage(msg); 
+        // 🚨 ΚΡΙΣΙΜΗ ΑΛΛΑΓΗ: ΠΕΡΝΑΜΕ ΤΟ CHATBOX ΩΣ ΠΑΡΑΜΕΤΡΟ
+        appendMessage(msg, chatbox); 
         playNotificationSound();
     });
     
     // Λήψη status messages 
     socket.on('status_message', function(data) {
-        appendMessage({...data, system: true}); 
+        // 🚨 ΚΡΙΣΙΜΗ ΑΛΛΑΓΗ: ΠΕΡΝΑΜΕ ΤΟ CHATBOX ΩΣ ΠΑΡΑΜΕΤΡΟ
+        appendMessage({...data, system: true}, chatbox); 
     });
 
+    // ... (Ο υπόλοιπος κώδικας για την λίστα χρηστών, send message και listeners κουμπιών)
+    
     // Ενημέρωση λίστας online χρηστών
     const onlineUsersList = document.getElementById('online-users-list');
     socket.on('update_online_users', function(data) {
@@ -187,7 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
         data.users.forEach(user => {
             const li = document.createElement('li');
             
-            // Ορισμός class βάσει ρόλου για το CSS styling
             const role_class = user.role === 'owner' ? 'owner-text' : (user.role === 'admin' ? 'admin-text' : 'user-text');
             
             li.innerHTML = `<i class="fas fa-circle ${role_class}" style="font-size: 0.7em; margin-right: 5px;"></i>${user.display_name} (${user.role})`;
@@ -202,8 +205,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function sendMessage() {
         const msg = messageInput.value.trim();
         if (msg) {
+            // 🚨 ΣΗΜΑΝΤΙΚΟ: Στέλνουμε και το επιλεγμένο χρώμα στον server
             socket.emit('message', { 
-                msg: msg
+                msg: msg,
+                color: selectedColor // Προσθέτουμε το selectedColor
             });
             messageInput.value = ''; 
             messageInput.style.height = 'auto'; 
@@ -235,12 +240,10 @@ function applyFormat(tag, value = null) {
     const end = messageInput.selectionEnd;
     const selectedText = messageInput.value.substring(start, end);
     
-    // Κατασκευή των tags. value χρησιμοποιείται για color=#HEX ή size=N
     const tagsOpen = `[${tag}${value !== null ? '=' + value : ''}]`;
     const tagsClose = `[/${tag}]`;
     
     if (selectedText.length > 0) {
-        // Περίπτωση 1: Υπάρχει επιλεγμένο κείμενο (Εφαρμόζουμε & τοποθετούμε τον κέρσο μετά)
         const newText = tagsOpen + selectedText + tagsClose;
         
         messageInput.value = messageInput.value.substring(0, start) + newText + messageInput.value.substring(end);
@@ -248,7 +251,6 @@ function applyFormat(tag, value = null) {
         const newCursorPos = start + newText.length;
         messageInput.setSelectionRange(newCursorPos, newCursorPos);
     } else {
-        // Περίπτωση 2: ΔΕΝ υπάρχει επιλεγμένο κείμενο (Εισάγουμε tags με τον κέρσο μέσα)
         const tags = tagsOpen + tagsClose;
         messageInput.value = messageInput.value.substring(0, start) + tags + messageInput.value.substring(end);
         messageInput.setSelectionRange(start + tagsOpen.length, start + tagsOpen.length);
@@ -257,9 +259,9 @@ function applyFormat(tag, value = null) {
 }
 
 // Listeners για τα απλά tags [b], [i], [u]
-boldButton.addEventListener('click', () => applyFormat('b'));
-italicButton.addEventListener('click', () => applyFormat('i'));
-underlineButton.addEventListener('click', () => applyFormat('u'));
+if (boldButton) boldButton.addEventListener('click', () => applyFormat('b'));
+if (italicButton) italicButton.addEventListener('click', () => applyFormat('i'));
+if (underlineButton) underlineButton.addEventListener('click', () => applyFormat('u'));
 
 // 3. Size Button (Εφαρμόζει [size=N])
 if (sizeButton) {
@@ -275,17 +277,18 @@ if (sizeButton) {
 }
 
 // 4. Color Picker (Εφαρμόζει [color=#HEX])
-colorPickerButton.addEventListener('click', () => {
-    colorInput.click();
-});
+if (colorPickerButton && colorInput) {
+    colorPickerButton.addEventListener('click', () => {
+        colorInput.click();
+    });
 
-colorInput.addEventListener('input', (e) => {
-    selectedColor = e.target.value; 
-    colorPickerButton.style.color = selectedColor; 
-    
-    // 💡 ΔΙΟΡΘΩΜΕΝΗ ΓΡΑΜΜΗ
-    applyFormat('color', selectedColor); 
-});
+    colorInput.addEventListener('input', (e) => {
+        selectedColor = e.target.value; 
+        colorPickerButton.style.color = selectedColor; 
+        
+        applyFormat('color', selectedColor); 
+    });
+}
 
 
 // 5. Emoticon Button (Toggle Display)
