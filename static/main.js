@@ -20,18 +20,25 @@ function playNotificationSound() {
 function parseBBCode(text) {
     if (!text) return '';
     
-    // Αντικαταστήστε [b], [i], [u], [color], [url], [img]
+    // 🚨 ΔΙΟΡΘΩΣΗ: Αφαιρούμε την διπλή escape (\\) για απλούστευση του regex literal.
     text = text.replace(/\[b\](.*?)\[\/b\]/gs, '<strong>$1</strong>');
     text = text.replace(/\[i\](.*?)\[\/i\]/gs, '<em>$1</em>');
     text = text.replace(/\[u\](.*?)\[\/u\]/gs, '<u>$1</u>'); 
+    
+    // Το [size] (Λειτουργεί)
     text = text.replace(/\[size=(\d+)\](.*?)\[\/size\]/gs, '<span style="font-size:$1px;">$2</span>');
     
-    // ΔΙΟΡΘΩΣΗ: [color] tag
+    // Το [color]
     text = text.replace(/\[color=(#[0-9a-fA-F]{3,6})\](.*?)\[\/color\]/gs, '<span style="color:$1;">$2</span>');
     
-    text = text.replace(/\[url=(.*?)\](.*?)\[\/url\]/gs, '<a href="$1" target="_blank">$2</a>'); 
-    text = text.replace(/\[img\](.*?)\[\/img\]/gsi, '<img src="$1" alt="User Image" style="max-width:100%; height:auto; display: block; margin-top: 5px;">');
+    // [url]
+    text = text.replace(/\[url=(.*?)\](.*?)\[\/url\]/gs, '<a href="$1" target="_blank">$2</a>');
     
+    // [img]
+    text = text.replace(/\[img\](.*?)\[\/img\]/gs, '<img src="$1" alt="image" style="max-width:100%; height:auto;">');
+
+    return text;
+}    
     // ΠΛΟΥΣΙΑ ONLINE EMOTICONS (Twemoji CDN)
     text = text.replace(/:joy:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f602.png" alt=":joy:" class="emoticon-img">');
     text = text.replace(/:smiley:/g, '<img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f603.png" alt=":smiley:" class="emoticon-img">');
@@ -61,9 +68,9 @@ function parseBBCode(text) {
 // 3. ΣΥΝΑΡΤΗΣΗ ΠΡΟΣΘΗΚΗΣ ΜΗΝΥΜΑΤΟΣ 
 function appendMessage(msg) { 
     
-    const chatbox = document.getElementById('chat-messages'); 
+    const chatbox = document.getElementById('chat-box'); 
     if (!chatbox) {
-        console.error("Chatbox element not found (ID: chat-messages)");
+        console.error("Chatbox element not found (ID: chat-box)");
         return; 
     } 
 
@@ -134,7 +141,7 @@ function appendMessage(msg) {
 document.addEventListener('DOMContentLoaded', () => {
     
     const socket = io({ transports: ['websocket', 'polling'] }); 
-    const chatbox = document.getElementById('chat-messages'); 
+    const chatbox = document.getElementById('chat-box'); 
     const messageInput = document.getElementById('message-input');
     const sendButton = document.getElementById('send-button');
 

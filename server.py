@@ -533,7 +533,7 @@ def handle_message(data):
         'role': user.role,
         'avatar_url': user.avatar_url if hasattr(user, 'avatar_url') and user.avatar_url else '/static/default_avatar.png',
         'color': color 
-    }, room='chat')
+    }, room='chat', broadcast=True) # <-- Το broadcast=True είναι το κλειδί
 
     print(f"DEBUG: Server received and emitted message from {user.display_name}: {msg_content}")
 

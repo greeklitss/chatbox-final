@@ -113,7 +113,7 @@ body {
 }
 
 /* ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ ΓΙΑ ΤΟ SCROLL */
-#chat-messages {
+#chat-box {
     flex-grow: 1;
     padding: 15px;
     height: 100%; 
