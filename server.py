@@ -523,8 +523,9 @@ def handle_message(data):
         db.session.add(new_message)
         db.session.commit()
             
-    # 3. Εκπομπή: Στέλνουμε το μήνυμα πίσω (Μαζί με τα κρίσιμα data)
-    emit('message', data_to_send, broadcast=True)
+    # 3. Εκπομπή: Στέλνουμε το μήνυμα πίσω σε ΟΛΟΥΣ τους συνδεδεμένους χρήστες
+    # (Επιλύει το πρόβλημα της ανανέωσης)
+    emit('message', { 
         'user_id': user_id,
         'username': user.display_name,
         'msg': msg_content,

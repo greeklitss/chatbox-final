@@ -230,17 +230,21 @@ document.addEventListener('DOMContentLoaded', () => {
         messageInput.style.height = (messageInput.scrollHeight) + 'px';
     });
     
+// ... (Τέλος του messageInput.addEventListener('input', ...)
+    
 // 2. Formatting Buttons Helper (BBCode Logic)
 // 🚨 ΔΙΟΡΘΩΣΗ: Η λογική που δεν εμφανίζει tags όταν δεν υπάρχει επιλογή κειμένου.
-function applyFormat(tag, value = null, isColorOrSize = false) {
+function applyFormat(tag, value = null) { // Αφαιρέθηκε η παράμετρος isColorOrSize
     const start = messageInput.selectionStart;
     const end = messageInput.selectionEnd;
     const selectedText = messageInput.value.substring(start, end);
     
+    // Κατασκευή των tags. value χρησιμοποιείται για color=#HEX ή size=N
     const tagsOpen = `[${tag}${value !== null ? '=' + value : ''}]`;
     const tagsClose = `[/${tag}]`;
     
     if (selectedText.length > 0) {
+        // Περίπτωση 1: Υπάρχει επιλεγμένο κείμενο
         const newText = tagsOpen + selectedText + tagsClose;
         
         messageInput.value = messageInput.value.substring(0, start) + newText + messageInput.value.substring(end);
@@ -249,7 +253,7 @@ function applyFormat(tag, value = null, isColorOrSize = false) {
         const newCursorPos = start + newText.length;
         messageInput.setSelectionRange(newCursorPos, newCursorPos);
     } else {
-        // Αν δεν υπάρχει επιλεγμένο κείμενο, εισάγουμε μόνο τα tags
+        // Περίπτωση 2: ΔΕΝ υπάρχει επιλεγμένο κείμενο (Εισαγωγή μόνο των tags με τον κέρσο μέσα)
         const tags = tagsOpen + tagsClose;
         messageInput.value = messageInput.value.substring(0, start) + tags + messageInput.value.substring(end);
         // Τοποθετούμε τον κέρσο μέσα στα tags
@@ -262,13 +266,13 @@ boldButton.addEventListener('click', () => applyFormat('b'));
 italicButton.addEventListener('click', () => applyFormat('i'));
 underlineButton.addEventListener('click', () => applyFormat('u'));
 
-// 🚨 ΔΙΟΡΘΩΜΕΝΗ ΛΟΓΙΚΗ: Size Button
+// 🚨 ΔΙΟΡΘΩΜΕΝΗ ΛΟΓΙΚΗ: Size Button (Χρησιμοποιεί την applyFormat)
 if (sizeButton) {
     sizeButton.addEventListener('click', () => {
         const sizeValue = prompt("Enter text size in pixels (e.g., 16, 20, 24):");
         
         if (sizeValue && !isNaN(parseInt(sizeValue)) && parseInt(sizeValue) > 0) {
-            applyFormat('size', parseInt(sizeValue), true);
+            applyFormat('size', parseInt(sizeValue));
         } else if (sizeValue !== null) {
             alert("Invalid size. Please enter a positive number.");
         }
@@ -285,8 +289,9 @@ colorInput.addEventListener('input', (e) => {
     colorPickerButton.style.color = selectedColor; 
     
     // Εφαρμόζουμε το [color] tag στο επιλεγμένο κείμενο
-    applyFormat('color', selectedColor, true);
+    applyFormat('color', selectedColor);
 });
+
         // ΛΟΓΙΚΗ ΕΙΣΑΓΩΓΗΣ EMOTICON
         const emoticonGrid = emoticonSelector.querySelector('.emoticon-grid');
         if (emoticonGrid) { 
