@@ -428,6 +428,13 @@ def on_join():
     # 🚨 ΝΕΟ: Ενημέρωση active_sessions & συλλογή δεδομένων
     with app.app_context():
         user = get_current_user_or_guest()
+
+        user_data = {
+            'id': user.id,
+            'display_name': user.display_name,
+            'role': user.role,
+            'color': user.color if user.role == 'guest' else '#FFFFFF' 
+        }
         
         session_info = {
             'user_id': user.id if user.role != 'guest' else None,
