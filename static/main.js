@@ -24,6 +24,7 @@ function parseBBCode(text) {
     text = text.replace(/\[b\](.*?)\[\/b\]/gs, '<strong>$1</strong>');
     text = text.replace(/\[i\](.*?)\[\/i\]/gs, '<em>$1</em>');
     text = text.replace(/\[u\](.*?)\[\/u\]/gs, '<u>$1</u>'); 
+    text = text.replace(/\[size=(\d+)\](.*?)\[\/size\]/gs, '<span style="font-size:$1px;">$2</span>');
     
     // ΔΙΟΡΘΩΣΗ: [color] tag
     text = text.replace(/\[color=(#[0-9a-fA-F]{3,6})\](.*?)\[\/color\]/gs, '<span style="color:$1;">$2</span>');
@@ -140,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const boldButton = document.getElementById('bold-button');
     const italicButton = document.getElementById('italic-button');
     const underlineButton = document.getElementById('underline-button');
+    const sizeButton = document.getElementById('size-button');
     const emoticonButton = document.getElementById('emoticon-button');
     const emoticonSelector = document.getElementById('emoticon-selector');
     const colorPickerButton = document.getElementById('color-picker-button');
@@ -258,6 +260,44 @@ document.addEventListener('DOMContentLoaded', () => {
     boldButton.addEventListener('click', () => applyFormat('b'));
     italicButton.addEventListener('click', () => applyFormat('i'));
     underlineButton.addEventListener('click', () => applyFormat('u'));
+
+
+    // 2. Size Button Logic (Εφαρμόζει [size] tag στο κείμενο)
+    if (sizeButton) {
+    sizeButton.addEventListener('click', () => {
+        // Ζητάμε από τον χρήστη να εισάγει ένα μέγεθος
+        const sizeValue = prompt("Enter text size in pixels (e.g., 16, 20, 24):");
+        
+        // Έλεγχος για έγκυρη είσοδο (αριθμό > 0)
+        if (sizeValue && !isNaN(parseInt(sizeValue)) && parseInt(sizeValue) > 0) {
+            const size = parseInt(sizeValue);
+            
+            const start = messageInput.selectionStart;
+            const end = messageInput.selectionEnd;
+            const selectedText = messageInput.value.substring(start, end);
+            
+            const sizeTag = `[size=${size}]`;
+            const closeTag = `[/size]`;
+            
+            if (selectedText.length > 0) {
+                // Εφαρμογή στα επιλεγμένα
+                const newText = sizeTag + selectedText + closeTag;
+                messageInput.value = messageInput.value.substring(0, start) + newText + messageInput.value.substring(end);
+                messageInput.setSelectionRange(start + newText.length, start + newText.length);
+            } else {
+                // Εισαγωγή μόνο των tags
+                const tags = sizeTag + closeTag;
+                messageInput.value = messageInput.value.substring(0, start) + tags + messageInput.value.substring(end);
+                messageInput.setSelectionRange(start + sizeTag.length, start + sizeTag.length);
+            }
+        } else if (sizeValue !== null) {
+            alert("Invalid size. Please enter a positive number.");
+        }
+        messageInput.focus();
+    });
+}
+
+
     
     // 3. Color Picker (Εφαρμόζει [color] tag στο κείμενο)
     colorPickerButton.addEventListener('click', () => {
