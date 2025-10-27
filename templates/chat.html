@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
@@ -19,7 +20,9 @@
     
     <div class="header-tools">
         
-        <audio id="audio-stream" src="https://uk24freenew.listen2myradio.com/live.mp3?typeportmount=s1_9254" controls loop preload="auto">
+        <audio id="audio-stream" 
+               src="{{ url_for('radio_proxy') }}"loop preload="auto">
+               controls loop preload="auto">
             Your browser does not support the audio element.
         </audio>
 

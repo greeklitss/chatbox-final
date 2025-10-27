@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 import time
+import requests
 from flask import Flask, send_from_directory, request, jsonify, url_for, redirect, session, render_template
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.utils import secure_filename
@@ -254,6 +255,23 @@ def initialize_emoticons():
 
 
 # --- ROUTES ---
+# --- ΝΕΑ ROUTE ΓΙΑ ΤΟ RADIO PROXY ---
+@app.route('/radio_proxy')
+def radio_proxy():
+    # Η διεύθυνση του ραδιοφώνου
+    radio_url = "https://uk24freenew.listen2myradio.com/live.mp3?typeportmount=s1_9254"
+    try:
+        # Χρησιμοποιούμε stream=True για να μην φορτώσει όλο το αρχείο στη μνήμη του server
+        req = requests.get(radio_url, stream=True)
+        
+        # Επιστρέφουμε την απάντηση ως stream απευθείας στον browser
+        return app.response_class(
+            req.iter_content(chunk_size=1024),
+            content_type=req.headers.get('Content-Type', 'audio/mpeg') # Διασφαλίζουμε τον σωστό Content-Type
+        )
+    except Exception as e:
+        print(f"Error streaming radio: {e}")
+        return "Radio stream unavailable.", 503
 
 @app.route('/')
 def index():
