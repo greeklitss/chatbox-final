@@ -524,7 +524,7 @@ def handle_message(data):
         db.session.commit()
             
     # 3. Εκπομπή: Στέλνουμε το μήνυμα πίσω (Μαζί με τα κρίσιμα data)
-    emit('message', { 
+    emit('message', data_to_send, broadcast=True)
         'user_id': user_id,
         'username': user.display_name,
         'msg': msg_content,

@@ -230,118 +230,63 @@ document.addEventListener('DOMContentLoaded', () => {
         messageInput.style.height = (messageInput.scrollHeight) + 'px';
     });
     
-    // 2. Formatting Buttons Helper (BBCode Logic)
-    function applyFormat(tag) {
-        const start = messageInput.selectionStart;
-        const end = messageInput.selectionEnd;
-        const selectedText = messageInput.value.substring(start, end);
-        
-        const tagsOpen = `[${tag}]`;
-        const tagsClose = `[/${tag}]`;
-        
-        if (selectedText.length > 0) {
-            const newText = tagsOpen + selectedText + tagsClose;
-            
-            messageInput.value = messageInput.value.substring(0, start) + newText + messageInput.value.substring(end);
-            
-            // Τοποθέτηση του cursor μετά το κλειστό tag
-            const newCursorPos = start + newText.length;
-            messageInput.setSelectionRange(newCursorPos, newCursorPos);
-        } else {
-            // Αν δεν υπάρχει επιλεγμένο κείμενο, εισάγουμε μόνο τα tags
-            const tags = tagsOpen + tagsClose;
-            messageInput.value = messageInput.value.substring(0, start) + tags + messageInput.value.substring(end);
-            // Τοποθετούμε τον κέρσο μέσα στα tags
-            messageInput.setSelectionRange(start + tagsOpen.length, start + tagsOpen.length);
-        }
-        messageInput.focus();
-    }
+// 2. Formatting Buttons Helper (BBCode Logic)
+// 🚨 ΔΙΟΡΘΩΣΗ: Η λογική που δεν εμφανίζει tags όταν δεν υπάρχει επιλογή κειμένου.
+function applyFormat(tag, value = null, isColorOrSize = false) {
+    const start = messageInput.selectionStart;
+    const end = messageInput.selectionEnd;
+    const selectedText = messageInput.value.substring(start, end);
     
-    boldButton.addEventListener('click', () => applyFormat('b'));
-    italicButton.addEventListener('click', () => applyFormat('i'));
-    underlineButton.addEventListener('click', () => applyFormat('u'));
+    const tagsOpen = `[${tag}${value !== null ? '=' + value : ''}]`;
+    const tagsClose = `[/${tag}]`;
+    
+    if (selectedText.length > 0) {
+        const newText = tagsOpen + selectedText + tagsClose;
+        
+        messageInput.value = messageInput.value.substring(0, start) + newText + messageInput.value.substring(end);
+        
+        // Τοποθέτηση του cursor μετά το κλειστό tag
+        const newCursorPos = start + newText.length;
+        messageInput.setSelectionRange(newCursorPos, newCursorPos);
+    } else {
+        // Αν δεν υπάρχει επιλεγμένο κείμενο, εισάγουμε μόνο τα tags
+        const tags = tagsOpen + tagsClose;
+        messageInput.value = messageInput.value.substring(0, start) + tags + messageInput.value.substring(end);
+        // Τοποθετούμε τον κέρσο μέσα στα tags
+        messageInput.setSelectionRange(start + tagsOpen.length, start + tagsOpen.length);
+    }
+    messageInput.focus();
+}
 
+boldButton.addEventListener('click', () => applyFormat('b'));
+italicButton.addEventListener('click', () => applyFormat('i'));
+underlineButton.addEventListener('click', () => applyFormat('u'));
 
-    // 2. Size Button Logic (Εφαρμόζει [size] tag στο κείμενο)
-    if (sizeButton) {
+// 🚨 ΔΙΟΡΘΩΜΕΝΗ ΛΟΓΙΚΗ: Size Button
+if (sizeButton) {
     sizeButton.addEventListener('click', () => {
-        // Ζητάμε από τον χρήστη να εισάγει ένα μέγεθος
         const sizeValue = prompt("Enter text size in pixels (e.g., 16, 20, 24):");
         
-        // Έλεγχος για έγκυρη είσοδο (αριθμό > 0)
         if (sizeValue && !isNaN(parseInt(sizeValue)) && parseInt(sizeValue) > 0) {
-            const size = parseInt(sizeValue);
-            
-            const start = messageInput.selectionStart;
-            const end = messageInput.selectionEnd;
-            const selectedText = messageInput.value.substring(start, end);
-            
-            const sizeTag = `[size=${size}]`;
-            const closeTag = `[/size]`;
-            
-            if (selectedText.length > 0) {
-                // Εφαρμογή στα επιλεγμένα
-                const newText = sizeTag + selectedText + closeTag;
-                messageInput.value = messageInput.value.substring(0, start) + newText + messageInput.value.substring(end);
-                messageInput.setSelectionRange(start + newText.length, start + newText.length);
-            } else {
-                // Εισαγωγή μόνο των tags
-                const tags = sizeTag + closeTag;
-                messageInput.value = messageInput.value.substring(0, start) + tags + messageInput.value.substring(end);
-                messageInput.setSelectionRange(start + sizeTag.length, start + sizeTag.length);
-            }
+            applyFormat('size', parseInt(sizeValue), true);
         } else if (sizeValue !== null) {
             alert("Invalid size. Please enter a positive number.");
         }
-        messageInput.focus();
     });
 }
 
+// 3. Color Picker (Τώρα χρησιμοποιεί την ίδια λογική για εισαγωγή tags)
+colorPickerButton.addEventListener('click', () => {
+    colorInput.click();
+});
 
+colorInput.addEventListener('input', (e) => {
+    selectedColor = e.target.value; 
+    colorPickerButton.style.color = selectedColor; 
     
-    // 3. Color Picker (Εφαρμόζει [color] tag στο κείμενο)
-    colorPickerButton.addEventListener('click', () => {
-        colorInput.click();
-    });
-    
-    colorInput.addEventListener('input', (e) => {
-        selectedColor = e.target.value; 
-        colorPickerButton.style.color = selectedColor; 
-        
-        // Εφαρμόζουμε το [color] tag στο επιλεγμένο κείμενο
-        const start = messageInput.selectionStart;
-        const end = messageInput.selectionEnd;
-        const selectedText = messageInput.value.substring(start, end);
-
-        const colorTag = `[color=${selectedColor}]`;
-        const closeTag = `[/color]`;
-        
-        if (selectedText.length > 0) {
-            const newText = colorTag + selectedText + closeTag;
-            messageInput.value = messageInput.value.substring(0, start) + newText + messageInput.value.substring(end);
-            messageInput.setSelectionRange(start + newText.length, start + newText.length);
-        } else {
-            // Αν δεν υπάρχει επιλεγμένο κείμενο, εισάγουμε μόνο τα tags
-            const tags = colorTag + closeTag;
-            messageInput.value = messageInput.value.substring(0, start) + tags + messageInput.value.substring(end);
-            messageInput.setSelectionRange(start + colorTag.length, start + colorTag.length);
-        }
-        messageInput.focus();
-    });
-
-    // 4. Emoticon Button (Toggle Display)
-    if (emoticonButton && emoticonSelector) {
-        emoticonButton.addEventListener('click', () => {
-            emoticonSelector.style.display = emoticonSelector.style.display === 'block' ? 'none' : 'block';
-        });
-        
-        // Κλείσιμο selector αν κλικάρουμε εκτός
-        document.addEventListener('click', (event) => {
-            if (!emoticonButton.contains(event.target) && !emoticonSelector.contains(event.target)) {
-                emoticonSelector.style.display = 'none';
-            }
-        });
-
+    // Εφαρμόζουμε το [color] tag στο επιλεγμένο κείμενο
+    applyFormat('color', selectedColor, true);
+});
         // ΛΟΓΙΚΗ ΕΙΣΑΓΩΓΗΣ EMOTICON
         const emoticonGrid = emoticonSelector.querySelector('.emoticon-grid');
         if (emoticonGrid) { 
