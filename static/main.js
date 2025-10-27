@@ -233,8 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ... (Τέλος του messageInput.addEventListener('input', ...)
     
 // 2. Formatting Buttons Helper (BBCode Logic)
-// 🚨 ΔΙΟΡΘΩΣΗ: Η λογική που δεν εμφανίζει tags όταν δεν υπάρχει επιλογή κειμένου.
-function applyFormat(tag, value = null) { // Αφαιρέθηκε η παράμετρος isColorOrSize
+function applyFormat(tag, value = null) {
     const start = messageInput.selectionStart;
     const end = messageInput.selectionEnd;
     const selectedText = messageInput.value.substring(start, end);
@@ -244,29 +243,28 @@ function applyFormat(tag, value = null) { // Αφαιρέθηκε η παράμ�
     const tagsClose = `[/${tag}]`;
     
     if (selectedText.length > 0) {
-        // Περίπτωση 1: Υπάρχει επιλεγμένο κείμενο
+        // Περίπτωση 1: Υπάρχει επιλεγμένο κείμενο (Εφαρμόζουμε & τοποθετούμε τον κέρσο μετά)
         const newText = tagsOpen + selectedText + tagsClose;
         
         messageInput.value = messageInput.value.substring(0, start) + newText + messageInput.value.substring(end);
         
-        // Τοποθέτηση του cursor μετά το κλειστό tag
         const newCursorPos = start + newText.length;
         messageInput.setSelectionRange(newCursorPos, newCursorPos);
     } else {
-        // Περίπτωση 2: ΔΕΝ υπάρχει επιλεγμένο κείμενο (Εισαγωγή μόνο των tags με τον κέρσο μέσα)
+        // Περίπτωση 2: ΔΕΝ υπάρχει επιλεγμένο κείμενο (Εισάγουμε tags με τον κέρσο μέσα)
         const tags = tagsOpen + tagsClose;
         messageInput.value = messageInput.value.substring(0, start) + tags + messageInput.value.substring(end);
-        // Τοποθετούμε τον κέρσο μέσα στα tags
         messageInput.setSelectionRange(start + tagsOpen.length, start + tagsOpen.length);
     }
     messageInput.focus();
 }
 
+// Listeners για τα απλά tags [b], [i], [u]
 boldButton.addEventListener('click', () => applyFormat('b'));
 italicButton.addEventListener('click', () => applyFormat('i'));
 underlineButton.addEventListener('click', () => applyFormat('u'));
 
-// 🚨 ΔΙΟΡΘΩΜΕΝΗ ΛΟΓΙΚΗ: Size Button (Χρησιμοποιεί την applyFormat)
+// 3. Size Button (Εφαρμόζει [size=N])
 if (sizeButton) {
     sizeButton.addEventListener('click', () => {
         const sizeValue = prompt("Enter text size in pixels (e.g., 16, 20, 24):");
@@ -279,7 +277,7 @@ if (sizeButton) {
     });
 }
 
-// 3. Color Picker (Τώρα χρησιμοποιεί την ίδια λογική για εισαγωγή tags)
+// 4. Color Picker (Εφαρμόζει [color=#HEX])
 colorPickerButton.addEventListener('click', () => {
     colorInput.click();
 });
@@ -288,29 +286,43 @@ colorInput.addEventListener('input', (e) => {
     selectedColor = e.target.value; 
     colorPickerButton.style.color = selectedColor; 
     
-    // Εφαρμόζουμε το [color] tag στο επιλεγμένο κείμενο
-    applyFormat('color', selectedColor);
+    // 💡 ΔΙΟΡΘΩΜΕΝΗ ΓΡΑΜΜΗ
+    applyFormat('color', selectedColor); 
 });
 
-        // ΛΟΓΙΚΗ ΕΙΣΑΓΩΓΗΣ EMOTICON
-        const emoticonGrid = emoticonSelector.querySelector('.emoticon-grid');
-        if (emoticonGrid) { 
-            emoticonGrid.addEventListener('click', (event) => {
-                if (event.target.tagName === 'IMG' && event.target.dataset.code) { 
-                    const code = event.target.dataset.code; 
-                    
-                    messageInput.value += (messageInput.value.length > 0 ? ' ' : '') + code + ' ';
-                    messageInput.focus();
-                    
-                    messageInput.style.height = 'auto';
-                    messageInput.style.height = (messageInput.scrollHeight) + 'px';
-                    
-                    emoticonSelector.style.display = 'none';
-                }
-            });
-        }
-    }
 
+// 5. Emoticon Button (Toggle Display)
+if (emoticonButton && emoticonSelector) {
+    emoticonButton.addEventListener('click', () => {
+        emoticonSelector.style.display = emoticonSelector.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    // Κλείνει το πλαίσιο αν κάνουμε κλικ αλλού
+    document.addEventListener('click', (event) => {
+        if (!emoticonButton.contains(event.target) && !emoticonSelector.contains(event.target)) {
+            emoticonSelector.style.display = 'none';
+        }
+    });
+    
+    // ΛΟΓΙΚΗ ΕΙΣΑΓΩΓΗΣ EMOTICON
+    const emoticonGrid = emoticonSelector.querySelector('.emoticon-grid');
+    if (emoticonGrid) {
+        emoticonGrid.addEventListener('click', (event) => {
+            if (event.target.tagName === 'IMG' && event.target.dataset.code) {
+                const code = event.target.dataset.code;
+                
+                messageInput.value += (messageInput.value.length > 0 ? ' ' : '') + code + ' ';
+                messageInput.focus();
+                
+                // Autoresize
+                messageInput.style.height = 'auto';
+                messageInput.style.height = (messageInput.scrollHeight) + 'px';
+                
+                emoticonSelector.style.display = 'none';
+            }
+        });
+    }
+}
     // 5. Notification Button (Volume)
     if (notificationButton) {
         notificationButton.addEventListener('click', () => {
