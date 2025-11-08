@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                    radioToggleButton.classList.replace('radio-off', 'radio-on');
                }).catch(e => {
                 // Αυτό πιάνει το σφάλμα "Audio playback blocked"
-                console.log("Audio playback blocked by browser:", e);
+                console.error("Audio playback blocked by browser:", e);
                 alert("Playback blocked. Please interact with the page first or check browser settings.");
             });
         } else {
