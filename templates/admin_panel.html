@@ -20,8 +20,14 @@
             --text-color: #333333;
             --button-color: #FFCC00;      /* Yellow/Gold Accent */
             --shadow-admin: 0 8px 20px rgba(255, 0, 102, 0.5);
+            --danger-color: #dc3545;      /* Red for dangerous actions */
+            --success-color: #28a745;     /* Green for success actions */
         }
         
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Roboto', sans-serif;
             background-color: var(--background-color); 
@@ -75,13 +81,23 @@
             cursor: pointer;
             transition: all 0.2s;
             margin-left: 10px;
+            font-weight: 700;
         }
+        
         button:hover {
             background-color: var(--primary-color);
             color: #FFFFFF;
             transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(255, 0, 102, 0.5);
         }
         
+        /* Specific Button Styles */
+        .user-item button { margin-left: 5px; }
+        .user-item button:nth-child(3) { /* Ban button */
+            background-color: var(--danger-color);
+            color: white;
+        }
+
         /* Settings Items */
         .setting-item, .user-item, .emoticon-item {
             display: flex;
@@ -89,6 +105,9 @@
             align-items: center;
             padding: 10px 0;
             border-bottom: 1px dotted #ccc;
+        }
+        .user-item {
+            padding: 15px 0;
         }
         
         /* Checkbox Styling */
@@ -105,30 +124,38 @@
             background-color: #FFF;
             color: var(--text-color);
         }
+        input[type="text"]:focus {
+             border-color: var(--primary-color);
+             box-shadow: 0 0 5px rgba(255, 0, 102, 0.3);
+             outline: none;
+        }
 
         /* Emoticons Table */
         .emoticon-item {
             gap: 10px;
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 150px; /* Tag, Image URL, Status, Actions */
+            grid-template-columns: 1.2fr 2fr 1fr 150px; /* Tag, Image URL, Status, Actions */
+            padding: 15px 0;
         }
         .emoticon-header {
             font-weight: bold;
-            border-bottom: 2px solid var(--primary-color);
+            border-bottom: 2px solid var(--primary-color) !important;
             margin-bottom: 10px;
-            padding-bottom: 5px;
+            padding-bottom: 5px !important;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Admin Control Panel</h1>
-        <p>Logged in as: <span id="current_user_role">...</span></p>
-        <button onclick="window.location.href='/'">Return to Chat</button>
+        <p style="font-size: 1.1em;">Logged in as: <span id="current_user_role" style="font-weight: bold; color: var(--primary-color);">...</span></p>
+        <button onclick="window.location.href='/'" style="background-color: var(--secondary-color); color: var(--text-color);">
+            <i class="fas fa-chevron-left"></i> Return to Chat
+        </button>
 
         <div class="section" id="theme-settings-section">
             <h2>🔗 Feature Toggle Control (Chat Buttons)</h2>
-            <p>Ενεργοποιήστε/Απενεργοποιήστε τις νέες δυνατότητες του Chat παγκοσμίως.</p>
+            <p>Ενεργοποιήστε/Απενεργοποιήστε τις νέες δυνατότητες του Chat παγκοσμίως. (Αλλαγή εμφανίζεται με reload)</p>
 
             <div class="setting-item">
                 <label for="toggle-bold"><i class="fas fa-bold"></i> Bold Button ([b])</label>
@@ -163,9 +190,9 @@
         
         <div class="section">
             <h2><i class="fas fa-smile-wink"></i> Emoticon Management</h2>
-            <div class="setting-item">
+            <div class="setting-item" style="border-bottom: none; gap: 10px;">
                 <input type="text" id="new-tag" placeholder=":tag:" style="width: 150px;">
-                <input type="text" id="new-url" placeholder="Image URL (e.g., /static/emotes/smile.gif)" style="flex-grow: 1; margin: 0 10px;">
+                <input type="text" id="new-url" placeholder="Image URL (e.g., /static/emotes/smile.gif)" style="flex-grow: 1;">
                 <button onclick="addEmoticon()"><i class="fas fa-plus"></i> Add New</button>
             </div>
             
@@ -176,7 +203,7 @@
                     <div>Status</div>
                     <div>Actions</div>
                 </div>
-                </div>
+            </div>
         </div>
 
         <div class="section">
@@ -190,6 +217,72 @@
     <script>
         let currentUserId = null;
         let currentUserRole = null;
+        
+        // --- HELPER FUNCTIONS ---
+        
+        // Function to generate HTML for an emoticon item
+        function createEmoticonItem(emoticon) {
+            const statusText = emoticon.is_enabled ? 'Active' : 'Disabled';
+            const statusColor = emoticon.is_enabled ? 'var(--success-color)' : 'var(--danger-color)';
+            const actionText = emoticon.is_enabled ? 'Disable' : 'Enable';
+            const actionBg = emoticon.is_enabled ? 'var(--danger-color)' : 'var(--success-color)';
+            
+            return `
+                <div class="emoticon-item">
+                    <div style="font-weight: bold; color: ${statusColor}">${emoticon.tag}</div>
+                    <div style="font-size: 0.9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${emoticon.url}</div>
+                    <div style="color: ${statusColor};">${statusText}</div>
+                    <div>
+                        <button onclick="toggleEmoticon(${emoticon.id})" 
+                                style="background-color: ${actionBg}; color: white; margin-left: 0;">
+                            ${actionText}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Function to generate HTML for a user item
+        function createUserItem(user) {
+            let roleColor;
+            if (user.role === 'owner') { roleColor = 'var(--primary-color)'; }
+            else if (user.role === 'admin') { roleColor = 'var(--secondary-color)'; }
+            else if (user.role === 'banned') { roleColor = 'var(--danger-color)'; }
+            else { roleColor = 'var(--text-color)'; }
+
+            const isCurrent = (user.id === currentUserId);
+            const disabledClass = isCurrent ? 'style="opacity: 0.5; cursor: not-allowed;" disabled' : '';
+            const ownerDisabled = (currentUserRole !== 'owner') && (user.role === 'owner' || user.role === 'admin') ? 'style="opacity: 0.5; cursor: not-allowed;" disabled' : '';
+
+            // User cannot change their own role
+            const disabledIfSelf = (isCurrent) ? 'disabled' : '';
+
+            return `
+                <div class="user-item">
+                    <div style="width: 50px;">#${user.id}</div>
+                    <div style="flex-grow: 1; font-weight: bold;">
+                        ${user.username} 
+                        ${isCurrent ? '<span style="color: var(--primary-color); font-size: 0.8em;">(You)</span>' : ''}
+                    </div>
+                    <div style="width: 100px; text-transform: uppercase; color: ${roleColor}; font-weight: 700;">${user.role}</div>
+                    <div style="width: 300px; text-align: right;">
+                        <button onclick="toggleUserRole(${user.id}, 'admin')" 
+                                ${user.role === 'admin' ? disabledClass : ''} 
+                                ${ownerDisabled} 
+                                ${disabledIfSelf}>Set Admin</button>
+                        <button onclick="toggleUserRole(${user.id}, 'user')" 
+                                ${user.role === 'user' ? disabledClass : ''} 
+                                ${ownerDisabled} 
+                                ${disabledIfSelf}>Set User</button>
+                        <button onclick="toggleUserRole(${user.id}, 'banned')" 
+                                ${user.role === 'banned' ? disabledClass : ''} 
+                                ${ownerDisabled} 
+                                ${disabledIfSelf}
+                                style="background-color: var(--danger-color); color: white;">Ban</button>
+                    </div>
+                </div>
+            `;
+        }
         
         // --- ΡΥΘΜΙΣΕΙΣ (SETTINGS) LOGIC ---
         
@@ -234,38 +327,152 @@
             }
         }
         
-        // --- EMOTICON LOGIC (Placeholder) ---
+        // --- EMOTICON LOGIC ---
+        
         async function loadEmoticons() {
-            // Αυτή η συνάρτηση θα φορτώσει τα emoticons από το /api/emoticons/all
-            // και θα γεμίσει το #emoticon-list.
-            console.log("Emoticons loaded (Placeholder)");
+            try {
+                const response = await fetch('/api/emoticons/all');
+                if (!response.ok) throw new Error('Failed to fetch emoticons.');
+                const emoticons = await response.json();
+                
+                const listContainer = document.getElementById('emoticon-list');
+                // Κρατάμε το header και καθαρίζουμε τα στοιχεία
+                const header = listContainer.querySelector('.emoticon-header').outerHTML;
+                listContainer.innerHTML = header; 
+                
+                emoticons.forEach(emoticon => {
+                    listContainer.innerHTML += createEmoticonItem(emoticon);
+                });
+                console.log("Emoticons loaded successfully.");
+            } catch (error) {
+                console.error('Error loading emoticons:', error);
+                alert('ERROR: Could not load emoticons. See console.');
+            }
         }
         
         async function addEmoticon() {
-            // Αυτή η συνάρτηση θα στείλει τα νέα δεδομένα στο /api/admin/add_emoticon
-            console.log("Add Emoticon clicked (Placeholder)");
+            const tagInput = document.getElementById('new-tag');
+            const urlInput = document.getElementById('new-url');
+            const tag = tagInput.value.trim();
+            const url = urlInput.value.trim();
+            
+            if (!tag || !url) {
+                alert("Both Tag and Image URL are required.");
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/admin/add_emoticon', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tag, url })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    alert(`Error adding emoticon: ${result.error || 'Unknown error'}`);
+                    throw new Error(result.error || 'Failed to add emoticon.');
+                }
+
+                alert(`Emoticon ${tag} added successfully!`);
+                tagInput.value = '';
+                urlInput.value = '';
+                await loadEmoticons();
+                
+            } catch (error) {
+                console.error('Error adding emoticon:', error);
+            }
         }
 
         async function toggleEmoticon(id) {
-            // Αυτή η συνάρτηση θα στείλει το toggle στο /api/admin/toggle_emoticon
-            console.log(`Toggle Emoticon ${id} (Placeholder)`);
+            if (!confirm(`Are you sure you want to toggle the status of Emoticon ID ${id}?`)) {
+                return;
+            }
+            try {
+                const response = await fetch('/api/admin/toggle_emoticon', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                });
+                
+                if (!response.ok) throw new Error('Failed to toggle emoticon.');
+                
+                await loadEmoticons();
+                
+            } catch (error) {
+                console.error(`Error toggling emoticon ${id}:`, error);
+                alert('ERROR: Could not toggle emoticon.');
+            }
         }
 
-        // --- USER LOGIC (Placeholder) ---
+        // --- USER LOGIC ---
+        
         async function loadUsers() {
-            // Αυτή η συνάρτηση θα φορτώσει τους χρήστες από το /api/users
-            // και θα γεμίσει το #user-list.
-            console.log("Users loaded (Placeholder)");
+            try {
+                const response = await fetch('/api/users');
+                if (!response.ok) throw new Error('Failed to fetch users.');
+                const users = await response.json();
+                
+                const listContainer = document.getElementById('user-list');
+                listContainer.innerHTML = ''; // Clear existing list
+                
+                // Add Header
+                listContainer.innerHTML += `
+                    <div class="user-item" style="border-bottom: 2px solid var(--primary-color); margin-bottom: 10px; font-weight: bold;">
+                        <div style="width: 50px;">ID</div>
+                        <div style="flex-grow: 1;">Username</div>
+                        <div style="width: 100px;">Role</div>
+                        <div style="width: 300px; text-align: right;">Actions</div>
+                    </div>
+                `;
+
+                // Add Items
+                users.forEach(user => {
+                    listContainer.innerHTML += createUserItem(user);
+                });
+                console.log("Users loaded successfully.");
+
+            } catch (error) {
+                console.error('Error loading users:', error);
+                alert('ERROR: Could not load users. See console.');
+            }
         }
 
         async function toggleUserRole(id, newRole) {
-            // Αυτή η συνάρτηση θα στείλει την αλλαγή ρόλου στο /api/admin/set_role
-            console.log(`Set User ${id} role to ${newRole} (Placeholder)`);
+            if (id === currentUserId) {
+                alert("You cannot change your own role!");
+                return;
+            }
+            if (!confirm(`Are you sure you want to set User ID ${id} role to "${newRole.toUpperCase()}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/admin/set_role', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: id, role: newRole })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    alert(`Error setting role: ${result.message || 'Unknown error'}`);
+                    throw new Error(result.message || 'Failed to set role.');
+                }
+
+                alert(`User ID ${id} role set to ${newRole.toUpperCase()}.`);
+                await loadUsers();
+                
+            } catch (error) {
+                console.error(`Error setting user role ${id}:`, error);
+            }
         }
         
         // --- DOMContentLoaded KΛΗΣΗ ---
         document.addEventListener('DOMContentLoaded', async () => {
-             // 1. Έλεγχος ρόλου & ID (Κρατάμε την υπάρχουσα λογική)
+             // 1. Έλεγχος ρόλου & ID 
              try {
                 const response = await fetch('/check_login');
                 if (!response.ok) throw new Error('Not logged in or session expired.');
@@ -273,14 +480,23 @@
                 const userData = await response.json();
                 currentUserId = userData.id;
                 currentUserRole = userData.role;
-                document.getElementById('current_user_role').textContent = currentUserRole.toUpperCase();
+                
+                const roleElement = document.getElementById('current_user_role');
+                roleElement.textContent = currentUserRole.toUpperCase();
+
+                // 🚨 Έλεγχος Admin/Owner
+                if (currentUserRole !== 'admin' && currentUserRole !== 'owner') {
+                    alert('Access Denied. Redirecting to chat.');
+                    window.location.href = '/';
+                    return;
+                }
              } catch (error) {
                  alert('Authentication Error: Redirecting to login.');
                  window.location.href = '/login';
                  return;
              }
 
-             // 2. Φόρτωση ρυθμίσεων (ΝΕΟ)
+             // 2. Φόρτωση ρυθμίσεων
              await loadSettings();
              
              // 3. Φόρτωση Emoticons

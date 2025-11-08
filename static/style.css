@@ -34,17 +34,21 @@ body {
     background-attachment: fixed;
 }
 
-/* --- 2. HEADER & TOOLS --- */
+/* ---------------------------------------------------- */
+/* 1. HEADER & TOOLS */
+/* ---------------------------------------------------- */
+
 .header-tools {
     display: flex;
     justify-content: space-between; 
     align-items: center;
     padding: 10px 20px;
-    background-color: var(--background-dark); 
+    background-color: rgba(0, 0, 0, 0.5); /* Ελαφρώς πιο διαφανές από το dark */
     border-bottom: 2px solid var(--primary-color); 
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
-    flex-shrink: 0; 
+    flex-shrink: 0; /* Δεν συρρικνώνεται */
 }
+
 /* Header controls (Admin, Volume, etc) */
 .header-controls {
     display: flex;
@@ -63,13 +67,8 @@ body {
 .header-controls button:hover {
     color: var(--primary-color);
 }
-/* Web Radio Stream */
-/* style.css */
 
-
-
-/* --- CUSTOM RADIO PLAYER BUTTON (Problem 5: Funky Style) --- */
-
+/* Web Radio Stream Toggle */
 #radio-toggle-button {
     background: none;
     border: none;
@@ -101,79 +100,90 @@ body {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
-}/* Emoticon Selector (Πρέπει να είναι στο header-tools ή κάπου με position: absolute/fixed) */
-.emoticon-selector {
-    display: none;
-    position: absolute;
-    top: 55px; /* Κάτω από το header */
-    right: 300px; /* Πάνω από το input area */
+
+/* ---------------------------------------------------- */
+/* 2. ΚΕΝΤΡΙΚΟ LAYOUT & CONTAINER (FLEX) */
+/* ---------------------------------------------------- */
+
+.chat-wrapper {
+    flex-grow: 1; /* Καταλαμβάνει τον υπόλοιπο χώρο */
+    display: flex;
+    justify-content: center; /* Κεντράρισμα οριζόντια */
+    align-items: flex-start; 
+    padding: 15px 10px;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.chat-container {
+    display: flex; 
+    flex-direction: row; 
+    width: 90%;
+    max-width: 1200px;
+    flex-grow: 1; /* Παίρνει το ύψος από το chat-wrapper */
+    min-height: 80vh; 
     background-color: var(--background-dark);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 10px;
-    z-index: 10;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-}
-.emoticon-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-}
-.emoticon-grid img {
-    cursor: pointer;
-    width: 25px;
-    height: 25px;
-    transition: transform 0.1s;
-}
-.emoticon-grid img:hover {
-    transform: scale(1.2);
-}
-
-
-/* --- 3. ΚΥΡΙΟ LAYOUT (Chat + Online List) --- */
-.chat-container {
-    display: flex; /* 🚨 Κάνει τα παιδιά να μπαίνουν δίπλα-δίπλα */
-    flex-direction: row; /* Εγγυάται τη διάταξη σε σειρά (Chat | Users) */
-    flex-grow: 1;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto; /* Κεντράρισμα */
-    height: calc(100vh - 170px); /* 🚨 Υπολογίζει το ύψος αφαιρώντας Header/Input */
-    min-height: 500px;
-    border: 1px solid var(--border-color);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
     border-radius: 10px;
     overflow: hidden; /* Κρύβει περιττό scroll */
 }
-/* ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ ΓΙΑ ΤΟ SCROLL */
+
+/* Main Chat Area (Messages) */
+.main-chat-area {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 0;
+    padding: 0;
+}
+
 #chat-box {
     flex-grow: 1;
-    padding: 15px;
-    height: 100%; 
     overflow-y: auto; /* ΟΡΙΖΕΙ ΤΗΝ ΕΣΩΤΕΡΙΚΗ ΚΥΛΙΣΗ ΕΔΩ */
+    padding: 15px;
+    min-height: 200px;
     background-color: transparent; 
 }
 
-.online-users-list {
-    width: 250px; 
-    min-width: 250px;
-    flex-shrink: 0; /* 🚨 Εμποδίζει τη στήλη να συρρικνωθεί όταν δεν χωράει */
-    flex-grow: 0; /* Εμποδίζει τη στήλη να μεγαλώσει */
-    padding: 15px;
-    background-color: var(--background-dark); 
-    border-left: 1px solid var(--border-color);
-    overflow-y: auto; 
-    border-top-right-radius: 15px;
-    border-bottom-right-radius: 15px;
-    height: 100%; 
+/* Webkit Scrollbar Styling (Chrome/Safari) */
+#chat-box::-webkit-scrollbar,
+.online-users-list::-webkit-scrollbar {
+    width: 8px;
+}
+#chat-box::-webkit-scrollbar-thumb,
+.online-users-list::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+    border-radius: 10px;
+}
+#chat-box::-webkit-scrollbar-track,
+.online-users-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
 }
 
+/* Sidebar (Online Users List) */
+.online-users-list {
+    width: 250px; 
+    min-width: 200px;
+    flex-shrink: 0;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.3); /* Πιο σκούρο background */
+    border-left: 1px solid var(--border-color);
+    overflow-y: auto; 
+    font-size: 0.9em;
+}
 
 /* ΣΤΥΛ ΡΟΛΩΝ ΣΤΗ ΛΙΣΤΑ ONLINE */
 .online-users-list h4 {
     margin-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(0, 230, 230, 0.3); /* Cyan border */
     padding-bottom: 5px;
     font-weight: 700;
+    color: var(--secondary-color);
+}
+.online-users-list ul {
+    list-style: none;
+    padding: 0;
 }
 .online-users-list li {
     font-size: 0.95em;
@@ -186,13 +196,16 @@ body {
 }
 .online-users-list .fa-circle {
     margin-right: 5px;
-    color: var(--default-user-color); 
+    font-size: 0.7em;
 }
-.online-users-list .owner-text { color: var(--primary-color) !important; } /* Owner - Hot Pink */
-.online-users-list .admin-text { color: var(--secondary-color) !important; } /* Admin - Bright Cyan */
+.online-users-list .owner-text { color: var(--primary-color) !important; font-weight: bold; } /* Owner - Hot Pink */
+.online-users-list .admin-text { color: var(--secondary-color) !important; font-weight: bold; } /* Admin - Bright Cyan */
 
 
-/* --- 4. ΣΤΥΛ ΜΗΝΥΜΑΤΟΣ --- */
+/* ---------------------------------------------------- */
+/* 3. MESSAGE ELEMENTS */
+/* ---------------------------------------------------- */
+
 .message-container {
     display: flex;
     align-items: flex-start;
@@ -204,11 +217,14 @@ body {
     height: var(--avatar-size);
     border-radius: 50%;
     margin-right: 10px;
+    object-fit: cover;
     border: 2px solid var(--secondary-color);
+    flex-shrink: 0;
 }
 
 .message-content {
-    max-width: 80%;
+    flex-grow: 1;
+    min-width: 0; 
 }
 
 .message-header {
@@ -221,16 +237,11 @@ body {
     font-weight: 700;
     margin-right: 10px;
     font-size: 1.1em;
+    text-shadow: 0 0 5px currentColor; /* Neon effect */
 }
 
-.owner-icon {
-    color: var(--primary-color);
-    margin-left: 3px;
-}
-.admin-icon {
-    color: var(--secondary-color);
-    margin-left: 3px;
-}
+.owner-icon { color: var(--primary-color); margin-left: 3px; }
+.admin-icon { color: var(--secondary-color); margin-left: 3px; }
 
 .timestamp {
     font-size: 0.75em;
@@ -241,15 +252,14 @@ body {
     background-color: rgba(255, 255, 255, 0.2); 
     color: var(--text-color);
     padding: 10px 15px;
-    border-radius: 18px;
-    border-top-left-radius: 0;
+    border-radius: 0 18px 18px 18px; /* Διορθωμένο: Κλασσικό στυλ chat */
     word-wrap: break-word;
     white-space: pre-wrap;
     line-height: 1.4;
     max-width: 100%;
-    /* ΔΙΟΡΘΩΣΗ: ΣΤΟΙΧΙΣΗ ΚΕΙΜΕΝΟΥ ΣΤΟ ΚΕΝΤΡΟ */
-    text-align: center;
-    overflow: hidden; /* Περιορίζει τα inline στοιχεία */
+    /* 🚨 ΔΙΟΡΘΩΣΗ: Αφαίρεση text-align: center */
+    text-align: left; 
+    overflow: hidden; 
 }
 
 .message-box a {
@@ -282,25 +292,30 @@ body {
 }
 
 .system-message .system-text {
-    background-color: var(--background-dark);
+    background-color: rgba(0, 0, 0, 0.5); /* Πιο σκούρο background */
     color: var(--system-color);
     padding: 5px 10px;
     border-radius: 15px;
     font-size: 0.9em;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    display: inline-block;
 }
 
+/* ---------------------------------------------------- */
+/* 4. FOOTER & MESSAGE INPUT AREA */
+/* ---------------------------------------------------- */
 
-/* --- 6. FOOTER & MESSAGE INPUT AREA (ΔΙΟΡΘΩΣΗ ΚΟΥΜΠΙΩΝ) --- */
 .message-input-area {
     display: flex;
-    align-items: flex-end; /* Κρατάμε τα κουμπιά στο κάτω μέρος */
-    width: 95%;
+    align-items: flex-end; 
+    width: 90%;
     max-width: 1200px;
-    margin: 10px auto 30px auto;
+    margin: 0 auto 15px auto; /* Margin κάτω */
     padding: 10px;
     background-color: var(--background-dark); 
     border-radius: 10px;
     border-top: 1px solid var(--border-color);
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.5);
     flex-shrink: 0; 
 }
 
@@ -310,21 +325,18 @@ body {
     flex-shrink: 0; 
     align-items: center; 
     margin-right: 10px;
-    padding: 5px 0; /* Δίνει λίγο χώρο πάνω/κάτω */
+    padding: 5px 0;
 }
 
-/* ΝΕΟ: Πιο ορατό στυλ για τα κουμπιά */
 .format-tools button {
     background: none;
     border: none;
-    /* Χρησιμοποιούμε το secondary color, αλλά το κάνουμε πιο φωτεινό */
     color: var(--secondary-color); 
-    font-size: 1.4em; /* ΑΥΞΗΣΗ ΜΕΓΕΘΟΥΣ: Από 1.2em σε 1.4em */
+    font-size: 1.4em; 
     cursor: pointer;
-    margin-right: 8px; /* Μικρή μείωση margin για να χωράνε */
-    padding: 6px; /* ΑΥΞΗΣΗ PADDING: Κάνει το clickable area μεγαλύτερο */
+    margin-right: 8px; 
+    padding: 6px; 
     transition: color 0.2s, text-shadow 0.2s;
-    /* Προσθήκη ελαφριάς σκιάς για ΝΕΟΝ ΕΦΕ */
     text-shadow: 0 0 5px rgba(0, 230, 230, 0.7); 
 }
 
@@ -336,11 +348,9 @@ body {
 /* Ειδικό στυλ για το Color Picker */
 #color-picker-button {
     color: var(--primary-color); 
-    text-shadow: 0 0 5px var(--primary-color); /* Πιο έντονο εφέ */
+    text-shadow: 0 0 5px var(--primary-color); 
     margin-right: 15px; 
 }
-
-/* ... Ο υπόλοιπος κώδικας του message-input-area παραμένει ίδιος ... */
 
 #message-input {
     flex-grow: 1;
@@ -353,12 +363,21 @@ body {
     margin-right: 10px;
     line-height: 1.4;
     max-height: 100px; 
+    min-height: 38px;
     font-size: 1em;
+    outline: none;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+#message-input:focus {
+    border-color: var(--secondary-color);
+    background-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 5px var(--secondary-color);
 }
 
 .message-input-area #send-button {
     background: var(--primary-color); 
-    transition: background 0.3s, transform 0.1s;
+    transition: background 0.3s, transform 0.1s, box-shadow 0.2s;
     font-size: 1.1em;
     padding: 10px 15px;
     border-radius: 7px;
@@ -366,9 +385,108 @@ body {
     color: white;
     cursor: pointer;
     flex-shrink: 0;
+    height: 38px; /* Ταιριάζει με το min-height του textarea */
 }
 
 .message-input-area #send-button:hover {
     background: #ff85b8; 
     transform: translateY(-1px);
+    box-shadow: 0 0 10px var(--primary-color);
+}
+
+/* ---------------------------------------------------- */
+/* 5. EMOTICON SELECTOR POPUP */
+/* ---------------------------------------------------- */
+
+#emoticon-selector {
+    position: absolute;
+    bottom: 60px; /* Πάνω από το input area */
+    right: 300px; 
+    width: 250px;
+    background-color: rgba(20, 25, 30, 0.98); /* Σχεδόν αδιαφανές */
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    z-index: 1000;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    display: none; /* Αρχικά κρυφό */
+}
+
+.emoticon-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-around;
+}
+
+.emoticon-grid img {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.emoticon-grid img:hover {
+    transform: scale(1.2);
+}
+
+/* ---------------------------------------------------- */
+/* 6. MEDIA QUERIES (Mobile Responsiveness) */
+/* ---------------------------------------------------- */
+
+@media (max-width: 900px) {
+    
+    .chat-wrapper {
+        padding: 0;
+    }
+
+    .chat-container {
+        width: 100%;
+        max-width: none;
+        height: 100%;
+        min-height: 100%;
+        border-radius: 0;
+        border: none;
+    }
+    
+    .online-users-list {
+        display: none; /* Κρύβουμε την πλαϊνή μπάρα στους κινητούς */
+    }
+
+    .message-input-area {
+        width: 100%;
+        margin: 0;
+        padding: 10px;
+        border-radius: 0;
+        flex-wrap: wrap; /* Επιτρέπει στα στοιχεία να πέσουν σε νέα γραμμή */
+        align-items: center; /* Ευθυγράμμιση στο κέντρο για τις 2 γραμμές */
+    }
+
+    .format-tools {
+        order: 1; /* Πηγαίνει τα κουμπιά στην πρώτη γραμμή */
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 0 5px;
+        justify-content: space-between;
+        margin-right: 0;
+    }
+
+    #message-input {
+        order: 2;
+        margin: 0 5px 0 0;
+        min-height: 45px;
+    }
+    
+    #send-button {
+        order: 3;
+        width: 50px;
+        padding: 10px 0;
+        height: 45px;
+    }
+    
+    #emoticon-selector {
+        bottom: 125px; /* Πάνω από την format-tools γραμμή */
+        right: 10px;
+        width: 95%;
+    }
 }
