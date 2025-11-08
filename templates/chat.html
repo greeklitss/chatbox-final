@@ -18,18 +18,14 @@
              background-position: center;
              background-attachment: fixed;"> 
     
-    <div class="header-tools">
-        
-        <audio id="audio-stream" 
-               src="{{ url_for('radio_proxy') }}"loop preload="auto">
-               controls loop preload="auto">
-            Your browser does not support the audio element.
-        </audio>
+   <div class="header-tools">
 
-        <button id="admin-button" title="Admin Panel" style="display:none;"><i class="fas fa-tools"></i> Admin</button>
-        
-        <button id="notification-volume-button" title="Notification Sound ON/OFF"><i class="fas fa-bell"></i></button>
+    <audio id="audio-stream" src="{{ url_for('radio_proxy') }}" loop preload="auto" style="display:none;"></audio>
+
+    <button id="radio-toggle-button" title="Web Radio ON/OFF" class="radio-on">
+        <i class="fas fa-compact-disc"></i> </button>
     </div>
+
 
     <div class="chat-container">
 

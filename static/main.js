@@ -133,7 +133,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatbox = document.getElementById('chat-box'); // ΕΔΩ ΤΟ ΒΡΙΣΚΕΙ ΣΩΣΤΑ
     const messageInput = document.getElementById('message-input');
     const sendButton = document.getElementById('send-button');
+    const audioStream = document.getElementById('audio-stream');
+const radioToggleButton = document.getElementById('radio-toggle-button');
 
+if (radioToggleButton && audioStream) {
+    radioToggleButton.addEventListener('click', () => {
+        if (audioStream.paused) {
+            audioStream.play().catch(e => console.log("Audio playback blocked:", e));
+            radioToggleButton.classList.replace('radio-off', 'radio-on');
+        } else {
+            audioStream.pause();
+            radioToggleButton.classList.replace('radio-on', 'radio-off');
+        }
+    });
+
+    // Αρχική ρύθμιση
+    radioToggleButton.classList.add('radio-off');
+    audioStream.volume = 0.3; // Βάζουμε την ένταση χαμηλά όπως θέλετε
+}
     const boldButton = document.getElementById('bold-button');
     const italicButton = document.getElementById('italic-button');
     const underlineButton = document.getElementById('underline-button');

@@ -64,12 +64,35 @@ body {
     color: var(--primary-color);
 }
 /* Web Radio Stream */
-#audio-stream {
-    flex-shrink: 0;
-    width: 200px; /* Μικρότερο πλάτος */
-    height: 35px; /* Μικρότερο ύψος */
+#radio-toggle-button {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 5px;
+    margin-right: 15px;
+    transition: all 0.3s;
 }
-/* Emoticon Selector (Πρέπει να είναι στο header-tools ή κάπου με position: absolute/fixed) */
+
+/* Neon/Funky Style για το ON state */
+#radio-toggle-button.radio-on {
+    color: var(--primary-color); /* Hot Pink */
+    /* Προσθέστε neon glow */
+    text-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color);
+    animation: spin 2s linear infinite; /* Εφέ περιστροφής */
+}
+
+/* Gray/Off Style για το OFF state */
+#radio-toggle-button.radio-off {
+    color: #888888;
+    text-shadow: none;
+    animation: none;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}/* Emoticon Selector (Πρέπει να είναι στο header-tools ή κάπου με position: absolute/fixed) */
 .emoticon-selector {
     display: none;
     position: absolute;

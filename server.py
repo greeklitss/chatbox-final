@@ -1,8 +1,9 @@
+import requests
 import os
 import json
 import uuid
 import time
-import requests
+
 from flask import Flask, send_from_directory, request, jsonify, url_for, redirect, session, render_template
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.utils import secure_filename
@@ -449,7 +450,7 @@ def on_join():
 
         user_data = {
             'id': user.id,
-            'display_name': user.display_name,
+            'username': user.display_name,
             'role': user.role,
             'color': user.color if user.role == 'guest' else '#FFFFFF' 
         }
@@ -525,43 +526,51 @@ def handle_message(data):
         return
     
     msg_content = data.get('msg')
-    # 🚨 ΝΕΟ: Χρησιμοποιούμε default color αν δεν σταλεί
     color = data.get('color') or '#FFFFFF' 
 
     if not msg_content:
         return
 
+    # 🚨 ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Όλη η λογική μέσα στο context
     with app.app_context():
         user = get_current_user_or_guest() 
         if not user:
             return
 
-        # 🚨 ΔΙΟΡΘΩΣΗ: Σύνταξη και αποθήκευση χρώματος
+        # 1. ΕΞΑΓΩΓΗ ΔΕΔΟΜΕΝΩΝ ΧΡΗΣΤΗ (ΠΡΙΝ το commit)
+        # Αυτό διασφαλίζει ότι το avatar_url λαμβάνεται εντός της ενεργής συνεδρίας
+        user_data = {
+            'user_id': user.id,
+            'username': user.display_name,
+            'role': user.role,
+            # ΕΞΑΓΩΓΗ AVATAR URL: Τώρα ασφαλές και αποθηκευμένο στο λεξικό:
+            'avatar_url': user.avatar_url if hasattr(user, 'avatar_url') and user.avatar_url else '/static/default_avatar.png',
+            'color': color 
+        }
+        
+        # 2. Αποθήκευση Μηνύματος (χρησιμοποιώντας τα ασφαλή user_data)
         new_message = Message(
-            user_id=user.id,
-            username=user.display_name, 
-            role=user.role,       
+            user_id=user_data['user_id'],
+            username=user_data['username'], 
+            role=user_data['role'],       
             content=msg_content,     
             timestamp=datetime.now(timezone.utc),
             color=color 
         )
         db.session.add(new_message)
-        db.session.commit()
-            
+        db.session.commit() # Η SQLAlchemy Session κλείνει μετά από αυτό!
 
-# 2. Εκπομπή: Χρησιμοποιούμε ΜΟΝΟ τα δεδομένα από το user_data
-emit('message', { 
-    'user_id': user_data['user_id'],
-    'username': user_data['username'],
-    'msg': msg_content,
-    'timestamp': datetime.now(timezone.utc).isoformat(), 
-    'role': user_data['role'],
-     'avatar_url': user.avatar_url if hasattr(user, 'avatar_url') and user.avatar_url else '/static/default_avatar.png',
-    'color': user_data['color'] 
-}, room='chat', broadcast=True) # 🚨 ΠΡΟΣΟΧΗ: broadcast=True
-        
-    print(f"DEBUG: Server received and emitted message from {user.display_name}: {msg_content}")
-
+    # 3. Εκπομπή: Χρησιμοποιούμε ΜΟΝΟ τα user_data (που είναι αποσυνδεδεμένα από τη Session)
+    emit('message', { 
+        'user_id': user_data['user_id'],
+        'username': user_data['username'],
+        'msg': msg_content,
+        'timestamp': datetime.now(timezone.utc).isoformat(), 
+        'role': user_data['role'],
+        'avatar_url': user_data['avatar_url'], # 🚨 ΤΩΡΑ ΧΡΗΣΙΜΟΠΟΙΕΙΤΑΙ ΤΟ user_data
+        'color': user_data['color'] 
+    }, room='chat', broadcast=True)
+    print(f"DEBUG: Server received and emitted message from {user_data['username']}: {msg_content}"){msg_content}")
 # --- ADMIN PANEL & SETTINGS ROUTES ---
 
 @app.route('/check_login')
