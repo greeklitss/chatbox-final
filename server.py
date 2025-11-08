@@ -255,34 +255,42 @@ def initialize_emoticons():
         db.session.commit()
 
 
-# --- ROUTES ---
-# --- ΝΕΑ ROUTE ΓΙΑ ΤΟ RADIO PROXY ---
+
+# --- NEW: WEB RADIO PROXY ROUTE (Fixes Problem 1 with robust checks) ---
 @app.route('/radio_proxy')
 def radio_proxy():
-    # Η διεύθυνση του ραδιοφώνου
     radio_url = "https://uk24freenew.listen2myradio.com/live.mp3?typeportmount=s1_9254"
     try:
-        # Χρησιμοποιούμε stream=True για να μην φορτώσει όλο το αρχείο στη μνήμη του server
-        req = requests.get(radio_url, stream=True)
+        # Δοκιμάζουμε να συνδεθούμε με timeout 5 δευτερολέπτων
+        req = requests.get(radio_url, stream=True, timeout=5) 
         
-        # Επιστρέφουμε την απάντηση ως stream απευθείας στον browser
+        # 1. Έλεγχος Status Code
+        if req.status_code != 200:
+            print(f"ERROR: External radio stream returned status code {req.status_code}")
+            return "External Radio stream unavailable (Bad Status).", 502
+
+        # 2. Έλεγχος Content-Type (προαιρετικός, αλλά χρήσιμος)
+        content_type = req.headers.get('Content-Type', '')
+        if 'audio' not in content_type and 'mpeg' not in content_type:
+             # Αν απαντήσει με HTML ή κάτι άλλο
+            print(f"ERROR: External radio Content-Type is {content_type}, not audio.")
+            return "External Radio stream unavailable (Bad Content-Type).", 502
+
+        # 3. Επιστρέφουμε το stream (Επιτυχία)
         return app.response_class(
             req.iter_content(chunk_size=1024),
-            content_type=req.headers.get('Content-Type', 'audio/mpeg') # Διασφαλίζουμε τον σωστό Content-Type
+            content_type=content_type
         )
+        
+    except requests.exceptions.RequestException as e:
+        # Χειρισμός αποτυχίας σύνδεσης/timeout (πιο συχνό)
+        print(f"CRITICAL: Failed to connect to external radio stream: {e}")
+        return "Radio stream unavailable (Connection Error).", 503
     except Exception as e:
-        print(f"Error streaming radio: {e}")
-        return "Radio stream unavailable.", 503
+        # Άγνωστο σφάλμα
+        print(f"CRITICAL: Unknown error during radio streaming: {e}")
+        return "Radio stream unavailable (Unknown Error).", 503
 
-@app.route('/')
-def index():
-    return redirect(url_for('login'))
-
-@app.route('/login')
-def login():
-    if 'user_id' in session:
-        return redirect(url_for('chat'))
-    return render_template('login.html')
 
 @app.route('/chat')
 def chat():
