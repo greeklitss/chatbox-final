@@ -103,9 +103,9 @@ body {
     display: flex; /* 🚨 Κάνει τα παιδιά να μπαίνουν δίπλα-δίπλα */
     flex-direction: row; /* Εγγυάται τη διάταξη σε σειρά (Chat | Users) */
     flex-grow: 1;
-    width: 95%;
+    width: 100%;
     max-width: 1200px;
-    margin: 20px auto 0 auto; /* Κεντράρισμα */
+    margin: 0 auto; /* Κεντράρισμα */
     height: calc(100vh - 170px); /* 🚨 Υπολογίζει το ύψος αφαιρώντας Header/Input */
     min-height: 500px;
     border: 1px solid var(--border-color);

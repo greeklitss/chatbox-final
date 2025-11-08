@@ -548,18 +548,18 @@ def handle_message(data):
         db.session.add(new_message)
         db.session.commit()
             
-    # 3. Εκπομπή: Στέλνουμε το μήνυμα πίσω σε ΟΛΟΥΣ τους συνδεδεμένους χρήστες
-    # (Επιλύει το πρόβλημα της ανανέωσης)
-    emit('message', { 
-        'user_id': user_id,
-        'username': user.display_name,
-        'msg': msg_content,
-        'timestamp': datetime.now(timezone.utc).isoformat(),
-        'role': user.role,
-        'avatar_url': user.avatar_url if hasattr(user, 'avatar_url') and user.avatar_url else '/static/default_avatar.png',
-        'color': color 
-    }, room='chat', broadcast=True) # <-- Το broadcast=True είναι το κλειδί
 
+# 2. Εκπομπή: Χρησιμοποιούμε ΜΟΝΟ τα δεδομένα από το user_data
+emit('message', { 
+    'user_id': user_data['user_id'],
+    'username': user_data['username'],
+    'msg': msg_content,
+    'timestamp': datetime.now(timezone.utc).isoformat(), 
+    'role': user_data['role'],
+     'avatar_url': user.avatar_url if hasattr(user, 'avatar_url') and user.avatar_url else '/static/default_avatar.png',
+    'color': user_data['color'] 
+}, room='chat', broadcast=True) # 🚨 ΠΡΟΣΟΧΗ: broadcast=True
+        
     print(f"DEBUG: Server received and emitted message from {user.display_name}: {msg_content}")
 
 # --- ADMIN PANEL & SETTINGS ROUTES ---
