@@ -24,6 +24,9 @@
 
     <button id="radio-toggle-button" title="Web Radio ON/OFF" class="radio-on">
         <i class="fas fa-compact-disc"></i> </button>
+    <button id="admin-button" title="Admin Panel" style="display:none;"><i class="fas fa-tools"></i> Admin</button>
+
+    <button id="notification-volume-button" title="Notification Sound ON/OFF"><i class="fas fa-bell"></i></button>
     </div>
 
 
@@ -80,14 +83,8 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const audio = document.getElementById('audio-stream');
-            
-            // Ρύθμιση έντασης του Web Radio
-            if (audio) {
-                audio.volume = 0.3; 
-            }
-            
-            // ΕΛΕΓΧΟΣ ΡΟΛΟΥ ΧΡΗΣΤΗ ΓΙΑ ΤΟ ADMIN BUTTON
+
+     // ΕΛΕΓΧΟΣ ΡΟΛΟΥ ΧΡΗΣΤΗ ΓΙΑ ΤΟ ADMIN BUTTON
             const currentUserRole = "{{ user.role }}"; // Παίρνουμε τον ρόλο από το Flask
             const adminButton = document.getElementById('admin-button');
 

@@ -134,13 +134,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageInput = document.getElementById('message-input');
     const sendButton = document.getElementById('send-button');
     const audioStream = document.getElementById('audio-stream');
-const radioToggleButton = document.getElementById('radio-toggle-button');
+    const radioToggleButton = document.getElementById('radio-toggle-button');
 
-if (radioToggleButton && audioStream) {
-    radioToggleButton.addEventListener('click', () => {
-        if (audioStream.paused) {
-            audioStream.play().catch(e => console.log("Audio playback blocked:", e));
-            radioToggleButton.classList.replace('radio-off', 'radio-on');
+    if (radioToggleButton && audioStream) {
+       audioStream.volume = 0.3;
+
+        radioToggleButton.addEventListener('click', () => {
+            if (audioStream.paused) {
+               audioStream.play().then(() => {
+                   radioToggleButton.classList.replace('radio-off', 'radio-on');
+               }).catch(e => {
+                // Αυτό πιάνει το σφάλμα "Audio playback blocked"
+                console.log("Audio playback blocked by browser:", e);
+                alert("Playback blocked. Please interact with the page first or check browser settings.");
+            });
         } else {
             audioStream.pause();
             radioToggleButton.classList.replace('radio-on', 'radio-off');
