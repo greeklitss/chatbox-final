@@ -137,26 +137,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const radioToggleButton = document.getElementById('radio-toggle-button');
 
     if (radioToggleButton && audioStream) {
-       audioStream.volume = 0.3;
-
-        radioToggleButton.addEventListener('click', () => {
-            if (audioStream.paused) {
-               audioStream.play().then(() => {
-                   radioToggleButton.classList.replace('radio-off', 'radio-on');
-               }).catch(e => {
-                // Αυτό πιάνει το σφάλμα "Audio playback blocked"
+    audioStream.volume = 0.3; 
+    
+    radioToggleButton.addEventListener('click', () => {
+        if (audioStream.paused) {
+            audioStream.play().then(() => {
+                radioToggleButton.classList.replace('radio-off', 'radio-on');
+            }).catch(e => {
                 console.error("Audio playback blocked by browser:", e);
-                alert("Playback blocked. Please interact with the page first or check browser settings.");
+                alert("Playback blocked. Please check browser settings.");
             });
         } else {
             audioStream.pause();
             radioToggleButton.classList.replace('radio-on', 'radio-off');
         }
     });
-
-    // Αρχική ρύθμιση
-    radioToggleButton.classList.add('radio-off');
-    audioStream.volume = 0.3; // Βάζουμε την ένταση χαμηλά όπως θέλετε
 }
     const boldButton = document.getElementById('bold-button');
     const italicButton = document.getElementById('italic-button');
