@@ -570,7 +570,7 @@ def handle_message(data):
         'avatar_url': user_data['avatar_url'], # 🚨 ΤΩΡΑ ΧΡΗΣΙΜΟΠΟΙΕΙΤΑΙ ΤΟ user_data
         'color': user_data['color'] 
     }, room='chat', broadcast=True)
-    print(f"DEBUG: Server received and emitted message from {user_data['username']}: {msg_content}"){msg_content}")
+    print(f"DEBUG: Server received and emitted message from {user_data['username']}: {msg_content}")
 # --- ADMIN PANEL & SETTINGS ROUTES ---
 
 @app.route('/check_login')
