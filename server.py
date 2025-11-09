@@ -9,6 +9,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
 from functools import wraps
+from flask import jsonify, url_for, request # Βεβαιωθείτε ότι έχετε εισάγει τα jsonify, url_for, request
 
 # --- ΒΙΒΛΙΟΘΗΚΕΣ ΓΙΑ DB & AUTH ---
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -514,11 +515,28 @@ def sign_up():
         db.session.rollback()
         return jsonify({'error': f'Database error during registration: {e}'}), 500
 
-@app.route('/login_guest', methods=['POST']) # 🚨 Αλλάξτε το route
-def login_guest():                            # 🚨 Αλλάξτε το όνομα της συνάρτησης    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+# 🚨 ΝΕΟ ROUTE: Προσθέστε αυτό για να "ιάσετε" το 404/api/v1/login
+@app.route('/api/v1/login', methods=['POST'])
+def api_login_alias():
+    # Καλούμε τη συνάρτηση που ήδη χειρίζεται τη λογική σύνδεσης.
+    # Υποθέτουμε ότι η συνάρτηση login_guest χειρίζεται τη λογική σύνχρονη (guest/username/password)
+    return login_guest()
 
+@app.route('/login_guest', methods=['POST']) 
+def login_guest(): 
+    # Προσπαθούμε να πάρουμε δεδομένα είτε από JSON (API call) είτε από Form Data (απλή φόρμα)
+    data = request.get_json(silent=True) # silent=True ώστε να μη σκάσει αν δεν είναι JSON
+    
+    if data:
+        # Αν υπάρχει JSON payload
+        username = data.get('username')
+        password = data.get('password')
+    else:
+        # Αν δεν υπάρχει JSON, ψάχνουμε στα form data
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+    # Ο υπόλοιπος έλεγχος παραμένει ίδιος
     if not username or not password:
         return jsonify({'error': 'Missing username or password'}), 400
 
@@ -533,11 +551,11 @@ def login_guest():                            # 🚨 Αλλάξτε το όνο�
         session['role'] = user.role
         session['color'] = user.color
         
-        add_system_message(f"User {user.username} has logged in.")
-
-        return jsonify({'message': 'Login successful'}), 200
-    else:
-        return jsonify({'error': 'Invalid username or password'}), 401
+        # 🚨 ΔΙΟΡΘΩΣΗ: Πρέπει να επιστρέψετε redirect URL στο frontend!
+        # Το frontend (main.js) χρειάζεται το URL για να ανακατευθύνει τον χρήστη.
+        return jsonify({'message': 'Login successful', 'redirect_url': url_for('chat')}), 200 # <-- Αλλαγή εδώ
+    
+    return jsonify({'error': 'Invalid username or password'}), 401 # <-- Αλλαγή εδώ (Επιστρέφουμε 401 για Invalid Credentials)
         
 @app.route('/login')
 def login():
