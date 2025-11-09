@@ -556,8 +556,8 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-@app.route('/google_auth')
-def google_auth():
+@app.route('/login_google')
+def login_google():
     # Set the redirect_uri dynamically based on the request environment
     # Crucial for deployment on platforms like Render or Heroku
     redirect_uri = url_for('google_callback', _external=True)
