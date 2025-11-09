@@ -449,6 +449,7 @@ def get_all_users():
 
 
 @app.route('/check_login')
+@login_required # <-- Προσθήκη του decorator, αν υπάρχει
 def check_login():
     """Επιστρέφει τα βασικά δεδομένα του χρήστη για frontend check (π.χ. Admin Panel)."""
     if 'user_id' not in session:
@@ -516,7 +517,11 @@ def sign_up():
             
         # 5. ΚΡΙΣΙΜΟΣ ΕΛΕΓΧΟΣ: Εάν είναι ο ΠΡΩΤΟΣ χρήστης, του δίνουμε ρόλο 'owner'
         # Μετράμε όλους τους χρήστες εκτός από τους Guests
-        user_count = db.session.scalar(select(User).filter(User.role.not_in(['guest'])).count())
+        user_count = db.session.scalar(
+    select(func.count())
+    .select_from(User)
+    .filter(User.role.not_in(['guest']))
+)
         is_first_user = user_count == 0
 
         # 6. Δημιουργία και αποθήκευση νέου χρήστη
@@ -527,6 +532,7 @@ def sign_up():
             role='owner' if is_first_user else 'user',
             # Δίνουμε default avatar (όπως στον κώδικα σας)
             avatar_url='/static/default_avatar.png'
+            color=generate_random_color()
             # Το color θα πάρει το default του μοντέλου, όπως επιθυμείτε.
         )
         new_user.set_password(password)
@@ -572,7 +578,7 @@ def login_guest():
     if not username or not password:
         return jsonify({'error': 'Missing username or password'}), 400
 
-    from sqlalchemy import select # Βεβαιωθείτε ότι υπάρχει
+
     user = db.session.scalar(select(User).filter_by(username=username))
 
     # 1. ΕΠΙΤΥΧΗΣ ΕΛΕΓΧΟΣ
@@ -672,7 +678,11 @@ def google_callback():
                     username = f"{base_username}_{counter}"
                     counter += 1
                     
-                is_first_user = db.session.scalar(select(User).filter(User.username.not_like('Guest-%'))).count() == 0
+                is_first_user = db.session.scalar(
+    select(func.count())
+    .select_from(User)
+    .filter(User.username.not_like('Guest-%'))
+) == 0 # <--- ΣΩΣΤΗ ΧΡΗΣΗ func.count()
 
                 new_user = User(
                     username=username,
@@ -1037,6 +1047,39 @@ def setup_app_on_startup():
             initialize_settings()
             initialize_emoticons()
             print("Settings and Emoticons initialized.")
+# 🚨 3. ΚΡΙΣΙΜΟ: ΕΛΕΓΧΟΣ & ΔΗΜΙΟΥΡΓΙΑ ΤΟΥ ΠΡΩΤΟΥ OWNER
+            from sqlalchemy import select, func # Αυτό είναι ασφαλές εδώ (αν και υπάρχει στην κορυφή)
+
+            # ΣΩΣΤΗ ΜΕΤΡΗΣΗ: Μετράμε όλους τους μη-guest χρήστες
+            user_count = db.session.scalar(
+                select(func.count())
+                .select_from(User)
+                .filter(User.role.not_in(['guest']))
+            )
+            
+            if user_count == 0:
+                # Δημιουργία του default Owner χρήστη
+                owner_username = os.environ.get('DEFAULT_ADMIN_USERNAME', 'ChatOwner')
+                owner_email = os.environ.get('DEFAULT_ADMIN_EMAIL', 'owner@chat.com')
+                owner_password = os.environ.get('DEFAULT_ADMIN_PASSWORD', secrets.token_urlsafe(16)) 
+                
+                # Έλεγχος για να μην υπάρχει ήδη με το ίδιο όνομα (για ασφάλεια)
+                if not db.session.scalar(select(User).filter_by(username=owner_username)):
+                    default_owner = User(
+                        username=owner_username,
+                        email=owner_email,
+                        role='owner',
+                        avatar_url='/static/default_avatar.png',
+                        color=generate_random_color() # Υποθέτουμε ότι η συνάρτηση είναι διαθέσιμη
+                    )
+                    default_owner.set_password(owner_password)
+                    db.session.add(default_owner)
+                    db.session.commit()
+                    print(f"✅ Created default Owner user: {owner_username}. Password is the one set in environment or a random one.")
+                else:
+                    print("Default Owner user already exists.")
+            else:
+                print("Owner user check completed.")
             
         except ProgrammingError as e:
              print(f"SQLAlchemy Programming Error during setup: {e}. If this is a new Postgres setup, ensure the database is accessible.")
