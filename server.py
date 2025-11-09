@@ -561,9 +561,9 @@ def sign_up():
 @app.route('/login_guest', methods=['POST'])
 @app.route('/api/v1/login', methods=['POST'])
 def login_guest():
-"""Χειρίζεται το Login είτε μέσω φόρμας (ως login_guest) είτε ως API call (ως /api/v1/login)."""
-    data_json = request.get_json(silent=True)
-    
+    """Χειρίζεται το Login είτε μέσω φόρμας (ως login_guest) είτε ως API call (ως /api/v1/login)."""
+    data_json = request.get_json(silent=True)    
+
     if data_json:
         username = data_json.get('username')
         password = data_json.get('password')
