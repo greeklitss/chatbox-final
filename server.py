@@ -86,10 +86,9 @@ def generate_random_password(length=12):
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    display_name = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
-    role = db.Column(db.String(20), default='guest') # guest, user, admin, owner
+    password_hash = db.Column(db.String(500), nullable=False)    role = db.Column(db.String(20), default='guest') # guest, user, admin, owner
     avatar_url = db.Column(db.String(200), default='/static/default_avatar.png')
     display_name = db.Column(db.String(80), nullable=False)
     color = db.Column(db.String(7), default=generate_random_color)
@@ -269,7 +268,7 @@ def sign_up():
             
         # 4. Δημιουργία χρήστη
         try:
-            new_user = User(username=username, email=email, role=role)
+            new_user = User(display_name=username, email=email, role=role) # ✅ ΣΩΣΤΟ
             new_user.set_password(password)
             db.session.add(new_user)
             db.session.commit()
@@ -304,7 +303,7 @@ def handle_login():
         # Αναζήτηση χρήστη με username ή email
         user = db.session.scalar(
             select(User).filter(
-                (User.username == username_or_email) | (User.email == username_or_email)
+                (User.display_name == username_or_email) | (User.email == username_or_email)
             )
         )
         
@@ -312,7 +311,7 @@ def handle_login():
             # Επιτυχής σύνδεση
             session.permanent = True # Set session to permanent
             session['user_id'] = user.id
-            session['username'] = user.username
+            session['username'] = user.display_name
             session['role'] = user.role # Store role in session
             
             return jsonify({
@@ -669,7 +668,7 @@ def setup_app_on_startup():
                         print("⚠️ WARNING: OWNER_PASSWORD not set. Using a random password (check logs!).")
 
                     default_owner = User(
-                        username=owner_username,
+                        display_name=owner_username,
                         email=owner_email,
                         role='owner',
                         avatar_url='/static/default_avatar.png',
