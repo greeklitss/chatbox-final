@@ -698,7 +698,5 @@ if __name__ == '__main__':
     # Flask-SocketIO runs the Flask app
     print("Starting Flask-SocketIO server...")
     socketio.run(app, debug=True, port=int(os.environ.get('PORT', 5000)))
-```eof
 
----
 
