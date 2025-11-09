@@ -340,7 +340,7 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route('/guest_login')
+@app.route('/guest_login', methods=['GET', 'POST'])
 def guest_login():
     """Allows a user to join as a guest."""
     with app.app_context():

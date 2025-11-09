@@ -12,8 +12,8 @@
     <style>
         /* 🚨 Neon Styles */
         :root { 
-            --primary-accent: #FF0066; /* Hot Pink/Magenta (Neon) */ 
-            --secondary-accent: #39FF14; /* Neon Green */ 
+            --primary-accent: #FF0066; 
+            --secondary-accent: #39FF14; 
             --text-color: #F0F0F0; 
             --box-bg: transparent;
         }
@@ -44,7 +44,7 @@
         }
 
         .login-box {
-            background-color: rgba(31, 31, 31, 0.9); /* Σχεδόν μαύρο με διαφάνεια */
+            background-color: rgba(31, 31, 31, 0.9);
             padding: 40px;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), 0 0 20px var(--primary-accent);
@@ -94,7 +94,7 @@
         }
 
         .google-button {
-            background-color: #4285F4; /* Google Blue */
+            background-color: #4285F4;
             color: white;
         }
 
@@ -103,7 +103,6 @@
             box-shadow: 0 0 15px #4285F4;
         }
         
-        /* 🚨 ΝΕΟ: Στυλ για το Guest Button */
         .guest-button {
             background-color: #333; 
             color: var(--secondary-accent);
@@ -255,19 +254,20 @@
             loginErrorMessage.textContent = '';
 
             try {
-                // 🚨 ΣΗΜΑΝΤΙΚΟ: Η σωστή route για τοπικό login είναι το /api/v1/login
                 const response = await fetch('/api/v1/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username_or_email: email, password: password }) // 🚨 ΔΙΟΡΘΩΣΗ ΣΤΟ BODY
+                    // ✅ ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε username_or_email όπως περιμένει το server.py
+                    body: JSON.stringify({ username_or_email: email, password: password }) 
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    window.location.href = result.redirect_url; // ✅ ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε 'redirect_url'
+                    // ✅ ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε redirect_url όπως στέλνει το server.py
+                    window.location.href = result.redirect_url; 
                 } else {
                     loginErrorMessage.textContent = result.error || 'Login failed. Try again.';
                 }
@@ -300,7 +300,6 @@
             signupErrorMessage.textContent = '';
 
             try {
-                // 🚨 ΣΗΜΑΝΤΙΚΟ: Η σωστή route για τοπικό sign up είναι το /api/v1/sign_up
                 const response = await fetch('/api/v1/sign_up', {
                     method: 'POST',
                     headers: {
@@ -316,8 +315,6 @@
                     signupErrorMessage.style.color = 'var(--primary-accent)';
                     // Αυτόματη αλλαγή στο login tab μετά την επιτυχή εγγραφή
                     showTab('login'); 
-                    // 🚨 Προαιρετική: Αυτόματη συμπλήρωση email στο login tab
-                    document.getElementById('login-email').value = email;
                 } else {
                     signupErrorMessage.textContent = result.error || 'Sign up failed. Try again.';
                     signupErrorMessage.style.color = 'var(--secondary-accent)';
