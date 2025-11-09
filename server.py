@@ -514,9 +514,8 @@ def sign_up():
         db.session.rollback()
         return jsonify({'error': f'Database error during registration: {e}'}), 500
 
-@app.route('/api/v1/login', methods=['POST'])
-def login_user():
-    data = request.get_json()
+@app.route('/login_guest', methods=['POST']) # 🚨 Αλλάξτε το route
+def login_guest():                            # 🚨 Αλλάξτε το όνομα της συνάρτησης    data = request.get_json()
     username = data.get('username')
     password = data.get('password')
 
