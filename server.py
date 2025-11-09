@@ -551,41 +551,48 @@ def api_login_alias():
     # Υποθέτουμε ότι η συνάρτηση login_guest χειρίζεται τη λογική σύνχρονη (guest/username/password)
     return login_guest()
 
-@app.route('/login_guest', methods=['POST']) 
-def login_guest(): 
-    # Προσπαθούμε να πάρουμε δεδομένα είτε από JSON (API call) είτε από Form Data (απλή φόρμα)
-    data = request.get_json(silent=True) # silent=True ώστε να μη σκάσει αν δεν είναι JSON
+
+@app.route('/login_guest', methods=['POST'])
+@app.route('/api/v1/login', methods=['POST'])
+def login_guest():
+    data_json = request.get_json(silent=True)
     
-    if data:
-        # Αν υπάρχει JSON payload
-        username = data.get('username')
-        password = data.get('password')
+    if data_json:
+        username = data_json.get('username')
+        password = data_json.get('password')
     else:
-        # Αν δεν υπάρχει JSON, ψάχνουμε στα form data
         username = request.form.get('username')
         password = request.form.get('password')
-
-    # Ο υπόλοιπος έλεγχος παραμένει ίδιος
+        
     if not username or not password:
         return jsonify({'error': 'Missing username or password'}), 400
 
+    from sqlalchemy import select # Βεβαιωθείτε ότι υπάρχει
     user = db.session.scalar(select(User).filter_by(username=username))
 
+    # 1. ΕΠΙΤΥΧΗΣ ΕΛΕΓΧΟΣ
     if user and user.check_password(password):
         if user.role == 'banned':
             return jsonify({'error': 'Your account has been banned.'}), 403
             
+        # 🚨 ΚΡΙΣΙΜΟ: Πρέπει να καλέσετε το login_user για να γίνει η session
+        # (Εφόσον δεν το κάνατε με flask_login, χρησιμοποιείτε απλώς το session dictionary)
+        # login_user(user) # <- Αν χρησιμοποιούσατε Flask-Login
+
+        # Ορισμός Session χειροκίνητα
         session['user_id'] = user.id
         session['username'] = user.username
         session['role'] = user.role
         session['color'] = user.color
         
-        # 🚨 ΔΙΟΡΘΩΣΗ: Πρέπει να επιστρέψετε redirect URL στο frontend!
-        # Το frontend (main.js) χρειάζεται το URL για να ανακατευθύνει τον χρήστη.
-        return jsonify({'message': 'Login successful', 'redirect_url': url_for('chat')}), 200 # <-- Αλλαγή εδώ
+        # Προσθήκη μηνύματος συστήματος
+        # add_system_message(f"User {user.username} has logged in.") # <- Αν υπάρχει αυτή η συνάρτηση
+
+        # Επιστροφή JSON επιτυχίας
+        return jsonify({'message': 'Login successful', 'redirect_url': url_for('chat')}), 200
     
-    return jsonify({'error': 'Invalid username or password'}), 401 # <-- Αλλαγή εδώ (Επιστρέφουμε 401 για Invalid Credentials)
-        
+    # 2. ΑΠΟΤΥΧΗΜΕΝΟΣ ΕΛΕΓΧΟΣ
+    return jsonify({'error': 'Invalid username or password'}), 401        
 @app.route('/login')
 def login():
     if 'user_id' in session:
