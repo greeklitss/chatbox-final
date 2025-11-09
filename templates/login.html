@@ -209,13 +209,13 @@
     
     <div class="or-separator">OR</div>
 
-   <a href="{{ url_for('google_login') }}">
-    <button class="google-button">
-        <i class="fab fa-google"></i> Login with Google
-    </button>
-</a>
+    <a href="{{ url_for('google_login') }}">
+        <button class="google-button">
+            <i class="fab fa-google"></i> Login with Google
+        </button>
+    </a>
     
-    <form action="{{ url_for('login_guest') }}" method="POST">
+    <form action="{{ url_for('guest_login') }}" method="POST">
         <button type="submit" class="guest-button">
             <i class="fas fa-ghost"></i> Σύνδεση ως Επισκέπτης (Guest)
         </button>
@@ -261,13 +261,13 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ email: email, password: password })
+                    body: JSON.stringify({ username_or_email: email, password: password }) // 🚨 ΔΙΟΡΘΩΣΗ ΣΤΟ BODY
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    window.location.href = result.redirect_url; 
+                    window.location.href = result.redirect_url; // ✅ ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε 'redirect_url'
                 } else {
                     loginErrorMessage.textContent = result.error || 'Login failed. Try again.';
                 }
@@ -316,6 +316,8 @@
                     signupErrorMessage.style.color = 'var(--primary-accent)';
                     // Αυτόματη αλλαγή στο login tab μετά την επιτυχή εγγραφή
                     showTab('login'); 
+                    // 🚨 Προαιρετική: Αυτόματη συμπλήρωση email στο login tab
+                    document.getElementById('login-email').value = email;
                 } else {
                     signupErrorMessage.textContent = result.error || 'Sign up failed. Try again.';
                     signupErrorMessage.style.color = 'var(--secondary-accent)';
