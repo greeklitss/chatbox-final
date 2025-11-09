@@ -3,6 +3,9 @@ import os
 import json
 import uuid
 import time
+import random
+import secrets
+import string
 
 from flask import Flask, send_from_directory, request, jsonify, url_for, redirect, session, render_template
 from flask_socketio import SocketIO, emit, join_room, leave_room
@@ -443,7 +446,7 @@ def get_all_users():
         return jsonify({'error': f'Database error: {e}'}), 500
 
 
-# --- (Εισαγωγή των υπόλοιπων routes: index, login, logout, google_auth, radio_proxy, file_upload) ---
+
 
 @app.route('/check_login')
 def check_login():
@@ -464,6 +467,23 @@ def check_login():
         'avatar_url': user.avatar_url,
         'color': user.color
     })
+def generate_random_color():
+    """Δημιουργεί ένα τυχαίο hex χρώμα, εξαιρώντας το λευκό και τα πολύ ανοιχτά."""
+    import random
+    
+    # Επιλέγουμε ένα τυχαίο φωτεινό χρώμα (όχι πολύ ανοιχτό)
+    r = random.randint(50, 255)
+    g = random.randint(50, 255)
+    b = random.randint(50, 255)
+    
+    # Εξασφαλίζουμε ότι δεν είναι πολύ κοντά στο λευκό
+    if r > 200 and g > 200 and b > 200:
+        index_to_lower = random.choice([0, 1, 2])
+        if index_to_lower == 0: r = random.randint(50, 150)
+        if index_to_lower == 1: g = random.randint(50, 150)
+        if index_to_lower == 2: b = random.randint(50, 150)
+        
+    return '#{:02x}{:02x}{:02x}'.format(r, g, b)
 @app.route('/api/v1/sign_up', methods=['POST'])
 def sign_up():
     # 1. Προσπαθούμε να πάρουμε δεδομένα από JSON (API call)
@@ -489,72 +509,59 @@ def sign_up():
         return jsonify({'error': 'Username must be at least 3 chars, Password at least 6.'}), 400
 
     try:
+        from sqlalchemy import select 
+        
         # 4. Έλεγχος ύπαρξης χρήστη/email
-        from sqlalchemy import select # Βεβαιωθείτε ότι το select είναι εισαγόμενο!
         existing_user = db.session.scalar(select(User).filter((User.username == username) | (User.email == email)))
         if existing_user:
             return jsonify({'error': 'Username or Email already registered'}), 409
             
-        # 5. Δημιουργία και αποθήκευση νέου χρήστη
-        new_user = User(username=username, email=email, role='user', color=generate_random_color())
-        new_user.set_password(password) # Υποθέτουμε ότι η κλάση User έχει τη μέθοδο set_password
-        
-        db.session.add(new_user)
-        db.session.commit()
-        
-        # 6. Είσοδος χρήστη (προαιρετικά, αλλά συνήθως γίνεται μετά την εγγραφή)
-        from flask_login import login_user # Υποθέτουμε ότι χρησιμοποιείτε flask_login
-        login_user(new_user)
-        add_system_message(f"User {new_user.username} has signed up.")
-        
-        # 7. Απάντηση επιτυχίας (JSON με URL ανακατεύθυνσης)
-        return jsonify({'message': 'Registration successful', 'redirect_url': url_for('chat')}), 201
+        # 5. ΚΡΙΣΙΜΟΣ ΕΛΕΓΧΟΣ: Εάν είναι ο ΠΡΩΤΟΣ χρήστης, του δίνουμε ρόλο 'owner'
+        # Μετράμε όλους τους χρήστες εκτός από τους Guests
+        user_count = db.session.scalar(select(User).filter(User.role.not_in(['guest'])).count())
+        is_first_user = user_count == 0
 
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error during sign up: {e}") # Εκτύπωση του σφάλματος για debugging
-        return jsonify({'error': 'An unexpected error occurred during registration.'}), 500        # Set first registered user as 'owner'
-        is_first_user = db.session.scalar(select(User).filter(User.username.not_like('Guest-%'))).count() == 0
-
+        # 6. Δημιουργία και αποθήκευση νέου χρήστη
         new_user = User(
             username=username,
             email=email,
+            # Ορίζουμε το ρόλο
             role='owner' if is_first_user else 'user',
+            # Δίνουμε default avatar (όπως στον κώδικα σας)
             avatar_url='/static/default_avatar.png'
+            # Το color θα πάρει το default του μοντέλου, όπως επιθυμείτε.
         )
         new_user.set_password(password)
         
-        # Set a default color for the user (optional)
-        # new_user.color = '#FF0066' 
-
         db.session.add(new_user)
         db.session.commit()
 
-        # Log in the new user immediately
+        # 7. Αυτόματη είσοδος (login) του χρήστη με Flask Session
         session['user_id'] = new_user.id
         session['username'] = new_user.username
         session['role'] = new_user.role
-        session['color'] = new_user.color
+        session['color'] = new_user.color # Χρησιμοποιεί το default χρώμα
         
+        # 8. Μήνυμα Συστήματος (Πρέπει να υπάρχει η συνάρτηση add_system_message)
+        # add_system_message(f"User {new_user.username} has signed up.") # Προαιρετικό
         add_system_message(f"New user {new_user.username} has joined the chat!")
 
-        return jsonify({'message': 'Registration successful, redirecting to chat'}), 201
+        # 9. Απάντηση επιτυχίας
+        return jsonify({'message': 'Registration successful, redirecting to chat', 'redirect_url': url_for('chat')}), 201
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': f'Database error during registration: {e}'}), 500
+        # Εδώ χρησιμοποιούμε το print για debugging
+        print(f"Error during sign up: {e}") 
+        return jsonify({'error': f'An unexpected database error occurred during registration: {e}'}), 500
 
 # 🚨 ΝΕΟ ROUTE: Προσθέστε αυτό για να "ιάσετε" το 404/api/v1/login
-@app.route('/api/v1/login', methods=['POST'])
-def api_login_alias():
-    # Καλούμε τη συνάρτηση που ήδη χειρίζεται τη λογική σύνδεσης.
-    # Υποθέτουμε ότι η συνάρτηση login_guest χειρίζεται τη λογική σύνχρονη (guest/username/password)
-    return login_guest()
 
 
 @app.route('/login_guest', methods=['POST'])
 @app.route('/api/v1/login', methods=['POST'])
 def login_guest():
+"""Χειρίζεται το Login είτε μέσω φόρμας (ως login_guest) είτε ως API call (ως /api/v1/login)."""
     data_json = request.get_json(silent=True)
     
     if data_json:
