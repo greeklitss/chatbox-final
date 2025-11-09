@@ -16,7 +16,7 @@ from flask import jsonify, url_for, request # Βεβαιωθείτε ότι έχ
 
 # --- ΒΙΒΛΙΟΘΗΚΕΣ ΓΙΑ DB & AUTH ---
 from werkzeug.middleware.proxy_fix import ProxyFix
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, func # <-- ΠΡΟΣΘΗΚΗ ΤΟΥ func
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -509,9 +509,7 @@ def sign_up():
         return jsonify({'error': 'Username must be at least 3 chars, Password at least 6.'}), 400
 
     try:
-        from sqlalchemy import select 
-        
-        # 4. Έλεγχος ύπαρξης χρήστη/email
+             # 4. Έλεγχος ύπαρξης χρήστη/email
         existing_user = db.session.scalar(select(User).filter((User.username == username) | (User.email == email)))
         if existing_user:
             return jsonify({'error': 'Username or Email already registered'}), 409
