@@ -249,7 +249,7 @@ def sign_up():
             return jsonify({'error': 'Registration is currently disabled.'}), 403
 
         # 2. Έλεγχος αν υπάρχει ήδη
-        existing_user = db.session.scalar(select(User).filter((User.username == username) | (User.email == email)))
+        existing_user = db.session.scalar(select(User).filter(User.display_name == username) | (User.email == email)))
         if existing_user:
             return jsonify({'error': 'Username or Email already exists.'}), 409
 
@@ -276,7 +276,7 @@ def sign_up():
             
             # 5. Αυτόματη σύνδεση μετά την εγγραφή (προαιρετικό)
             session['user_id'] = new_user.id
-            session['username'] = new_user.username
+            session['username'] = new_user.display_name
             session['role'] = new_user.role
             
             return jsonify({
@@ -303,8 +303,7 @@ def handle_login():
     with app.app_context():
         # Αναζήτηση χρήστη με username ή email
         user = db.session.scalar(
-            select(User).filter(
-                (User.display_name == username_or_email) | (User.email == username_or_email)
+            select(User).filter((User.display_name == username_or_email)
             )
         )
         
@@ -312,7 +311,7 @@ def handle_login():
             # Επιτυχής σύνδεση
             session.permanent = True # Set session to permanent
             session['user_id'] = user.id
-            session['username'] = user.display_name
+            session['username'] = 
             session['role'] = user.role # Store role in session
             
             return jsonify({
@@ -354,8 +353,7 @@ def guest_login():
         
         # Εισαγωγή του Guest χρήστη στη βάση (χωρίς password)
         try:
-            guest_user = User(
-                username=username, 
+                guest_user = User(display_name=username, 
                 email=f"guest_{guest_id}@temporary.com", 
                 role='guest',
                 display_name=username
@@ -367,7 +365,7 @@ def guest_login():
             # Σύνδεση του Guest
             session.permanent = False # Guest session is temporary
             session['user_id'] = guest_user.id
-            session['username'] = guest_user.username
+            session['username'] = guest_user.display_name
             session['role'] = 'guest'
             
             return redirect(url_for('chat'))
@@ -414,7 +412,7 @@ def google_callback():
             if user:
                 # Υπάρχων χρήστης: Ενημέρωση στοιχείων και σύνδεση
                 user.avatar_url = picture
-                user.display_name = name
+                 = name
                 user.is_google_user = True
                 if user.role == 'guest':
                     user.role = 'user' # Αναβαθμίζουμε τον guest σε user
@@ -451,7 +449,7 @@ def google_callback():
             # 3. Σύνδεση
             session.permanent = True
             session['user_id'] = user.id
-            session['username'] = user.username
+            session['username'] = user.display_name
             session['role'] = user.role
             
             return redirect(url_for('chat'))
@@ -545,8 +543,7 @@ def check_login():
     if user:
         return jsonify({
             'id': user.id,
-            'username': user.username,
-            'display_name': user.display_name,
+            'username': user.display_name, & 'display_name': user.display_name,
             'role': user.role,
             'color': user.color,
             'avatar_url': user.avatar_url
@@ -600,8 +597,7 @@ def upload_file():
             emit('message', {
                 'id': new_message.id,
                 'user_id': user.id,
-                'username': user.username,
-                'display_name': user.display_name,
+                'username': user.display_name, & 'display_name': user.display_name, ,
                 'role': user.role,
                 'color': user.color,
                 'avatar_url': user.avatar_url,
