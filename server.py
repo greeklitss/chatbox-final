@@ -104,11 +104,11 @@ class User(db.Model):
             raise ValueError("Invalid role assigned.")
         return role
 
-    def __init__(self, username, email, role='guest', avatar_url=None, color=None, is_google_user=False):
+    def __init__(self, username, email, display_name=None, role='guest', avatar_url=None, color=None, is_google_user=False):
         self.username = username
         self.email = email
         self.role = role
-        self.display_name = username
+        self.display_name = display_name or username
         self.avatar_url = avatar_url or '/static/default_avatar.png'
         self.color = color or generate_random_color()
         self.is_google_user = is_google_user
@@ -356,7 +356,6 @@ def guest_login():
                 guest_user = User(display_name=username, 
                 email=f"guest_{guest_id}@temporary.com", 
                 role='guest',
-                display_name=username
             )
             # Δεν χρειάζεται set_password
             db.session.add(guest_user)
