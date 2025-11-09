@@ -464,27 +464,56 @@ def check_login():
         'avatar_url': user.avatar_url,
         'color': user.color
     })
-
 @app.route('/api/v1/sign_up', methods=['POST'])
 def sign_up():
-    data = request.get_json()
-    username = data.get('username')
-    email = data.get('email')
-    password = data.get('password')
+    # 1. Προσπαθούμε να πάρουμε δεδομένα από JSON (API call)
+    data_json = request.get_json(silent=True)
+    
+    # Επιλέγουμε πηγή δεδομένων (JSON ή Form Data)
+    if data_json:
+        username = data_json.get('username')
+        email = data_json.get('email')
+        password = data_json.get('password')
+    else:
+        # Αν δεν υπάρχει JSON, ψάχνουμε στα form data
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
 
+    # 2. Έλεγχος υποχρεωτικών πεδίων (το 400 Bad Request)
     if not username or not email or not password:
         return jsonify({'error': 'Missing required fields'}), 400
 
+    # 3. Έλεγχος μήκους
     if len(username) < 3 or len(password) < 6:
         return jsonify({'error': 'Username must be at least 3 chars, Password at least 6.'}), 400
 
     try:
-        # Check if username or email already exists
+        # 4. Έλεγχος ύπαρξης χρήστη/email
+        from sqlalchemy import select # Βεβαιωθείτε ότι το select είναι εισαγόμενο!
         existing_user = db.session.scalar(select(User).filter((User.username == username) | (User.email == email)))
         if existing_user:
             return jsonify({'error': 'Username or Email already registered'}), 409
+            
+        # 5. Δημιουργία και αποθήκευση νέου χρήστη
+        new_user = User(username=username, email=email, role='user', color=generate_random_color())
+        new_user.set_password(password) # Υποθέτουμε ότι η κλάση User έχει τη μέθοδο set_password
+        
+        db.session.add(new_user)
+        db.session.commit()
+        
+        # 6. Είσοδος χρήστη (προαιρετικά, αλλά συνήθως γίνεται μετά την εγγραφή)
+        from flask_login import login_user # Υποθέτουμε ότι χρησιμοποιείτε flask_login
+        login_user(new_user)
+        add_system_message(f"User {new_user.username} has signed up.")
+        
+        # 7. Απάντηση επιτυχίας (JSON με URL ανακατεύθυνσης)
+        return jsonify({'message': 'Registration successful', 'redirect_url': url_for('chat')}), 201
 
-        # Set first registered user as 'owner'
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error during sign up: {e}") # Εκτύπωση του σφάλματος για debugging
+        return jsonify({'error': 'An unexpected error occurred during registration.'}), 500        # Set first registered user as 'owner'
         is_first_user = db.session.scalar(select(User).filter(User.username.not_like('Guest-%'))).count() == 0
 
         new_user = User(
