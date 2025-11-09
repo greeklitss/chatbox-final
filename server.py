@@ -303,7 +303,7 @@ def handle_login():
     with app.app_context():
         # Αναζήτηση χρήστη με username ή email
         user = db.session.scalar(
-            select(User).filter((User.display_name == username_or_email)
+            select(User).filter(User.display_name == username_or_email) | (User.email == username_or_email)
             )
         )
         
