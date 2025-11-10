@@ -412,7 +412,7 @@ def google_callback():
             if user:
                 # Υπάρχων χρήστης: Ενημέρωση στοιχείων και σύνδεση
                 user.avatar_url = picture
-                 = name
+                user.display_name = name
                 user.is_google_user = True
                 if user.role == 'guest':
                     user.role = 'user' # Αναβαθμίζουμε τον guest σε user
@@ -543,7 +543,7 @@ def check_login():
     if user:
         return jsonify({
             'id': user.id,
-            'username': user.display_name, & 'display_name': user.display_name,
+            'username': user.display_name, 'display_name': user.display_name,
             'role': user.role,
             'color': user.color,
             'avatar_url': user.avatar_url
@@ -597,7 +597,7 @@ def upload_file():
             emit('message', {
                 'id': new_message.id,
                 'user_id': user.id,
-                'username': user.display_name, & 'display_name': user.display_name, ,
+                'username': user.display_name, 'display_name': user.display_name,
                 'role': user.role,
                 'color': user.color,
                 'avatar_url': user.avatar_url,
