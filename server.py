@@ -303,7 +303,9 @@ def handle_login():
     with app.app_context():
         # Αναζήτηση χρήστη με username ή email
         user = db.session.scalar(
-            select(User).filter(User.display_name == username_or_email) | (User.email == username_or_email)
+            select(User).filter(
+                (User.display_name == username_or_email) | (User.email == username_or_email)
+           ) 
 
         )
         
@@ -543,7 +545,8 @@ def check_login():
     if user:
         return jsonify({
             'id': user.id,
-            'username': user.display_name, 'display_name': user.display_name,
+            'username': user.display_name, 
+            'display_name': user.display_name,
             'role': user.role,
             'color': user.color,
             'avatar_url': user.avatar_url
@@ -597,7 +600,8 @@ def upload_file():
             emit('message', {
                 'id': new_message.id,
                 'user_id': user.id,
-                'username': user.display_name, 'display_name': user.display_name,
+                'username': user.display_name, 
+                'display_name': user.display_name,
                 'role': user.role,
                 'color': user.color,
                 'avatar_url': user.avatar_url,
