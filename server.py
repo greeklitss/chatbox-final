@@ -664,6 +664,7 @@ def setup_app_on_startup():
                         print("⚠️ WARNING: OWNER_PASSWORD not set. Using a random password (check logs!).")
 
                     default_owner = User(
+                        username=owner_username,
                         display_name=owner_username,
                         email=owner_email,
                         role='owner',
