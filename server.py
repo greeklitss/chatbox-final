@@ -353,7 +353,8 @@ def guest_login():
         
         # Εισαγωγή του Guest χρήστη στη βάση (χωρίς password)
         try:
-                guest_user = User(username=username, 
+            guest_user = User(
+                username=username, 
                 email=f"guest_{guest_id}@temporary.com", 
                 role='guest',
             )
