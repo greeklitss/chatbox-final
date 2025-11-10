@@ -249,7 +249,7 @@ def sign_up():
             return jsonify({'error': 'Registration is currently disabled.'}), 403
 
         # 2. Έλεγχος αν υπάρχει ήδη
-        existing_user = db.session.scalar(select(User).filter(User.display_name == username) | (User.email == email)))
+        existing_user = db.session.scalar(select(User).filter((User.display_name == username) | (User.email == email)))
         if existing_user:
             return jsonify({'error': 'Username or Email already exists.'}), 409
 
