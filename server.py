@@ -269,7 +269,7 @@ def sign_up():
             
         # 4. Δημιουργία χρήστη
         try:
-            new_user = User(display_name=username, email=email, role=role) # ✅ ΣΩΣΤΟ
+            new_user = User(username=username, email=email, role=role)
             new_user.set_password(password)
             db.session.add(new_user)
             db.session.commit()
@@ -304,14 +304,14 @@ def handle_login():
         # Αναζήτηση χρήστη με username ή email
         user = db.session.scalar(
             select(User).filter(User.display_name == username_or_email) | (User.email == username_or_email)
-            )
+
         )
         
         if user and user.password_hash and user.check_password(password):
             # Επιτυχής σύνδεση
             session.permanent = True # Set session to permanent
             session['user_id'] = user.id
-            session['username'] = 
+            session['username'] = user.display_name 
             session['role'] = user.role # Store role in session
             
             return jsonify({
@@ -353,7 +353,7 @@ def guest_login():
         
         # Εισαγωγή του Guest χρήστη στη βάση (χωρίς password)
         try:
-                guest_user = User(display_name=username, 
+                guest_user = User(username=username, 
                 email=f"guest_{guest_id}@temporary.com", 
                 role='guest',
             )
