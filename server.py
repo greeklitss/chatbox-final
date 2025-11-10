@@ -373,7 +373,7 @@ def guest_login():
         except IntegrityError:
             db.session.rollback()
             # Σπάνιο: αν υπάρχει ήδη το τυχαίο username, ξαναδοκιμάζουμε login
-            return redirect(url_for('guest_login'))
+            return redirect(url_for('login'))
         except Exception as e:
             print(f"Guest login error: {e}")
             return redirect(url_for('login'))
