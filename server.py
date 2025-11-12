@@ -400,15 +400,13 @@ def google_callback():
         name = user_info.get('name')
         picture = user_info.get('picture')
 
-        with app.app_context():
-            # 1. Αναζήτηση χρήστη
-user = db.session.scalar(select(User).filter_by(email=email))
-
-        if not user:
-            # 🚨 Νέος χρήστης. Χρειάζεται έλεγχος για μοναδικό display_name.
-            base_display_name = user_info.get('name') or user_info.get('given_name', 'GoogleUser')
-            current_display_name = base_display_name
-            suffix = 1
+    # 1. Αναζήτηση χρήστη (με τη σωστή εσοχή της συνάρτησης)
+    user = db.session.scalar(select(User).filter_by(email=email))
+    if not user:
+        # 🚨 Νέος χρήστης. Χρειάζεται έλεγχος για μοναδικό display_name.
+        base_display_name = user_info.get('name') or user_info.get('given_name', 'GoogleUser')
+        current_display_name = base_display_name
+        suffix = 1
             
             # Βρίσκουμε ένα μοναδικό display_name
             while db.session.scalar(select(User).filter_by(display_name=current_display_name)):
@@ -416,7 +414,9 @@ user = db.session.scalar(select(User).filter_by(email=email))
                 suffix += 1
 
             new_user = User(
-                # Χρησιμοποιούμε το email για το internal username
+                # Χρησιμοποιούμε το email για το internal username    # 1. Αναζήτηση χρήστη (με τη σωστή εσοχή της συνάρτησης)
+    user = db.session.scalar(select(User).filter_by(email=email))
+
                 username=email, 
                 display_name=current_display_name, # Χρησιμοποιούμε το μοναδικό όνομα
                 email=email,
