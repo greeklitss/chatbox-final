@@ -36,7 +36,8 @@ app = Flask(__name__)
 # 🚨 ΚΡΙΣΙΜΗ ΠΡΟΣΘΗΚΗ: ΕΦΑΡΜΟΓΗ PROXYFIX για το Render
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_prefix=1, x_port=1, x_proto=1)
 # --- CONFIGURATION ---
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or secrets.token_hex(24)app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///chatbox.db')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or secrets.token_hex(24)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///chatbox.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_TYPE'] = 'sqlalchemy' # Χρησιμοποιούμε SQLAlchemy για session
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
