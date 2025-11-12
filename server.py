@@ -59,12 +59,12 @@ socketio = SocketIO(app, manage_session=False, cors_allowed_origins="*")
 
 # --- OAuth Configuration (Google) ---
 oauth.init_app(app)
-# ✅ ΔΙΟΡΘΩΜΕΝΟΣ ΚΩΔΙΚΑΣ:
+# ✅ ΔΙΟΡΘΩΜΕΝΟΣ ΚΩΔΙΚΑΣ ΓΙΑ ΤΟΝ GOOGLE PROVIDER:
 google = oauth.register(
     name='google',
     client_id=app.config['GOOGLE_CLIENT_ID'],
     client_secret=app.config['GOOGLE_CLIENT_SECRET'],
-    # ΚΡΙΣΙΜΟ: Χρησιμοποιούμε server_metadata_url για αυτόματη ανακάλυψη των JWKS
+    # Χρησιμοποιούμε server_metadata_url για αυτόματη ανακάλυψη των endpoints
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
     client_kwargs={'scope': 'openid email profile'},
 )
@@ -392,11 +392,10 @@ def google_callback():
         token = oauth.google.authorize_access_token()
         
         # ⚠️ ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ ΓΙΑ ΤΟ NONCE:
-        # 1. Παίρνουμε το ID token ως string
         id_token_string = token.get('id_token')
-        # 2. Παίρνουμε ρητά το nonce από το session (όπου το αποθήκευσε η Authlib)
+        # Παίρνουμε ρητά το nonce από το session
         nonce = session.pop(f'_authlib_oauth_nonce_{oauth.google.name}', None)
-        # 3. Καλούμε την parse_id_token περνώντας το ID token ΚΑΙ το nonce.
+        # Καλούμε την parse_id_token περνώντας το token ΚΑΙ το nonce.
         user_info = oauth.google.parse_id_token(id_token_string, nonce=nonce)
         
         email = user_info.get('email')
@@ -432,9 +431,9 @@ def google_callback():
             db.session.commit()
             user = new_user
 
-        # 4. ΟΛΟΚΛΗΡΩΣΗ LOGIN
+        # 4. ΟΛΟΚΛΗΡΩΣΗ LOGIN (Δημιουργία Session)
         session.permanent = True
-        session['user_id'] = user.id 
+        session['user_id'] = user.id # 💡 ΚΡΙΣΙΜΟ ΒΗΜΑ
         session['username'] = user.display_name 
         session['role'] = user.role
         session['is_google_user'] = user.is_google_user
@@ -450,7 +449,6 @@ def google_callback():
         db.session.rollback()
         print(f"FATAL ERROR IN GOOGLE CALLBACK: {e}") 
         return redirect(url_for('login', error='An unexpected error occurred during Google sign-in.'))
-
 # --- CHAT ROUTES & SOCKETIO LOGIC (Ο υπόλοιπος κώδικας) ---
 
 @app.route('/')
