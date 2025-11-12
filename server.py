@@ -391,9 +391,18 @@ def google_callback():
         # 1. Ανταλλαγή κωδικού (code) για tokens
         token = oauth.google.authorize_access_token()
         
-        # ⚠️ ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ ΓΙΑ ΤΟ NONCE:
+        # ⚠️ ΝΕΑ ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Έλεγχος αν η εξουσιοδότηση απέτυχε (το token είναι None)
+        if token is None:
+            # Αν αποτύχει η λήψη του token, επιστρέφουμε στο login με σφάλμα.
+            return redirect(url_for('login', error='Google login failed: Authorization failed or token expired.'))
+            
+        # 2. ΔΙΟΡΘΩΣΗ NONCE: Εξαγωγή του ID token και επικύρωση με nonce
         id_token_string = token.get('id_token')
-        # Παίρνουμε ρητά το nonce από το session
+        
+        if not id_token_string:
+            return redirect(url_for('login', error='Google login failed: ID token not found.'))
+            
+        # Παίρνουμε ρητά το nonce από το session (όπου το αποθήκευσε η Authlib)
         nonce = session.pop(f'_authlib_oauth_nonce_{oauth.google.name}', None)
         # Καλούμε την parse_id_token περνώντας το token ΚΑΙ το nonce.
         user_info = oauth.google.parse_id_token(id_token_string, nonce=nonce)
@@ -403,11 +412,11 @@ def google_callback():
         if not email:
             return redirect(url_for('login', error='Google login failed: No email provided.'))
         
-        # 2. Αναζήτηση χρήστη βάσει email
+        # 3. Αναζήτηση/Δημιουργία χρήστη βάσει email
         user = db.session.scalar(select(User).filter_by(email=email))
         
         if not user:
-            # 3. Ο ΧΡΗΣΤΗΣ ΔΕΝ ΥΠΑΡΧΕΙ: Δημιουργία νέου χρήστη
+            # Δημιουργία νέου χρήστη
             base_display_name = user_info.get('name') or email.split('@')[0]
             current_display_name = base_display_name
             suffix = 1
@@ -433,7 +442,7 @@ def google_callback():
 
         # 4. ΟΛΟΚΛΗΡΩΣΗ LOGIN (Δημιουργία Session)
         session.permanent = True
-        session['user_id'] = user.id # 💡 ΚΡΙΣΙΜΟ ΒΗΜΑ
+        session['user_id'] = user.id # 💡 ΕΔΩ ΓΙΝΕΤΑΙ ΤΟ LOGIN
         session['username'] = user.display_name 
         session['role'] = user.role
         session['is_google_user'] = user.is_google_user
@@ -447,6 +456,7 @@ def google_callback():
 
     except Exception as e:
         db.session.rollback()
+        # Εδώ θα καταγραφεί οποιοδήποτε άλλο σφάλμα (π.χ. DB errors)
         print(f"FATAL ERROR IN GOOGLE CALLBACK: {e}") 
         return redirect(url_for('login', error='An unexpected error occurred during Google sign-in.'))
 # --- CHAT ROUTES & SOCKETIO LOGIC (Ο υπόλοιπος κώδικας) ---
