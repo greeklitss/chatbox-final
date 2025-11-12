@@ -64,10 +64,11 @@ google = oauth.register(
     name='google',
     client_id=app.config['GOOGLE_CLIENT_ID'],
     client_secret=app.config['GOOGLE_CLIENT_SECRET'],
-    # Χρησιμοποιούμε server_metadata_url για αυτόματη ανακάλυψη των endpoints
+    # 💡 Χρησιμοποιεί αυτόματη ανακάλυψη (REQUIRED)
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
     client_kwargs={'scope': 'openid email profile'},
 )
+
 # --- MODELS ---
 def generate_random_color():
     """Generates a random hex color."""
@@ -391,9 +392,8 @@ def google_callback():
         # 1. Ανταλλαγή κωδικού (code) για tokens
         token = oauth.google.authorize_access_token()
         
-        # ⚠️ ΝΕΑ ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Έλεγχος αν η εξουσιοδότηση απέτυχε (το token είναι None)
+        # ⚠️ ΔΙΟΡΘΩΣΗ: Έλεγχος για αποτυχία λήψης token (NoneType Error)
         if token is None:
-            # Αν αποτύχει η λήψη του token, επιστρέφουμε στο login με σφάλμα.
             return redirect(url_for('login', error='Google login failed: Authorization failed or token expired.'))
             
         # 2. ΔΙΟΡΘΩΣΗ NONCE: Εξαγωγή του ID token και επικύρωση με nonce
@@ -402,9 +402,8 @@ def google_callback():
         if not id_token_string:
             return redirect(url_for('login', error='Google login failed: ID token not found.'))
             
-        # Παίρνουμε ρητά το nonce από το session (όπου το αποθήκευσε η Authlib)
+        # Παίρνουμε ρητά το nonce από το session (για OIDC ασφάλεια)
         nonce = session.pop(f'_authlib_oauth_nonce_{oauth.google.name}', None)
-        # Καλούμε την parse_id_token περνώντας το token ΚΑΙ το nonce.
         user_info = oauth.google.parse_id_token(id_token_string, nonce=nonce)
         
         email = user_info.get('email')
@@ -416,11 +415,11 @@ def google_callback():
         user = db.session.scalar(select(User).filter_by(email=email))
         
         if not user:
-            # Δημιουργία νέου χρήστη
+            # Λογική δημιουργίας νέου χρήστη (με έλεγχο μοναδικού display_name)
             base_display_name = user_info.get('name') or email.split('@')[0]
             current_display_name = base_display_name
             suffix = 1
-            
+            # ... (Λογική εύρεσης μοναδικού display_name)
             while db.session.scalar(select(User).filter_by(display_name=current_display_name)):
                 current_display_name = f"{base_display_name}_{suffix}"
                 suffix += 1
@@ -442,12 +441,12 @@ def google_callback():
 
         # 4. ΟΛΟΚΛΗΡΩΣΗ LOGIN (Δημιουργία Session)
         session.permanent = True
-        session['user_id'] = user.id # 💡 ΕΔΩ ΓΙΝΕΤΑΙ ΤΟ LOGIN
+        session['user_id'] = user.id 
         session['username'] = user.display_name 
         session['role'] = user.role
         session['is_google_user'] = user.is_google_user
         
-        # 5. Ανακατεύθυνση στην αρχική σελίδα του chat
+        # 5. Ανακατεύθυνση στο chat
         return redirect(url_for('chat'))
 
     except MismatchingStateError:
@@ -456,9 +455,10 @@ def google_callback():
 
     except Exception as e:
         db.session.rollback()
-        # Εδώ θα καταγραφεί οποιοδήποτε άλλο σφάλμα (π.χ. DB errors)
         print(f"FATAL ERROR IN GOOGLE CALLBACK: {e}") 
         return redirect(url_for('login', error='An unexpected error occurred during Google sign-in.'))
+
+
 # --- CHAT ROUTES & SOCKETIO LOGIC (Ο υπόλοιπος κώδικας) ---
 
 @app.route('/')
