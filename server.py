@@ -391,59 +391,31 @@ def google_login():
 
 @app.route('/google_callback')
 def google_callback():
-    """Handles the callback from Google OAuth."""
+    # 4 κενά
     try:
-        token = google.authorize_access_token()
-        user_info = google.parse_id_token(token)
-
+        # 8 κενά: ΟΛΟΣ ο κώδικας που θέλουμε να προστατέψουμε
+        token = oauth.google.authorize_access_token()
+        user_info = oauth.google.parse_id_token(token)
+        
         email = user_info.get('email')
-        name = user_info.get('name')
-        picture = user_info.get('picture')
+        
+        if not email:
+            return redirect(url_for('login', error='Google login failed: No email provided.'))
+        
+        # ... Ο υπόλοιπος κώδικας εύρεσης/δημιουργίας χρήστη ...
+        
+        # 5. Ανακατεύθυνση στην αρχική σελίδα του chat
+        return redirect(url_for('chat'))
 
-    # 1. Αναζήτηση χρήστη (με τη σωστή εσοχή της συνάρτησης)
-    user = db.session.scalar(select(User).filter_by(email=email))
-    if not user:
-        # 🚨 Νέος χρήστης. Χρειάζεται έλεγχος για μοναδικό display_name.
-        base_display_name = user_info.get('name') or user_info.get('given_name', 'GoogleUser')
-        current_display_name = base_display_name
-        suffix = 1
-            
-            # Βρίσκουμε ένα μοναδικό display_name
-            while db.session.scalar(select(User).filter_by(display_name=current_display_name)):
-                current_display_name = f"{base_display_name}_{suffix}"
-                suffix += 1
+    # 4 κενά: Τα except blocks πρέπει να είναι στο ίδιο επίπεδο με το try
+    except MismatchingStateError:
+        print("Mismatching State Error during Google login.")
+        return redirect(url_for('login', error='Session expired or state mismatch. Please try logging in again.'))
 
-            new_user = User(
-                # Χρησιμοποιούμε το email για το internal username    # 1. Αναζήτηση χρήστη (με τη σωστή εσοχή της συνάρτησης)
-    user = db.session.scalar(select(User).filter_by(email=email))
-
-                username=email, 
-                display_name=current_display_name, # Χρησιμοποιούμε το μοναδικό όνομα
-                email=email,
-                role='user', 
-                is_google_user=True,
-                avatar_url='/static/default_avatar.png',
-                color=generate_random_color()
-            )
-            # Δεν χρειάζεται set_password για Google user
-            db.session.add(new_user)
-            db.session.commit()
-            user = new_user
-            # 3. Σύνδεση
-            session.permanent = True
-            session['user_id'] = user.id
-            session['username'] = user.display_name
-            session['role'] = user.role
-            
-            return redirect(url_for('chat'))
-
-    except MismatchingStateError as e:
-        db.session.rollback()
-        print(f"FATAL ERROR IN GOOGLE CALLBACK: {e}")        
-        return redirect(url_for('login', error='An unexpected error occurred during Google sign-in.'))
+    # 4 κενά
     except Exception as e:
-        print(f"An unexpected error occurred during Google OAuth: {e}")
-        return redirect(url_for('login', error="An unexpected error occurred."))
+        # ... Χειρισμός σφάλματος ...
+        return redirect(url_for('login', error='An unexpected error occurred during Google sign-in.'))
 
 
 # --- CHAT ROUTES & SOCKETIO LOGIC (Ο υπόλοιπος κώδικας) ---
