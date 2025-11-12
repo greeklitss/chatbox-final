@@ -402,52 +402,33 @@ def google_callback():
 
         with app.app_context():
             # 1. Αναζήτηση χρήστη
-            user = db.session.scalar(select(User).filter_by(email=email))
+user = db.session.scalar(select(User).filter_by(email=email))
+
+        if not user:
+            # 🚨 Νέος χρήστης. Χρειάζεται έλεγχος για μοναδικό display_name.
+            base_display_name = user_info.get('name') or user_info.get('given_name', 'GoogleUser')
+            current_display_name = base_display_name
+            suffix = 1
             
-            # 2. Καθορισμός ρόλου (πρώτος χρήστης = owner, εκτός αν υπάρχει ήδη)
-            try:
-                # ✅ ΔΙΟΡΘΩΣΗ: Χρήση func.count()
-                user_count = db.session.scalar(select(func.count()).select_from(User)) 
-            except Exception:
-                user_count = 0 
-                
-            if user:
-                # Υπάρχων χρήστης: Ενημέρωση στοιχείων και σύνδεση
-                user.avatar_url = picture
-                user.display_name = name
-                user.is_google_user = True
-                if user.role == 'guest':
-                    user.role = 'user' # Αναβαθμίζουμε τον guest σε user
-                
-                db.session.commit()
+            # Βρίσκουμε ένα μοναδικό display_name
+            while db.session.scalar(select(User).filter_by(display_name=current_display_name)):
+                current_display_name = f"{base_display_name}_{suffix}"
+                suffix += 1
 
-            else:
-                # Νέος χρήστης: Δημιουργία λογαριασμού
-                # Καθορισμός ρόλου
-                if user_count == 0:
-                    role = 'owner'
-                else:
-                    role = 'user'
-                    
-                # Δημιουργούμε ένα μοναδικό username από το email
-                username = email.split('@')[0] 
-                
-                new_user = User(
-                    username=username, 
-                    email=email, 
-                    role=role, 
-                    avatar_url=picture, 
-                    display_name=name,
-                    is_google_user=True
-                )
-                
-                # Ορισμός τυχαίου hash password για να μην είναι null, αλλά δεν μπορεί να συνδεθεί με local login
-                new_user.set_password(generate_random_password()) 
-                
-                db.session.add(new_user)
-                db.session.commit()
-                user = new_user
-
+            new_user = User(
+                # Χρησιμοποιούμε το email για το internal username
+                username=email, 
+                display_name=current_display_name, # Χρησιμοποιούμε το μοναδικό όνομα
+                email=email,
+                role='user', 
+                is_google_user=True,
+                avatar_url='/static/default_avatar.png',
+                color=generate_random_color()
+            )
+            # Δεν χρειάζεται set_password για Google user
+            db.session.add(new_user)
+            db.session.commit()
+            user = new_user
             # 3. Σύνδεση
             session.permanent = True
             session['user_id'] = user.id
@@ -457,11 +438,9 @@ def google_callback():
             return redirect(url_for('chat'))
 
     except MismatchingStateError as e:
-        print(f"Google OAuth Error (State Mismatch): {e}")
-        return redirect(url_for('login', error="State Mismatch Error. Please try again."))
-    except OAuthError as e:
-        print(f"Google OAuth Error: {e}")
-        return redirect(url_for('login', error="Authentication failed. Check logs."))
+        db.session.rollback()
+        print(f"FATAL ERROR IN GOOGLE CALLBACK: {e}")        
+        return redirect(url_for('login', error='An unexpected error occurred during Google sign-in.'))
     except Exception as e:
         print(f"An unexpected error occurred during Google OAuth: {e}")
         return redirect(url_for('login', error="An unexpected error occurred."))
