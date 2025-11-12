@@ -59,19 +59,15 @@ socketio = SocketIO(app, manage_session=False, cors_allowed_origins="*")
 
 # --- OAuth Configuration (Google) ---
 oauth.init_app(app)
+# ✅ ΔΙΟΡΘΩΜΕΝΟΣ ΚΩΔΙΚΑΣ:
 google = oauth.register(
     name='google',
     client_id=app.config['GOOGLE_CLIENT_ID'],
     client_secret=app.config['GOOGLE_CLIENT_SECRET'],
-    access_token_url='https://oauth2.googleapis.com/token',
-    access_token_params=None,
-    authorize_url='https://accounts.google.com/o/oauth2/auth',
-    authorize_params=None,
-    api_base_url='https://www.googleapis.com/oauth2/v1/',
-    userinfo_endpoint='https://www.googleapis.com/oauth2/v3/userinfo',
+    # ΚΡΙΣΙΜΟ: Χρησιμοποιούμε server_metadata_url για αυτόματη ανακάλυψη των JWKS
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
     client_kwargs={'scope': 'openid email profile'},
 )
-
 # --- MODELS ---
 def generate_random_color():
     """Generates a random hex color."""
@@ -443,10 +439,12 @@ def google_callback():
         return redirect(url_for('chat'))
 
     except MismatchingStateError:
+        # Αυτό συμβαίνει αν χαθεί το session (π.χ. σε proxy servers)
         print("Mismatching State Error during Google login.")
         return redirect(url_for('login', error='Session expired or state mismatch. Please try logging in again.'))
 
     except Exception as e:
+        # Χειρισμός οποιουδήποτε άλλου σφάλματος
         db.session.rollback()
         print(f"FATAL ERROR IN GOOGLE CALLBACK: {e}")
         return redirect(url_for('login', error='An unexpected error occurred during Google sign-in.'))
