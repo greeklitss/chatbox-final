@@ -391,32 +391,68 @@ def google_login():
 
 @app.route('/google_callback')
 def google_callback():
-    # 4 κενά
     try:
-        # 8 κενά: ΟΛΟΣ ο κώδικας που θέλουμε να προστατέψουμε
+        # 1. Ανταλλαγή κωδικού (code) για tokens
         token = oauth.google.authorize_access_token()
         user_info = oauth.google.parse_id_token(token)
         
         email = user_info.get('email')
         
         if not email:
+            # Αν η Google δεν επιστρέψει email (πρέπει να επιστρέφει με το scope 'email')
             return redirect(url_for('login', error='Google login failed: No email provided.'))
         
-        # ... Ο υπόλοιπος κώδικας εύρεσης/δημιουργίας χρήστη ...
+        # 2. Αναζήτηση χρήστη βάσει email (το email είναι μοναδικό)
+        user = db.session.scalar(select(User).filter_by(email=email))
+        
+        if not user:
+            # 3. Ο ΧΡΗΣΤΗΣ ΔΕΝ ΥΠΑΡΧΕΙ: Δημιουργία νέου χρήστη
+            base_display_name = user_info.get('name') or email.split('@')[0]
+            current_display_name = base_display_name
+            suffix = 1
+            
+            # Εύρεση μοναδικού display_name αν υπάρχει ήδη
+            while db.session.scalar(select(User).filter_by(display_name=current_display_name)):
+                current_display_name = f"{base_display_name}_{suffix}"
+                suffix += 1
+
+            new_user = User(
+                # Χρησιμοποιούμε το email ως username για να είναι μοναδικό (όπως έχετε κάνει στο μοντέλο)
+                username=email, 
+                display_name=current_display_name, 
+                email=email,
+                role='user', 
+                is_google_user=True,
+                avatar_url=user_info.get('picture', '/static/default_avatar.png'),
+                color=generate_random_color()
+            )
+            # ⚠️ ΚΡΙΣΙΜΟ: Το μοντέλο User απαιτεί password_hash (nullable=False), οπότε ορίζουμε ένα τυχαίο hash.
+            new_user.set_password(generate_random_password()) 
+            
+            db.session.add(new_user)
+            db.session.commit()
+            user = new_user
+
+        # 4. ΟΛΟΚΛΗΡΩΣΗ LOGIN (για υπάρχοντα ή νεοδημιουργηθέντα χρήστη)
+        session.permanent = True # Ορίζουμε το session ως μόνιμο
+        session['user_id'] = user.id # 💡 ΑΥΤΟ ΕΙΝΑΙ ΤΟ ΚΡΙΣΙΜΟ ΒΗΜΑ
+        session['username'] = user.display_name 
+        session['role'] = user.role
+        session['is_google_user'] = user.is_google_user
         
         # 5. Ανακατεύθυνση στην αρχική σελίδα του chat
         return redirect(url_for('chat'))
 
-    # 4 κενά: Τα except blocks πρέπει να είναι στο ίδιο επίπεδο με το try
     except MismatchingStateError:
+        # Αυτό συμβαίνει αν χαθεί το session (π.χ. σε proxy servers)
         print("Mismatching State Error during Google login.")
         return redirect(url_for('login', error='Session expired or state mismatch. Please try logging in again.'))
 
-    # 4 κενά
     except Exception as e:
-        # ... Χειρισμός σφάλματος ...
+        # Χειρισμός οποιουδήποτε άλλου σφάλματος (π.χ. IntegrityError)
+        db.session.rollback()
+        print(f"FATAL ERROR IN GOOGLE CALLBACK: {e}")
         return redirect(url_for('login', error='An unexpected error occurred during Google sign-in.'))
-
 
 # --- CHAT ROUTES & SOCKETIO LOGIC (Ο υπόλοιπος κώδικας) ---
 
