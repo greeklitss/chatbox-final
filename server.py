@@ -399,10 +399,10 @@ def google_callback():
         email = user_info.get('email')
         
         if not email:
-            # Αν η Google δεν επιστρέψει email (πρέπει να επιστρέφει με το scope 'email')
+            # Αν η Google δεν επιστρέψει email
             return redirect(url_for('login', error='Google login failed: No email provided.'))
         
-        # 2. Αναζήτηση χρήστη βάσει email (το email είναι μοναδικό)
+        # 2. Αναζήτηση χρήστη βάσει email
         user = db.session.scalar(select(User).filter_by(email=email))
         
         if not user:
@@ -417,7 +417,6 @@ def google_callback():
                 suffix += 1
 
             new_user = User(
-                # Χρησιμοποιούμε το email ως username για να είναι μοναδικό (όπως έχετε κάνει στο μοντέλο)
                 username=email, 
                 display_name=current_display_name, 
                 email=email,
@@ -426,7 +425,7 @@ def google_callback():
                 avatar_url=user_info.get('picture', '/static/default_avatar.png'),
                 color=generate_random_color()
             )
-            # ⚠️ ΚΡΙΣΙΜΟ: Το μοντέλο User απαιτεί password_hash (nullable=False), οπότε ορίζουμε ένα τυχαίο hash.
+            # ΚΡΙΣΙΜΟ: Το μοντέλο User απαιτεί password_hash (nullable=False), οπότε ορίζουμε ένα τυχαίο hash.
             new_user.set_password(generate_random_password()) 
             
             db.session.add(new_user)
@@ -444,15 +443,14 @@ def google_callback():
         return redirect(url_for('chat'))
 
     except MismatchingStateError:
-        # Αυτό συμβαίνει αν χαθεί το session (π.χ. σε proxy servers)
         print("Mismatching State Error during Google login.")
         return redirect(url_for('login', error='Session expired or state mismatch. Please try logging in again.'))
 
     except Exception as e:
-        # Χειρισμός οποιουδήποτε άλλου σφάλματος (π.χ. IntegrityError)
         db.session.rollback()
         print(f"FATAL ERROR IN GOOGLE CALLBACK: {e}")
         return redirect(url_for('login', error='An unexpected error occurred during Google sign-in.'))
+
 
 # --- CHAT ROUTES & SOCKETIO LOGIC (Ο υπόλοιπος κώδικας) ---
 
