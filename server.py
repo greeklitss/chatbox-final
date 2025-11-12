@@ -390,7 +390,14 @@ def google_callback():
     try:
         # 1. Ανταλλαγή κωδικού (code) για tokens
         token = oauth.google.authorize_access_token()
-        user_info = oauth.google.parse_id_token(token)
+        
+        # ⚠️ ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ ΓΙΑ ΤΟ NONCE:
+        # 1. Παίρνουμε το ID token ως string
+        id_token_string = token.get('id_token')
+        # 2. Παίρνουμε ρητά το nonce από το session (όπου το αποθήκευσε η Authlib)
+        nonce = session.pop(f'_authlib_oauth_nonce_{oauth.google.name}', None)
+        # 3. Καλούμε την parse_id_token περνώντας το ID token ΚΑΙ το nonce.
+        user_info = oauth.google.parse_id_token(id_token_string, nonce=nonce)
         
         email = user_info.get('email')
         
@@ -401,7 +408,7 @@ def google_callback():
         user = db.session.scalar(select(User).filter_by(email=email))
         
         if not user:
-            # 3. Ο ΧΡΗΣΤΗΣ ΔΕΝ ΥΠΑΡΧΕΙ: Δημιουργία νέου χρήστη (με έλεγχο μοναδικού display_name)
+            # 3. Ο ΧΡΗΣΤΗΣ ΔΕΝ ΥΠΑΡΧΕΙ: Δημιουργία νέου χρήστη
             base_display_name = user_info.get('name') or email.split('@')[0]
             current_display_name = base_display_name
             suffix = 1
@@ -419,7 +426,6 @@ def google_callback():
                 avatar_url=user_info.get('picture', '/static/default_avatar.png'),
                 color=generate_random_color()
             )
-            # ΚΡΙΣΙΜΟ: Το μοντέλο User απαιτεί password_hash (nullable=False)
             new_user.set_password(generate_random_password()) 
             
             db.session.add(new_user)
@@ -428,7 +434,7 @@ def google_callback():
 
         # 4. ΟΛΟΚΛΗΡΩΣΗ LOGIN
         session.permanent = True
-        session['user_id'] = user.id # 💡 ΑΥΤΟ ΕΙΝΑΙ ΤΟ ΚΡΙΣΙΜΟ ΒΗΜΑ ΓΙΑ ΤΟ CHAT
+        session['user_id'] = user.id 
         session['username'] = user.display_name 
         session['role'] = user.role
         session['is_google_user'] = user.is_google_user
@@ -441,7 +447,6 @@ def google_callback():
         return redirect(url_for('login', error='Session expired or state mismatch. Please try logging in again.'))
 
     except Exception as e:
-        # Εδώ χειρίζεται οποιοδήποτε σφάλμα (π.χ. IntegrityError)
         db.session.rollback()
         print(f"FATAL ERROR IN GOOGLE CALLBACK: {e}") 
         return redirect(url_for('login', error='An unexpected error occurred during Google sign-in.'))
