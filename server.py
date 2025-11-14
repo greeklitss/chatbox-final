@@ -12,9 +12,9 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-from flask import jsonify, url_for, request # Βεβαιωθείτε ότι έχετε εισάγει τα jsonify, url_for, request
+from flask import jsonify, url_for, request # Ensure jsonify, url_for, request are imported
 
-# --- ΒΙΒΛΙΟΘΗΚΕΣ ΓΙΑ DB & AUTH ---
+# --- DB & AUTH LIBRARIES ---
 from werkzeug.middleware.proxy_fix import ProxyFix
 from sqlalchemy import select, desc, func
 from flask_sqlalchemy import SQLAlchemy
@@ -24,24 +24,30 @@ from flask_session import Session
 from sqlalchemy.sql import text
 from sqlalchemy.exc import IntegrityError, ProgrammingError
 from authlib.integrations.base_client.errors import MismatchingStateError, OAuthError
+from sqlalchemy.orm import validates
 
 
-# 🚨 1. Αρχικοποιούμε τα extensions χωρίς το app
+# 🚨 1. Initialize extensions without the app
 db = SQLAlchemy()
 sess = Session()
 oauth = OAuth()
 
 
-# --- Ρυθμίσεις Εφαρμογής & Flask App ---
+# --- Application Settings & Flask App ---
 app = Flask(__name__)
-# 🚨 ΚΡΙΣΙΜΗ ΠΡΟΣΘΗΚΗ: ΕΦΑΡΜΟΓΗ PROXYFIX για το Render
+# 🚨 CRITICAL ADDITION: APPLY PROXYFIX for Render
 app.wsgi_app = ProxyFix(app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
-# --- ΚΛΕΙΔΙΑ & ΡΥΘΜΙΣΕΙΣ (ΑΠΟ ENVIRONMENT VARIABLES) ---
+# --- KEYS & CONFIGURATION (FROM ENVIRONMENT VARIABLES) ---
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(24))
 app.config['SESSION_TYPE'] = 'sqlalchemy'
 app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace('postgres://', 'postgresql://')
+# CRITICAL: Replace 'postgres://' with 'postgresql://' for SQLAlchemy 2.0+
+db_uri = os.environ.get('DATABASE_URL')
+if db_uri and db_uri.startswith('postgres://'):
+    db_uri = db_uri.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 Megabytes max upload size
@@ -51,21 +57,22 @@ app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'svg'}
 app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
 app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET')
 
-# Owner/Admin Configuration (Defaults to avoid errors if missing)
+# Owner/Admin Configuration
+# (Using environment variables or defaults)
 OWNER_USERNAME = os.environ.get('OWNER_USERNAME', 'owner')
 OWNER_EMAIL = os.environ.get('OWNER_EMAIL', 'owner@chatbox.com')
 OWNER_PASSWORD = os.environ.get('OWNER_PASSWORD', secrets.token_urlsafe(16)) 
 
 
-# 🚨 2. Συνδέουμε τα extensions με το app
-# --- ΑΝΑΔΙΑΤΑΞΗ ΓΙΑ ΔΙΟΡΘΩΣΗ FLASK-SESSION/SQLALCHEMY ---
-# 1. Συνδέουμε το SQLAlchemy (db) πρώτο.
+# 🚨 2. Connect extensions to the app
+# --- REARRANGEMENT FOR FLASK-SESSION/SQLALCHEMY FIX ---
+# 1. Connect SQLAlchemy (db) first.
 db.init_app(app) 
-# 2. Αφού συνδέθηκε το db, ορίζουμε το SESSION_SQLALCHEMY.
+# 2. After db is connected, set SESSION_SQLALCHEMY.
 app.config['SESSION_SQLALCHEMY'] = db
-# 3. Συνδέουμε το Session (sess).
+# 3. Connect Session (sess).
 sess.init_app(app) 
-# 4. Συνδέουμε το OAuth.
+# 4. Connect OAuth.
 oauth.init_app(app)
 
 # --- SOCKETIO --
@@ -75,14 +82,16 @@ socketio = SocketIO(
     cors_allowed_origins="*" 
 )
 
-# --- ΜΟΝΤΕΛΑ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ (SQLAlchemy Models) ---
+# --- DATABASE MODELS (SQLAlchemy Models) ---
 
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True) # Allow null for OAuth
-    password_hash = db.Column(db.String(128), nullable=True) # Allow null for OAuth
+    # 💥 CRITICAL FIX: Increased size to 255 for password hash storage
+    # This line MUST be db.Column(db.String(255), nullable=True)
+    password_hash = db.Column(db.String(255), nullable=True) # Allow null for OAuth
     role = db.Column(db.String(20), default='user') # 'user', 'moderator', 'admin', 'owner'
     is_active = db.Column(db.Boolean, default=True)
     last_seen = db.Column(db.DateTime, default=datetime.now(timezone.utc))
@@ -92,6 +101,12 @@ class User(db.Model):
     is_online = db.Column(db.Boolean, default=False)
     
     messages = db.relationship('Message', backref='author', lazy=True)
+    
+    @validates('role')
+    def validate_role(self, key, role):
+        if role not in ['user', 'moderator', 'admin', 'owner']:
+            raise ValueError("Invalid role specified.")
+        return role
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -124,30 +139,27 @@ class Emoticon(db.Model):
     is_active = db.Column(db.Boolean, default=True)
 
 
-# --- ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ ---
+# --- HELPER FUNCTIONS ---
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 def generate_random_color():
+    # Helper function to generate a random hex color
     return '#' + ''.join(random.choices(string.hexdigits.upper(), k=6))
 
 def requires_auth(f):
-    """Decorator για να διασφαλιστεί ότι ο χρήστης είναι συνδεδεμένος."""
+    """Decorator to ensure the user is logged in."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # 🚨 Η σύνδεση αποτυγχάνει εδώ αν το session χάνεται (π.χ. λόγω DB)
         if 'user_id' not in session:
             return redirect(url_for('login_page', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
 
-# (Οι υπόλοιπες βοηθητικές συναρτήσεις παραμένουν ίδιες)
-# ...
-
 def initialize_settings():
-    """Διασφαλίζει ότι οι βασικές ρυθμίσεις υπάρχουν στη βάση."""
+    """Ensures basic settings exist in the database."""
     default_settings = {
         'CHAT_ENABLED': {'value': 'True', 'description': 'Enable or disable the main chat function.', 'is_boolean': True},
         'REGISTRATION_ENABLED': {'value': 'True', 'description': 'Allow new users to register.', 'is_boolean': True},
@@ -175,7 +187,7 @@ def initialize_settings():
         print("IntegrityError: Settings already exist. Rolled back.")
         
 def get_setting(key, default=None):
-    """Λαμβάνει μια ρύθμιση από τη βάση δεδομένων."""
+    """Retrieves a setting from the database."""
     setting = db.session.execute(select(Setting).filter_by(key=key)).scalar_one_or_none()
     if setting:
         if setting.is_boolean:
@@ -184,7 +196,7 @@ def get_setting(key, default=None):
     return default
 
 def initialize_emoticons():
-    """Διασφαλίζει ότι τα βασικά emoticons υπάρχουν."""
+    """Ensures basic emoticons exist."""
     default_emoticons = {
         ':D': '/static/emoticons/happy.png',
         ':)': '/static/emoticons/smile.png',
@@ -198,6 +210,7 @@ def initialize_emoticons():
         emoticon = db.session.execute(select(Emoticon).filter_by(code=code)).scalar_one_or_none()
         
         if not emoticon:
+            # Note: The front-end assumes the full path is available from the database.
             new_emoticon = Emoticon(code=code, image_url=url, is_active=True)
             db.session.add(new_emoticon)
             print(f"Added new emoticon: {code}")
@@ -209,7 +222,7 @@ def initialize_emoticons():
         print("IntegrityError: Emoticons already exist. Rolled back.")
         
 def requires_role(required_role):
-    """Decorator για έλεγχο ρόλου."""
+    """Decorator for role checking."""
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -235,8 +248,6 @@ def index():
 
 @app.route('/login', methods=['GET'])
 def login_page():
-    # Εάν η εφαρμογή είναι σε λειτουργία συντήρησης και η εγγραφή είναι απενεργοποιημένη, 
-    # μπορεί να χρειαστεί να εμφανιστεί μήνυμα (αλλά αφήνουμε τον χρήστη να δοκιμάσει login)
     return render_template('login.html')
 
 @app.route('/chat')
@@ -248,6 +259,7 @@ def chat_page():
     user = db.session.get(User, session['user_id'])
     
     emoticons_results = db.session.execute(select(Emoticon).where(Emoticon.is_active == True)).scalars().all()
+    # We use url_for to ensure the path is correctly generated by Flask for front-end rendering
     emoticons_data = {e.code: url_for('static', filename=e.image_url.split('/')[-1]) for e in emoticons_results}
 
     return render_template('chat.html', user=user, emoticons=emoticons_data)
@@ -269,16 +281,13 @@ def api_login():
     user = db.session.execute(select(User).filter_by(username=username)).scalar_one_or_none()
 
     if user and user.check_password(password):
-        # 🚨 Η επιτυχής σύνδεση ΕΔΩ θα αποθηκεύσει τη συνεδρία στο DB
+        # Successful login stores session in DB
         session.clear()
         session['user_id'] = user.id
         session['username'] = user.username
-        # Αν η αποθήκευση του session αποτύχει, το requires_auth θα ανακατευθύνει πίσω στο login_page
         return jsonify({'message': 'Login successful', 'redirect': url_for('chat_page')}), 200
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
-# (Οι υπόλοιπες API routes παραμένουν ίδιες)
-# ...
 
 @app.route('/api/v1/sign_up', methods=['POST'])
 def api_sign_up():
@@ -380,10 +389,12 @@ def authorize_google():
         user = db.session.execute(select(User).filter_by(email=email)).scalar_one_or_none()
         
         if user:
+            # Link Google ID to existing email user
             user.google_id = google_id
             db.session.commit()
             print(f"Linked Google ID to existing user: {user.username}")
         else:
+            # Create a new user
             new_user = User(
                 username=username,
                 email=email,
@@ -392,6 +403,7 @@ def authorize_google():
                 avatar_url=avatar_url,
                 color=generate_random_color()
             )
+            # No password needed for OAuth users
             db.session.add(new_user)
             db.session.commit()
             user = new_user
@@ -403,8 +415,7 @@ def authorize_google():
     
     return redirect(url_for('chat_page'))
 
-# --- SOCKETIO EVENT HANDLERS (Παραμένουν ίδια) ---
-# ...
+# --- SOCKETIO EVENT HANDLERS ---
 
 @socketio.on('connect')
 def handle_connect():
@@ -464,7 +475,9 @@ def handle_send_message(data):
             emoticons = db.session.execute(select(Emoticon).where(Emoticon.is_active == True)).scalars().all()
             
             processed_content = content
+            # Simple emoticon substitution logic
             for emo in emoticons:
+                # We use url_for to ensure the path is correctly generated by Flask for front-end rendering
                 img_path = url_for('static', filename=emo.image_url.split('/')[-1])
                 img_tag = f'<img src="{img_path}" alt="{emo.code}" class="emoticon">'
                 processed_content = processed_content.replace(emo.code, img_tag)
@@ -478,18 +491,17 @@ def handle_send_message(data):
             emit('new_message', message_data, room=room)
 
 
-# --- ΤΕΛΙΚΟΣ ΕΛΕΓΧΟΣ ΔΗΜΙΟΥΡΓΙΑΣ ΦΑΚΕΛΩΝ & ΕΚΤΕΛΕΣΗ SERVER ---
+# --- FINAL SETUP CHECK AND SERVER EXECUTION ---
 
 def setup_app_on_startup():
-    """Ελέγχει και δημιουργεί φακέλους. Εκτελείται μόνο μία φορά."""
+    """Checks and creates folders. Runs only once."""
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
         print(f"Created upload folder: {app.config['UPLOAD_FOLDER']}")
         
     with app.app_context():
         try:
-            # Δημιουργία πινάκων (θα τους δημιουργήσει μόνο αν δεν υπάρχουν)
-            # Αυτό περιλαμβάνει τον πίνακα flask_sessions για το session persistence
+            # Create tables (only if they don't exist)
             db.create_all() 
             print("Database tables ensured.")
             
@@ -497,10 +509,11 @@ def setup_app_on_startup():
             initialize_emoticons()
             print("Settings and Emoticons initialized.")
             
-            # Δημιουργία Owner χρήστη αν δεν υπάρχει
+            # Create Owner user if it doesn't exist
             owner_user = db.session.execute(select(User).filter_by(role='owner')).scalar_one_or_none()
 
             if not owner_user:
+                # Check if a user with the owner's desired username already exists
                 if not db.session.execute(select(User).filter_by(username=OWNER_USERNAME)).scalar_one_or_none():
                     default_owner = User(
                         username=OWNER_USERNAME,
@@ -509,17 +522,18 @@ def setup_app_on_startup():
                         avatar_url='/static/default_avatar.png',
                         color=generate_random_color()
                     )
+                    # The hash generation now fits due to db.String(255)
                     default_owner.set_password(OWNER_PASSWORD)
                     db.session.add(default_owner)
                     db.session.commit()
                     print(f"✅ Created default Owner user: {OWNER_USERNAME}. Password is the one set in environment or a random one.")
                 else:
-                    print("Default Owner user already exists.")
+                    print("Default Owner user already exists with the configured username.")
             else:
                 print("Owner user check completed.")
             
         except ProgrammingError as e:
-             # 🚨 ΕΝΙΣΧΥΜΕΝΟ ΜΗΝΥΜΑ ΣΦΑΛΜΑΤΟΣ ΓΙΑ ΤΟΝ ΧΡΗΣΤΗ
+             # 🚨 CRITICAL ERROR MESSAGE: If you see this, you must reset the DB schema
              print(f"SQLAlchemy Programming Error during setup: {e}. "
                    f"CRITICAL: The database schema is likely inconsistent. "
                    f"ACTION REQUIRED: Run 'DROP TABLE IF EXISTS users, messages, settings, emoticons, flask_sessions CASCADE;' "
