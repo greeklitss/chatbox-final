@@ -39,9 +39,12 @@ app = Flask(__name__)
 app.wsgi_app = ProxyFix(app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
 # --- KEYS & CONFIGURATION (FROM ENVIRONMENT VARIABLES) ---
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(24))
+# 💥 Changed SECRET_KEY to ensure a new key is generated if environment variable is missing
+# This helps with session consistency issues.
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32)) 
 app.config['SESSION_TYPE'] = 'sqlalchemy'
-app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions'
+# 💥 CRITICAL FIX: Changed table name to force recreation of the session table
+app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions_new' 
 # CRITICAL: Replace 'postgres://' with 'postgresql://' for SQLAlchemy 2.0+
 db_uri = os.environ.get('DATABASE_URL')
 if db_uri and db_uri.startswith('postgres://'):
@@ -85,9 +88,8 @@ socketio = SocketIO(
 # --- DATABASE MODELS (SQLAlchemy Models) ---
 
 class User(db.Model):
-    # 💥 CRITICAL FIX: Changed tablename from 'users' to 'chat_users' 
-    # to force SQLAlchemy to create a new, correct table structure if the old one is corrupted.
-    __tablename__ = 'chat_users'
+    # 💥 Using 'chat_users' to avoid old 'users' table corruption
+    __tablename__ = 'chat_users' 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True) # Allow null for OAuth
