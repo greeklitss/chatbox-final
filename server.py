@@ -85,12 +85,13 @@ socketio = SocketIO(
 # --- DATABASE MODELS (SQLAlchemy Models) ---
 
 class User(db.Model):
-    __tablename__ = 'users'
+    # 💥 CRITICAL FIX: Changed tablename from 'users' to 'chat_users' 
+    # to force SQLAlchemy to create a new, correct table structure if the old one is corrupted.
+    __tablename__ = 'chat_users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True) # Allow null for OAuth
     # 💥 CRITICAL FIX: Increased size to 255 for password hash storage
-    # This line MUST be db.Column(db.String(255), nullable=True)
     password_hash = db.Column(db.String(255), nullable=True) # Allow null for OAuth
     role = db.Column(db.String(20), default='user') # 'user', 'moderator', 'admin', 'owner'
     is_active = db.Column(db.Boolean, default=True)
@@ -100,6 +101,7 @@ class User(db.Model):
     google_id = db.Column(db.String(120), unique=True, nullable=True)
     is_online = db.Column(db.Boolean, default=False)
     
+    # Updated foreign key reference to the new tablename
     messages = db.relationship('Message', backref='author', lazy=True)
     
     @validates('role')
@@ -119,7 +121,8 @@ class User(db.Model):
 class Message(db.Model):
     __tablename__ = 'messages'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    # Updated foreign key reference to the new tablename
+    user_id = db.Column(db.Integer, db.ForeignKey('chat_users.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     room = db.Column(db.String(50), default='general') 
@@ -341,7 +344,8 @@ def get_messages(room):
 
     message_list = []
     for msg in messages:
-        user = db.session.get(User, msg.user_id)
+        # User is linked via the new 'chat_users' table, so this retrieval works fine
+        user = db.session.get(User, msg.user_id) 
         if user:
             message_list.append({
                 'id': msg.id,
