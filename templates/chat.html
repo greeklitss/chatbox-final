@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+    <title>AkoY Me Chat</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='default_avatar.png') }}" type="image/png">
+</head>
+
+<body style="background-image: url('{{ url_for('static', filename='akoyme_background.png') }}'); 
+             background-size: cover; 
+             background-position: center;
+             background-attachment: fixed;"> 
+    
+    <div class="main-header">
+        <h1 id="chat-name-header">AkoY Me Chat</h1>
+        
+        <div class="header-tools">
+            
+            <audio id="audio-stream" src="/radio_proxy" loop preload="auto" style="display:none;"></audio>
+            
+            <button id="radio-toggle-button" title="Web Radio ON/OFF" class="radio-off">
+                <i class="fas fa-compact-disc"></i> 
+            </button>
+            
+            <div id="radio-metadata" class="radio-metadata-display">Loading Radio Data...</div> 
+            
+            <button id="admin-button" title="Admin Panel" style="display:none;"><i class="fas fa-tools"></i> Admin</button>
+
+            <button id="notification-volume-button" title="Notification Sound ON/OFF"><i class="fas fa-bell"></i></button>
+        </div>
+    </div>
+
+    <div class="chat-container">
+
+        <div class="chat-box" id="chat-box"> 
+        </div>
+
+        <div class="online-users-sidebar" id="online-users-list">
+            <h4>Online Users (<span id="online-users-count">0</span>)</h4>
+        </div>
+    </div> 
+    
+    <div class="chat-footer">
+        
+        <div class="message-toolbar">
+            <button id="bold-button" title="Bold [b]"><i class="fas fa-bold"></i></button>
+            <button id="italic-button" title="Italic [i]"><i class="fas fa-italic"></i></button>
+            <button id="underline-button" title="Underline [u]"><i class="fas fa-underline"></i></button>
+            <button id="size-button" title="Font Size [size=N]"><i class="fas fa-text-height"></i></button>
+            **<button id="link-button" title="Link [url=link]text[/url]"><i class="fas fa-link"></i></button>**
+            <button id="gif-button" title="Image/GIF [img]"><i class="far fa-image"></i></button>
+            
+            <div class="color-picker-wrapper">
+                <input type="color" id="color-input" value="#FF0066" style="display: none;">
+                <button id="color-picker-button" title="Text Color" style="color: #FF0066;"><i class="fas fa-palette"></i></button>
+            </div>
+            
+            <div class="emoticon-wrapper">
+                <button id="emoticon-button" title="Emoticons"><i class="far fa-smile"></i></button> 
+                **<div id="emoticon-selector" class="emoticon-selector" style="display: none;">**
+                    ****
+                **</div>**
+            </div>
+        </div>
+
+        <div class="message-input-area">
+            <textarea id="message-input" placeholder="Type your message... (Shift+Enter for new line)" rows="1"></textarea>
+            <button id="send-button" title="Send Message (Enter)">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+        
+        <div class="user-info-bar">
+            <div class="user-profile">
+                <img src="{{ user.avatar_url if user.avatar_url else url_for('static', filename='default_avatar.png') }}" alt="User Avatar" class="small-avatar" id="current-user-avatar">
+                <span class="user-display-name">{{ user.display_name }}</span>
+                <span class="user-role-text">({{ user.role }})</span>
+            </div>
+            <a href="{{ url_for('logout') }}" class="logout-link" title="Logout">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+        
+    </div>
+    
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script>
+// 🚨 ΚΡΙΣΙΜΟ: ΠΕΡΝΑΜΕ ΤΑ GLOBAL SETTINGS ΚΑΙ EMOTICONS ΑΠΟ ΤΟ FLASK ΣΤΟ JAVASCRIPT
+        const globalSettings = {{ settings | tojson }};
+        const globalEmoticons = {{ emoticons | tojson }};
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ρύθμιση έντασης του Web Radio (Προσθήκη)
+            const audio = document.getElementById('audio-stream');
+            if (audio) {
+                audio.volume = 0.3; 
+            }
+            
+            // ΕΛΕΓΧΟΣ ΡΟΛΟΥ ΧΡΗΣΤΗ ΓΙΑ ΤΟ ADMIN BUTTON
+            const currentUserRole = "{{ user.role }}"; // Παίρνουμε τον ρόλο από το Flask
+            const adminButton = document.getElementById('admin-button');
+
+            if (adminButton && (currentUserRole === 'admin' || currentUserRole === 'owner')) {
+                adminButton.style.display = 'inline-block';
+                adminButton.addEventListener('click', () => {
+                    window.location.href = '/admin_panel'; }); 
+            }
+        });
+    </script>
+</body>
+</html>
