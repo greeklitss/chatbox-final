@@ -89,7 +89,7 @@ class Message(db.Model):
     room = db.Column(db.String(50), default='main')
     system_message = db.Column(db.Boolean, default=False)
 
-class Setting(db.Model): # 🚨 Πρέπει να είναι Setting (όχι Settings)
+class Setting(db.Model): # ΣΩΣΤΟ ΟΝΟΜΑ: Setting (ενικός)
     __tablename__ = 'settings'
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(50), unique=True, nullable=False)
@@ -102,6 +102,25 @@ class Emoticon(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(20), unique=True, nullable=False)
     url = db.Column(db.String(200), nullable=False)
+
+# 💥 ΝΕΟ ΜΟΝΤΕΛΟ: Χειροκίνητος ορισμός του μοντέλου Session για το Flask-Session
+class Session(db.Model):
+    # CRITICAL FIX: Setting extend_existing=True allows the model to be loaded 
+    # multiple times without the InvalidRequestError.
+    __tablename__ = 'flask_sessions'
+    __table_args__ = {'extend_existing': True} 
+
+    id = db.Column(db.String(256), primary_key=True)
+    data = db.Column(db.LargeBinary)
+    expiry = db.Column(db.DateTime, nullable=False)
+
+    def __init__(self, sid, data, expiry):
+        self.id = sid
+        self.data = data
+        self.expiry = expiry
+
+    def __repr__(self):
+        return f"<Session {self.id}>"
 
 
 # ----------------------------------------------------
@@ -123,7 +142,6 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
 def initialize_settings():
-    # ... (Logic remains the same, uses db.session) ...
     default_settings = {
         'feature_bold': ('True', 'Enable **bold** formatting', True),
         'feature_italic': ('True', 'Enable *italic* formatting', True),
@@ -151,7 +169,6 @@ def initialize_settings():
         db.session.rollback()
 
 def initialize_emoticons():
-    # ... (Logic remains the same, uses db.session) ...
     default_emoticons = {
         ':D': '/static/emoticons/happy.gif',
         ':)': '/static/emoticons/smile.gif',
@@ -269,6 +286,7 @@ def create_app():
     app.config['SESSION_PERMANENT'] = True
     app.config['SESSION_USE_SIGNER'] = True
     app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions'
+    app.config['SESSION_SQLALCHEMY_MODEL'] = Session # 🚨 ΝΕΑ ΡΥΘΜΙΣΗ: Χρήση του χειροκίνητα ορισμένου μοντέλου Session
     
     app.config['UPLOAD_FOLDER'] = 'uploads'
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -281,6 +299,9 @@ def create_app():
     if app.config.get('SESSION_TYPE') == 'sqlalchemy':
         app.config['SESSION_SQLALCHEMY'] = db 
     sess.init_app(app) 
+    
+    # 💥 ΑΦΑΙΡΕΘΗΚΕ: Ο κώδικας για το SessionModel fix (τώρα είναι ενσωματωμένος στο μοντέλο)
+
     socketio.init_app(app, manage_session=False, cors_allowed_origins="*")
     oauth.init_app(app)
 
