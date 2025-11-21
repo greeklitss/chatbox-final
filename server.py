@@ -391,6 +391,61 @@ def create_app(test_config=None):
         session.clear()
         return redirect(url_for('login'))
 
+    @app.route('/login/google')
+    def google_login():
+        # 🚨 Χρειάζεται local import για να βρει το oauth
+        from server import oauth 
+        
+        # 1. Δημιουργία client για το Google
+        client = oauth.create_client('google')
+
+        # 2. Redirect στον Google Authorization Server
+        # Η 'google_auth' είναι η συνάρτηση callback που θα πρέπει να ορίσετε
+        return client.authorize_redirect(redirect_uri=url_for('google_auth', _external=True))
+
+
+    @app.route('/auth/google')
+    def google_auth():
+        # 🚨 Χρειάζονται local imports 
+        from server import oauth, db, User, get_or_create_user
+        from authlib.integrations.base_client.errors import OAuthError
+
+        client = oauth.create_client('google')
+        
+        try:
+            # 1. Παραλαβή και επικύρωση του token
+            token = client.authorize_access_token()
+            user_info = token.get('userinfo')
+            
+            if user_info is None:
+                return redirect(url_for('login', error="Google login failed: Missing user info."))
+            
+            # 2. Χρήση του get_or_create_user για σύνδεση/εγγραφή
+            user = get_or_create_user(
+                email=user_info.get('email'),
+                display_name=user_info.get('name') or user_info.get('email'),
+                avatar_url=user_info.get('picture'),
+                provider='google'
+            )
+
+            # 3. Δημιουργία Session και Redirect
+            session['user_id'] = user.id
+            session.permanent = True 
+            
+            # Redirect στον κεντρικό χώρο chat
+            return redirect(url_for('chat'))
+
+        except OAuthError as e:
+            # Χειρισμός σφαλμάτων Authlib (π.χ. χρήστης ακύρωσε)
+            error_message = f"Google authentication failed: {e.error}"
+            print(error_message)
+            return redirect(url_for('login', error="Google login failed. Please try again."))
+        except Exception as e:
+            # Χειρισμός άλλων σφαλμάτων
+            db.session.rollback()
+            print(f"Server error during Google auth: {e}")
+            return redirect(url_for('login', error="Server error during login."))
+
 
     # ... (socketio event handlers παραμένουν ίδια) ...
     # ... (για λόγους συντομίας) ...
