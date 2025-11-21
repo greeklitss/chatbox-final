@@ -10,3 +10,4 @@ gunicorn
 eventlet
 psycopg2-binary 
 requests
+redis
