@@ -400,8 +400,9 @@ def create_app(test_config=None):
         # ... (ο κώδικας παραμένει ίδιος) ...
 
     @socketio.on('disconnect')
-    def on_disconnect():
-        # ... (ο κώδικας παραμένει ίδιος) ...
+    def handle_disconnect():
+        # 💡 ΔΙΟΡΘΩΣΗ: Προσθέστε 'pass' αν δεν θέλετε να κάνει τίποτα
+        pass.
 
     @socketio.on('new_message')
     def handle_new_message(data):
