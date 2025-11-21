@@ -36,14 +36,12 @@ class Setting(db.Model):
     value = db.Column(db.String(100), nullable=False)
 
 
-# 🚨 ΠΡΟΣΘΗΚΗ: Ορισμός Emoticon για να ταιριάζει με τον πίνακα της βάσης
 class Emoticon(db.Model):
     __tablename__ = 'emoticons'
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(10), unique=True, nullable=False)
-    image_url = db.Column(db.String(255), nullable=False) # <--- Αυτό το πεδίο ήταν το κρίσιμο
+    image_url = db.Column(db.String(255), nullable=False) # <--- Αυτό είναι κρίσιμο
     is_active = db.Column(db.Boolean, default=True)
-
     
 # --- 3. Flask Application Factory ---
 
