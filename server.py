@@ -397,17 +397,52 @@ def create_app(test_config=None):
     
     @socketio.on('connect')
     def on_connect():
-        # ... (ο κώδικας παραμένει ίδιος) ...
+        current_user = get_current_user_from_session()
+        if current_user:
+            # 1. Βάζουμε τον χρήστη στο main room
+            join_room(GLOBAL_ROOM)
+            # 2. Καταγράφουμε το SID του χρήστη
+            ONLINE_SIDS[request.sid] = current_user.id
+            # 3. Στέλνουμε update στους άλλους χρήστες
+            emit('user_status_update', {'user_id': current_user.id, 'is_online': True}, room=GLOBAL_ROOM)
+            # 4. Εκπέμπουμε την ενημερωμένη λίστα online χρηστών
+            emit_online_users_list()
 
     @socketio.on('disconnect')
     def handle_disconnect():
-        # 💡 ΔΙΟΡΘΩΣΗ: Προσθέστε 'pass' αν δεν θέλετε να κάνει τίποτα
-        pass
+        leave_room(GLOBAL_ROOM)
+        user_id = ONLINE_SIDS.pop(request.sid, None)
+        if user_id:
+            # Στέλνουμε update στους άλλους χρήστες
+            emit('user_status_update', {'user_id': user_id, 'is_online': False}, room=GLOBAL_ROOM)
+            # Εκπέμπουμε την ενημερωμένη λίστα online χρηστών
+            emit_online_users_list()
 
     @socketio.on('new_message')
     def handle_new_message(data):
-        # ... (ο κώδικας παραμένει ίδιος) ...
+        from server import get_current_user_from_session, save_and_emit_message # 🚨 Χρειάζεται local import
+        
+        current_user = get_current_user_from_session()
 
+        if not current_user:
+            # Εκπομπή σφάλματος μόνο στον χρήστη που προσπαθεί να στείλει
+            emit('error_message', {'error': 'You must be logged in to send a message.'})
+            return
+
+        content = data.get('content', '').strip()
+        room_name = data.get('room', GLOBAL_ROOM)
+        
+        # 1. Βασικός έλεγχος περιεχομένου
+        if not content or len(content) > 500:
+            error_msg = 'Message cannot be empty or too long (Max 500 chars).'
+            emit('error_message', {'error': error_msg})
+            return
+
+        # 2. Αποθήκευση και εκπομπή
+        success = save_and_emit_message(current_user.id, content, room_name)
+        
+        if not success:
+            emit('error_message', {'error': 'Failed to send message due to server error.'})
     return app
 
 
