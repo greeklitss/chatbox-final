@@ -19,462 +19,629 @@
             --border-color: #FF77A9;       /* Medium Pink Border */
             --text-color: #333333;
             --button-color: #FFCC00;      /* Yellow/Gold Accent */
-            --shadow-admin: 0 8px 20px rgba(255, 0, 102, 0.5);
-            --danger-color: #dc3545;      /* Red for dangerous actions */
-            --success-color: #28a745;     /* Green for success actions */
-        }
-        
-        * {
-            box-sizing: border-box;
+            --shadow-admin: 0 8px 15px rgba(255, 0, 102, 0.4);
+            --shadow-success: 0 4px 8px rgba(0, 255, 204, 0.3);
+            --shadow-error: 0 4px 8px rgba(255, 0, 102, 0.6);
         }
 
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: var(--background-color); 
+            background-color: var(--background-color);
             color: var(--text-color);
-            margin: 0;
-            padding: 40px 20px;
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: var(--box-bg);
-            padding: 30px;
-            border-radius: 25px;
-            border: 4px solid var(--border-color);
-            box-shadow: var(--shadow-admin);
-        }
-        
-        h1 {
-            color: var(--primary-color);
-            text-align: center;
-            border-bottom: 3px solid var(--secondary-color);
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-            text-shadow: 1px 1px var(--text-color);
-        }
-        
-        h2 {
-            color: var(--primary-color);
-            border-left: 5px solid var(--secondary-color);
-            padding-left: 10px;
-            margin-top: 30px;
-            margin-bottom: 20px;
-        }
-        
-        .section {
-            margin-bottom: 40px;
             padding: 20px;
-            border: 1px dashed var(--border-color);
-            border-radius: 15px;
-        }
-        
-        /* Buttons */
-        button {
-            background-color: var(--button-color);
-            color: var(--text-color); 
-            border: none;
-            border-radius: 12px;
-            padding: 10px 15px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-left: 10px;
-            font-weight: 700;
-        }
-        
-        button:hover {
-            background-color: var(--primary-color);
-            color: #FFFFFF;
-            transform: scale(1.05);
-            box-shadow: 0 4px 10px rgba(255, 0, 102, 0.5);
-        }
-        
-        /* Specific Button Styles */
-        .user-item button { margin-left: 5px; }
-        .user-item button:nth-child(3) { /* Ban button */
-            background-color: var(--danger-color);
-            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
         }
 
-        /* Settings Items */
-        .setting-item, .user-item, .emoticon-item {
+        .admin-container {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--box-bg);
+            border-radius: 15px;
+            box-shadow: var(--shadow-admin);
+            padding: 20px 30px;
+            margin-top: 20px;
+        }
+
+        header {
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px dotted #ccc;
-        }
-        .user-item {
-            padding: 15px 0;
         }
         
-        /* Checkbox Styling */
-        input[type="checkbox"] {
-            transform: scale(1.5);
-            accent-color: var(--secondary-color);
+        header h1 {
+            color: var(--primary-color);
+            font-weight: 900;
         }
 
-        /* Input Fields */
-        input[type="text"], input[type="color"] {
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background-color: #FFF;
+        .user-info {
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+
+        .user-info .role {
+            color: var(--secondary-color);
+            background-color: var(--primary-color);
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-left: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-menu {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 700;
             color: var(--text-color);
-        }
-        input[type="text"]:focus {
-             border-color: var(--primary-color);
-             box-shadow: 0 0 5px rgba(255, 0, 102, 0.3);
-             outline: none;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
         }
 
-        /* Emoticons Table */
-        .emoticon-item {
-            gap: 10px;
-            display: grid;
-            grid-template-columns: 1.2fr 2fr 1fr 150px; /* Tag, Image URL, Status, Actions */
-            padding: 15px 0;
+        .tab-button.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
         }
-        .emoticon-header {
+        
+        .tab-button:hover:not(.active) {
+            color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Form & List Styling */
+        .form-group, .list-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        input[type="text"], input[type="url"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+
+        button {
+            background-color: var(--button-color);
+            color: var(--text-color);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+
+        button.action-button {
+            background-color: var(--primary-color);
+            color: white;
+            margin-left: 10px;
+        }
+        
+        button.action-button.delete {
+            background-color: #e74c3c; /* Red */
+        }
+        
+        button.action-button.unban {
+            background-color: #2ecc71; /* Green */
+        }
+
+        button.action-button:hover {
+            box-shadow: 0 4px 8px rgba(255, 0, 102, 0.4);
+        }
+
+        #message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
             font-weight: bold;
-            border-bottom: 2px solid var(--primary-color) !important;
+        }
+        
+        .setting-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* List Specifics */
+        .users-list, .emoticons-list {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 15px;
+        }
+        
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
             margin-bottom: 10px;
-            padding-bottom: 5px !important;
+            transition: all 0.3s ease;
+        }
+
+        .list-item:hover {
+            background-color: #ffe0e9;
+        }
+
+        .user-details, .emoticon-details {
+            flex-grow: 1;
+        }
+        
+        .user-details strong {
+            color: var(--primary-color);
+        }
+        
+        .emoticon-details strong {
+            color: var(--secondary-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 15px;
+            }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .user-info {
+                margin-top: 10px;
+            }
+            .list-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .list-item .actions {
+                margin-top: 10px;
+                width: 100%;
+                display: flex;
+                justify-content: flex-end;
+            }
+            .list-item select, .list-item button {
+                margin-top: 5px;
+            }
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Admin Control Panel</h1>
-        <p style="font-size: 1.1em;">Logged in as: <span id="current_user_role" style="font-weight: bold; color: var(--primary-color);">...</span></p>
-        <button onclick="window.location.href='/'" style="background-color: var(--secondary-color); color: var(--text-color);">
-            <i class="fas fa-chevron-left"></i> Return to Chat
-        </button>
-
-        <div class="section" id="theme-settings-section">
-            <h2>🔗 Feature Toggle Control (Chat Buttons)</h2>
-            <p>Ενεργοποιήστε/Απενεργοποιήστε τις νέες δυνατότητες του Chat παγκοσμίως. (Αλλαγή εμφανίζεται με reload)</p>
-
-            <div class="setting-item">
-                <label for="toggle-bold"><i class="fas fa-bold"></i> Bold Button ([b])</label>
-                <input type="checkbox" id="toggle-bold" data-setting-key="feature_bold">
-                <button onclick="saveToggle('feature_bold')">Save</button>
-            </div>
-            
-            <div class="setting-item">
-                <label for="toggle-italic"><i class="fas fa-italic"></i> Italic Button ([i])</label>
-                <input type="checkbox" id="toggle-italic" data-setting-key="feature_italic">
-                <button onclick="saveToggle('feature_italic')">Save</button>
-            </div>
-            
-            <div class="setting-item">
-                <label for="toggle-underline"><i class="fas fa-underline"></i> Underline Button ([u])</label>
-                <input type="checkbox" id="toggle-underline" data-setting-key="feature_underline">
-                <button onclick="saveToggle('feature_underline')">Save</button>
-            </div>
-
-            <div class="setting-item">
-                <label for="toggle-url"><i class="fas fa-link"></i> Link Button ([url])</label>
-                <input type="checkbox" id="toggle-url" data-setting-key="feature_url">
-                <button onclick="saveToggle('feature_url')">Save</button>
-            </div>
-            
-            <div class="setting-item">
-                <label for="toggle-img"><i class="fas fa-image"></i> GIF/Image Button ([img])</label>
-                <input type="checkbox" id="toggle-img" data-setting-key="feature_img">
-                <button onclick="saveToggle('feature_img')">Save</button>
-            </div>
-        </div>
+    <!-- 🚨 ΚΡΙΣΙΜΟ FIX: Προσθήκη Jinja templates για τους URLs για αποφυγή σφαλμάτων 'Failed to parse URL' -->
+    <script>
+        const CHECK_LOGIN_URL = "{{ url_for('check_login') }}";
+        const LOGIN_URL = "{{ url_for('login') }}";
+        const CHAT_URL = "{{ url_for('index') }}";
         
-        <div class="section">
-            <h2><i class="fas fa-smile-wink"></i> Emoticon Management</h2>
-            <div class="setting-item" style="border-bottom: none; gap: 10px;">
-                <input type="text" id="new-tag" placeholder=":tag:" style="width: 150px;">
-                <input type="text" id="new-url" placeholder="Image URL (e.g., /static/emotes/smile.gif)" style="flex-grow: 1;">
-                <button onclick="addEmoticon()"><i class="fas fa-plus"></i> Add New</button>
+        // API URLs για ρυθμίσεις
+        const GET_SETTINGS_URL = "{{ url_for('api_get_settings') }}";
+        const UPDATE_SETTING_BASE_URL = "{{ url_for('api_update_setting', setting_key='PLACEHOLDER') }}".replace('PLACEHOLDER', '');
+        
+        // API URLs για emoticons
+        const GET_EMOTICONS_URL = "{{ url_for('api_get_emoticons') }}";
+        const ADD_EMOTICON_URL = "{{ url_for('api_add_emoticon') }}";
+        const DELETE_EMOTICON_BASE_URL = "{{ url_for('api_delete_emoticon', emoticon_id=0) }}".replace('/0', '');
+        
+        // API URLs για χρήστες
+        const GET_USERS_URL = "{{ url_for('api_get_users') }}";
+        const UPDATE_USER_ROLE_BASE_URL = "{{ url_for('api_update_user_role', user_id=0) }}".replace('/0/role', ''); // Κρατάμε το ID για χρήση στη συνάρτηση
+        const DELETE_USER_BASE_URL = "{{ url_for('api_delete_user', user_id=0) }}".replace('/0', '');
+        const UNBAN_USER_BASE_URL = "{{ url_for('api_unban_user', user_id=0) }}".replace('/0/unban', '');
+    </script>
+    
+    <div class="admin-container">
+        <header>
+            <h1><i class="fas fa-tools"></i> Πίνακας Διαχείρισης Chat</h1>
+            <div class="user-info">
+                Ο ρόλος μου: <span class="role" id="current_user_role">...</span>
             </div>
+        </header>
+
+        <!-- Tab Menu -->
+        <div class="tab-menu">
+            <button class="tab-button active" onclick="showTab('settings')">Ρυθμίσεις</button>
+            <button class="tab-button" onclick="showTab('emoticons')">Emoticons</button>
+            <button class="tab-button" onclick="showTab('users')">Χρήστες</button>
+            <button class="tab-button" onclick="window.location.href = CHAT_URL;"><i class="fas fa-comments"></i> Επιστροφή στο Chat</button>
+        </div>
+
+        <!-- Tab Content: Settings -->
+        <div id="settings" class="tab-content active">
+            <h2><i class="fas fa-sliders-h"></i> Ρυθμίσεις Chat</h2>
+            <div id="settings-list">
+                <!-- Settings will be dynamically loaded here -->
+            </div>
+            <div id="settings-message" class="message"></div>
+        </div>
+
+        <!-- Tab Content: Emoticons -->
+        <div id="emoticons" class="tab-content">
+            <h2><i class="fas fa-smile"></i> Διαχείριση Emoticons</h2>
             
-            <div id="emoticon-list">
-                <div class="emoticon-header emoticon-item">
-                    <div>Tag</div>
-                    <div>Image URL</div>
-                    <div>Status</div>
-                    <div>Actions</div>
-                </div>
+            <div class="form-group">
+                <h3>Προσθήκη Νέου Emoticon</h3>
+                <label for="new-code">Κωδικός Emoticon (π.χ. :cool:):</label>
+                <input type="text" id="new-code" placeholder=":code:" required>
+                
+                <label for="new-url">URL Εικόνας/GIF:</label>
+                <input type="url" id="new-url" placeholder="http://example.com/image.gif" required>
+                
+                <button onclick="addEmoticon()"><i class="fas fa-plus"></i> Προσθήκη</button>
+                <div id="emoticon-add-message" class="message"></div>
             </div>
+
+            <h3>Λίστα Emoticons</h3>
+            <div class="emoticons-list" id="emoticons-list">
+                <!-- Emoticons will be dynamically loaded here -->
+            </div>
+            <div id="emoticon-message" class="message"></div>
         </div>
 
-        <div class="section">
-            <h2><i class="fas fa-users"></i> User Management</h2>
-            <div id="user-list">
-                </div>
+        <!-- Tab Content: Users -->
+        <div id="users" class="tab-content">
+            <h2><i class="fas fa-users"></i> Διαχείριση Χρηστών</h2>
+            <p><strong>ΠΡΟΣΟΧΗ:</strong> Η αλλαγή ρόλου ή η διαγραφή χρήστη είναι μη αναστρέψιμη.</p>
+            <div class="users-list" id="users-list">
+                <!-- Users will be dynamically loaded here -->
+            </div>
+            <div id="users-message" class="message"></div>
         </div>
-
     </div>
 
     <script>
+        // Global State
         let currentUserId = null;
         let currentUserRole = null;
-        
-        // --- HELPER FUNCTIONS ---
-        
-        // Function to generate HTML for an emoticon item
-        function createEmoticonItem(emoticon) {
-            const statusText = emoticon.is_enabled ? 'Active' : 'Disabled';
-            const statusColor = emoticon.is_enabled ? 'var(--success-color)' : 'var(--danger-color)';
-            const actionText = emoticon.is_enabled ? 'Disable' : 'Enable';
-            const actionBg = emoticon.is_enabled ? 'var(--danger-color)' : 'var(--success-color)';
+        const adminMessage = document.getElementById('message');
+
+        // Utility: Display System Message
+        function showMessage(elementId, text, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = text;
+            element.style.color = isError ? '#e74c3c' : '#2ecc71';
+            setTimeout(() => {
+                element.textContent = '';
+            }, 5000);
+        }
+
+        // Utility: Tab Switching
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
             
-            return `
-                <div class="emoticon-item">
-                    <div style="font-weight: bold; color: ${statusColor}">${emoticon.tag}</div>
-                    <div style="font-size: 0.9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${emoticon.url}</div>
-                    <div style="color: ${statusColor};">${statusText}</div>
-                    <div>
-                        <button onclick="toggleEmoticon(${emoticon.id})" 
-                                style="background-color: ${actionBg}; color: white; margin-left: 0;">
-                            ${actionText}
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Function to generate HTML for a user item
-        function createUserItem(user) {
-            let roleColor;
-            if (user.role === 'owner') { roleColor = 'var(--primary-color)'; }
-            else if (user.role === 'admin') { roleColor = 'var(--secondary-color)'; }
-            else if (user.role === 'banned') { roleColor = 'var(--danger-color)'; }
-            else { roleColor = 'var(--text-color)'; }
-
-            const isCurrent = (user.id === currentUserId);
-            const disabledClass = isCurrent ? 'style="opacity: 0.5; cursor: not-allowed;" disabled' : '';
-            const ownerDisabled = (currentUserRole !== 'owner') && (user.role === 'owner' || user.role === 'admin') ? 'style="opacity: 0.5; cursor: not-allowed;" disabled' : '';
-
-            // User cannot change their own role
-            const disabledIfSelf = (isCurrent) ? 'disabled' : '';
-
-            return `
-                <div class="user-item">
-                    <div style="width: 50px;">#${user.id}</div>
-                    <div style="flex-grow: 1; font-weight: bold;">
-                        ${user.username} 
-                        ${isCurrent ? '<span style="color: var(--primary-color); font-size: 0.8em;">(You)</span>' : ''}
-                    </div>
-                    <div style="width: 100px; text-transform: uppercase; color: ${roleColor}; font-weight: 700;">${user.role}</div>
-                    <div style="width: 300px; text-align: right;">
-                        <button onclick="toggleUserRole(${user.id}, 'admin')" 
-                                ${user.role === 'admin' ? disabledClass : ''} 
-                                ${ownerDisabled} 
-                                ${disabledIfSelf}>Set Admin</button>
-                        <button onclick="toggleUserRole(${user.id}, 'user')" 
-                                ${user.role === 'user' ? disabledClass : ''} 
-                                ${ownerDisabled} 
-                                ${disabledIfSelf}>Set User</button>
-                        <button onclick="toggleUserRole(${user.id}, 'banned')" 
-                                ${user.role === 'banned' ? disabledClass : ''} 
-                                ${ownerDisabled} 
-                                ${disabledIfSelf}
-                                style="background-color: var(--danger-color); color: white;">Ban</button>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // --- ΡΥΘΜΙΣΕΙΣ (SETTINGS) LOGIC ---
-        
-        async function saveSetting(key, value) {
-            try {
-                const response = await fetch('/api/admin/set_setting', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key, value })
-                });
-                if (!response.ok) throw new Error('Failed to save setting.');
-                console.log(`Setting ${key} saved.`);
-            } catch (error) {
-                alert(`ERROR: Could not save setting. Check console.`);
-                console.error('Error saving setting:', error);
-            }
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`.tab-button[onclick*='${tabId}']`).classList.add('active');
         }
 
-        function saveToggle(key) {
-            const checkbox = document.querySelector(`[data-setting-key="${key}"]`);
-            // Αποθηκεύουμε ως string 'True' ή 'False'
-            const value = checkbox.checked ? 'True' : 'False';
-            saveSetting(key, value); 
-        }
+        // ----------------------------------------------------
+        // 1. ΡΥΘΜΙΣΕΙΣ (Settings)
+        // ----------------------------------------------------
 
         async function loadSettings() {
             try {
-                const response = await fetch('/api/settings');
-                if (!response.ok) throw new Error('Failed to fetch settings.');
-                const settings = await response.json();
+                const response = await fetch(GET_SETTINGS_URL);
+                if (!response.ok) throw new Error('Failed to load settings.');
                 
-                // Φόρτωση των τιμών στα checkboxes
-                document.querySelectorAll('[data-setting-key]').forEach(input => {
-                    const key = input.dataset.settingKey;
-                    if (settings.hasOwnProperty(key)) {
-                        // Μετατροπή string 'True'/'False' σε boolean
-                        input.checked = (settings[key].toString().toLowerCase() === 'true');
-                    }
+                const settings = await response.json();
+                const list = document.getElementById('settings-list');
+                list.innerHTML = '';
+
+                settings.forEach(setting => {
+                    const item = document.createElement('div');
+                    item.className = 'form-group setting-toggle';
+                    item.innerHTML = `
+                        <div>
+                            <strong>${setting.display_name}</strong>
+                            <p>${setting.description}</p>
+                        </div>
+                        <select id="setting-${setting.key}" data-key="${setting.key}" onchange="updateSetting('${setting.key}', this.value)">
+                            <option value="True" ${setting.value === 'True' ? 'selected' : ''}>Ενεργό</option>
+                            <option value="False" ${setting.value === 'False' ? 'selected' : ''}>Ανενεργό</option>
+                        </select>
+                    `;
+                    list.appendChild(item);
                 });
+
             } catch (error) {
                 console.error('Error loading settings:', error);
+                showMessage('settings-message', 'Σφάλμα φόρτωσης ρυθμίσεων.', true);
             }
         }
-        
-        // --- EMOTICON LOGIC ---
+
+        async function updateSetting(key, value) {
+            // Δημιουργούμε το σωστό URL με τον key
+            const url = UPDATE_SETTING_BASE_URL + key;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ value: value })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('settings-message', `Η ρύθμιση ${key} ενημερώθηκε.`, false);
+                } else {
+                    throw new Error(result.error || 'Αποτυχία ενημέρωσης ρύθμισης.');
+                }
+            } catch (error) {
+                console.error(`Error updating setting ${key}:`, error);
+                showMessage('settings-message', error.message, true);
+            }
+        }
+
+        // ----------------------------------------------------
+        // 2. EMOTICONS
+        // ----------------------------------------------------
         
         async function loadEmoticons() {
             try {
-                const response = await fetch('/api/emoticons/all');
-                if (!response.ok) throw new Error('Failed to fetch emoticons.');
+                const response = await fetch(GET_EMOTICONS_URL);
+                if (!response.ok) throw new Error('Failed to load emoticons.');
+                
                 const emoticons = await response.json();
-                
-                const listContainer = document.getElementById('emoticon-list');
-                // Κρατάμε το header και καθαρίζουμε τα στοιχεία
-                const header = listContainer.querySelector('.emoticon-header').outerHTML;
-                listContainer.innerHTML = header; 
-                
+                const list = document.getElementById('emoticons-list');
+                list.innerHTML = '';
+
                 emoticons.forEach(emoticon => {
-                    listContainer.innerHTML += createEmoticonItem(emoticon);
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.id = `emoticon-item-${emoticon.id}`;
+                    item.innerHTML = `
+                        <div class="emoticon-details">
+                            <strong>${emoticon.code}</strong> 
+                            (ID: ${emoticon.id})
+                            <img src="${emoticon.url}" alt="${emoticon.code}" style="width: 30px; height: 30px; margin-left: 10px; border-radius: 3px; vertical-align: middle;">
+                        </div>
+                        <div class="actions">
+                            <button class="action-button delete" onclick="deleteEmoticon(${emoticon.id})">
+                                <i class="fas fa-trash"></i> Διαγραφή
+                            </button>
+                        </div>
+                    `;
+                    list.appendChild(item);
                 });
-                console.log("Emoticons loaded successfully.");
             } catch (error) {
                 console.error('Error loading emoticons:', error);
-                alert('ERROR: Could not load emoticons. See console.');
+                showMessage('emoticon-message', 'Σφάλμα φόρτωσης emoticons.', true);
             }
         }
-        
+
         async function addEmoticon() {
-            const tagInput = document.getElementById('new-tag');
-            const urlInput = document.getElementById('new-url');
-            const tag = tagInput.value.trim();
-            const url = urlInput.value.trim();
-            
-            if (!tag || !url) {
-                alert("Both Tag and Image URL are required.");
+            const codeInput = document.getElementById('new-code').value.trim();
+            const urlInput = document.getElementById('new-url').value.trim();
+
+            if (!codeInput || !urlInput) {
+                showMessage('emoticon-add-message', 'Παρακαλώ συμπληρώστε και τα δύο πεδία.', true);
                 return;
             }
-            
+
             try {
-                const response = await fetch('/api/admin/add_emoticon', {
+                const response = await fetch(ADD_EMOTICON_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tag, url })
+                    body: JSON.stringify({ code: codeInput, url: urlInput })
                 });
-                
-                const result = await response.json();
-                
-                if (!response.ok) {
-                    alert(`Error adding emoticon: ${result.error || 'Unknown error'}`);
-                    throw new Error(result.error || 'Failed to add emoticon.');
-                }
 
-                alert(`Emoticon ${tag} added successfully!`);
-                tagInput.value = '';
-                urlInput.value = '';
-                await loadEmoticons();
-                
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('emoticon-add-message', result.message || 'Emoticon προστέθηκε επιτυχώς.', false);
+                    document.getElementById('new-code').value = '';
+                    document.getElementById('new-url').value = '';
+                    await loadEmoticons(); // Reload list
+                } else {
+                    throw new Error(result.error || 'Αποτυχία προσθήκης Emoticon.');
+                }
             } catch (error) {
                 console.error('Error adding emoticon:', error);
+                showMessage('emoticon-add-message', error.message, true);
             }
         }
 
-        async function toggleEmoticon(id) {
-            if (!confirm(`Are you sure you want to toggle the status of Emoticon ID ${id}?`)) {
-                return;
-            }
+        async function deleteEmoticon(id) {
+            // Αντικατάσταση alert() με custom UI
+            if (!confirm(`Είστε σίγουροι ότι θέλετε να διαγράψετε το Emoticon με ID ${id};`)) return;
+
+            // Δημιουργούμε το σωστό URL με το ID
+            const url = DELETE_EMOTICON_BASE_URL + '/' + id;
+
             try {
-                const response = await fetch('/api/admin/toggle_emoticon', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id })
+                const response = await fetch(url, {
+                    method: 'DELETE'
                 });
-                
-                if (!response.ok) throw new Error('Failed to toggle emoticon.');
-                
-                await loadEmoticons();
-                
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('emoticon-message', result.message || `Emoticon ${id} διαγράφηκε.`, false);
+                    document.getElementById(`emoticon-item-${id}`).remove();
+                } else {
+                    throw new Error(result.error || 'Αποτυχία διαγραφής Emoticon.');
+                }
             } catch (error) {
-                console.error(`Error toggling emoticon ${id}:`, error);
-                alert('ERROR: Could not toggle emoticon.');
+                console.error(`Error deleting emoticon ${id}:`, error);
+                showMessage('emoticon-message', error.message, true);
             }
         }
 
-        // --- USER LOGIC ---
-        
+        // ----------------------------------------------------
+        // 3. ΧΡΗΣΤΕΣ (Users)
+        // ----------------------------------------------------
+
         async function loadUsers() {
             try {
-                const response = await fetch('/api/users');
-                if (!response.ok) throw new Error('Failed to fetch users.');
+                const response = await fetch(GET_USERS_URL);
+                if (!response.ok) throw new Error('Failed to load users.');
+                
                 const users = await response.json();
-                
-                const listContainer = document.getElementById('user-list');
-                listContainer.innerHTML = ''; // Clear existing list
-                
-                // Add Header
-                listContainer.innerHTML += `
-                    <div class="user-item" style="border-bottom: 2px solid var(--primary-color); margin-bottom: 10px; font-weight: bold;">
-                        <div style="width: 50px;">ID</div>
-                        <div style="flex-grow: 1;">Username</div>
-                        <div style="width: 100px;">Role</div>
-                        <div style="width: 300px; text-align: right;">Actions</div>
-                    </div>
-                `;
+                const list = document.getElementById('users-list');
+                list.innerHTML = '';
+                const roles = ['user', 'moderator', 'admin', 'owner', 'banned'];
 
-                // Add Items
                 users.forEach(user => {
-                    listContainer.innerHTML += createUserItem(user);
-                });
-                console.log("Users loaded successfully.");
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.id = `user-item-${user.id}`;
+                    item.innerHTML = `
+                        <div class="user-details">
+                            <img src="${user.avatar_url}" alt="${user.display_name}" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px; vertical-align: middle;">
+                            <strong>${user.display_name}</strong> 
+                            (${user.email}) - ID: ${user.id} - 
+                            <span style="color: ${user.is_banned ? 'red' : 'green'}; font-weight: bold;">${user.is_banned ? 'BANNED' : 'ACTIVE'}</span>
+                        </div>
+                        <div class="actions">
+                            ${user.id !== currentUserId ? `
+                            <select id="role-select-${user.id}" onchange="updateUserRole(${user.id}, this.value)" ${user.role === 'owner' ? 'disabled' : ''}>
+                                ${roles.map(role => `
+                                    <option value="${role}" ${user.role === role ? 'selected' : ''} ${role === 'owner' && currentUserRole !== 'owner' ? 'disabled' : ''}>
+                                        ${role.toUpperCase()}
+                                    </option>
+                                `).join('')}
+                            </select>
+                            ` : `<span style="margin-right: 15px;">(Your Role)</span>`}
 
+                            ${(currentUserRole === 'owner' || currentUserRole === 'admin') && user.role !== 'owner' && user.id !== currentUserId ? `
+                                <button class="action-button delete" onclick="deleteUser(${user.id})">
+                                    <i class="fas fa-user-minus"></i> Διαγραφή
+                                </button>
+                                ${user.is_banned ? `
+                                <button class="action-button unban" onclick="unbanUser(${user.id})">
+                                    <i class="fas fa-check-circle"></i> Unban
+                                </button>
+                                ` : ''}
+                            ` : ''}
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
             } catch (error) {
                 console.error('Error loading users:', error);
-                alert('ERROR: Could not load users. See console.');
+                showMessage('users-message', 'Σφάλμα φόρτωσης χρηστών.', true);
             }
         }
 
-        async function toggleUserRole(id, newRole) {
-            if (id === currentUserId) {
-                alert("You cannot change your own role!");
-                return;
+        async function updateUserRole(id, role) {
+            if (role === 'owner' && currentUserRole !== 'owner') {
+                 showMessage('users-message', 'Μόνο ο Owner μπορεί να ορίσει άλλον ως Owner.', true);
+                 document.getElementById(`role-select-${id}`).value = 'admin'; // Revert selection if possible
+                 return;
             }
-            if (!confirm(`Are you sure you want to set User ID ${id} role to "${newRole.toUpperCase()}"?`)) {
-                return;
+
+            if (id === currentUserId && role !== currentUserRole) {
+                 showMessage('users-message', 'Δεν μπορείτε να αλλάξετε τον δικό σας ρόλο.', true);
+                 document.getElementById(`role-select-${id}`).value = currentUserRole; // Revert selection
+                 return;
+            }
+
+            if (!confirm(`Είστε σίγουροι ότι θέλετε να αλλάξετε τον ρόλο του χρήστη ${id} σε ${role.toUpperCase()};`)) {
+                 document.getElementById(`role-select-${id}`).value = document.querySelector(`#user-item-${id} .user-details span`).textContent.toLowerCase().replace(/[()]/g, ''); // Revert to current displayed role
+                 return;
             }
             
+            // Δημιουργούμε το σωστό URL με το ID
+            const url = UPDATE_USER_ROLE_BASE_URL + '/' + id + '/role';
+            
             try {
-                const response = await fetch('/api/admin/set_role', {
-                    method: 'POST',
+                const response = await fetch(url, {
+                    method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: id, role: newRole })
+                    body: JSON.stringify({ role: role })
                 });
-                
-                const result = await response.json();
-                
-                if (!response.ok) {
-                    alert(`Error setting role: ${result.message || 'Unknown error'}`);
-                    throw new Error(result.message || 'Failed to set role.');
-                }
 
-                alert(`User ID ${id} role set to ${newRole.toUpperCase()}.`);
-                await loadUsers();
-                
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('users-message', result.message || `Ο ρόλος του χρήστη ${id} άλλαξε σε ${role.toUpperCase()}.`, false);
+                    await loadUsers(); // Reload list to reflect changes
+                } else {
+                    throw new Error(result.error || 'Αποτυχία ενημέρωσης ρόλου.');
+                }
             } catch (error) {
-                console.error(`Error setting user role ${id}:`, error);
+                console.error(`Error updating user role ${id}:`, error);
+                showMessage('users-message', error.message, true);
             }
         }
         
+        async function deleteUser(id) {
+            // Αντικατάσταση alert() με custom UI
+            if (!confirm(`Είστε σίγουροι ότι θέλετε να ΔΙΑΓΡΑΨΕΤΕ οριστικά τον χρήστη με ID ${id};`)) return;
+
+            // Δημιουργούμε το σωστό URL με το ID
+            const url = DELETE_USER_BASE_URL + '/' + id;
+
+            try {
+                const response = await fetch(url, { method: 'DELETE' });
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('users-message', result.message || `Ο χρήστης ${id} διαγράφηκε.`, false);
+                    document.getElementById(`user-item-${id}`).remove();
+                } else {
+                    throw new Error(result.error || 'Αποτυχία διαγραφής χρήστη.');
+                }
+            } catch (error) {
+                console.error(`Error deleting user ${id}:`, error);
+                showMessage('users-message', error.message, true);
+            }
+        }
+        
+        async function unbanUser(id) {
+            // Αντικατάσταση alert() με custom UI
+            if (!confirm(`Είστε σίγουροι ότι θέλετε να άρετε την απαγόρευση (unban) του χρήστη με ID ${id};`)) return;
+
+            // Δημιουργούμε το σωστό URL με το ID
+            const url = UNBAN_USER_BASE_URL + '/' + id + '/unban';
+
+            try {
+                const response = await fetch(url, { method: 'PUT' });
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('users-message', result.message || `Ο χρήστης ${id} έγινε Unbanned.`, false);
+                    await loadUsers(); // Reload list to reflect changes
+                } else {
+                    throw new Error(result.error || 'Αποτυχία Unban χρήστη.');
+                }
+            } catch (error) {
+                console.error(`Error unbanning user ${id}:`, error);
+                showMessage('users-message', error.message, true);
+            }
+        }
+
         // --- DOMContentLoaded KΛΗΣΗ ---
         document.addEventListener('DOMContentLoaded', async () => {
              // 1. Έλεγχος ρόλου & ID 
              try {
-                const response = await fetch('/check_login');
+                // Χρησιμοποιούμε την μεταβλητή URL από το Jinja
+                const response = await fetch(CHECK_LOGIN_URL); 
                 if (!response.ok) throw new Error('Not logged in or session expired.');
                 
                 const userData = await response.json();
@@ -486,13 +653,20 @@
 
                 // 🚨 Έλεγχος Admin/Owner
                 if (currentUserRole !== 'admin' && currentUserRole !== 'owner') {
-                    alert('Access Denied. Redirecting to chat.');
-                    window.location.href = '/';
+                    // Χρησιμοποιούμε την μεταβλητή URL από το Jinja
+                    showMessage('users-message', 'Άρνηση Πρόσβασης. Ανακατεύθυνση στο chat.', true);
+                    setTimeout(() => {
+                         window.location.href = CHAT_URL;
+                    }, 2000);
                     return;
                 }
              } catch (error) {
-                 alert('Authentication Error: Redirecting to login.');
-                 window.location.href = '/login';
+                 console.error('Initial Authentication Error:', error);
+                 // Χρησιμοποιούμε την μεταβλητή URL από το Jinja
+                 showMessage('users-message', 'Σφάλμα ταυτοποίησης: Ανακατεύθυνση στη σελίδα σύνδεσης.', true);
+                 setTimeout(() => {
+                     window.location.href = LOGIN_URL;
+                 }, 2000);
                  return;
              }
 
