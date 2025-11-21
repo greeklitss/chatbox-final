@@ -27,12 +27,22 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer) 
     content = db.Column(db.Text)
+
     
 class Setting(db.Model):
     __tablename__ = 'settings'
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(50), unique=True, nullable=False)
     value = db.Column(db.String(100), nullable=False)
+
+
+# 🚨 ΝΕΟ: ΠΡΟΣΘΕΤΟΥΜΕ ΤΟ EMOTICON ΜΕ ΤΟ ΠΕΔΙΟ IMAGE_URL ΠΟΥ ΖΗΤΑΕΙ Η ΒΑΣΗ
+class Emoticon(db.Model):
+    __tablename__ = 'emoticons'
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(10), unique=True, nullable=False)
+    image_url = db.Column(db.String(255), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
     
 # --- 3. Flask Application Factory ---
 
