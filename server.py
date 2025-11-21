@@ -248,7 +248,14 @@ def create_app():
     socketio.init_app(app, manage_session=False, async_mode='threading', cors_allowed_origins="*")
     oauth.init_app(app)
 
-    # Προσθήκη Google OAuth Provider
+ # 2.3. FIX ΓΙΑ Flask-Session & Flask-SQLAlchemy Conflict
+    # Το Flask-Session, όταν χρησιμοποιεί το 'sqlalchemy' ως τύπο, προσπαθεί να δημιουργήσει
+    # μια νέα επέκταση SQLAlchemy αν δεν του δοθεί ρητά η υπάρχουσα, οδηγώντας στο RuntimeError.
+    if app.config.get('SESSION_TYPE') == 'sqlalchemy':
+        # 🚨 ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Δίνουμε την υπάρχουσα επέκταση `db` στο Session configuration.
+       app.config['SESSION_SQLALCHEMY'] = db    # Προσθήκη Google OAuth Provider
+
+
     global google
     google = oauth.register(
         name='google',
@@ -528,5 +535,6 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000)) 
     socketio.run(app, debug=True, port=port)
     
-# 🚨 Αυτό το `application` ή `app` είναι που ψάχνουν οι WSGI servers (Gunicorn, Render)
-application = create_app()
+# 🚨 ΔΙΟΡΘΩΣΗ: Δεν καλούμε το create_app() εδώ. 
+# Θα ορίσουμε το Procfile να καλεί τη συνάρτηση.
+# application = create_app() # <--- ΣΧΟΛΙΑΣΕ Ή ΔΙΕΓΡΑΨΕ ΑΥΤΗ ΤΗ ΓΡΑΜΜΗ
