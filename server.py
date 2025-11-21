@@ -403,6 +403,37 @@ def create_app(test_config=None):
         # Η 'google_auth' είναι η συνάρτηση callback που θα πρέπει να ορίσετε
         return client.authorize_redirect(redirect_uri=url_for('google_auth', _external=True))
 
+    @app.route('/guest_login', methods=['POST'])
+    def guest_login():
+        # 🚨 Χρειάζεται local import της get_or_create_user και άλλων helpers
+        from server import get_or_create_user, db, User
+        
+        # 1. Παραγωγή τυχαίου ονόματος χρήστη για τον Guest
+        # Ονομασία: Guest_ + 4 τυχαία ψηφία
+        random_suffix = ''.join(random.choices(string.digits, k=4))
+        guest_display_name = f"Guest_{random_suffix}"
+        
+        # 2. Χρήση του get_or_create_user για τη δημιουργία/ανάκτηση του Guest χρήστη
+        # Δίνουμε ένα ψεύτικο, μοναδικό email.
+        # Θέτουμε 'guest' ως provider
+        try:
+            user = get_or_create_user(
+                email=f"guest_{guest_display_name}@{uuid.uuid4().hex[:8]}.com", # Μοναδικό ψεύτικο email
+                display_name=guest_display_name,
+                provider='guest'
+            )
+            
+            # 3. Δημιουργία Session και Redirect
+            session['user_id'] = user.id
+            session.permanent = False # Οι Guest sessions δεν είναι μόνιμες
+            
+            return redirect(url_for('chat'))
+        
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error during guest login: {e}")
+            return redirect(url_for('login', error='Guest login failed due to server error.'))
+
 
     @app.route('/auth/google')
     def google_auth():
