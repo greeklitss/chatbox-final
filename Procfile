@@ -1,1 +1,1 @@
-web: gunicorn --worker-class eventlet -w 1 server:create_app()
+web: gunicorn --worker-class eventlet -w 1 "server:create_app()"

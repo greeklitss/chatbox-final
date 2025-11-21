@@ -1,118 +1,330 @@
 <!DOCTYPE html>
-<html>
+<html lang="el">
 <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
-    <title>AkoY Me Chat</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="icon" href="{{ url_for('static', filename='default_avatar.png') }}" type="image/png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBox - Συνδεδεμένος ως {{ user.display_name }}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Socket.IO Client -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        /* Προσαρμοσμένο Scrollbar - κάνει το chatbox να φαίνεται πιο καθαρό */
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 4px;
+        }
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background-color: #555;
+        }
+        /* Προσαρμοσμένο style για τα Emoticons, ώστε να έχουν σταθερό μέγεθος */
+        .emoticon-img {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            margin: 0 1px;
+        }
+    </style>
 </head>
+<body class="bg-gray-100 flex h-screen antialiased">
 
-<body style="background-image: url('{{ url_for('static', filename='akoyme_background.png') }}'); 
-             background-size: cover; 
-             background-position: center;
-             background-attachment: fixed;"> 
-    
-    <div class="main-header">
-        <h1 id="chat-name-header">AkoY Me Chat</h1>
-        
-        <div class="header-tools">
-            
-            <audio id="audio-stream" src="/radio_proxy" loop preload="auto" style="display:none;"></audio>
-            
-            <button id="radio-toggle-button" title="Web Radio ON/OFF" class="radio-off">
-                <i class="fas fa-compact-disc"></i> 
-            </button>
-            
-            <div id="radio-metadata" class="radio-metadata-display">Loading Radio Data...</div> 
-            
-            <button id="admin-button" title="Admin Panel" style="display:none;"><i class="fas fa-tools"></i> Admin</button>
+    <!-- Κύριο Περιβάλλον Εφαρμογής -->
+    <div class="flex-1 flex flex-col">
+        <!-- Επικεφαλίδα και Ραδιόφωνο (προαιρετικό) -->
+        <header class="bg-white p-4 shadow-md flex justify-between items-center z-10">
+            <h1 class="text-2xl font-bold text-indigo-600">ChatBox</h1>
+            <div class="flex items-center space-x-4">
+                {% if settings.feature_radio == 'True' and radio_url %}
+                <audio controls loop class="h-8">
+                    <source src="{{ radio_url }}" type="audio/mpeg">
+                    Ο browser σας δεν υποστηρίζει το στοιχείο ήχου.
+                </audio>
+                {% endif %}
+                <span class="text-gray-700">Συνδεδεμένος ως: <span class="font-semibold" style="color: {{ user.color }};">{{ user.display_name }}</span></span>
+                <a href="{{ url_for('logout') }}" class="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full hover:bg-red-600 transition duration-150">
+                    Έξοδος
+                </a>
+            </div>
+        </header>
 
-            <button id="notification-volume-button" title="Notification Sound ON/OFF"><i class="fas fa-bell"></i></button>
-        </div>
-    </div>
+        <!-- Κυρίως Περιεχόμενο: Chat Area & Users Sidebar -->
+        <main class="flex-1 flex overflow-hidden">
+            
+            <!-- Chat Area (Μηνύματα & Εισαγωγή) -->
+            <div class="flex flex-col flex-grow w-full lg:w-3/4 bg-white border-r">
+                
+                <!-- Μηνύματα -->
+                <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-4 chat-container">
+                    <!-- Τα αρχικά μηνύματα φορτώνονται εδώ -->
+                    {% for message in initial_messages %}
+                        <div id="msg-{{ message.id }}" class="flex items-start space-x-3">
+                            <img src="{{ message.avatar_url }}" alt="{{ message.username }}" class="w-10 h-10 rounded-full object-cover">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-semibold text-sm" style="color: {{ message.color }};">{{ message.username }}</span>
+                                    <span class="text-xs text-gray-500">{{ message.timestamp }}</span>
+                                </div>
+                                <div class="bg-gray-50 p-2 rounded-lg shadow-sm text-gray-800 break-words max-w-lg md:max-w-xl message-content">{{ message.content|safe }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
 
-    <div class="chat-container">
+                <!-- Εισαγωγή Μηνυμάτων -->
+                <div class="p-4 border-t bg-gray-50">
+                    <!-- Toolbar για μορφοποίηση -->
+                    <div class="flex space-x-2 mb-2">
+                        {% if settings.feature_bold == 'True' %}
+                        <button id="btn-bold" class="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg font-bold hover:bg-indigo-200 transition duration-150">B</button>
+                        {% endif %}
+                        {% if settings.feature_italic == 'True' %}
+                        <button id="btn-italic" class="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg italic hover:bg-indigo-200 transition duration-150">I</button>
+                        {% endif %}
+                        {% if settings.feature_underline == 'True' %}
+                        <button id="btn-underline" class="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg underline hover:bg-indigo-200 transition duration-150">U</button>
+                        {% endif %}
+                        <!-- Emoticon Dropdown -->
+                        <div class="relative inline-block text-left">
+                            <button id="btn-emoticon" class="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition duration-150">
+                                😀
+                            </button>
+                            <div id="emoticon-dropdown" class="absolute bottom-full mb-1 left-0 z-20 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden p-2 grid grid-cols-4 gap-1">
+                                <!-- Emoticons θα εισαχθούν εδώ από το JS -->
+                            </div>
+                        </div>
+                        
+                    </div>
+                    
+                    <form id="message-form" class="flex space-x-3">
+                        <input type="text" id="message-input" placeholder="Πληκτρολογήστε το μήνυμά σας..." maxlength="{{ settings.max_message_length }}" autocomplete="off"
+                               class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                        <button type="submit" class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 flex items-center justify-center">
+                            Αποστολή
+                        </button>
+                    </form>
+                    <p class="text-xs text-gray-500 mt-1">Μέγιστο μήκος: {{ settings.max_message_length }} χαρακτήρες.</p>
+                </div>
+            </div>
 
-        <div class="chat-box" id="chat-box"> 
-        </div>
+            <!-- Online Users Sidebar -->
+            <div class="hidden lg:block w-1/4 bg-gray-50 p-4 shadow-inner overflow-y-auto">
+                <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-3">Online Χρήστες (<span id="online-count">0</span>)</h2>
+                <div id="online-users-list" class="space-y-2">
+                    <!-- Οι online χρήστες θα εισαχθούν εδώ από το SocketIO -->
+                </div>
+            </div>
+        </main>
+    </div>
 
-        <div class="online-users-sidebar" id="online-users-list">
-            <h4>Online Users (<span id="online-users-count">0</span>)</h4>
-        </div>
-    </div> 
-    
-    <div class="chat-footer">
-        
-        <div class="message-toolbar">
-            <button id="bold-button" title="Bold [b]"><i class="fas fa-bold"></i></button>
-            <button id="italic-button" title="Italic [i]"><i class="fas fa-italic"></i></button>
-            <button id="underline-button" title="Underline [u]"><i class="fas fa-underline"></i></button>
-            <button id="size-button" title="Font Size [size=N]"><i class="fas fa-text-height"></i></button>
-            **<button id="link-button" title="Link [url=link]text[/url]"><i class="fas fa-link"></i></button>**
-            <button id="gif-button" title="Image/GIF [img]"><i class="far fa-image"></i></button>
-            
-            <div class="color-picker-wrapper">
-                <input type="color" id="color-input" value="#FF0066" style="display: none;">
-                <button id="color-picker-button" title="Text Color" style="color: #FF0066;"><i class="fas fa-palette"></i></button>
-            </div>
-            
-            <div class="emoticon-wrapper">
-                <button id="emoticon-button" title="Emoticons"><i class="far fa-smile"></i></button> 
-                **<div id="emoticon-selector" class="emoticon-selector" style="display: none;">**
-                    ****
-                **</div>**
-            </div>
-        </div>
+    <script>
+        // Φορτώνει τα δεδομένα από το Flask
+        // ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε JSON.parse() με μονά εισαγωγικά και | tojson | safe.
+        // Αυτό διορθώνει τα προβλήματα escaping όταν το JSON περιέχει διπλά εισαγωγικά ή newlines.
+        const initialMessages = JSON.parse('{{ initial_messages | tojson | safe }}');
+        const emoticons = JSON.parse('{{ emoticons | tojson | safe }}');
+        const currentUser = JSON.parse('{{ user | tojson | safe }}');
+        const settings = JSON.parse('{{ settings | tojson | safe }}');
+        
+        const socket = io();
+        const messagesContainer = document.getElementById('messages-container');
+        const messageInput = document.getElementById('message-input');
+        const emoticonDropdown = document.getElementById('emoticon-dropdown');
+        
+        // --- Utility Functions ---
 
-        <div class="message-input-area">
-            <textarea id="message-input" placeholder="Type your message... (Shift+Enter for new line)" rows="1"></textarea>
-            <button id="send-button" title="Send Message (Enter)">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
-        
-        <div class="user-info-bar">
-            <div class="user-profile">
-                <img src="{{ user.avatar_url if user.avatar_url else url_for('static', filename='default_avatar.png') }}" alt="User Avatar" class="small-avatar" id="current-user-avatar">
-                <span class="user-display-name">{{ user.display_name }}</span>
-                <span class="user-role-text">({{ user.role }})</span>
-            </div>
-            <a href="{{ url_for('logout') }}" class="logout-link" title="Logout">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </div>
-        
-    </div>
-    
-    <script src="{{ url_for('static', filename='main.js') }}"></script>
-    <script>
-// 🚨 ΚΡΙΣΙΜΟ: ΠΕΡΝΑΜΕ ΤΑ GLOBAL SETTINGS ΚΑΙ EMOTICONS ΑΠΟ ΤΟ FLASK ΣΤΟ JAVASCRIPT
-        const globalSettings = {{ settings | tojson }};
-        const globalEmoticons = {{ emoticons | tojson }};
+        /**
+         * Μετατρέπει το απλό κείμενο σε HTML, αντικαθιστά τους κωδικούς emoticon 
+         * με εικόνες και προσθέτει βασική μορφοποίηση.
+         */
+        function parseMessageContent(content) {
+            let processedContent = content;
+            
+            // 1. Αντικατάσταση Emoticons (πρέπει να γίνει πρώτα)
+            for (const code in emoticons) {
+                const url = emoticons[code];
+                const imgTag = `<img src="${url}" alt="${code}" class="emoticon-img" title="${code}">`;
+                // Χρησιμοποιούμε regex με escape για να αντικαταστήσουμε μόνο ολόκληρες λέξεις (κωδικούς)
+                const regex = new RegExp(escapeRegExp(code), 'g');
+                processedContent = processedContent.replace(regex, imgTag);
+            }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Ρύθμιση έντασης του Web Radio (Προσθήκη)
-            const audio = document.getElementById('audio-stream');
-            if (audio) {
-                audio.volume = 0.3; 
-            }
-            
-            // ΕΛΕΓΧΟΣ ΡΟΛΟΥ ΧΡΗΣΤΗ ΓΙΑ ΤΟ ADMIN BUTTON
-            const currentUserRole = "{{ user.role }}"; // Παίρνουμε τον ρόλο από το Flask
-            const adminButton = document.getElementById('admin-button');
+            // 2. Μορφοποίηση κειμένου (αντικαθιστά tags τύπου [b]text[/b])
+            if (settings.feature_bold === 'True') {
+                 processedContent = processedContent.replace(/\[b\](.*?)\[\/b\]/gi, '<b>$1</b>');
+            }
+            if (settings.feature_italic === 'True') {
+                 processedContent = processedContent.replace(/\[i\](.*?)\[\/i\]/gi, '<i>$1</i>');
+            }
+            if (settings.feature_underline === 'True') {
+                 processedContent = processedContent.replace(/\[u\](.*?)\[\/u\]/gi, '<u>$1</u>');
+            }
+            
+            // Κρατάμε τις αλλαγές γραμμής
+            processedContent = processedContent.replace(/\n/g, '<br>');
 
-            if (adminButton && (currentUserRole === 'admin' || currentUserRole === 'owner')) {
-                adminButton.style.display = 'inline-block';
-                adminButton.addEventListener('click', () => {
-                    window.location.href = '/admin_panel'; }); 
-            }
-        });
-    </script>
+            return processedContent;
+        }
+
+        /** Βοηθητική συνάρτηση για την escape των regex χαρακτήρων */
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        /** Δημιουργεί το HTML για ένα μήνυμα και το προσθέτει στο container. */
+        function createMessageElement(message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'flex items-start space-x-3';
+            messageElement.id = `msg-${message.id}`;
+            
+            // Προσοχή: Επειδή το message.content έρχεται από τον server, 
+            // αν δεν έχει γίνει parseMessageContent() στο Python, το κάνουμε εδώ.
+            const contentHTML = parseMessageContent(message.content);
+
+            messageElement.innerHTML = `
+                <img src="${message.avatar_url}" alt="${message.username}" class="w-10 h-10 rounded-full object-cover">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-semibold text-sm" style="color: ${message.color};">${message.username}</span>
+                        <span class="text-xs text-gray-500">${message.timestamp}</span>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded-lg shadow-sm text-gray-800 break-words max-w-lg md:max-w-xl message-content">${contentHTML}</div>
+                </div>
+            `;
+            messagesContainer.appendChild(messageElement);
+        }
+
+        /** Σκρολάρει στο κάτω μέρος του container. */
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // --- Event Listeners & SocketIO Handlers ---
+
+        // 1. Φόρμα Αποστολής Μηνύματος
+        document.getElementById('message-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const content = messageInput.value.trim();
+
+            if (content.length > 0 && content.length <= parseInt(settings.max_message_length)) {
+                socket.emit('new_message', { 
+                    content: content, 
+                    room: 'main' // Προς το παρόν, μόνο main room
+                });
+                messageInput.value = ''; // Καθαρισμός του input
+            } else if (content.length > parseInt(settings.max_message_length)) {
+                // ΔΙΟΡΘΩΣΗ: Αντικατάσταση alert() με console.error ή custom UI
+                console.error(`Το μήνυμα είναι πολύ μεγάλο. Μέγιστο: ${settings.max_message_length} χαρακτήρες.`);
+                // Εναλλακτικά, θα μπορούσε να εμφανιστεί ένα μήνυμα στο UI.
+            }
+        });
+
+        // 2. Λήψη Νέου Μηνύματος
+        socket.on('new_message', function(message) {
+            createMessageElement(message);
+            scrollToBottom();
+        });
+        
+        // 3. Ενημέρωση Online Χρηστών
+        socket.on('online_users_update', function(data) {
+            const listContainer = document.getElementById('online-users-list');
+            const countElement = document.getElementById('online-count');
+            listContainer.innerHTML = ''; // Καθαρισμός λίστας
+
+            data.users.forEach(user => {
+                const userElement = document.createElement('div');
+                userElement.className = 'flex items-center space-x-3 p-2 bg-white rounded-lg shadow-sm';
+                userElement.innerHTML = `
+                    <img src="${user.avatar_url}" alt="${user.display_name}" class="w-8 h-8 rounded-full object-cover">
+                    <span class="font-medium text-sm" style="color: ${user.color};">${user.display_name}</span>
+                    <span class="text-xs text-gray-400">(${user.role})</span>
+                `;
+                listContainer.appendChild(userElement);
+            });
+            countElement.textContent = data.users.length;
+        });
+
+        // 4. Χειρισμός Εργαλείων Μορφοποίησης (Bold, Italic, Underline)
+        function applyFormatting(tag) {
+            const startTag = `[${tag}]`;
+            const endTag = `[/${tag}]`;
+            let input = messageInput;
+            let value = input.value;
+            let start = input.selectionStart;
+            let end = input.selectionEnd;
+
+            if (start !== undefined && end !== undefined && start !== end) {
+                // Περιβάλλουμε την επιλεγμένη περιοχή
+                const selectedText = value.substring(start, end);
+                const newText = startTag + selectedText + endTag;
+                input.value = value.substring(0, start) + newText + value.substring(end);
+                input.focus();
+                // Τοποθετούμε τον κέρσο μετά το τέλος
+                input.selectionStart = start + newText.length;
+                input.selectionEnd = start + newText.length;
+            } else {
+                // Απλά προσθέτουμε τα tags στο τέλος
+                input.value += startTag + endTag;
+                input.focus();
+                // Τοποθετούμε τον κέρσο ανάμεσα στα tags
+                input.selectionStart = input.selectionEnd = input.value.length - endTag.length;
+            }
+        }
+        
+        document.getElementById('btn-bold')?.addEventListener('click', (e) => { e.preventDefault(); applyFormatting('b'); });
+        document.getElementById('btn-italic')?.addEventListener('click', (e) => { e.preventDefault(); applyFormatting('i'); });
+        document.getElementById('btn-underline')?.addEventListener('click', (e) => { e.preventDefault(); applyFormatting('u'); });
+
+        // 5. Φόρτωση και Χειρισμός Emoticons
+        const btnEmoticon = document.getElementById('btn-emoticon');
+        if (btnEmoticon) {
+            // Γέμισμα του dropdown με τα emoticons
+            for (const code in emoticons) {
+                const url = emoticons[code];
+                const emoticonBtn = document.createElement('button');
+                emoticonBtn.className = 'p-1 hover:bg-gray-100 rounded-md transition duration-100';
+                emoticonBtn.innerHTML = `<img src="${url}" alt="${code}" class="w-6 h-6 emoticon-img" title="${code}">`;
+                
+                emoticonBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // Εισάγουμε τον κωδικό του emoticon στο πεδίο κειμένου
+                    messageInput.value += ` ${code} `;
+                    messageInput.focus();
+                    emoticonDropdown.classList.add('hidden');
+                });
+                emoticonDropdown.appendChild(emoticonBtn);
+            }
+
+            // Εναλλαγή εμφάνισης/απόκρυψης του dropdown
+            btnEmoticon.addEventListener('click', (e) => {
+                e.preventDefault();
+                emoticonDropdown.classList.toggle('hidden');
+            });
+
+             // Κρύψιμο του dropdown αν κάνουμε κλικ αλλού
+            document.addEventListener('click', function(event) {
+                if (!emoticonDropdown.contains(event.target) && !btnEmoticon.contains(event.target)) {
+                    emoticonDropdown.classList.add('hidden');
+                }
+            });
+        }
+
+
+        // 6. Τελική Αρχικοποίηση
+        window.onload = function() {
+            // Μετατρέπουμε τα αρχικά μηνύματα σε HTML
+            const initialElements = messagesContainer.querySelectorAll('.message-content');
+            initialElements.forEach(el => {
+                el.innerHTML = parseMessageContent(el.textContent);
+            });
+
+            // Κάνουμε scroll στο κάτω μέρος όταν φορτωθεί η σελίδα
+            scrollToBottom();
+        };
+
+    </script>
 </body>
 </html>
