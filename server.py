@@ -402,7 +402,7 @@ def create_app(test_config=None):
     @socketio.on('disconnect')
     def handle_disconnect():
         # 💡 ΔΙΟΡΘΩΣΗ: Προσθέστε 'pass' αν δεν θέλετε να κάνει τίποτα
-        pass.
+        pass
 
     @socketio.on('new_message')
     def handle_new_message(data):
