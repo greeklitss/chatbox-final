@@ -1,4 +1,3 @@
-# db_init.py
 import os
 import sys
 
@@ -7,7 +6,9 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # 🚨 Κρίσιμη εισαγωγή: Εισάγουμε όλα τα απαραίτητα μοντέλα και συναρτήσεις
 try:
-    from server import db, app, initialize_settings, initialize_emoticons, User, Message, Setting, Emoticon
+    # 💡 ΔΙΟΡΘΩΣΗ: Εισάγουμε τη συνάρτηση create_app() αντί για την app
+    # και το μοντέλο Settings (αν δεν υπήρχε)
+    from server import db, create_app, initialize_settings, initialize_emoticons, User, Message, Settings, Emoticon 
 except ImportError as e:
     print(f"FATAL ERROR: Could not import models/functions from server.py. Ensure server.py is updated.")
     print(f"Original Error: {e}")
@@ -15,6 +16,11 @@ except ImportError as e:
 
 
 def init_db():
+    # 🚨 ΚΡΙΣΙΜΟ: Καλούμε την create_app() για να πάρουμε την instance του app 
+    # και να δημιουργήσουμε το application context.
+    # Αυτό ΔΕΝ προκαλεί διπλή αρχικοποίηση, καθώς δεν καλείται η socketio.run().
+    app = create_app() 
+    
     print("--- Starting Database Initialization ---")
     with app.app_context():
         try:
