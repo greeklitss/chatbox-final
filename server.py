@@ -448,23 +448,20 @@ def create_app(test_config=None):
 
 # --- Τερματικό Σημείο: Εκτέλεση του Server (για local dev) ---
 
+# Αυτό το block είναι μόνο για τοπική εκτέλεση (π.χ. python server.py)
 if __name__ == '__main__':
     app = create_app()
-<<<<<<< HEAD
-    port = int(os.environ.get('PORT', 10000))
-    print("Starting Flask-SocketIO server locally with default mode...")
-    # 🚨 ΤΡΕΞΤΕ ΧΩΡΙΣ EVENTLET/GUNICORN ΓΙΑ ΝΑ ΔΕΙΤΕ ΤΟ ΣΦΑΛΜΑ
-    socketio.run(app, host='0.0.0.0', port=port, debug=True, allow_unsafe_werkzeug=True)
-=======
-    # ... (ο κώδικας εκτέλεσης παραμένει ίδιος) ...
+    print("Starting Flask-SocketIO server locally...")
+    # 🚨 ΟΡΙΖΟΥΜΕ ΤΟ PORT ΝΑ ΠΡΟΕΡΧΕΤΑΙ ΑΠΟ ΤΟ ΠΕΡΙΒΑΛΛΟΝ, με fallback στο 10000
     port = int(os.environ.get('PORT', 10000)) 
     
+    # 🚨 Κρίσιμο: Πρέπει να χρησιμοποιούμε eventlet/gunicorn για παραγωγή. 
+    # Εδώ απλά τρέχουμε τοπικά με eventlet, αν είναι διαθέσιμο.
     try:
         import eventlet
-        eventlet.monkey_patch() 
-        print("Using eventlet for SocketIO.")
+        eventlet.monkey_patch() # Patch για SocketIO με eventlet
         socketio.run(app, host='0.0.0.0', port=port, debug=True)
     except ImportError:
-        print("Eventlet not found. Running with default Flask server. WARNING: Not suitable for production.")
+        # Fallback αν δεν βρεθεί το eventlet
+        print("Warning: eventlet not found. Running with default Flask server (not recommended for production).")
         socketio.run(app, host='0.0.0.0', port=port, debug=True)
->>>>>>> db06065a26cd62870dff87667687bf148f2b9b21
