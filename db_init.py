@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 try:
     # 💡 ΔΙΟΡΘΩΣΗ: Εισάγουμε τη συνάρτηση create_app() αντί για την app
     # και το μοντέλο Settings (αν δεν υπήρχε)
-    from server import db, create_app, initialize_settings, initialize_emoticons, User, Message, Settings, Emoticon 
+    from server import db, create_app, initialize_settings, initialize_emoticons, User, Message, Setting, Emoticon 
 except ImportError as e:
     print(f"FATAL ERROR: Could not import models/functions from server.py. Ensure server.py is updated.")
     print(f"Original Error: {e}")
