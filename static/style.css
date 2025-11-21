@@ -21,409 +21,374 @@
 }
 
 body {
-    background-color: #1f2328; 
-    color: var(--text-color);
-    /* ΚΡΙΣΙΜΟ: ΔΙΑΣΦΑΛΙΣΗ body ΩΣ FLEX CONTAINER ΠΛΗΡΟΥΣ ΥΨΟΥΣ */
+    /* 🚨 Αφαίρεση του background-color: #1f2833; και χρήση μόνο της εικόνας που ορίζεται στο chat.html */
     display: flex;
-    flex-direction: column;
-    height: 100vh; 
-    overflow: hidden; /* Αποτρέπουμε το scroll της ίδιας της σελίδας */
-    font-size: 16px;
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-}
-
-/* ---------------------------------------------------- */
-/* 1. HEADER & TOOLS */
-/* ---------------------------------------------------- */
-
-.header-tools {
-    display: flex;
-    justify-content: space-between; 
+    justify-content: center;
     align-items: center;
-    padding: 10px 20px;
-    background-color: rgba(0, 0, 0, 0.5); /* Ελαφρώς πιο διαφανές από το dark */
-    border-bottom: 2px solid var(--primary-color); 
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
-    flex-shrink: 0; /* Δεν συρρικνώνεται */
-}
-
-/* Header controls (Admin, Volume, etc) */
-.header-controls {
-    display: flex;
-    align-items: center;
-}
-.header-controls button {
-    background: none;
-    border: none;
-    color: var(--secondary-color);
-    font-size: 1.2em;
-    cursor: pointer;
-    margin-left: 10px;
-    padding: 5px;
-    transition: color 0.2s;
-}
-.header-controls button:hover {
-    color: var(--primary-color);
-}
-
-/* Web Radio Stream Toggle */
-#radio-toggle-button {
-    background: none;
-    border: none;
-    font-size: 1.8em; 
-    cursor: pointer;
-    padding: 5px;
-    margin-right: 15px;
-    transition: all 0.3s;
-    flex-shrink: 0; 
-}
-
-/* Gray/Off Style για το OFF state */
-#radio-toggle-button.radio-off {
-    color: #888888;
-    text-shadow: none;
-    animation: none;
-}
-
-/* Neon/Funky Style για το ON state */
-#radio-toggle-button.radio-on {
-    color: var(--primary-color); 
-    /* Neon Glow */
-    text-shadow: 0 0 8px var(--primary-color), 0 0 15px var(--primary-color);
-    animation: spin 3s linear infinite; /* Εφέ περιστροφής */
-}
-
-/* Keyframes για το εφέ περιστροφής */
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    min-height: 100vh;
+    width: 100%;
+    /* Διασφάλιση ότι το <body> καταλαμβάνει όλο τον χώρο */
+    min-width: 100vw;
 }
 
 /* ---------------------------------------------------- */
-/* 2. ΚΕΝΤΡΙΚΟ LAYOUT & CONTAINER (FLEX) */
+/* 1. LAYOUT & ΓΕΝΙΚΟ ΣΤΥΛ */
 /* ---------------------------------------------------- */
 
 .chat-wrapper {
-    flex-grow: 1; /* Καταλαμβάνει τον υπόλοιπο χώρο */
     display: flex;
-    justify-content: center; /* Κεντράρισμα οριζόντια */
-    align-items: flex-start; 
-    padding: 15px 10px;
-    min-height: 0;
-    overflow: hidden;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px;
 }
 
 .chat-container {
-    display: flex; 
-    flex-direction: row; 
     width: 90%;
     max-width: 1200px;
-    flex-grow: 1; /* Παίρνει το ύψος από το chat-wrapper */
-    min-height: 80vh; 
-    background-color: var(--background-dark);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-    border-radius: 10px;
-    overflow: hidden; /* Κρύβει περιττό scroll */
-}
-
-/* Main Chat Area (Messages) */
-.main-chat-area {
+    height: 90vh; /* Κρατάμε σταθερό ύψος για να φαίνεται η δομή */
+    min-height: 600px;
+    background-color: var(--background-dark); /* Σκούρο διαφανές φόντο */
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), 0 0 10px var(--secondary-color); /* Neon Shadow */
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-    min-width: 0;
-    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
 }
 
-#chat-box {
-    flex-grow: 1;
-    overflow-y: auto; /* ΟΡΙΖΕΙ ΤΗΝ ΕΣΩΤΕΡΙΚΗ ΚΥΛΙΣΗ ΕΔΩ */
-    padding: 15px;
-    min-height: 200px;
-    background-color: transparent; 
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color);
+    flex-shrink: 0; /* Δεν συρρικνώνεται */
 }
 
-/* Webkit Scrollbar Styling (Chrome/Safari) */
-#chat-box::-webkit-scrollbar,
-.online-users-list::-webkit-scrollbar {
-    width: 8px;
-}
-#chat-box::-webkit-scrollbar-thumb,
-.online-users-list::-webkit-scrollbar-thumb {
-    background-color: var(--primary-color);
-    border-radius: 10px;
-}
-#chat-box::-webkit-scrollbar-track,
-.online-users-list::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
+.chat-main-content {
+    display: flex;
+    flex-grow: 1; /* Καταλαμβάνει τον υπόλοιπο χώρο */
+    overflow: hidden; /* Απαραίτητο για το σωστό scroll του message-area */
 }
 
-/* Sidebar (Online Users List) */
-.online-users-list {
-    width: 250px; 
-    min-width: 200px;
-    flex-shrink: 0;
-    padding: 15px;
-    background-color: rgba(0, 0, 0, 0.3); /* Πιο σκούρο background */
-    border-left: 1px solid var(--border-color);
-    overflow-y: auto; 
-    font-size: 0.9em;
-}
+/* ---------------------------------------------------- */
+/* 2. HEADER & ΧΡΗΣΤΕΣ */
+/* ---------------------------------------------------- */
 
-/* ΣΤΥΛ ΡΟΛΩΝ ΣΤΗ ΛΙΣΤΑ ONLINE */
-.online-users-list h4 {
-    margin-bottom: 10px;
-    border-bottom: 1px solid rgba(0, 230, 230, 0.3); /* Cyan border */
-    padding-bottom: 5px;
+.user-info {
+    display: flex;
+    align-items: center;
+    font-size: 1.1em;
     font-weight: 700;
+}
+
+.user-avatar {
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+    border: 2px solid var(--primary-color);
+}
+
+.user-role-text {
+    font-size: 0.8em;
+    font-weight: 400;
+    margin-left: 5px;
     color: var(--secondary-color);
 }
+
+.header-controls a {
+    color: var(--text-color);
+    text-decoration: none;
+    margin-left: 15px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+    font-weight: 700;
+}
+
+.header-controls a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.admin-link {
+    color: var(--secondary-color) !important;
+}
+
+/* Online Users List */
+.online-users-list {
+    width: 250px;
+    flex-shrink: 0;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-left: 1px solid var(--border-color);
+    color: var(--text-color);
+    overflow-y: auto;
+}
+
+.online-users-list h2 {
+    font-size: 1.2em;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    font-weight: 900;
+    color: var(--primary-color);
+}
+
 .online-users-list ul {
     list-style: none;
     padding: 0;
 }
-.online-users-list li {
-    font-size: 0.95em;
-    margin-bottom: 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+
+.user-list-item {
     display: flex;
     align-items: center;
+    padding: 5px 0;
+    font-size: 0.9em;
+    color: var(--text-color);
 }
-.online-users-list .fa-circle {
-    margin-right: 5px;
+
+.user-list-item img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 8px;
+    object-fit: cover;
+    border: 1px solid var(--secondary-color);
+}
+
+.user-role {
     font-size: 0.7em;
+    margin-left: auto;
+    padding: 2px 5px;
+    border-radius: 5px;
+    font-weight: 700;
 }
-.online-users-list .owner-text { color: var(--primary-color) !important; font-weight: bold; } /* Owner - Hot Pink */
-.online-users-list .admin-text { color: var(--secondary-color) !important; font-weight: bold; } /* Admin - Bright Cyan */
 
+.role-user {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--default-user-color);
+}
+.role-admin {
+    background-color: rgba(0, 230, 230, 0.2);
+    color: var(--secondary-color);
+}
+.role-owner {
+    background-color: rgba(255, 51, 153, 0.2);
+    color: var(--primary-color);
+}
 
 /* ---------------------------------------------------- */
-/* 3. MESSAGE ELEMENTS */
+/* 3. MESSAGE AREA & ΜΗΝΥΜΑΤΑ */
 /* ---------------------------------------------------- */
 
-.message-container {
+.message-area {
+    flex-grow: 1;
+    padding: 15px 20px;
+    overflow-y: auto; /* Το κύριο scrollable μέρος */
     display: flex;
-    align-items: flex-start;
-    margin-bottom: 15px;
+    flex-direction: column;
 }
 
-.avatar {
+.message-item {
+    display: flex;
+    margin-bottom: 12px;
+    align-items: flex-start;
+    padding: 5px;
+    border-radius: 10px;
+    transition: background-color 0.3s;
+}
+
+.message-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.message-avatar {
     width: var(--avatar-size);
     height: var(--avatar-size);
     border-radius: 50%;
-    margin-right: 10px;
     object-fit: cover;
-    border: 2px solid var(--secondary-color);
+    margin-right: 10px;
     flex-shrink: 0;
 }
 
-.message-content {
-    flex-grow: 1;
-    min-width: 0; 
-}
-
-.message-header {
+.message-content-wrapper {
     display: flex;
-    align-items: baseline;
-    margin-bottom: 2px;
+    flex-direction: column;
+    max-width: calc(100% - var(--avatar-size) - 20px);
 }
 
-.username {
+.message-header-line {
+    display: flex;
+    align-items: center;
+    margin-bottom: 3px;
+    line-height: 1.2;
+}
+
+.message-username {
     font-weight: 700;
     margin-right: 10px;
-    font-size: 1.1em;
-    text-shadow: 0 0 5px currentColor; /* Neon effect */
+    word-break: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.owner-icon { color: var(--primary-color); margin-left: 3px; }
-.admin-icon { color: var(--secondary-color); margin-left: 3px; }
-
-.timestamp {
+.message-timestamp {
     font-size: 0.75em;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
 }
 
-.message-box {
-    background-color: rgba(255, 255, 255, 0.2); 
-    color: var(--text-color);
-    padding: 10px 15px;
-    border-radius: 0 18px 18px 18px; /* Διορθωμένο: Κλασσικό στυλ chat */
+.message-text {
     word-wrap: break-word;
-    white-space: pre-wrap;
+    font-size: 0.95em;
     line-height: 1.4;
-    max-width: 100%;
-    /* 🚨 ΔΙΟΡΘΩΣΗ: Αφαίρεση text-align: center */
-    text-align: left; 
-    overflow: hidden; 
+    color: var(--default-user-color);
 }
 
-.message-box a {
-    color: var(--secondary-color);
-    text-decoration: underline;
-    word-break: break-all;
-}
-
-.message-box img {
-    display: block;
-    margin-top: 5px;
-    max-width: 100%;
-    height: auto;
-    border-radius: 5px;
-}
-
-.message-box .emoticon-img {
-    width: 20px;
-    height: 20px;
-    vertical-align: middle;
-    margin: 0 1px;
-    display: inline-block;
-}
-
-/* Στυλ Μηνυμάτων Συστήματος */
+/* System Message Style */
 .system-message {
     text-align: center;
-    margin: 15px 0;
+    margin: 10px 0;
     font-style: italic;
+    color: var(--system-color);
+    font-size: 0.85em;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+    padding-bottom: 5px;
 }
 
-.system-message .system-text {
-    background-color: rgba(0, 0, 0, 0.5); /* Πιο σκούρο background */
-    color: var(--system-color);
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 0.9em;
-    border: 1px solid rgba(255, 193, 7, 0.3);
-    display: inline-block;
+/* BBCode styles in message text (for rendering) */
+.bbcode-b { font-weight: bold; }
+.bbcode-i { font-style: italic; }
+.bbcode-u { text-decoration: underline; }
+.bbcode-color { color: var(--primary-color); } /* Placeholder, θα αντικατασταθεί από το JS */
+.bbcode-img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-top: 5px;
+    display: block;
+    border: 1px solid var(--primary-color);
+}
+.bbcode-emoticon {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    margin: 0 2px;
 }
 
 /* ---------------------------------------------------- */
-/* 4. FOOTER & MESSAGE INPUT AREA */
+/* 4. INPUT AREA & BUTTONS */
 /* ---------------------------------------------------- */
 
 .message-input-area {
     display: flex;
-    align-items: flex-end; 
-    width: 90%;
-    max-width: 1200px;
-    margin: 0 auto 15px auto; /* Margin κάτω */
-    padding: 10px;
-    background-color: var(--background-dark); 
-    border-radius: 10px;
+    flex-direction: column;
+    padding: 10px 20px;
+    background-color: rgba(0, 0, 0, 0.5);
     border-top: 1px solid var(--border-color);
-    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.5);
-    flex-shrink: 0; 
+    flex-shrink: 0;
+    position: relative; /* Για το emoticon selector */
 }
 
-/* Ομάδα των κουμπιών μορφοποίησης */
 .format-tools {
     display: flex;
-    flex-shrink: 0; 
-    align-items: center; 
-    margin-right: 10px;
-    padding: 5px 0;
+    gap: 8px;
+    margin-bottom: 10px;
 }
 
-.format-tools button {
-    background: none;
+.format-tools button, #send-btn {
+    background-color: var(--secondary-color);
+    color: #1f2833;
     border: none;
-    color: var(--secondary-color); 
-    font-size: 1.4em; 
+    padding: 8px 12px;
+    border-radius: 8px;
     cursor: pointer;
-    margin-right: 8px; 
-    padding: 6px; 
-    transition: color 0.2s, text-shadow 0.2s;
-    text-shadow: 0 0 5px rgba(0, 230, 230, 0.7); 
+    font-size: 1em;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    font-weight: 700;
 }
 
-.format-tools button:hover {
-    color: var(--primary-color);
-    text-shadow: 0 0 8px var(--primary-color), 0 0 15px var(--primary-color);
+.format-tools button:hover, #send-btn:hover {
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 0 10px var(--primary-color);
 }
 
-/* Ειδικό στυλ για το Color Picker */
-#color-picker-button {
-    color: var(--primary-color); 
-    text-shadow: 0 0 5px var(--primary-color); 
-    margin-right: 15px; 
+/* Special button styles */
+#notification-sound-btn, #radio-toggle-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--secondary-color);
+    border: 1px solid var(--secondary-color);
+}
+
+#notification-sound-btn.active, #radio-toggle-btn.radio-on {
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border: 1px solid var(--primary-color);
+}
+
+.input-send-container {
+    display: flex;
+    gap: 10px;
 }
 
 #message-input {
     flex-grow: 1;
-    background-color: var(--input-background); 
-    color: var(--text-color);
+    padding: 10px 15px;
     border: 1px solid var(--border-color);
-    border-radius: 7px;
-    padding: 10px;
-    resize: none;
-    margin-right: 10px;
-    line-height: 1.4;
-    max-height: 100px; 
-    min-height: 38px;
+    border-radius: 8px;
+    background-color: var(--input-background);
+    color: var(--text-color);
     font-size: 1em;
     outline: none;
-    transition: border-color 0.2s, background-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 #message-input:focus {
     border-color: var(--secondary-color);
-    background-color: rgba(255, 255, 255, 0.2);
     box-shadow: 0 0 5px var(--secondary-color);
 }
 
-.message-input-area #send-button {
-    background: var(--primary-color); 
-    transition: background 0.3s, transform 0.1s, box-shadow 0.2s;
-    font-size: 1.1em;
-    padding: 10px 15px;
-    border-radius: 7px;
-    border: none;
-    color: white;
-    cursor: pointer;
-    flex-shrink: 0;
-    height: 38px; /* Ταιριάζει με το min-height του textarea */
+#send-btn {
+    width: 80px;
+    padding: 10px 0;
 }
 
-.message-input-area #send-button:hover {
-    background: #ff85b8; 
-    transform: translateY(-1px);
-    box-shadow: 0 0 10px var(--primary-color);
-}
-
-/* ---------------------------------------------------- */
-/* 5. EMOTICON SELECTOR POPUP */
-/* ---------------------------------------------------- */
-
-#emoticon-selector {
+/* Emoticon Selector Popup */
+.emoticon-selector-popup {
     position: absolute;
-    bottom: 60px; /* Πάνω από το input area */
-    right: 300px; 
-    width: 250px;
-    background-color: rgba(20, 25, 30, 0.98); /* Σχεδόν αδιαφανές */
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    bottom: calc(100% + 10px); /* Πάνω από το input area */
+    right: 20px;
+    background-color: var(--background-dark);
+    border: 1px solid var(--primary-color);
+    border-radius: 10px;
     padding: 10px;
-    z-index: 1000;
+    z-index: 10;
+    max-height: 200px;
+    overflow-y: auto;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-    display: none; /* Αρχικά κρυφό */
+    width: 250px;
 }
 
 .emoticon-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: space-around;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+    gap: 5px;
 }
 
 .emoticon-grid img {
     width: 30px;
     height: 30px;
     cursor: pointer;
-    transition: transform 0.1s;
+    transition: transform 0.2s;
 }
 
 .emoticon-grid img:hover {
@@ -444,7 +409,7 @@ body {
         width: 100%;
         max-width: none;
         height: 100%;
-        min-height: 100%;
+        min-height: 100vh; /* Full height σε κινητά */
         border-radius: 0;
         border: none;
     }
@@ -466,27 +431,35 @@ body {
         order: 1; /* Πηγαίνει τα κουμπιά στην πρώτη γραμμή */
         width: 100%;
         margin-bottom: 10px;
-        padding: 0 5px;
-        justify-content: space-between;
-        margin-right: 0;
+        padding: 0;
+        justify-content: space-between; /* Καλύτερη κατανομή στα κουμπιά */
+        gap: 5px;
+    }
+    
+    .format-tools button {
+        padding: 8px 10px;
+        flex-grow: 1; /* Τα κουμπιά καταλαμβάνουν ίσο χώρο */
+        font-size: 0.85em;
     }
 
-    #message-input {
-        order: 2;
-        margin: 0 5px 0 0;
-        min-height: 45px;
+    .input-send-container {
+        order: 2; /* Πηγαίνει το input και το send στη δεύτερη γραμμή */
+        width: 100%;
+        gap: 8px;
     }
     
-    #send-button {
-        order: 3;
-        width: 50px;
-        padding: 10px 0;
-        height: 45px;
+    #send-btn {
+        width: 60px;
+        font-size: 0.9em;
+        padding: 10px 5px;
     }
-    
-    #emoticon-selector {
-        bottom: 125px; /* Πάνω από την format-tools γραμμή */
-        right: 10px;
+
+    .emoticon-selector-popup {
+        bottom: 100%; /* Ακριβώς πάνω από το input area */
+        left: 50%;
+        transform: translateX(-50%);
+        right: auto;
         width: 95%;
+        max-width: 350px;
     }
 }
