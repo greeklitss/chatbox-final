@@ -42,8 +42,8 @@ class User(db.Model):
     """Μοντέλο Χρήστη."""
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=True)
+    username = db.Column(db.String(80), unique=True, nullable=True) # ΠΡΟΣΘΗΚΗ
+    email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=True) # Για local login
     display_name = db.Column(db.String(80), nullable=False)
     role = db.Column(db.String(20), default='user') # 'user', 'admin', 'owner'
