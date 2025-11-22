@@ -394,7 +394,7 @@ def create_app(test_config=None):
     @app.route('/login/google')
     def google_login():
         # 🚨 Χρειάζεται local import για να βρει το oauth
-        from server import oauth 
+        #from server import oauth 
         
         # 1. Δημιουργία client για το Google
         client = oauth.create_client('google')
@@ -438,7 +438,7 @@ def create_app(test_config=None):
     @app.route('/auth/google')
     def google_auth():
         # 🚨 Χρειάζονται local imports 
-        from server import oauth, db, User, get_or_create_user
+        #from server import oauth, db, User, get_or_create_user
         from authlib.integrations.base_client.errors import OAuthError
 
         client = oauth.create_client('google')
@@ -506,7 +506,7 @@ def create_app(test_config=None):
 
     @socketio.on('new_message')
     def handle_new_message(data):
-        from server import get_current_user_from_session, save_and_emit_message # 🚨 Χρειάζεται local import
+        #from server import get_current_user_from_session, save_and_emit_message # 🚨 Χρειάζεται local import
         
         current_user = get_current_user_from_session()
 
