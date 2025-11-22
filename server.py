@@ -406,7 +406,7 @@ def create_app(test_config=None):
     @app.route('/guest_login', methods=['POST'])
     def guest_login():
         # 🚨 Χρειάζεται local import της get_or_create_user και άλλων helpers
-        from server import get_or_create_user, db, User
+        #from server import get_or_create_user, db, User
         
         # 1. Παραγωγή τυχαίου ονόματος χρήστη για τον Guest
         # Ονομασία: Guest_ + 4 τυχαία ψηφία
