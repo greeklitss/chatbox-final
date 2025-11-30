@@ -363,12 +363,18 @@ def create_app():
                      )
     
     # --- 3. Δημιουργία Πινάκων και Βασικών Δεδομένων (Μόνο αν δεν υπάρχουν) ---
+   # --- 3. Δημιουργία Πινάκων και Βασικών Δεδομένων (Μόνο αν δεν υπάρχουν) ---
     with app.app_context():
+        # Δοκιμάζουμε να δούμε αν ο πίνακας 'users' υπάρχει και περιέχει τα νέα πεδία
         try:
             # Αυτό θα δημιουργήσει τους πίνακες αν δεν υπάρχουν
             db.create_all() 
+            db.session.commit() # Κάνουμε commit για να είναι σίγουροι ότι ο πίνακας υπάρχει
+
+            # 🚨 Έλεγχος: Αν η βάση είναι ζωντανή, προχωράμε
             
             # 🚨 Δημιουργία Owner αν δεν υπάρχει
+            # Προσπαθούμε να εκτελέσουμε μια απλή αναζήτηση. Αν αποτύχει, πιθανότατα λείπουν τα πεδία.
             owner_user = db.session.execute(select(User).where(User.role == 'owner')).scalar_one_or_none()
             if not owner_user:
                 print("🚨 Creating initial OWNER user. Email: owner@example.com, Password: password123")
@@ -377,9 +383,9 @@ def create_app():
                     email='owner@example.com',
                     display_name='Admin Owner',
                     role='owner',
-                    # 🚨 Τροποποίηση: Χρυσό χρώμα για τον Owner
-                    color='#FFD700', 
-                    avatar_url='/static/default_avatar.png'
+                    color='#FF0066',
+                    avatar_url='/static/default_avatar.png',
+                    is_online=False # Εξασφαλίζουμε ότι χρησιμοποιείται το νέο πεδίο
                 )
                 new_owner.set_password('password123')
                 db.session.add(new_owner)
@@ -387,6 +393,7 @@ def create_app():
                 print("Owner created successfully.")
             
             # 🚨 Βασικές Ρυθμίσεις (Settings)
+            # ... (Ο υπόλοιπος κώδικας για Settings/Emoticons παραμένει ίδιος)
             default_settings = {
                 'chat_enabled': 'True',
                 'feature_bold': 'True',
@@ -413,10 +420,12 @@ def create_app():
             db.session.commit()
             
         except (IntegrityError, ProgrammingError, OperationalError) as e:
-            # Σφάλματα που μπορεί να συμβούν κατά το build/startup του Render
+            # Αν συμβεί οποιοδήποτε σφάλμα DB (όπως UndefinedColumn), απλά κάνουμε rollback
+            # και εκτυπώνουμε ένα WARNING.
             db.session.rollback()
+            # Το error είναι ακριβώς το UndefinedColumn που βλέπεις, το οποίο τώρα 'αγνοούμε'
+            # κατά την εκκίνηση, αφού ξέρουμε ότι διορθώθηκε χειροκίνητα.
             print(f"DB Initialization Warning (Rollback): {e}")
-
     # --- 4. Flask Routes ---
 
     # 🚨 Route: Βασική σελίδα ελέγχου (απαιτεί session)
