@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatBox - Συνδεδεμένος ως {{ user.display_name }}</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Socket.IO Client -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         /* Προσαρμοσμένο Scrollbar - κάνει το chatbox να φαίνεται πιο καθαρό */
@@ -28,38 +26,47 @@
             vertical-align: middle;
             margin: 0 1px;
         }
+        /* Κρυφό για browsers που δεν υποστηρίζουν το audio tag */
+        #radio-player {
+            width: 100%;
+            height: 30px; 
+            min-width: 200px; /* Ελάχιστο πλάτος για κινητά */
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex h-screen antialiased">
 
-    <!-- Κύριο Περιβάλλον Εφαρμογής -->
     <div class="flex-1 flex flex-col">
-        <!-- Επικεφαλίδα και Ραδιόφωνο (προαιρετικό) -->
+        
         <header class="bg-white p-4 shadow-md flex justify-between items-center z-10">
             <h1 class="text-2xl font-bold text-indigo-600">ChatBox</h1>
+            
             <div class="flex items-center space-x-4">
                 {% if settings.feature_radio == 'True' and radio_url %}
-                <audio controls loop class="h-8">
+                
+                <div id="now-playing-info" class="text-sm font-medium text-gray-700 hidden sm:block truncate max-w-xs">
+                    Loading...
+                </div>
+                
+                <audio id="radio-player" controls loop class="h-8">
                     <source src="{{ radio_url }}" type="audio/mpeg">
                     Ο browser σας δεν υποστηρίζει το στοιχείο ήχου.
                 </audio>
+                
                 {% endif %}
-                <span class="text-gray-700">Συνδεδεμένος ως: <span class="font-semibold" style="color: {{ user.color }};">{{ user.display_name }}</span></span>
+
+                <span class="text-gray-700 hidden sm:inline">Συνδεδεμένος ως: <span class="font-semibold" style="color: {{ user.color }};">{{ user.display_name }}</span></span>
                 <a href="{{ url_for('logout') }}" class="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full hover:bg-red-600 transition duration-150">
                     Έξοδος
                 </a>
             </div>
         </header>
 
-        <!-- Κυρίως Περιεχόμενο: Chat Area & Users Sidebar -->
         <main class="flex-1 flex overflow-hidden">
             
-            <!-- Chat Area (Μηνύματα & Εισαγωγή) -->
             <div class="flex flex-col flex-grow w-full lg:w-3/4 bg-white border-r">
                 
-                <!-- Μηνύματα -->
                 <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-4 chat-container">
-                    <!-- Τα αρχικά μηνύματα φορτώνονται εδώ -->
                     {% for message in initial_messages %}
                         <div id="msg-{{ message.id }}" class="flex items-start space-x-3">
                             <img src="{{ message.avatar_url }}" alt="{{ message.username }}" class="w-10 h-10 rounded-full object-cover">
@@ -74,9 +81,7 @@
                     {% endfor %}
                 </div>
 
-                <!-- Εισαγωγή Μηνυμάτων -->
                 <div class="p-4 border-t bg-gray-50">
-                    <!-- Toolbar για μορφοποίηση -->
                     <div class="flex space-x-2 mb-2">
                         {% if settings.feature_bold == 'True' %}
                         <button id="btn-bold" class="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg font-bold hover:bg-indigo-200 transition duration-150">B</button>
@@ -87,14 +92,12 @@
                         {% if settings.feature_underline == 'True' %}
                         <button id="btn-underline" class="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg underline hover:bg-indigo-200 transition duration-150">U</button>
                         {% endif %}
-                        <!-- Emoticon Dropdown -->
                         <div class="relative inline-block text-left">
                             <button id="btn-emoticon" class="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition duration-150">
                                 😀
                             </button>
                             <div id="emoticon-dropdown" class="absolute bottom-full mb-1 left-0 z-20 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden p-2 grid grid-cols-4 gap-1">
-                                <!-- Emoticons θα εισαχθούν εδώ από το JS -->
-                            </div>
+                                </div>
                         </div>
                         
                     </div>
@@ -110,20 +113,16 @@
                 </div>
             </div>
 
-            <!-- Online Users Sidebar -->
             <div class="hidden lg:block w-1/4 bg-gray-50 p-4 shadow-inner overflow-y-auto">
                 <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-3">Online Χρήστες (<span id="online-count">0</span>)</h2>
                 <div id="online-users-list" class="space-y-2">
-                    <!-- Οι online χρήστες θα εισαχθούν εδώ από το SocketIO -->
-                </div>
+                    </div>
             </div>
         </main>
     </div>
 
     <script>
         // Φορτώνει τα δεδομένα από το Flask
-        // ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε JSON.parse() με μονά εισαγωγικά και | tojson | safe.
-        // Αυτό διορθώνει τα προβλήματα escaping όταν το JSON περιέχει διπλά εισαγωγικά ή newlines.
         const initialMessages = JSON.parse('{{ initial_messages | tojson | safe }}');
         const emoticons = JSON.parse('{{ emoticons | tojson | safe }}');
         const currentUser = JSON.parse('{{ user | tojson | safe }}');
@@ -180,8 +179,6 @@
             messageElement.className = 'flex items-start space-x-3';
             messageElement.id = `msg-${message.id}`;
             
-            // Προσοχή: Επειδή το message.content έρχεται από τον server, 
-            // αν δεν έχει γίνει parseMessageContent() στο Python, το κάνουμε εδώ.
             const contentHTML = parseMessageContent(message.content);
 
             messageElement.innerHTML = `
@@ -212,13 +209,11 @@
             if (content.length > 0 && content.length <= parseInt(settings.max_message_length)) {
                 socket.emit('new_message', { 
                     content: content, 
-                    room: 'main' // Προς το παρόν, μόνο main room
+                    room: 'main' 
                 });
-                messageInput.value = ''; // Καθαρισμός του input
+                messageInput.value = ''; 
             } else if (content.length > parseInt(settings.max_message_length)) {
-                // ΔΙΟΡΘΩΣΗ: Αντικατάσταση alert() με console.error ή custom UI
                 console.error(`Το μήνυμα είναι πολύ μεγάλο. Μέγιστο: ${settings.max_message_length} χαρακτήρες.`);
-                // Εναλλακτικά, θα μπορούσε να εμφανιστεί ένα μήνυμα στο UI.
             }
         });
 
@@ -232,7 +227,7 @@
         socket.on('online_users_update', function(data) {
             const listContainer = document.getElementById('online-users-list');
             const countElement = document.getElementById('online-count');
-            listContainer.innerHTML = ''; // Καθαρισμός λίστας
+            listContainer.innerHTML = ''; 
 
             data.users.forEach(user => {
                 const userElement = document.createElement('div');
@@ -257,19 +252,15 @@
             let end = input.selectionEnd;
 
             if (start !== undefined && end !== undefined && start !== end) {
-                // Περιβάλλουμε την επιλεγμένη περιοχή
                 const selectedText = value.substring(start, end);
                 const newText = startTag + selectedText + endTag;
                 input.value = value.substring(0, start) + newText + value.substring(end);
                 input.focus();
-                // Τοποθετούμε τον κέρσο μετά το τέλος
                 input.selectionStart = start + newText.length;
                 input.selectionEnd = start + newText.length;
             } else {
-                // Απλά προσθέτουμε τα tags στο τέλος
                 input.value += startTag + endTag;
                 input.focus();
-                // Τοποθετούμε τον κέρσο ανάμεσα στα tags
                 input.selectionStart = input.selectionEnd = input.value.length - endTag.length;
             }
         }
@@ -281,7 +272,6 @@
         // 5. Φόρτωση και Χειρισμός Emoticons
         const btnEmoticon = document.getElementById('btn-emoticon');
         if (btnEmoticon) {
-            // Γέμισμα του dropdown με τα emoticons
             for (const code in emoticons) {
                 const url = emoticons[code];
                 const emoticonBtn = document.createElement('button');
@@ -290,7 +280,6 @@
                 
                 emoticonBtn.addEventListener('click', (e) => {
                     e.preventDefault();
-                    // Εισάγουμε τον κωδικό του emoticon στο πεδίο κειμένου
                     messageInput.value += ` ${code} `;
                     messageInput.focus();
                     emoticonDropdown.classList.add('hidden');
@@ -298,13 +287,11 @@
                 emoticonDropdown.appendChild(emoticonBtn);
             }
 
-            // Εναλλαγή εμφάνισης/απόκρυψης του dropdown
             btnEmoticon.addEventListener('click', (e) => {
                 e.preventDefault();
                 emoticonDropdown.classList.toggle('hidden');
             });
 
-             // Κρύψιμο του dropdown αν κάνουμε κλικ αλλού
             document.addEventListener('click', function(event) {
                 if (!emoticonDropdown.contains(event.target) && !btnEmoticon.contains(event.target)) {
                     emoticonDropdown.classList.add('hidden');
@@ -315,15 +302,59 @@
 
         // 6. Τελική Αρχικοποίηση
         window.onload = function() {
-            // Μετατρέπουμε τα αρχικά μηνύματα σε HTML
             const initialElements = messagesContainer.querySelectorAll('.message-content');
             initialElements.forEach(el => {
                 el.innerHTML = parseMessageContent(el.textContent);
             });
 
-            // Κάνουμε scroll στο κάτω μέρος όταν φορτωθεί η σελίδα
             scrollToBottom();
         };
+
+        // ----------------------------------------------------
+        // 7. RADIO PLAYER LOGIC (NOW PLAYING)
+        // ----------------------------------------------------
+        const nowPlayingElement = document.getElementById('now-playing-info');
+        // Χρησιμοποιούμε το API URL που εντοπίσαμε
+        const apiURL = 'https://or.mysonicserver.com/cp/get_info.php?p=8050';
+
+        function fetchNowPlaying() {
+            if (!nowPlayingElement) return;
+
+            fetch(apiURL)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.title) {
+                        const title = data.title;
+                        const listeners = data.listeners || 0;
+                        // const djUsername = data.djusername || 'Station'; // Αν θέλετε να το εμφανίσετε
+
+                        // Εμφάνιση των πληροφοριών (αν δεν είναι ήδη ορατό, το εμφανίζουμε)
+                        nowPlayingElement.classList.remove('hidden'); 
+                        nowPlayingElement.innerHTML = `
+                            <span class="text-indigo-600">LIVE:</span> 
+                            ${title} 
+                            <span class="text-xs text-gray-500 ml-2">(${listeners} listeners)</span>
+                        `;
+                    } else {
+                        nowPlayingElement.textContent = "Live Stream Info N/A.";
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching Now Playing data:', error);
+                    nowPlayingElement.textContent = "Error loading info.";
+                });
+        }
+
+        // 1. Καλέστε την αρχική φόρτωση
+        fetchNowPlaying(); 
+
+        // 2. Ρυθμίστε την αυτόματη ανανέωση (κάθε 5 δευτερόλεπτα)
+        setInterval(fetchNowPlaying, 5000); 
 
     </script>
 </body>
