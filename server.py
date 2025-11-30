@@ -66,7 +66,8 @@ class User(db.Model):
     # Χρονικές σφραγίδες
     created_at = db.Column(db.DateTime, default=datetime.now)
     last_login = db.Column(db.DateTime, default=datetime.now)
-    last_activity = db.Column(db.DateTime, default=datetime.now)
+    is_online = db.Column(db.Boolean, default=False) 
+    last_activity = db.Column(db.DateTime(timezone=True), default=datetime.now, onupdate=datetime.now)
     
     # Σχέσεις
     messages = db.relationship('Message', backref='author', lazy='dynamic')
@@ -336,8 +337,7 @@ def create_app():
     # 🚨 DB/Session: Πρέπει να γίνει το db.init_app ΠΡΙΝ το sess.init_app
     db.init_app(app)
     sess.init_app(app) # Χρησιμοποιεί το db που μόλις αρχικοποιήθηκε
-    
-    # OAuth
+# OAuth
     oauth.init_app(app)
     # Δημιουργία remote application για το Google
     if app.config.get('GOOGLE_CLIENT_ID') and app.config.get('GOOGLE_CLIENT_SECRET'):
@@ -345,12 +345,12 @@ def create_app():
             name='google',
             client_id=app.config['GOOGLE_CLIENT_ID'],
             client_secret=app.config['GOOGLE_CLIENT_SECRET'],
-            access_token_url='https://oauth2.googleapis.com/token',
-            access_token_params=None,
-            authorize_url='https://accounts.google.com/o/oauth2/auth',
-            authorize_params=None,
-            api_base_url='https://www.googleapis.com/oauth2/v1/',
+            # 🚨 Η ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Χρήση του Server Metadata URL
+            server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
             client_kwargs={'scope': 'openid email profile'},
+            # Αφαιρούμε τις γραμμές access_token_url, authorize_url, api_base_url
+            # καθώς παρέχονται αυτόματα από το server_metadata_url
+
         )
     
     # SocketIO
