@@ -71,7 +71,7 @@
             outline: none;
         }
 
-        .login-button, .google-button, .guest-button {
+        .login-button, .google-button {
             width: 100%;
             padding: 12px;
             margin: 10px 0;
@@ -103,18 +103,8 @@
             box-shadow: 0 0 15px #4285F4;
         }
         
-        .guest-button {
-            background-color: #333; 
-            color: var(--secondary-accent);
-            border: 1px solid var(--secondary-accent); 
-        }
+        /* 🚨 Το guest-button δεν χρειάζεται πλέον */
         
-        .guest-button:hover {
-            background-color: var(--secondary-accent);
-            color: #1f1f1f;
-            box-shadow: 0 0 15px var(--secondary-accent);
-        }
-
         .or-separator {
             margin: 20px 0;
             color: #aaa;
@@ -190,7 +180,7 @@
     </div>
 
     <div id="login-tab" class="tab-content active">
-        <input type="email" id="login-email" placeholder="Email" required>
+        <input type="email" id="login-email" placeholder="Email / Username" required>
         <input type="password" id="login-password" placeholder="Password" required>
         
         <button id="login-button" class="login-button">Login</button>
@@ -208,19 +198,13 @@
     
     <div class="or-separator">OR</div>
 
-    <a href="{{ url_for('google_login') }}">
+    <a href="{{ google_auth_url }}">
         <button class="google-button">
             <i class="fab fa-google"></i> Login with Google
         </button>
     </a>
     
-    <form action="{{ url_for('guest_login') }}" method="POST">
-        <button type="submit" class="guest-button">
-            <i class="fas fa-ghost"></i> Σύνδεση ως Επισκέπτης (Guest)
-        </button>
-    </form>
-    
-</div>
+    </div>
 
 <script>
     // --- Tab Switching Logic ---
@@ -249,7 +233,7 @@
 
     if (loginButton) {
         loginButton.addEventListener('click', async () => {
-            const email = loginEmailInput.value;
+            const loginId = loginEmailInput.value; // Χρησιμοποιούμε loginId γιατί μπορεί να είναι email ή username
             const password = loginPasswordInput.value;
             loginErrorMessage.textContent = '';
 
@@ -259,14 +243,14 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    // ✅ ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε username_or_email όπως περιμένει το server.py
-                    body: JSON.stringify({ username_or_email: email, password: password }) 
+                    // ✅ ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε login_id όπως περιμένει το server.py
+                    body: JSON.stringify({ login_id: loginId, password: password }) 
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    // ✅ ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε redirect_url όπως στέλνει το server.py
+                    // Χρησιμοποιούμε redirect_url όπως στέλνει το server.py
                     window.location.href = result.redirect_url; 
                 } else {
                     loginErrorMessage.textContent = result.error || 'Login failed. Try again.';
