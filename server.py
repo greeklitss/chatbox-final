@@ -180,93 +180,59 @@ def generate_random_color():
     """Δημιουργεί ένα τυχαίο hex χρώμα (π.χ. #a34b2f)"""
     return '#'+''.join(random.choices('0123456789abcdef', k=6))
 
-# 🚨 Ο ΠΛΗΡΗΣ ΟΡΙΣΜΟΣ ΤΗΣ get_or_create_user 🚨
-# ----------------------------------------------------------------------------------
+# 🚨 ΕΔΩ ΠΡΕΠΕΙ ΝΑ ΕΠΙΚΟΛΛΗΣΕΤΕ ΤΟΝ ΠΛΗΡΗ ΟΡΙΣΜΟ ΤΗΣ get_or_create_user 🚨
 def get_or_create_user(email, display_name, provider, oauth_id=None, avatar_url=None):
     """
-    Βρίσκει ή δημιουργεί έναν χρήστη με βάση το email και τον OAuth provider/ID.
+    Ανακτά τον χρήστη με βάση το OAuth ID ή το Email, αλλιώς δημιουργεί νέο.
     """
-    
-    # Καθαρισμός/Τυποποίηση δεδομένων
-    email = email.lower().strip()
-    display_name = display_name.strip()
-    provider = provider.strip().lower()
-
-    # 1. Αναζήτηση με βάση OAuth ID και Provider (πρωταρχικός έλεγχος)
-    if oauth_id and provider:
+    # 1. Αναζήτηση με OAuth ID (αν υπάρχει)
+    if provider != 'guest' and oauth_id:
         user = db.session.execute(
-            select(User).where(
-                (User.oauth_provider == provider) & (User.oauth_id == oauth_id)
-            )
+            select(User)
+            .where(User.oauth_provider == provider, User.oauth_id == oauth_id)
         ).scalar_one_or_none()
-        
         if user:
-            # Βρέθηκε χρήστης μέσω OAuth. Ενημέρωση last_login.
+            # Ενημέρωση τελευταίας σύνδεσης και επιστροφή
             user.last_login = datetime.now()
             db.session.commit()
             return user
 
-    # 2. Αναζήτηση με βάση το Email
-    user = db.session.execute(
-        select(User).where(User.email == email)
-    ).scalar_one_or_none()
-    
+    # 2. Αναζήτηση με Email (Για να συνδέσουμε OAuth με υπάρχοντα email)
+    user = db.session.execute(select(User).where(User.email == email)).scalar_one_or_none()
+
     if user:
-        # Βρέθηκε χρήστης μέσω Email.
-        
-        # Αν ο χρήστης ήταν local και συνδέεται τώρα μέσω OAuth, τον μετατρέπουμε σε OAuth user.
-        if not user.oauth_provider and oauth_id and provider:
+        # Αν βρέθηκε μέσω email, επικαιροποιούμε τα OAuth/Display πεδία
+        if user.oauth_provider is None:
             user.oauth_provider = provider
             user.oauth_id = oauth_id
-            user.display_name = display_name 
-            user.avatar_url = avatar_url if avatar_url else user.avatar_url
-            
-            if not user.username:
-                user.username = f"{provider}_{secrets.token_hex(4)}"
-            
-            try:
-                db.session.commit()
-            except IntegrityError:
-                db.session.rollback()
-                pass
         
-        # Ενημέρωση last_login
+        # Επικαιροποίηση ονόματος & avatar από τον πάροχο
+        user.display_name = display_name 
+        user.avatar_url = avatar_url or user.avatar_url
         user.last_login = datetime.now()
         db.session.commit()
         return user
-        
-    # 3. Δημιουργία Νέου Χρήστη (πρώτη φορά σύνδεση)
     
-    # Δημιουργία μοναδικού username
-    base_username = display_name.replace(' ', '_').lower()
-    username = base_username
-    count = 1
-    while db.session.execute(select(User).where(User.username == username)).scalar_one_or_none():
-        username = f"{base_username}_{count}"
-        count += 1
-        if count > 100: 
-            username = f"{provider}_{secrets.token_hex(4)}" 
-            break
-            
-    # 🚨 ΕΔΩ: Ορίζουμε το default χρώμα για νέους χρήστες (role='user') σε ΛΕΥΚΟ (#FFFFFF)
+    # 3. Δημιουργία νέου χρήστη
+    # Δημιουργούμε ένα μοναδικό username για το SQLAlchemy model
+    unique_username = f"{provider}_{uuid.uuid4().hex[:8]}" 
+    
     new_user = User(
         email=email,
+        username=unique_username,
         display_name=display_name,
+        role='user',
+        avatar_url=avatar_url or '/static/default_avatar.png',
         oauth_provider=provider,
         oauth_id=oauth_id,
-        avatar_url=avatar_url if avatar_url else '/static/default_avatar.png',
-        username=username,
-        role='user', 
-        color='#FFFFFF' # Default white color for all new 'user' role accounts
+        is_active=True,
+        last_login=datetime.now()
     )
-    
-    try:
-        db.session.add(new_user)
-        db.session.commit()
-        return new_user
-    except IntegrityError:
-        db.session.rollback()
-        return None
+
+    db.session.add(new_user)
+    db.session.commit()
+    print(f"New user created: {new_user.email} via {provider}")
+    return new_user
 # ----------------------------------------------------------------------------------
 
 
