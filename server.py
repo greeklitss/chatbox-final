@@ -362,14 +362,21 @@ def create_app():
                       manage_session=False # Χρησιμοποιούμε το Flask-Session
                      )
     
-    # --- 3. Δημιουργία Πινάκων και Βασικών Δεδομένων (Μόνο αν δεν υπάρχουν) ---
-   # --- 3. Δημιουργία Πινάκων και Βασικών Δεδομένων (Μόνο αν δεν υπάρχουν) ---
+# --- Δημιουργία Πινάκων και Αρχικοποίηση Δεδομένων ---
     with app.app_context():
-        # Δοκιμάζουμε να δούμε αν ο πίνακας 'users' υπάρχει και περιέχει τα νέα πεδία
         try:
-            # Αυτό θα δημιουργήσει τους πίνακες αν δεν υπάρχουν
+            # 1. Δημιουργία των πινάκων (θα τρέξει μόνο αν δεν υπάρχουν)
             db.create_all() 
-            db.session.commit() # Κάνουμε commit για να είναι σίγουροι ότι ο πίνακας υπάρχει
+            # 2. Αρχικοποίηση ρυθμίσεων και Owner
+            initialize_settings() 
+            # 3. Αρχικοποίηση emoticons
+            initialize_emoticons()
+            print("Database initialized successfully, settings and owner user ensured.")
+        except Exception as e:
+            # ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Rollback για να καθαρίσει την αποτυχημένη συναλλαγή 
+            # (Είναι απαραίτητο για το psycopg2/PostgreSQL)
+            db.session.rollback() 
+            print(f"!!! CRITICAL DB SETUP ERROR: {e} !!!")
 
             # 🚨 Έλεγχος: Αν η βάση είναι ζωντανή, προχωράμε
             
