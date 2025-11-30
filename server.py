@@ -7,7 +7,7 @@ import random
 import secrets
 import string
 
-from flask import Flask, send_from_directory, request, jsonify, url_for, redirect, session, render_template
+from flask import Flask, send_from_directory, request, jsonify, url_for, redirect, session, render_template, make_response
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
@@ -30,7 +30,7 @@ from sqlalchemy.orm import validates
 ONLINE_SIDS = {} 
 GLOBAL_ROOM = 'main'
 
-# 🚨 1. Αρχικοποιούμε τα extensions χωρίς το app, για να χρησιμοποιηθούν στο factory pattern
+# 🚨 1. Αρχικοποιούμε τα extensions
 db = SQLAlchemy()
 sess = Session()
 oauth = OAuth()
@@ -43,7 +43,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=True) # Για local login
+    password_hash = db.Column(db.String(128), nullable=True) 
     display_name = db.Column(db.String(80))
     role = db.Column(db.String(20), default='user')
     color = db.Column(db.String(7), default='#ffffff')
@@ -58,6 +58,10 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    @property
+    def is_active(self):
+        return True
 
 class AppSetting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -77,7 +81,9 @@ class Message(db.Model):
     room = db.Column(db.String(50), default=GLOBAL_ROOM)
 
 
-# --- Βοηθητικές Συναρτήσεις ---
+# ------------------------------------------------------------------
+# --- Βοηθητικές Συναρτήσεις (Helpers) - ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ ΠΡΙΝ create_app ---
+# ------------------------------------------------------------------
 
 def login_required(f):
     """Decorator για να απαιτείται σύνδεση."""
@@ -92,7 +98,6 @@ def get_current_user_from_session():
     """Ανακτά τον χρήστη από το session."""
     user_id = session.get('user_id')
     if user_id:
-        # Χρησιμοποιούμε db.session.get() για ανάκτηση by PK
         return db.session.get(User, user_id) 
     return None
 
@@ -215,9 +220,42 @@ def initialize_emoticons():
 
     db.session.commit()
     print("Default emoticons initialized from CDN.")
+    
+def save_and_emit_message(user_id, content, room_name):
+    """Αποθηκεύει το μήνυμα στη βάση και το εκπέμπει στους clients."""
+    try:
+        new_msg = Message(user_id=user_id, content=content, room=room_name)
+        db.session.add(new_msg)
+        db.session.commit()
+        
+        # Λαμβάνουμε τα στοιχεία του χρήστη για την εκπομπή
+        user_data = db.session.execute(
+            select(User.display_name, User.avatar_url, User.color)
+            .where(User.id == user_id)
+        ).first()
 
+        if user_data:
+            message_data = {
+                'content': content,
+                'timestamp': new_msg.timestamp.isoformat(),
+                'user': {
+                    'display_name': user_data.display_name,
+                    'avatar_url': user_data.avatar_url,
+                    'color': user_data.color
+                }
+            }
+            # Εκπέμπει το μήνυμα σε όλους τους συνδεδεμένους χρήστες στο δωμάτιο
+            socketio.emit('new_message', message_data, room=room_name)
+            return True
+        return False
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving or emitting message: {e}")
+        return False
 
+# ------------------------------------------------------------------
 # --- ΣΥΝΑΡΤΗΣΗ ΔΗΜΙΟΥΡΓΙΑΣ ΕΦΑΡΜΟΓΗΣ (Factory Pattern) ---
+# ------------------------------------------------------------------
 
 def create_app():
     app = Flask(__name__)
@@ -233,16 +271,15 @@ def create_app():
     app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions' 
     app.config['SESSION_PERMANENT'] = True
     app.config['SESSION_USE_SIGNER'] = True
-    app.config['SESSION_COOKIE_SECURE'] = True 
+    app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER') else False # True for prod
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24 * 7)
 
     # Ρυθμίσεις OAuth
     app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
     app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET')
-
+    
     # --- 2. Αρχικοποίηση Extensions με το App ---
-    # 🚨 ΚΡΙΣΙΜΟ: DB ΠΡΙΝ ΤΟ SESSION
     db.init_app(app)
     app.config['SESSION_SQLALCHEMY'] = db 
     sess.init_app(app) 
@@ -264,27 +301,26 @@ def create_app():
                       cors_allowed_origins="*", 
                       logger=False, 
                       engineio_logger=False,
-                      manage_session=False
+                      manage_session=False # Χρησιμοποιούμε Flask-Session
                      )
     
     # --- 3. ΔΙΟΡΘΩΜΕΝΗ ΔΟΜΗ ΑΡΧΙΚΟΠΟΙΗΣΗΣ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ ---
     with app.app_context():
         try:
-            # 1. Δημιουργία των πινάκων (Θα τρέξει μόνο αν δεν υπάρχουν)
+            # 1. Δημιουργία των πινάκων 
             db.create_all() 
             print("Database tables ensured (db.create_all() successful).")
             
         except Exception as e:
-            # 🚨 Rollback για να καθαρίσει την αποτυχημένη συναλλαγή (ΚΡΙΣΙΜΟ)
+            # 🚨 Rollback για να καθαρίσει την αποτυχημένη συναλλαγή 
             db.session.rollback()
             print(f"!!! DB CREATE_ALL WARNING (Rollback and Proceed): {e} !!!")
             
         # -------------------------------------------------------------
-        # 🚨 ΕΚΤΕΛΕΣΗ ΛΟΓΙΚΗΣ ΑΡΧΙΚΟΠΟΙΗΣΗΣ (ΤΡΕΧΕΙ ΠΑΝΤΑ ΣΤΟ STARTUP) 🚨
+        # 🚨 ΕΚΤΕΛΕΣΗ ΛΟΓΙΚΗΣ ΑΡΧΙΚΟΠΟΙΗΣΗΣ (ΔΕΝ ΘΑ ΠΕΤΑΞΕΙ NameError ΠΛΕΟΝ) 🚨
         # -------------------------------------------------------------
         try:
-            # Αυτές οι συναρτήσεις διασφαλίζουν ότι ο Owner, Settings και Emoticons
-            # υπάρχουν σε κάθε εκκίνηση.
+            # Οι συναρτήσεις είναι πλέον ορισμένες πριν την κλήση
             initialize_settings() 
             initialize_emoticons()
             print("Database initialized successfully, settings and owner user ensured.")
@@ -294,7 +330,9 @@ def create_app():
             print(f"!!! CRITICAL SETUP COMMIT ERROR: {e} !!!")
 
 
-    # --- 4. Διαδρομές (Routes) ---
+    # ------------------------------------------------------------------
+    # --- 4. Διαδρομές (Routes) & API Endpoints ---
+    # ------------------------------------------------------------------
     
     @app.route('/')
     def index():
@@ -310,11 +348,10 @@ def create_app():
     @login_required
     def chat():
         current_user = get_current_user_from_session()
-        # Φόρτωση ρυθμίσεων και emoticons για το Jinja template
+        
         settings = {s.setting_key: s.setting_value for s in db.session.execute(select(AppSetting)).scalars().all()}
         emoticons = {e.code: e.url for e in db.session.execute(select(Emoticon)).scalars().all()}
         
-        # Φόρτωση τελευταίων 50 μηνυμάτων
         messages = db.session.execute(
             select(Message, User.display_name, User.avatar_url, User.color)
             .join(User)
@@ -330,7 +367,53 @@ def create_app():
         
         return render_template('chat.html', user=current_user, settings=settings, emoticons=emoticons, messages=messages)
 
-    # --- OAuth Διαδρομές (Callback & Login) ---
+    @app.route('/logout')
+    def logout():
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
+
+    # --- API ENDPOINTS ΓΙΑ ΤΟΠΙΚΟ LOGIN/SIGNUP (ΧΡΗΣΙΜΟΠΟΙΕΙΤΑΙ ΑΠΟ login.html) ---
+
+    @app.route('/api/v1/sign_up', methods=['POST'])
+    def sign_up():
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        username = data.get('username')
+
+        if not email or not password or not username:
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        if db.session.execute(select(User).where(User.email == email)).scalar_one_or_none():
+             return jsonify({'error': 'Email already registered'}), 409
+
+        try:
+            new_user = User(username=username, email=email, display_name=username, role='user')
+            new_user.set_password(password)
+            db.session.add(new_user)
+            db.session.commit()
+            return jsonify({'message': 'User created successfully'}), 201
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': f'Database error: {e}'}), 500
+
+    @app.route('/api/v1/login', methods=['POST'])
+    def local_login():
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+
+        user = db.session.execute(select(User).where(User.email == email)).scalar_one_or_none()
+        
+        if user and user.check_password(password):
+            session['user_id'] = user.id
+            user.last_login = datetime.now()
+            db.session.commit()
+            return jsonify({'message': 'Login successful', 'redirect': url_for('chat')}), 200
+        else:
+            return jsonify({'error': 'Invalid email or password'}), 401
+
+    # --- OAuth Διαδρομές ---
 
     @app.route('/oauth/login/google')
     def google_login():
@@ -340,10 +423,10 @@ def create_app():
     @app.route('/oauth/callback/google')
     def google_auth():
         try:
-            token = oauth.google.authorize_access_token()
+            # Το Render απαιτεί HTTPS, αυτό διορθώνει το 'No scheme supplied'
+            token = oauth.google.authorize_access_token() 
             userinfo = oauth.google.parse_id_token(token)
             
-            # Χρησιμοποιούμε την διορθωμένη get_or_create_user
             user = get_or_create_user(
                 email=userinfo.get('email'),
                 display_name=userinfo.get('name'),
@@ -356,13 +439,84 @@ def create_app():
             return redirect(url_for('chat'))
 
         except Exception as e:
-            # Κρατάμε το rollback σε περίπτωση αποτυχίας DB μέσα στο OAuth
             db.session.rollback() 
             print(f"!!! CRITICAL OAUTH CALLBACK ERROR: {e} !!!")
-            # 500 (Internal Server Error) για τον χρήστη
             return f"Internal Server Error during OAuth: {e}", 500
             
-    # --- Πρέπει να προσθέσετε logout, local login/signup, και SocketIO handlers εδώ ---
+    # ------------------------------------------------------------------
+    # --- 5. SocketIO Event Handlers (ΚΡΙΣΙΜΑ ΓΙΑ ΤΟ CHAT) ---
+    # ------------------------------------------------------------------
+    
+    @socketio.on('connect')
+    def handle_connect():
+        user = get_current_user_from_session()
+        if user and request.sid:
+            ONLINE_SIDS[request.sid] = user.id
+            user.is_online = True
+            db.session.commit()
+            join_room(GLOBAL_ROOM)
+            
+            # Ενημέρωση όλων για τον νέο online χρήστη
+            online_users_list = get_online_users()
+            socketio.emit('user_list_update', {'users': online_users_list}, room=GLOBAL_ROOM)
+            
+            # Μήνυμα Συστήματος (Προαιρετικό)
+            # emit('system_message', {'content': f'{user.display_name} has connected.'}, room=GLOBAL_ROOM)
+
+    @socketio.on('disconnect')
+    def handle_disconnect():
+        user = get_current_user_from_session()
+        if user and request.sid in ONLINE_SIDS:
+            del ONLINE_SIDS[request.sid]
+            
+            # Ελέγχουμε αν ο χρήστης έχει ακόμα ενεργό SID
+            if user.id not in ONLINE_SIDS.values():
+                user.is_online = False
+                db.session.commit()
+                
+                # Ενημέρωση όλων για τον offline χρήστη
+                online_users_list = get_online_users()
+                socketio.emit('user_list_update', {'users': online_users_list}, room=GLOBAL_ROOM)
+                
+                # Μήνυμα Συστήματος (Προαιρετικό)
+                # emit('system_message', {'content': f'{user.display_name} has disconnected.'}, room=GLOBAL_ROOM)
+
+    @socketio.on('send_message')
+    def handle_send_message(data):
+        user = get_current_user_from_session()
+        if not user:
+            # Ο χρήστης δεν είναι πλέον συνδεδεμένος (expired session)
+            return
+
+        content = data.get('content', '').strip()
+        room_name = data.get('room', GLOBAL_ROOM)
+        
+        # Λαμβάνουμε τις ρυθμίσεις για τον μέγιστο μήκος
+        max_length_setting = db.session.execute(
+            select(AppSetting.setting_value).where(AppSetting.setting_key == 'max_msg_length')
+        ).scalar_one_or_none()
+        
+        max_length = int(max_length_setting) if max_length_setting and max_length_setting.isdigit() else 500
+
+        if not content or len(content) > max_length:
+            error_msg = f'Message cannot be empty or longer than {max_length} characters.'
+            emit('error_message', {'error': error_msg})
+            return
+
+        save_and_emit_message(user.id, content, room_name)
+
+    def get_online_users():
+        """Βοηθητική συνάρτηση για την ανάκτηση της λίστας των online χρηστών."""
+        user_ids = list(set(ONLINE_SIDS.values()))
+        if not user_ids:
+            return []
+            
+        users = db.session.execute(
+            select(User.display_name, User.color, User.avatar_url, User.role)
+            .where(User.id.in_(user_ids))
+        ).all()
+        
+        return [{'display_name': u.display_name, 'color': u.color, 'avatar_url': u.avatar_url, 'role': u.role} for u in users]
 
     return app
 
