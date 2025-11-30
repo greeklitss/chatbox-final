@@ -373,9 +373,14 @@ def create_app():
 
             # 🚨 Έλεγχος: Αν η βάση είναι ζωντανή, προχωράμε
             
-            # 🚨 Δημιουργία Owner αν δεν υπάρχει
-            # Προσπαθούμε να εκτελέσουμε μια απλή αναζήτηση. Αν αποτύχει, πιθανότατα λείπουν τα πεδία.
-            owner_user = db.session.execute(select(User).where(User.role == 'owner')).scalar_one_or_none()
+            # Βρες τον ΠΡΩΤΟ owner χρήστη (αν υπάρχουν πολλοί, χρησιμοποίησε μόνο τον πρώτο)
+            owner_user = db.session.execute(
+                select(User)
+                .where(User.role == 'owner')
+                .limit(1)  
+           # Περιορίζουμε τα αποτελέσματα σε 1
+           ).scalar_one_or_none()
+
             if not owner_user:
                 print("🚨 Creating initial OWNER user. Email: owner@example.com, Password: password123")
                 new_owner = User(
