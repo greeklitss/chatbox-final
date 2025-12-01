@@ -255,6 +255,8 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_fallback_key')
 # 🚨 ΝΕΑ ΓΡΑΜΜΗ: Ορίζει ρητά το domain για τα sessions
     app.config['SESSION_COOKIE_DOMAIN'] = os.environ.get('SESSION_DOMAIN') # Πρέπει να είναι 'radioparea.com'
+# 🚨 ΚΡΙΣΙΜΟ: Εξαναγκάζει το Flask να χρησιμοποιεί HTTPS για όλα τα URL (π.χ. OAuth callbacks)
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///chat.db')  
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
