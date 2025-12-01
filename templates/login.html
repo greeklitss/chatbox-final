@@ -180,7 +180,7 @@
     </div>
 
     <div id="login-tab" class="tab-content active">
-        <input type="email" id="login-email" placeholder="Email / Username" required>
+        <input type="email" id="login-email" placeholder="Email / Username" required> 
         <input type="password" id="login-password" placeholder="Password" required>
         
         <button id="login-button" class="login-button">Login</button>
@@ -198,7 +198,7 @@
     
    <div class="or-separator">OR</div>
 
-<a href="{{ google_auth_url }}">
+<a href="{{ url_for('google_login') }}">
     <button class="google-button">
         <i class="fab fa-google"></i> Login with Google
     </button>
@@ -233,7 +233,7 @@
 
     if (loginButton) {
         loginButton.addEventListener('click', async () => {
-            const loginId = loginEmailInput.value; // Χρησιμοποιούμε loginId γιατί μπορεί να είναι email ή username
+            const loginId = loginEmailInput.value; 
             const password = loginPasswordInput.value;
             loginErrorMessage.textContent = '';
 
@@ -243,15 +243,15 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    // ✅ ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε login_id όπως περιμένει το server.py
+                    // ✅ ΔΙΟΡΘΩΣΗ: Στέλνουμε το πεδίο login_id για να ταιριάζει με τον server
                     body: JSON.stringify({ login_id: loginId, password: password }) 
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    // Χρησιμοποιούμε redirect_url όπως στέλνει το server.py
-                    window.location.href = result.redirect_url; 
+                    // ✅ ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε 'redirect' όπως επιστρέφει ο server
+                    window.location.href = result.redirect; 
                 } else {
                     loginErrorMessage.textContent = result.error || 'Login failed. Try again.';
                 }
@@ -299,6 +299,10 @@
                     signupErrorMessage.style.color = 'var(--primary-accent)';
                     // Αυτόματη αλλαγή στο login tab μετά την επιτυχή εγγραφή
                     showTab('login'); 
+                    // Καθαρισμός πεδίων εγγραφής
+                    signupUsernameInput.value = '';
+                    signupEmailInput.value = '';
+                    signupPasswordInput.value = '';
                 } else {
                     signupErrorMessage.textContent = result.error || 'Sign up failed. Try again.';
                     signupErrorMessage.style.color = 'var(--secondary-accent)';

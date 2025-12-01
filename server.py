@@ -20,7 +20,7 @@ from sqlalchemy import select, desc, func
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
 from werkzeug.security import generate_password_hash, check_password_hash
-# from flask_session import Session # 🚨 ΣΧΟΛΙΑΣΤΗΚΕ
+from flask_session import Session
 from sqlalchemy.sql import text
 from sqlalchemy.exc import IntegrityError, ProgrammingError, OperationalError
 from authlib.integrations.base_client.errors import MismatchingStateError, OAuthError
@@ -32,7 +32,7 @@ GLOBAL_ROOM = 'main'
 
 # 🚨 1. Αρχικοποιούμε τα extensions
 db = SQLAlchemy()
-# sess = Session() # 🚨 ΑΦΑΙΡΕΘΗΚΕ
+sess = Session()
 oauth = OAuth()
 socketio = SocketIO()
 
@@ -54,7 +54,6 @@ class User(db.Model):
     last_login = db.Column(db.DateTime, default=datetime.now)
 
     def set_password(self, password):
-        # Έχει μείνει το 'pbkdf2:sha256' για συμβατότητα
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
 
     def check_password(self, password):
@@ -260,17 +259,17 @@ def save_and_emit_message(user_id, content, room_name):
 
 def create_app():
     app = Flask(__name__)
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1)
+    # 🚨 ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Επιθετικό ProxyFix για σωστή αναγνώριση HTTPS (κρίσιμο για cookies σε Render)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
     # --- Ρυθμίσεις (Config) ---
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_fallback_key')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///chat.db')  
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    # Ρυθμίσεις Flask-Session (Πλέον χρησιμοποιούμε default cookie session του Flask)
-    # 🚨 ΣΧΟΛΙΑΣΤΗΚΑΝ ΟΙ ΓΡΑΜΜΕΣ ΓΙΑ SQLAlchemy SESSION
-    # app.config['SESSION_TYPE'] = 'sqlalchemy'
-    # app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions' 
+    # Ρυθμίσεις Flask-Session
+    app.config['SESSION_TYPE'] = 'sqlalchemy'
+    app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions' 
     app.config['SESSION_PERMANENT'] = True
     app.config['SESSION_USE_SIGNER'] = True
     app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER') else False # True for prod
@@ -283,8 +282,8 @@ def create_app():
     
     # --- 2. Αρχικοποίηση Extensions με το App ---
     db.init_app(app)
-    # app.config['SESSION_SQLALCHEMY'] = db # 🚨 ΑΦΑΙΡΕΘΗΚΕ
-    # sess.init_app(app) # 🚨 ΑΦΑΙΡΕΘΗΚΕ
+    app.config['SESSION_SQLALCHEMY'] = db 
+    sess.init_app(app) 
     
     # OAuth
     oauth.init_app(app)
@@ -303,7 +302,7 @@ def create_app():
                       cors_allowed_origins="*", 
                       logger=False, 
                       engineio_logger=False,
-                      manage_session=True # 🚨 ΑΛΛΑΓΗ: Επιστροφή στο default session management
+                      manage_session=False # Χρησιμοποιούμε Flask-Session
                      )
     
     # --- 3. ΔΙΟΡΘΩΜΕΝΗ ΔΟΜΗ ΑΡΧΙΚΟΠΟΙΗΣΗΣ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ ---
@@ -319,10 +318,9 @@ def create_app():
             print(f"!!! DB CREATE_ALL WARNING (Rollback and Proceed): {e} !!!")
             
         # -------------------------------------------------------------
-        # 🚨 ΕΚΤΕΛΕΣΗ ΛΟΓΙΚΗΣ ΑΡΧΙΚΟΠΟΙΗΣΗΣ (ΔΕΝ ΘΑ ΠΕΤΑΞΕΙ NameError ΠΛΕΟΝ) 🚨
+        # 🚨 ΕΚΤΕΛΕΣΗ ΛΟΓΙΚΗΣ ΑΡΧΙΚΟΠΟΙΗΣΗΣ 
         # -------------------------------------------------------------
         try:
-            # Οι συναρτήσεις είναι πλέον ορισμένες πριν την κλήση
             initialize_settings() 
             initialize_emoticons()
             print("Database initialized successfully, settings and owner user ensured.")
@@ -386,6 +384,8 @@ def create_app():
         if not email or not password or not username:
             return jsonify({'error': 'Missing required fields'}), 400
         
+        # Εδώ εμφανίζεται το σφάλμα unique constraint
+        # (Ελέγχουμε μόνο το email, το username ελέγχεται αυτόματα από το db.Column(unique=True))
         if db.session.execute(select(User).where(User.email == email)).scalar_one_or_none():
              return jsonify({'error': 'Email already registered'}), 409
 
@@ -402,25 +402,28 @@ def create_app():
     @app.route('/api/v1/login', methods=['POST'])
     def local_login():
         data = request.get_json()
-        email = data.get('email')
+        login_id = data.get('login_id') # ✅ Διορθώθηκε για να ταιριάζει με το JS
         password = data.get('password')
 
-        user = db.session.execute(select(User).where(User.email == email)).scalar_one_or_none()
+        # 1. Αναζήτηση με email
+        user = db.session.execute(select(User).where(User.email == login_id)).scalar_one_or_none()
+        
+        # 2. Αν δεν βρεθεί με email, αναζήτηση με username
+        if not user:
+             user = db.session.execute(select(User).where(User.username == login_id)).scalar_one_or_none()
         
         if user and user.check_password(password):
             session['user_id'] = user.id
             user.last_login = datetime.now()
-       # 2. Απομονώνουμε το commit για να πιάσουμε το σφάλμα SQL (Απαραίτητο μόνο για το last_login)
             try:
                 db.session.commit()
-                # Το session αποθηκεύεται τώρα αυτόματα από το Flask στα cookies
-                print("DEBUG: Commit SUCCESSFUL (last_login updated).")
+                print("DEBUG: Commit SUCCESSFUL. Session saved to flask_sessions.")
             except Exception as e:
                 db.session.rollback()
-                print(f"CRITICAL LOGIN COMMIT ERROR (last_login fail): {e}", flush=True) 
-                # Συνεχίζουμε, γιατί το session έχει οριστεί.
+                print(f"CRITICAL LOGIN COMMIT ERROR: {e}", flush=True) 
                 pass 
                 
+            # Επιστρέφουμε 'redirect'
             return jsonify({'message': 'Login successful', 'redirect': url_for('chat')}), 200
         else:
             return jsonify({'error': 'Invalid email or password'}), 401
@@ -436,7 +439,6 @@ def create_app():
     @app.route('/oauth/callback/google')
     def google_auth():
         try:
-            # Το Render απαιτεί HTTPS, αυτό διορθώνει το 'No scheme supplied'
             token = oauth.google.authorize_access_token() 
             userinfo = oauth.google.parse_id_token(token)
             
@@ -449,7 +451,6 @@ def create_app():
             )
             
             session['user_id'] = user.id
-            # 🚨 Εάν το πρόβλημα ήταν το session, εδώ θα γίνει η επιτυχής ανακατεύθυνση
             return redirect(url_for('chat'))
 
         except Exception as e:
