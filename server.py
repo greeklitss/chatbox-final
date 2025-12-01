@@ -253,6 +253,8 @@ def create_app():
 
     # --- Ρυθμίσεις (Config) ---
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_fallback_key')
+# 🚨 ΝΕΑ ΓΡΑΜΜΗ: Ορίζει ρητά το domain για τα sessions
+    app.config['SESSION_COOKIE_DOMAIN'] = os.environ.get('SESSION_DOMAIN')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///chat.db')  
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
