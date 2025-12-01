@@ -259,13 +259,15 @@ def create_app():
     app.config['PREFERRED_URL_SCHEME'] = 'https'
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///chat.db')  
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+# 🚨 ΝΕΑ ΓΡΑΜΜΗ: Εξασφαλίζει ότι το cookie ισχύει σε όλο το domain
+    app.config['SESSION_COOKIE_PATH'] = '/'
     # Ρυθμίσεις Flask Session (Χρησιμοποιούμε default cookies)
     app.config['SESSION_PERMANENT'] = True
     app.config['SESSION_USE_SIGNER'] = True
     # 🚨 ΚΡΙΣΙΜΟ: True για HTTPS (Render)
     app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER') else False 
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24 * 7)
 
     # Ρυθμίσεις OAuth
