@@ -103,8 +103,6 @@
             box-shadow: 0 0 15px #4285F4;
         }
         
-        /* 🚨 Το guest-button δεν χρειάζεται πλέον */
-        
         .or-separator {
             margin: 20px 0;
             color: #aaa;
@@ -180,7 +178,7 @@
     </div>
 
     <div id="login-tab" class="tab-content active">
-        <input type="email" id="login-email" placeholder="Email / Username" required> 
+        <input type="text" id="login-email" placeholder="Email / Username" required> 
         <input type="password" id="login-password" placeholder="Password" required>
         
         <button id="login-button" class="login-button">Login</button>
@@ -220,7 +218,6 @@
         document.querySelector(`.tab-button[onclick*='${tabId}']`).classList.add('active');
     }
     
-    // Default to show login tab
     document.addEventListener('DOMContentLoaded', () => {
         showTab('login');
     });
@@ -243,14 +240,13 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    // ✅ ΔΙΟΡΘΩΣΗ: Στέλνουμε το πεδίο login_id για να ταιριάζει με τον server
+                    // ✅ Στέλνουμε το πεδίο login_id
                     body: JSON.stringify({ login_id: loginId, password: password }) 
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    // ✅ ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε 'redirect' όπως επιστρέφει ο server
                     window.location.href = result.redirect; 
                 } else {
                     loginErrorMessage.textContent = result.error || 'Login failed. Try again.';
@@ -261,7 +257,6 @@
             }
         });
         
-        // Επιτρέπει το Login με Enter
         loginPasswordInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 loginButton.click();
@@ -297,12 +292,11 @@
                 if (response.ok) {
                     signupErrorMessage.textContent = result.message || 'Registration successful!';
                     signupErrorMessage.style.color = 'var(--primary-accent)';
-                    // Αυτόματη αλλαγή στο login tab μετά την επιτυχή εγγραφή
-                    showTab('login'); 
-                    // Καθαρισμός πεδίων εγγραφής
+                    // Καθαρισμός πεδίων και μετάβαση στο login
                     signupUsernameInput.value = '';
                     signupEmailInput.value = '';
                     signupPasswordInput.value = '';
+                    showTab('login'); 
                 } else {
                     signupErrorMessage.textContent = result.error || 'Sign up failed. Try again.';
                     signupErrorMessage.style.color = 'var(--secondary-accent)';
@@ -313,7 +307,6 @@
             }
         });
         
-        // Επιτρέπει το Sign Up με Enter
         signupPasswordInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 signupButton.click();

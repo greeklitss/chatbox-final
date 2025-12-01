@@ -20,7 +20,6 @@ from sqlalchemy import select, desc, func
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_session import Session
 from sqlalchemy.sql import text
 from sqlalchemy.exc import IntegrityError, ProgrammingError, OperationalError
 from authlib.integrations.base_client.errors import MismatchingStateError, OAuthError
@@ -32,12 +31,13 @@ GLOBAL_ROOM = 'main'
 
 # 🚨 1. Αρχικοποιούμε τα extensions
 db = SQLAlchemy()
-sess = Session()
 oauth = OAuth()
 socketio = SocketIO()
 
 
-# --- ΜΟΝΤΕΛΑ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ (ΟΛΑ ΕΔΩ) ---
+# ------------------------------------------------------------------
+# --- ΜΟΝΤΕΛΑ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ (MODELS) ---
+# ------------------------------------------------------------------
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -82,7 +82,7 @@ class Message(db.Model):
 
 
 # ------------------------------------------------------------------
-# --- Βοηθητικές Συναρτήσεις (Helpers) - ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ ΠΡΙΝ create_app ---
+# --- ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ (HELPERS) ---
 # ------------------------------------------------------------------
 
 def login_required(f):
@@ -103,9 +103,8 @@ def get_current_user_from_session():
 
 def get_or_create_user(email, display_name, provider, oauth_id=None, avatar_url=None):
     """
-    ΔΙΟΡΘΩΜΕΝΗ ΛΟΓΙΚΗ: Ανακτά τον χρήστη με βάση το OAuth ID ή το Email, αλλιώς δημιουργεί νέο.
+    Ανακτά τον χρήστη με βάση το OAuth ID ή το Email, αλλιώς δημιουργεί νέο.
     """
-    # 1. Αναζήτηση με OAuth ID
     if provider != 'guest' and oauth_id:
         user = db.session.execute(
             select(User)
@@ -116,11 +115,9 @@ def get_or_create_user(email, display_name, provider, oauth_id=None, avatar_url=
             db.session.commit()
             return user
 
-    # 2. Αναζήτηση με Email
     user = db.session.execute(select(User).where(User.email == email)).scalar_one_or_none()
 
     if user:
-        # Επικαιροποίηση
         if user.oauth_provider is None:
             user.oauth_provider = provider
             user.oauth_id = oauth_id
@@ -130,7 +127,6 @@ def get_or_create_user(email, display_name, provider, oauth_id=None, avatar_url=
         db.session.commit()
         return user
     
-    # 3. Δημιουργία νέου χρήστη
     unique_username = f"{provider}_{uuid.uuid4().hex[:8]}" 
     
     new_user = User(
@@ -150,11 +146,8 @@ def get_or_create_user(email, display_name, provider, oauth_id=None, avatar_url=
     return new_user
 
 def initialize_settings():
-    """
-    ΔΙΟΡΘΩΜΕΝΟ: Δημιουργεί βασικές ρυθμίσεις και τον αρχικό χρήστη (owner) αν δεν υπάρχουν.
-    """
+    """Δημιουργεί βασικές ρυθμίσεις και τον αρχικό χρήστη (owner) αν δεν υπάρχουν."""
     
-    # 1. Δημιουργία/Ενημέρωση Ρυθμίσεων 
     default_settings = {
         'chat_enabled': 'True',
         'feature_bold': 'True',
@@ -170,7 +163,6 @@ def initialize_settings():
         if not existing:
             db.session.add(AppSetting(setting_key=key, setting_value=default_value))
 
-    # 2. Δημιουργία Owner Χρήστη (αν δεν υπάρχει)
     owner_user = db.session.execute(
         select(User).where(User.role == 'owner').limit(1)
     ).scalar_one_or_none()
@@ -194,9 +186,7 @@ def initialize_settings():
     print("Settings and Owner user checked/initialized.")
 
 def initialize_emoticons():
-    """
-    ΔΙΟΡΘΩΜΕΝΟ: Δημιουργεί βασικά emoticons με URLs από CDN.
-    """
+    """Δημιουργεί βασικά emoticons."""
     
     TWEMOJI_CDN = "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/"
 
@@ -228,7 +218,6 @@ def save_and_emit_message(user_id, content, room_name):
         db.session.add(new_msg)
         db.session.commit()
         
-        # Λαμβάνουμε τα στοιχεία του χρήστη για την εκπομπή
         user_data = db.session.execute(
             select(User.display_name, User.avatar_url, User.color)
             .where(User.id == user_id)
@@ -244,7 +233,6 @@ def save_and_emit_message(user_id, content, room_name):
                     'color': user_data.color
                 }
             }
-            # Εκπέμπει το μήνυμα σε όλους τους συνδεδεμένους χρήστες στο δωμάτιο
             socketio.emit('new_message', message_data, room=room_name)
             return True
         return False
@@ -259,6 +247,7 @@ def save_and_emit_message(user_id, content, room_name):
 
 def create_app():
     app = Flask(__name__)
+    
     # 🚨 ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Επιθετικό ProxyFix για σωστή αναγνώριση HTTPS (κρίσιμο για cookies σε Render)
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
@@ -267,12 +256,11 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///chat.db')  
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    # Ρυθμίσεις Flask-Session
-    app.config['SESSION_TYPE'] = 'sqlalchemy'
-    app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions' 
+    # Ρυθμίσεις Flask Session (Χρησιμοποιούμε default cookies)
     app.config['SESSION_PERMANENT'] = True
     app.config['SESSION_USE_SIGNER'] = True
-    app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER') else False # True for prod
+    # 🚨 ΚΡΙΣΙΜΟ: True για HTTPS (Render)
+    app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER') else False 
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24 * 7)
 
@@ -280,10 +268,16 @@ def create_app():
     app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
     app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET')
     
+    # 🚨 ΕΛΕΓΧΟΣ ΚΛΕΙΔΙΩΝ: Εμφανίζεται στα logs του Render για διάγνωση
+    if not app.config.get('GOOGLE_CLIENT_ID') or not app.config.get('GOOGLE_CLIENT_SECRET'):
+        print("🚨 CRITICAL: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing or empty. Check Render Env Vars.")
+    else:
+        id_snippet = app.config['GOOGLE_CLIENT_ID'][:5] + '...' + app.config['GOOGLE_CLIENT_ID'][-5:]
+        print(f"✅ Google Client ID set: {id_snippet}. Proceeding with OAuth setup.")
+
+
     # --- 2. Αρχικοποίηση Extensions με το App ---
     db.init_app(app)
-    app.config['SESSION_SQLALCHEMY'] = db 
-    sess.init_app(app) 
     
     # OAuth
     oauth.init_app(app)
@@ -302,29 +296,22 @@ def create_app():
                       cors_allowed_origins="*", 
                       logger=False, 
                       engineio_logger=False,
-                      manage_session=False # Χρησιμοποιούμε Flask-Session
+                      manage_session=False
                      )
     
-    # --- 3. ΔΙΟΡΘΩΜΕΝΗ ΔΟΜΗ ΑΡΧΙΚΟΠΟΙΗΣΗΣ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ ---
+    # --- 3. ΑΡΧΙΚΟΠΟΙΗΣΗ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ ---
     with app.app_context():
         try:
-            # 1. Δημιουργία των πινάκων 
             db.create_all() 
             print("Database tables ensured (db.create_all() successful).")
-            
         except Exception as e:
-            # 🚨 Rollback για να καθαρίσει την αποτυχημένη συναλλαγή 
             db.session.rollback()
             print(f"!!! DB CREATE_ALL WARNING (Rollback and Proceed): {e} !!!")
             
-        # -------------------------------------------------------------
-        # 🚨 ΕΚΤΕΛΕΣΗ ΛΟΓΙΚΗΣ ΑΡΧΙΚΟΠΟΙΗΣΗΣ 
-        # -------------------------------------------------------------
         try:
             initialize_settings() 
             initialize_emoticons()
             print("Database initialized successfully, settings and owner user ensured.")
-
         except Exception as e:
             db.session.rollback()
             print(f"!!! CRITICAL SETUP COMMIT ERROR: {e} !!!")
@@ -372,8 +359,6 @@ def create_app():
         session.pop('user_id', None)
         return redirect(url_for('login'))
 
-    # --- API ENDPOINTS ΓΙΑ ΤΟΠΙΚΟ LOGIN/SIGNUP (ΧΡΗΣΙΜΟΠΟΙΕΙΤΑΙ ΑΠΟ login.html) ---
-
     @app.route('/api/v1/sign_up', methods=['POST'])
     def sign_up():
         data = request.get_json()
@@ -384,8 +369,6 @@ def create_app():
         if not email or not password or not username:
             return jsonify({'error': 'Missing required fields'}), 400
         
-        # Εδώ εμφανίζεται το σφάλμα unique constraint
-        # (Ελέγχουμε μόνο το email, το username ελέγχεται αυτόματα από το db.Column(unique=True))
         if db.session.execute(select(User).where(User.email == email)).scalar_one_or_none():
              return jsonify({'error': 'Email already registered'}), 409
 
@@ -402,7 +385,7 @@ def create_app():
     @app.route('/api/v1/login', methods=['POST'])
     def local_login():
         data = request.get_json()
-        login_id = data.get('login_id') # ✅ Διορθώθηκε για να ταιριάζει με το JS
+        login_id = data.get('login_id') 
         password = data.get('password')
 
         # 1. Αναζήτηση με email
@@ -417,13 +400,11 @@ def create_app():
             user.last_login = datetime.now()
             try:
                 db.session.commit()
-                print("DEBUG: Commit SUCCESSFUL. Session saved to flask_sessions.")
             except Exception as e:
                 db.session.rollback()
                 print(f"CRITICAL LOGIN COMMIT ERROR: {e}", flush=True) 
                 pass 
                 
-            # Επιστρέφουμε 'redirect'
             return jsonify({'message': 'Login successful', 'redirect': url_for('chat')}), 200
         else:
             return jsonify({'error': 'Invalid email or password'}), 401
@@ -453,13 +434,24 @@ def create_app():
             session['user_id'] = user.id
             return redirect(url_for('chat'))
 
+        except MismatchingStateError as e:
+            db.session.rollback() 
+            print(f"!!! OAUTH STATE ERROR (MismatchingStateError): {e} !!!")
+            return "OAuth State Error: Session state lost during redirection. Check ProxyFix and cookies.", 400
+            
+        except OAuthError as e:
+            db.session.rollback() 
+            print(f"!!! CRITICAL OAUTH AUTHORIZATION ERROR: {e} !!!")
+            # 🚨 Επιστρέφει 401 στον χρήστη, εμφανίζοντας λεπτομέρειες σφάλματος στα logs
+            return f"OAuth Authorization Failed: Check GOOGLE_CLIENT_ID/SECRET and Redirect URI in Google Console. Error detail: {e}", 401
+            
         except Exception as e:
             db.session.rollback() 
-            print(f"!!! CRITICAL OAUTH CALLBACK ERROR: {e} !!!")
-            return f"Internal Server Error during OAuth: {e}", 500
-            
+            print(f"!!! GENERIC INTERNAL OAUTH ERROR: {e} !!!")
+            return f"Generic Internal OAuth Error: {e}", 500
+
     # ------------------------------------------------------------------
-    # --- 5. SocketIO Event Handlers (ΚΡΙΣΙΜΑ ΓΙΑ ΤΟ CHAT) ---
+    # --- 5. SocketIO Event Handlers ---
     # ------------------------------------------------------------------
     
     @socketio.on('connect')
@@ -471,7 +463,6 @@ def create_app():
             db.session.commit()
             join_room(GLOBAL_ROOM)
             
-            # Ενημέρωση όλων για τον νέο online χρήστη
             online_users_list = get_online_users()
             socketio.emit('user_list_update', {'users': online_users_list}, room=GLOBAL_ROOM)
 
@@ -481,12 +472,10 @@ def create_app():
         if user and request.sid in ONLINE_SIDS:
             del ONLINE_SIDS[request.sid]
             
-            # Ελέγχουμε αν ο χρήστης έχει ακόμα ενεργό SID
             if user.id not in ONLINE_SIDS.values():
                 user.is_online = False
                 db.session.commit()
                 
-                # Ενημέρωση όλων για τον offline χρήστη
                 online_users_list = get_online_users()
                 socketio.emit('user_list_update', {'users': online_users_list}, room=GLOBAL_ROOM)
 
@@ -494,13 +483,11 @@ def create_app():
     def handle_send_message(data):
         user = get_current_user_from_session()
         if not user:
-            # Ο χρήστης δεν είναι πλέον συνδεδεμένος (expired session)
             return
 
         content = data.get('content', '').strip()
         room_name = data.get('room', GLOBAL_ROOM)
         
-        # Λαμβάνουμε τις ρυθμίσεις για τον μέγιστο μήκος
         max_length_setting = db.session.execute(
             select(AppSetting.setting_value).where(AppSetting.setting_key == 'max_msg_length')
         ).scalar_one_or_none()
