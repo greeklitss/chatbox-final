@@ -43,7 +43,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=True) 
+    password_hash = db.Column(db.String(256), nullable=True) 
     display_name = db.Column(db.String(80))
     role = db.Column(db.String(20), default='user')
     color = db.Column(db.String(7), default='#ffffff')
@@ -262,7 +262,7 @@ def create_app():
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1)
 
     # --- Ρυθμίσεις (Config) ---
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_fallback_key')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///chat.db')  
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -408,10 +408,23 @@ def create_app():
         if user and user.check_password(password):
             session['user_id'] = user.id
             user.last_login = datetime.now()
-            db.session.commit()
+       # 2. Απομονώνουμε το commit για να πιάσουμε το σφάλμα SQL
+            try:
+                db.session.commit()
+                print("DEBUG: Commit SUCCESSFUL. Session saved to flask_sessions.")
+            except Exception as e:
+                db.session.rollback()
+                # 🚨 ΚΡΙΣΙΜΟ LOGGING: Αυτό θα μας δείξει το σφάλμα SQL
+                print(f"CRITICAL LOGIN COMMIT ERROR: {e}", flush=True) 
+                
+                # Παρ' όλα αυτά, συνεχίζουμε με το 200, καθώς το session μπορεί να έχει ήδη αποθηκευτεί
+                # ή απλώς το update του last_login απέτυχε.
+                pass 
+                
             return jsonify({'message': 'Login successful', 'redirect': url_for('chat')}), 200
         else:
             return jsonify({'error': 'Invalid email or password'}), 401
+
 
     # --- OAuth Διαδρομές ---
 
