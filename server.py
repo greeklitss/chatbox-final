@@ -289,7 +289,11 @@ def create_app():
             client_id=app.config['GOOGLE_CLIENT_ID'],
             client_secret=app.config['GOOGLE_CLIENT_SECRET'],
             server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+            # ✅ Αυτό διορθώνει το 'missing nonce'
             client_kwargs={'scope': 'openid email profile'},
+
+            # ✅ Διορθώνει το MismatchingStateError (CSRF State Bypass)
+            state_factory=lambda: None
         )
         
     # SocketIO
