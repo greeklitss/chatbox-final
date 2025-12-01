@@ -20,7 +20,7 @@ from sqlalchemy import select, desc, func
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_session import Session
+# from flask_session import Session # 🚨 ΣΧΟΛΙΑΣΤΗΚΕ
 from sqlalchemy.sql import text
 from sqlalchemy.exc import IntegrityError, ProgrammingError, OperationalError
 from authlib.integrations.base_client.errors import MismatchingStateError, OAuthError
@@ -32,7 +32,7 @@ GLOBAL_ROOM = 'main'
 
 # 🚨 1. Αρχικοποιούμε τα extensions
 db = SQLAlchemy()
-sess = Session()
+# sess = Session() # 🚨 ΑΦΑΙΡΕΘΗΚΕ
 oauth = OAuth()
 socketio = SocketIO()
 
@@ -54,6 +54,7 @@ class User(db.Model):
     last_login = db.Column(db.DateTime, default=datetime.now)
 
     def set_password(self, password):
+        # Έχει μείνει το 'pbkdf2:sha256' για συμβατότητα
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
 
     def check_password(self, password):
@@ -266,9 +267,10 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///chat.db')  
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    # Ρυθμίσεις Flask-Session
-    app.config['SESSION_TYPE'] = 'sqlalchemy'
-    app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions' 
+    # Ρυθμίσεις Flask-Session (Πλέον χρησιμοποιούμε default cookie session του Flask)
+    # 🚨 ΣΧΟΛΙΑΣΤΗΚΑΝ ΟΙ ΓΡΑΜΜΕΣ ΓΙΑ SQLAlchemy SESSION
+    # app.config['SESSION_TYPE'] = 'sqlalchemy'
+    # app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions' 
     app.config['SESSION_PERMANENT'] = True
     app.config['SESSION_USE_SIGNER'] = True
     app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER') else False # True for prod
@@ -281,8 +283,8 @@ def create_app():
     
     # --- 2. Αρχικοποίηση Extensions με το App ---
     db.init_app(app)
-    app.config['SESSION_SQLALCHEMY'] = db 
-    sess.init_app(app) 
+    # app.config['SESSION_SQLALCHEMY'] = db # 🚨 ΑΦΑΙΡΕΘΗΚΕ
+    # sess.init_app(app) # 🚨 ΑΦΑΙΡΕΘΗΚΕ
     
     # OAuth
     oauth.init_app(app)
@@ -301,7 +303,7 @@ def create_app():
                       cors_allowed_origins="*", 
                       logger=False, 
                       engineio_logger=False,
-                      manage_session=False # Χρησιμοποιούμε Flask-Session
+                      manage_session=True # 🚨 ΑΛΛΑΓΗ: Επιστροφή στο default session management
                      )
     
     # --- 3. ΔΙΟΡΘΩΜΕΝΗ ΔΟΜΗ ΑΡΧΙΚΟΠΟΙΗΣΗΣ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ ---
@@ -408,17 +410,15 @@ def create_app():
         if user and user.check_password(password):
             session['user_id'] = user.id
             user.last_login = datetime.now()
-       # 2. Απομονώνουμε το commit για να πιάσουμε το σφάλμα SQL
+       # 2. Απομονώνουμε το commit για να πιάσουμε το σφάλμα SQL (Απαραίτητο μόνο για το last_login)
             try:
                 db.session.commit()
-                print("DEBUG: Commit SUCCESSFUL. Session saved to flask_sessions.")
+                # Το session αποθηκεύεται τώρα αυτόματα από το Flask στα cookies
+                print("DEBUG: Commit SUCCESSFUL (last_login updated).")
             except Exception as e:
                 db.session.rollback()
-                # 🚨 ΚΡΙΣΙΜΟ LOGGING: Αυτό θα μας δείξει το σφάλμα SQL
-                print(f"CRITICAL LOGIN COMMIT ERROR: {e}", flush=True) 
-                
-                # Παρ' όλα αυτά, συνεχίζουμε με το 200, καθώς το session μπορεί να έχει ήδη αποθηκευτεί
-                # ή απλώς το update του last_login απέτυχε.
+                print(f"CRITICAL LOGIN COMMIT ERROR (last_login fail): {e}", flush=True) 
+                # Συνεχίζουμε, γιατί το session έχει οριστεί.
                 pass 
                 
             return jsonify({'message': 'Login successful', 'redirect': url_for('chat')}), 200
@@ -449,6 +449,7 @@ def create_app():
             )
             
             session['user_id'] = user.id
+            # 🚨 Εάν το πρόβλημα ήταν το session, εδώ θα γίνει η επιτυχής ανακατεύθυνση
             return redirect(url_for('chat'))
 
         except Exception as e:
@@ -472,9 +473,6 @@ def create_app():
             # Ενημέρωση όλων για τον νέο online χρήστη
             online_users_list = get_online_users()
             socketio.emit('user_list_update', {'users': online_users_list}, room=GLOBAL_ROOM)
-            
-            # Μήνυμα Συστήματος (Προαιρετικό)
-            # emit('system_message', {'content': f'{user.display_name} has connected.'}, room=GLOBAL_ROOM)
 
     @socketio.on('disconnect')
     def handle_disconnect():
@@ -490,9 +488,6 @@ def create_app():
                 # Ενημέρωση όλων για τον offline χρήστη
                 online_users_list = get_online_users()
                 socketio.emit('user_list_update', {'users': online_users_list}, room=GLOBAL_ROOM)
-                
-                # Μήνυμα Συστήματος (Προαιρετικό)
-                # emit('system_message', {'content': f'{user.display_name} has disconnected.'}, room=GLOBAL_ROOM)
 
     @socketio.on('send_message')
     def handle_send_message(data):
