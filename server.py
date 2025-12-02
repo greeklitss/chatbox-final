@@ -8,6 +8,7 @@ import secrets
 import string
 
 from flask import Flask, send_from_directory, request, jsonify, url_for, redirect, session, render_template, make_response
+from flask_session import Session # ΝΕΟ IMPORT
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
@@ -33,6 +34,7 @@ GLOBAL_ROOM = 'main'
 db = SQLAlchemy()
 oauth = OAuth()
 socketio = SocketIO()
+sess = Session() # ΝΕΑ ΑΡΧΙΚΟΠΟΙΗΣΗ
 
 
 # ------------------------------------------------------------------
@@ -264,6 +266,10 @@ def create_app():
     # Ρυθμίσεις Flask Session (Χρησιμοποιούμε default cookies)
     app.config['SESSION_PERMANENT'] = True
     app.config['SESSION_USE_SIGNER'] = True
+# 🚨 ΚΡΙΣΙΜΟ: ΡΥΘΜΙΣΕΙΣ REDIS SESSION 🚨
+    # Χρησιμοποιούμε το REDIS_URL του Render για τη σύνδεση Redis
+    app.config['SESSION_TYPE'] = 'redis'
+    app.config['SESSION_REDIS'] = redis.from_url(os.environ.get('REDIS_URL'))
     # 🚨 ΚΡΙΣΙΜΟ: True για HTTPS (Render)
     app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER') else False 
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -284,6 +290,7 @@ def create_app():
 
     # --- 2. Αρχικοποίηση Extensions με το App ---
     db.init_app(app)
+    sess.init_app(app) # ΚΑΛΕΣΤΕ ΤΟ ΓΙΑ ΝΑ ΕΝΕΡΓΟΠΟΙΗΘΕΙ Ο REDIS STORE
     
     # OAuth
     oauth.init_app(app)
