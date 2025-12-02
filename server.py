@@ -6,9 +6,11 @@ import time
 import random
 import secrets
 import string
+import redis
+
+from flask_session import Session # ΝΕΟ IMPORT
 
 from flask import Flask, send_from_directory, request, jsonify, url_for, redirect, session, render_template, make_response
-from flask_session import Session # ΝΕΟ IMPORT
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
