@@ -3,48 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radioparea - Coming Soon</title>
+    <title>Radioparea - On Air & Festive!</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
+        /* ================================================= */
+        /* 🚨 ΧΡΙΣΤΟΥΓΕΝΝΙΑΤΙΚΑ ΧΡΩΜΑΤΑ (Override Neon) */
+        /* ================================================= */
+        :root {
+            --primary-accent: #C0392B;    /* Έντονο Χριστουγεννιάτικο Κόκκινο */
+            --secondary-accent: #27AE60;  /* Σκούρο Χριστουγεννιάτικο Πράσινο */
+            --text-color: #F0F0F0;        /* Λευκό του Χιονιού */
+            --box-bg: rgba(0, 0, 0, 0.7); /* Σκούρο διαφανές φόντο για το container (0.7: 70% αδιαφάνεια) */
+            --shadow-color: #F1C40F;      /* Χρυσό/Κίτρινο για λάμψη */
+        }
+
         /* Βασικό Styling */
         body { 
             font-family: 'Roboto', sans-serif; 
             margin: 0; 
             padding: 0; 
-            background: #1a1a2e; /* Σκούρο μπλε φόντο */
-            color: #e0e0e0; 
+            color: var(--text-color); 
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden; /* Κρύβουμε τις μπάρες λόγω του χιονιού */
+            overflow: hidden; 
+
+            /* 🚨 ΝΕΟ: ΕΙΚΟΝΑ BACKGROUND */
+            background-color: #1a1a2e; /* Fallback χρώμα */
+            background-image: url("{{ url_for('static', filename='christmas_background.jpg') }}"); /* ⚠️ ΑΛΛΑΞΤΕ ΤΟ ΟΝΟΜΑ ΑΡΧΕΙΟΥ ΕΑΝ ΧΡΕΙΑΣΤΕΙ */
+            background-size: cover; 
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed; 
         }
         .container { 
-            background: rgba(0, 0, 0, 0.7); 
+            background: var(--box-bg); /* Χρησιμοποιούμε το σκούρο διαφανές χρώμα */
             padding: 30px 40px; 
             border-radius: 12px; 
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6); /* Neon εφέ */
+            box-shadow: 0 0 20px var(--shadow-color); 
             max-width: 450px; 
             text-align: center;
             z-index: 10;
         }
         h1 { 
-            color: #00ffcc; /* Cyan */
+            color: var(--primary-accent); 
             font-family: 'Orbitron', sans-serif;
             margin-bottom: 20px;
+        }
+        p { 
+            color: var(--text-color);
         }
         .countdown {
             font-family: 'Orbitron', sans-serif;
             font-size: 2.5em;
-            color: #ff3399; /* Hot Pink */
+            color: var(--shadow-color); 
             margin-bottom: 30px;
-            text-shadow: 0 0 5px rgba(255, 51, 153, 0.8);
+            text-shadow: 0 0 8px rgba(241, 196, 15, 0.9);
         }
         .player { margin-bottom: 25px; }
-        .player audio { width: 100%; border-radius: 5px; }
+        .player iframe { width: 100%; border-radius: 5px; }
         .login-btn {
-            background: #FFCC00; 
+            background: var(--secondary-accent); 
             color: #1a1a2e; 
             border: none; 
             padding: 10px 20px; 
@@ -56,28 +78,89 @@
             display: inline-block;
             transition: background 0.3s;
         }
-        .login-btn:hover { background: #ffe066; }
+        .login-btn:hover { background: #45b778; } 
 
-        /* --- ΕΦΕ ΧΙΟΝΙΟΥ (CSS Snowflakes) --- */
+        /* ================================================= */
+        /* 💡 ΕΦΕ ΧΡΙΣΤΟΥΓΕΝΝΙΑΤΙΚΑ ΛΑΜΠΑΚΙΑ 💡 */
+        /* ================================================= */
+
+        .christmas-lights {
+            position: fixed;
+            top: -5px; 
+            left: 0;
+            width: 100%;
+            height: 30px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 1001; 
+            pointer-events: none;
+        }
+
+        .light {
+            width: 10px;
+            height: 15px;
+            background: #555; 
+            border-radius: 50% 50% 5px 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            margin-top: 5px;
+            transform: rotate(5deg); 
+            animation: blink 1.5s ease-in-out infinite alternate;
+        }
+
+        .light.red { background-color: #E74C3C; box-shadow: 0 0 10px #E74C3C; }
+        .light.green { background-color: #2ECC71; box-shadow: 0 0 10px #2ECC71; }
+        .light.blue { background-color: #3498DB; box-shadow: 0 0 10px #3498DB; }
+        .light.gold { background-color: #F1C40F; box-shadow: 0 0 10px #F1C40F; }
+
+        .light:nth-child(4n+1) { animation-delay: 0.1s; } 
+        .light:nth-child(4n+2) { animation-delay: 0.5s; } 
+        .light:nth-child(4n+3) { animation-delay: 0.8s; } 
+
+        @keyframes blink {
+            0% {
+                opacity: 0.7;
+                transform: scale(1) rotate(5deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.1) rotate(5deg); 
+            }
+        }
+
+        /* ================================================= */
+        /* ❄️ ΔΙΟΡΘΩΜΕΝΟ ΕΦΕ ΧΙΟΝΟΠΤΩΣΗΣ (CSS/JS Support) ❄️ */
+        /* ================================================= */
         .snowflake {
             position: absolute;
-            width: 10px;
-            height: 10px;
             background: #fff;
             border-radius: 50%;
             opacity: 0.8;
-            animation: fall linear infinite;
+            animation: fall linear infinite; 
             pointer-events: none;
             z-index: 5;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
         }
+        
         @keyframes fall {
-            to { transform: translateY(100vh); }
+            0% { 
+                transform: translateY(0vh) translateX(0); 
+            }
+            100% { 
+                transform: translateY(110vh) translateX(var(--fall-x-offset)); 
+            }
         }
     </style>
 </head>
 <body>
+    <div class="christmas-lights">
+        <div class="light red"></div><div class="light green"></div><div class="light blue"></div><div class="light gold"></div>
+        <div class="light red"></div><div class="light green"></div><div class="light blue"></div><div class="light gold"></div>
+        <div class="light red"></div><div class="light green"></div><div class="light blue"></div><div class="light gold"></div>
+        <div class="light red"></div><div class="light green"></div><div class="light blue"></div><div class="light gold"></div>
+    </div>
+    
     <div class="container">
-        <h1>📻 RADIOPAREA IS ON AIR</h1>
+        <h1>🎅 📻 RADIOPAREA IS ON AIR 🎁</h1>
         <p>Λειτουργίες Chatbox σε δοκιμή. Επιστρέφουμε σύντομα!</p>
 
         <div class="player">
@@ -99,7 +182,6 @@
         // ----------------------------------------------------
         // JAVASCRIPT ΓΙΑ ΑΝΤΙΣΤΡΟΦΗ ΜΕΤΡΗΣΗ
         // ----------------------------------------------------
-        // 🚨 Ορίστε την ημερομηνία στόχο (π.χ. 1 Ιανουαρίου 2026)
         const targetDate = new Date("Dec 23, 2025 00:00:00").getTime();
         const countdownElement = document.getElementById("countdown-timer");
 
@@ -120,42 +202,44 @@
             countdownElement.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
         }
 
-        updateCountdown(); // Αρχική κλήση
-        setInterval(updateCountdown, 1000); // Ανανέωση κάθε δευτερόλεπτο
+        updateCountdown(); 
+        setInterval(updateCountdown, 1000); 
 
         // ----------------------------------------------------
-        // JAVASCRIPT ΓΙΑ ΕΦΕ ΧΙΟΝΙΟΥ
+        // JAVASCRIPT ΓΙΑ ΕΦΕ ΧΙΟΝΙΟΥ (ΔΙΟΡΘΩΜΕΝΟ)
         // ----------------------------------------------------
         const snowContainer = document.getElementById("snow-container");
-        const numSnowflakes = 100; // Αριθμός νιφάδων
+        const numSnowflakes = 100; 
 
         const createSnowflake = () => {
             const snowflake = document.createElement("div");
             snowflake.className = "snowflake";
             
-            // Τυχαία θέση και μέγεθος
-            const size = Math.random() * 5 + 5; // 5px to 10px
+            const size = Math.random() * 5 + 5; 
             snowflake.style.width = `${size}px`;
             snowflake.style.height = `${size}px`;
-            snowflake.style.left = `${Math.random() * 100}vw`;
             
-            // Τυχαία διάρκεια κίνησης
-            const duration = Math.random() * 10 + 10; // 10s to 20s
+            snowflake.style.left = `${Math.random() * 100}vw`;
+            snowflake.style.top = `${-Math.random() * 100}vh`; 
+            
+            const duration = Math.random() * 15 + 15; 
             snowflake.style.animationDuration = `${duration}s`;
             
-            // Τυχαία καθυστέρηση (για να μην ξεκινούν όλες μαζί)
             snowflake.style.animationDelay = `${Math.random() * 10}s`;
             
+            const xOffset = Math.random() * 50 - 25; 
+            snowflake.style.setProperty('--fall-x-offset', `${xOffset}vw`);
+
             snowContainer.appendChild(snowflake);
 
-            // Αφαίρεση μετά την πτώση για να μην γεμίζει το DOM
             setTimeout(() => {
-                snowflake.remove();
-                createSnowflake(); // Δημιουργία νέας
+                if (snowflake.parentNode) {
+                    snowflake.remove();
+                }
+                createSnowflake(); 
             }, duration * 1000);
         }
 
-        // Δημιουργία των αρχικών νιφάδων
         for (let i = 0; i < numSnowflakes; i++) {
             createSnowflake();
         }
