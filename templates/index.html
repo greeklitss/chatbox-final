@@ -2,30 +2,165 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <title>Clean Start - Base Check</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radioparea - Coming Soon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; margin: 50px; background-color: #f4f4f4; }
-        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
-        h1 { color: #007bff; }
-        .status { padding: 10px; border-radius: 4px; margin-top: 15px; }
-        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        /* Βασικό Styling */
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: #1a1a2e; /* Σκούρο μπλε φόντο */
+            color: #e0e0e0; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden; /* Κρύβουμε τις μπάρες λόγω του χιονιού */
+        }
+        .container { 
+            background: rgba(0, 0, 0, 0.7); 
+            padding: 30px 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6); /* Neon εφέ */
+            max-width: 450px; 
+            text-align: center;
+            z-index: 10;
+        }
+        h1 { 
+            color: #00ffcc; /* Cyan */
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 20px;
+        }
+        .countdown {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5em;
+            color: #ff3399; /* Hot Pink */
+            margin-bottom: 30px;
+            text-shadow: 0 0 5px rgba(255, 51, 153, 0.8);
+        }
+        .player { margin-bottom: 25px; }
+        .player audio { width: 100%; border-radius: 5px; }
+        .login-btn {
+            background: #FFCC00; 
+            color: #1a1a2e; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        .login-btn:hover { background: #ffe066; }
+
+        /* --- ΕΦΕ ΧΙΟΝΙΟΥ (CSS Snowflakes) --- */
+        .snowflake {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: fall linear infinite;
+            pointer-events: none;
+            z-index: 5;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>✅ Clean Start Successful!</h1>
-        <p><strong>Status:</strong> Όλες οι βασικές υπηρεσίες (Flask, Session, SocketIO, DB) έχουν αρχικοποιηθεί.</p>
-        
-        <div class="status success">
-            <strong>Έλεγχος Session:</strong> Αυτή είναι η επίσκεψη <strong>{{ visits }}</strong> σε αυτή τη συνεδρία.
+        <h1>📻 RADIOPAREA IS ON AIR</h1>
+        <p>Λειτουργίες Chatbox σε δοκιμή. Επιστρέφουμε σύντομα!</p>
+
+        <div class="player">
+            <audio id="stream" controls preload="none" style="width: 400px;">
+            <source src="https://or.mysonicserver.com/8050/stream" type="audio/mpeg">
+</audio>
         </div>
-        
-        <div class="status {% if 'Success' in db_status %}success{% else %}error{% endif %}">
-            <strong>Κατάσταση Βάσης Δεδομένων:</strong> {{ db_status }}
+
+        <div class="countdown" id="countdown-timer">
+            Φόρτωση...
         </div>
-        
-        <p><strong>Επόμενο Βήμα:</strong> Συνεχίστε με την ανάπτυξη της λειτουργίας Login/Sign-up και του Chat Client.</p>
+
+        <a href="{{ url_for('login') }}" class="login-btn">
+            Είσοδος στο Chat (Δοκιμαστικά)
+        </a>
     </div>
+
+    <div id="snow-container"></div>
+
+    <script>
+        // ----------------------------------------------------
+        // JAVASCRIPT ΓΙΑ ΑΝΤΙΣΤΡΟΦΗ ΜΕΤΡΗΣΗ
+        // ----------------------------------------------------
+        // 🚨 Ορίστε την ημερομηνία στόχο (π.χ. 1 Ιανουαρίου 2026)
+        const targetDate = new Date("Jan 1, 2026 00:00:00").getTime();
+        const countdownElement = document.getElementById("countdown-timer");
+
+        const updateCountdown = () => {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            if (distance < 0) {
+                countdownElement.innerHTML = "Είμαστε Live! 🎉";
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            countdownElement.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        updateCountdown(); // Αρχική κλήση
+        setInterval(updateCountdown, 1000); // Ανανέωση κάθε δευτερόλεπτο
+
+        // ----------------------------------------------------
+        // JAVASCRIPT ΓΙΑ ΕΦΕ ΧΙΟΝΙΟΥ
+        // ----------------------------------------------------
+        const snowContainer = document.getElementById("snow-container");
+        const numSnowflakes = 50; // Αριθμός νιφάδων
+
+        const createSnowflake = () => {
+            const snowflake = document.createElement("div");
+            snowflake.className = "snowflake";
+            
+            // Τυχαία θέση και μέγεθος
+            const size = Math.random() * 5 + 5; // 5px to 10px
+            snowflake.style.width = `${size}px`;
+            snowflake.style.height = `${size}px`;
+            snowflake.style.left = `${Math.random() * 100}vw`;
+            
+            // Τυχαία διάρκεια κίνησης
+            const duration = Math.random() * 10 + 10; // 10s to 20s
+            snowflake.style.animationDuration = `${duration}s`;
+            
+            // Τυχαία καθυστέρηση (για να μην ξεκινούν όλες μαζί)
+            snowflake.style.animationDelay = `${Math.random() * 10}s`;
+            
+            snowContainer.appendChild(snowflake);
+
+            // Αφαίρεση μετά την πτώση για να μην γεμίζει το DOM
+            setTimeout(() => {
+                snowflake.remove();
+                createSnowflake(); // Δημιουργία νέας
+            }, duration * 1000);
+        }
+
+        // Δημιουργία των αρχικών νιφάδων
+        for (let i = 0; i < numSnowflakes; i++) {
+            createSnowflake();
+        }
+    </script>
 </body>
 </html>
