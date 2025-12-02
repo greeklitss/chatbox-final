@@ -293,7 +293,9 @@ def create_app():
     # --- 2. Αρχικοποίηση Extensions με το App ---
     db.init_app(app)
     sess.init_app(app) # ΚΑΛΕΣΤΕ ΤΟ ΓΙΑ ΝΑ ΕΝΕΡΓΟΠΟΙΗΘΕΙ Ο REDIS STORE
-    
+# 🚨 ΚΡΙΣΙΜΟ: ΠΡΕΠΕΙ ΝΑ ΥΠΑΡΧΕΙ 🚨
+    oauth.init_app(app) 
+        
     oauth.register(
         name='google',
         client_id=os.environ.get('GOOGLE_CLIENT_ID'),
@@ -310,12 +312,12 @@ def create_app():
         
     # SocketIO
     socketio.init_app(app, 
-                      message_queue=os.environ.get('REDIS_URL'), 
-                      cors_allowed_origins="*", 
-                      logger=False, 
-                      engineio_logger=False,
-                      manage_session=False
-                     )
+                     message_queue=os.environ.get('REDIS_URL'), 
+                     cors_allowed_origins="*", 
+                     logger=False, 
+                     engineio_logger=False,
+                     manage_session=False
+                    )
     
     # --- 3. ΑΡΧΙΚΟΠΟΙΗΣΗ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ ---
     with app.app_context():
