@@ -294,19 +294,18 @@ def create_app():
     db.init_app(app)
     sess.init_app(app) # ΚΑΛΕΣΤΕ ΤΟ ΓΙΑ ΝΑ ΕΝΕΡΓΟΠΟΙΗΘΕΙ Ο REDIS STORE
     
-    # OAuth
-    oauth.init_app(app)
-    if app.config.get('GOOGLE_CLIENT_ID') and app.config.get('GOOGLE_CLIENT_SECRET'):
-        oauth.register(
-            name='google',
-            client_id=app.config['GOOGLE_CLIENT_ID'],
-            client_secret=app.config['GOOGLE_CLIENT_SECRET'],
-            server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-            # ✅ Αυτό διορθώνει το 'missing nonce'
-            client_kwargs={'scope': 'openid email profile'},
-
-            # ✅ Διορθώνει το MismatchingStateError (CSRF State Bypass)
-            state_factory=lambda: None
+    oauth.register(
+        name='google',
+        client_id=os.environ.get('GOOGLE_CLIENT_ID'),
+        client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
+        access_token_url='https://oauth2.googleapis.com/token',
+        access_token_params=None,
+        authorize_url='https://accounts.google.com/o/oauth2/auth',
+        authorize_params=None,
+        api_base_url='https://www.googleapis.com/oauth2/v1/',
+        # 🚨 ΔΙΟΡΘΩΣΗ: Αφαιρούμε το 'openid' για να αποφύγουμε το σφάλμα 'nonce'
+        client_kwargs={'scope': 'email profile'}, 
+        state_factory=lambda: None
         )
         
     # SocketIO
