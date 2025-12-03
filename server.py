@@ -121,6 +121,7 @@ def initialize_settings(app):
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     
+    # 1. Proxy Fix για σωστή ανίχνευση πρωτοκόλλου (HTTPS)
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     
     app.config.from_mapping(
@@ -128,6 +129,11 @@ def create_app(test_config=None):
         SQLALCHEMY_DATABASE_URI=os.environ.get("DATABASE_URL", 'sqlite:///chat.db'),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SESSION_TYPE='filesystem', 
+        
+        # 🚨 ΔΙΟΡΘΩΣΗ: Ρυθμίσεις Cookie για αποφυγή CSRF (MismatchingStateError)
+        SESSION_COOKIE_SECURE=True, 
+        SESSION_COOKIE_SAMESITE='Lax', 
+        
         GOOGLE_CLIENT_ID=os.environ.get("GOOGLE_CLIENT_ID", "default_client_id_if_missing"),
         GOOGLE_CLIENT_SECRET=os.environ.get("GOOGLE_CLIENT_SECRET", "default_client_secret_if_missing"),
     )
@@ -171,7 +177,7 @@ def create_app(test_config=None):
         return redirect(url_for('login'))
         
     @app.route('/login/google')
-    def login_google(): # ⬅️ Το σωστό endpoint 'login_google'
+    def login_google(): 
         redirect_uri = url_for('auth_google', _external=True) 
         return oauth.google.authorize_redirect(redirect_uri)
 
@@ -298,7 +304,7 @@ def create_app(test_config=None):
     @socketio.on('send_message')
     def handle_send_message(data):
         # ... (Λογική αποστολής μηνύματος) ...
-        pass # Placeholder: Η πλήρης λογική υπήρχε στο snippetFromBack του προηγούμενου βήματος
+        pass 
     
     return app
 
