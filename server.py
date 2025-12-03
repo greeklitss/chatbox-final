@@ -10,8 +10,8 @@ from flask import Flask, send_from_directory, request, jsonify, url_for, redirec
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
-from functools import wraps
-from werkzeug.middleware.proxy_fix import ProxyFix # 🚨 ΝΕΟ: Κρίσιμο για σωστό OAuth σε reverse proxy (π.χ. Render)
+from functools import wraps # 🚨 ΚΡΙΣΙΜΟ: ΑΠΑΡΑΙΤΗΤΟ ΓΙΑ ΤΟΥΣ DECORATORS
+from werkzeug.middleware.proxy_fix import ProxyFix 
 from sqlalchemy import select, desc, func 
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
@@ -22,18 +22,18 @@ from sqlalchemy.exc import IntegrityError, ProgrammingError, OperationalError
 from authlib.integrations.base_client.errors import MismatchingStateError, OAuthError
 from sqlalchemy.orm import validates 
 
-# --- Global Real-time State & Models ---
+# --- Global Real-time State & DB Initialization ---
 ONLINE_SIDS = {} 
 GLOBAL_ROOM = 'main'
 db = SQLAlchemy()
 
-# 🚨 Placeholder Models (Υποθέτουμε ότι είναι σωστά ορισμένα)
+# 🚨 MODELS (Πρέπει να είναι στο global scope για να λειτουργήσουν)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=True) 
     email = db.Column(db.String(120), unique=True, nullable=False)
     display_name = db.Column(db.String(120), nullable=False)
-    role = db.Column(db.String(20), default='user') # user, admin, owner
+    role = db.Column(db.String(20), default='user') 
     password_hash = db.Column(db.String(128))
     is_active = db.Column(db.Boolean, default=True)
     avatar_url = db.Column(db.String(255), default='/static/default_avatar.png')
@@ -49,14 +49,55 @@ class Emoticon(db.Model):
     code = db.Column(db.String(30), unique=True, nullable=False)
     url = db.Column(db.String(255), nullable=False)
     
-# --- Βοηθητικές Συναρτήσεις (Auth, DB) ---
-# ... (login_required, role_required, get_current_user_from_session, get_settings, get_emoticons) ...
+# --- ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ & DECORATORS (ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ GLOBAL) ---
 
-# 🚨 ΔΙΟΡΘΩΣΗ: Η συνάρτηση initialize_settings πρέπει να είναι στο global scope
+def get_current_user_from_session():
+    """Ανάκτηση χρήστη από το session."""
+    # 🚨 ΣΗΜΕΙΩΣΗ: Απαιτείται app context για τη λειτουργία του db.session
+    try:
+        user_id = session.get('user_id')
+        return db.session.get(User, user_id) if user_id else None
+    except RuntimeError:
+        # Μπορεί να καλεστεί εκτός app context (π.χ. στο socketio connect handler), οπότε επιστρέφουμε None
+        return None
+
+def login_required(f):
+    """Decorator για έλεγχο σύνδεσης."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            # Ανακατεύθυνση στο login αν δεν υπάρχει session
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def role_required(roles):
+    """Decorator για έλεγχο ρόλου (π.χ. admin, owner)."""
+    def wrapper(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            user = get_current_user_from_session()
+            if not user or user.role not in roles:
+                # Χρησιμοποιούμε jsonify για API endpoints, redirect για HTML routes
+                if request.blueprint in ['api']: # Υποθέτουμε ότι τα API έχουν blueprint 'api'
+                    return jsonify({"error": "Forbidden. Insufficient role."}), 403
+                return redirect(url_for('index')) # Ανακατεύθυνση στην αρχική σελίδα
+            return f(*args, **kwargs)
+        return decorated_function
+    return wrapper
+
+def get_settings():
+    """Επιστρέφει όλες τις ρυθμίσεις ως dictionary."""
+    settings = db.session.execute(select(Setting)).scalars().all()
+    return {s.key: s.value for s in settings}
+
+def get_emoticons():
+    """Επιστρέφει όλα τα emoticons ως dictionary."""
+    emoticons = db.session.execute(select(Emoticon)).scalars().all()
+    return {e.code: {'code': e.code, 'url': e.url} for e in emoticons}
+
 def initialize_settings(app):
     """Αρχικοποιεί τις default ρυθμίσεις στη βάση δεδομένων."""
-    
-    # Χρειάζεται application context για να χρησιμοποιήσει το db.session
     with app.app_context(): 
         default_settings = {
             'feature_bold': 'True',
@@ -67,7 +108,7 @@ def initialize_settings(app):
             'feature_emoticons': 'True',
             'feature_gif': 'True',
             'feature_radio': 'True', 
-            'radio_stream_url': 'http://127.0.0.1:8000/stream.mp3', # 🚨 ΑΛΛΑΞΕ ΑΥΤΟ ΤΟ URL!
+            'radio_stream_url': 'http://127.0.0.1:8000/stream.mp3', 
             'global_chat_enabled': 'True', 
             'welcome_message': 'Welcome to the chat!'
         }
@@ -84,7 +125,6 @@ def initialize_settings(app):
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     
-    # 🚨 Κρίσιμο: Proxy Fix για το OAuth σε production environments
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     
     app.config.from_mapping(
@@ -92,15 +132,15 @@ def create_app(test_config=None):
         SQLALCHEMY_DATABASE_URI=os.environ.get("DATABASE_URL", 'sqlite:///chat.db'),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SESSION_TYPE='filesystem', 
-        # 🚨 Google OAuth Config (Αντλείται από περιβάλλον)
-        GOOGLE_CLIENT_ID=os.environ.get("GOOGLE_CLIENT_ID", "default_client_id"),
-        GOOGLE_CLIENT_SECRET=os.environ.get("GOOGLE_CLIENT_SECRET", "default_client_secret"),
+        GOOGLE_CLIENT_ID=os.environ.get("GOOGLE_CLIENT_ID", "default_client_id_if_missing"),
+        GOOGLE_CLIENT_SECRET=os.environ.get("GOOGLE_CLIENT_SECRET", "default_client_secret_if_missing"),
     )
 
     db.init_app(app)
     Session(app) 
     oauth = OAuth(app)
-    socketio = SocketIO(app, manage_session=False, cors_allowed_origins="*") # CORS * για ευκολία deploy
+    # 🚨 Κρίσιμο: manage_session=False λόγω της Flask-Session
+    socketio = SocketIO(app, manage_session=False, cors_allowed_origins="*") 
 
     # 🚨 Ρύθμιση Google OAuth
     oauth.register(
@@ -121,11 +161,10 @@ def create_app(test_config=None):
 
     with app.app_context():
         db.create_all()
-        # 🚨 Αρχικοποίηση ρυθμίσεων αν δεν υπάρχουν (Η κλήση είναι τώρα έγκυρη)
         initialize_settings(app)
 
-    # --- ROUTES ΓΙΑ AUTHENTICATION (Ολοκληρωμένα) ---
-    
+    # --- ROUTES ΓΙΑ AUTHENTICATION ---
+
     @app.route('/login')
     def login():
         return render_template('login.html')
@@ -138,12 +177,12 @@ def create_app(test_config=None):
         
     @app.route('/login/google')
     def login_google():
-        # Χρησιμοποιούμε _external=True για να πάρουμε το σωστό URL στο Render/Production
         redirect_uri = url_for('auth_google', _external=True) 
         return oauth.google.authorize_redirect(redirect_uri)
 
     @app.route('/auth/google')
     def auth_google():
+        # ... (Λογική Google Callback - Όπως πριν) ...
         try:
             token = oauth.google.authorize_access_token()
             userinfo = oauth.google.parse_id_token(token)
@@ -164,17 +203,15 @@ def create_app(test_config=None):
             
             return redirect(url_for('index'))
 
-        except MismatchingStateError as e:
-            print(f"OAuth Error (State Mismatch): {e}")
-            # Αυτό συνήθως διορθώνεται με το ProxyFix ή σωστή session ρύθμιση
-            return redirect(url_for('login'))
-        except Exception as e:
-            print(f"General OAuth Error: {e}")
+        except (MismatchingStateError, Exception) as e:
+            print(f"OAuth Error: {e}")
             return redirect(url_for('login'))
 
+
     # --- ΒΑΣΙΚΑ APPLICATION ROUTES ---
+
     @app.route('/')
-    @login_required
+    @login_required # 🚨 ΤΩΡΑ ΕΙΝΑΙ ΟΡΑΤΟ
     def index():
         user = get_current_user_from_session()
         settings = get_settings()
@@ -183,18 +220,95 @@ def create_app(test_config=None):
 
     @app.route('/admin_panel')
     @login_required
-    @role_required(['admin', 'owner'])
+    @role_required(['admin', 'owner']) # 🚨 ΤΩΡΑ ΕΙΝΑΙ ΟΡΑΤΟ
     def admin_panel():
         return render_template('admin_panel.html')
 
-    # ... (Υλοποίηση /check_login, /radio_proxy, /api/v1/settings, /api/v1/emoticons, /api/v1/users) ...
-    # 🚨 Εδώ ακολουθούν τα routes που σου έστειλα στο προηγούμενο βήμα
-    
-    return app
+    # --- ADMIN PANEL & RADIO API ROUTES (Σημαντικά για τη λειτουργία) ---
 
+    @app.route('/check_login')
+    @login_required
+    def check_login():
+        # ... (Λογική) ...
+        current_user = get_current_user_from_session()
+        return jsonify({
+            'id': current_user.id,
+            'role': current_user.role,
+            'display_name': current_user.display_name
+        }), 200
+
+    @app.route('/radio_proxy')
+    @login_required 
+    def radio_proxy():
+        # ... (Λογική) ...
+        settings = get_settings()
+        radio_url = settings.get('radio_stream_url')
+        
+        if not radio_url or settings.get('feature_radio') != 'True':
+            return "", 204
+            
+        try:
+            # 🚨 Χρησιμοποιούμε requests για stream, όπως συζητήθηκε
+            response = requests.get(radio_url, stream=True, timeout=10)
+            res = make_response(response.iter_content(chunk_size=1024))
+            res.status_code = response.status_code
+            res.headers['Content-Type'] = response.headers.get('Content-Type', 'audio/mpeg')
+            res.headers['Access-Control-Allow-Origin'] = '*' 
+            return res
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Error in radio proxy: {e}")
+            return "", 503
+            
+    # --- ADMIN API: SETTINGS ---
+
+    @app.route('/api/v1/settings', methods=['GET'])
+    @role_required(['admin', 'owner'])
+    def get_all_settings_api():
+        # ... (Λογική) ...
+        settings = db.session.execute(select(Setting)).scalars().all()
+        return jsonify([{'key': s.key, 'value': s.value, 'description': s.description} for s in settings]), 200
+
+    @app.route('/api/v1/settings', methods=['POST'])
+    @role_required(['admin', 'owner'])
+    def update_settings_api():
+        # ... (Λογική) ...
+        data = request.get_json()
+        updates = data.get('settings', [])
+        
+        try:
+            for item in updates:
+                key = item.get('key')
+                value = item.get('value')
+                setting = db.session.get(Setting, key)
+                if setting:
+                    setting.value = value
+            db.session.commit()
+            socketio.emit('settings_update', get_settings(), room=GLOBAL_ROOM)
+            return jsonify({"message": "Settings updated successfully."}), 200
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": "Database error during update."}), 500
+
+
+    # --- SOCKETIO EVENT HANDLERS ---
+    # ... (Υποθέτουμε ότι τα handlers για 'connect', 'disconnect', 'send_message' υπάρχουν) ...
+    # 🚨 ΣΗΜΕΙΩΣΗ: Πρέπει να διασφαλιστεί ότι τα handlers όπως το 'send_message' έχουν πρόσβαση
+    # στον χρήστη μέσω του session/socket (όπως ορίστηκε στις βοηθητικές συναρτήσεις).
+
+    return app
 
 # --- Τερματικό Σημείο: Εκτέλεση του Server ---
 if __name__ == '__main__':
     app = create_app()
     # ... (eventlet setup) ...
-    pass
+    print("Starting Flask-SocketIO server locally...")
+    port = int(os.environ.get('PORT', 10000)) 
+    try:
+        import eventlet
+        eventlet.monkey_patch() 
+        from eventlet import wsgi
+        wsgi.server(eventlet.listen(('', port)), app)
+    except ImportError:
+        # Fallback for local testing without eventlet
+        app.run(debug=True, port=port)
