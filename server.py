@@ -10,7 +10,7 @@ from flask import Flask, send_from_directory, request, jsonify, url_for, redirec
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
-from functools import wraps # 🚨 ΚΡΙΣΙΜΟ: ΑΠΑΡΑΙΤΗΤΟ ΓΙΑ ΤΟΥΣ DECORATORS
+from functools import wraps 
 from werkzeug.middleware.proxy_fix import ProxyFix 
 from sqlalchemy import select, desc, func 
 from flask_sqlalchemy import SQLAlchemy
@@ -27,7 +27,7 @@ ONLINE_SIDS = {}
 GLOBAL_ROOM = 'main'
 db = SQLAlchemy()
 
-# 🚨 MODELS (Πρέπει να είναι στο global scope για να λειτουργήσουν)
+# 🚨 MODELS 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=True) 
@@ -49,16 +49,14 @@ class Emoticon(db.Model):
     code = db.Column(db.String(30), unique=True, nullable=False)
     url = db.Column(db.String(255), nullable=False)
     
-# --- ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ & DECORATORS (ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ GLOBAL) ---
+# --- ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ & DECORATORS (ΣΤΟ GLOBAL SCOPE) ---
 
 def get_current_user_from_session():
     """Ανάκτηση χρήστη από το session."""
-    # 🚨 ΣΗΜΕΙΩΣΗ: Απαιτείται app context για τη λειτουργία του db.session
     try:
         user_id = session.get('user_id')
         return db.session.get(User, user_id) if user_id else None
     except RuntimeError:
-        # Μπορεί να καλεστεί εκτός app context (π.χ. στο socketio connect handler), οπότε επιστρέφουμε None
         return None
 
 def login_required(f):
@@ -66,22 +64,20 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            # Ανακατεύθυνση στο login αν δεν υπάρχει session
             return redirect(url_for('login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
 
 def role_required(roles):
-    """Decorator για έλεγχο ρόλου (π.χ. admin, owner)."""
+    """Decorator για έλεγχο ρόλου."""
     def wrapper(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             user = get_current_user_from_session()
             if not user or user.role not in roles:
-                # Χρησιμοποιούμε jsonify για API endpoints, redirect για HTML routes
-                if request.blueprint in ['api']: # Υποθέτουμε ότι τα API έχουν blueprint 'api'
+                if request.blueprint in ['api']: 
                     return jsonify({"error": "Forbidden. Insufficient role."}), 403
-                return redirect(url_for('index')) # Ανακατεύθυνση στην αρχική σελίδα
+                return redirect(url_for('index')) 
             return f(*args, **kwargs)
         return decorated_function
     return wrapper
@@ -139,7 +135,6 @@ def create_app(test_config=None):
     db.init_app(app)
     Session(app) 
     oauth = OAuth(app)
-    # 🚨 Κρίσιμο: manage_session=False λόγω της Flask-Session
     socketio = SocketIO(app, manage_session=False, cors_allowed_origins="*") 
 
     # 🚨 Ρύθμιση Google OAuth
@@ -176,13 +171,12 @@ def create_app(test_config=None):
         return redirect(url_for('login'))
         
     @app.route('/login/google')
-    def login_google():
+    def login_google(): # ⬅️ Το σωστό endpoint 'login_google'
         redirect_uri = url_for('auth_google', _external=True) 
         return oauth.google.authorize_redirect(redirect_uri)
 
     @app.route('/auth/google')
     def auth_google():
-        # ... (Λογική Google Callback - Όπως πριν) ...
         try:
             token = oauth.google.authorize_access_token()
             userinfo = oauth.google.parse_id_token(token)
@@ -211,7 +205,7 @@ def create_app(test_config=None):
     # --- ΒΑΣΙΚΑ APPLICATION ROUTES ---
 
     @app.route('/')
-    @login_required # 🚨 ΤΩΡΑ ΕΙΝΑΙ ΟΡΑΤΟ
+    @login_required
     def index():
         user = get_current_user_from_session()
         settings = get_settings()
@@ -220,16 +214,15 @@ def create_app(test_config=None):
 
     @app.route('/admin_panel')
     @login_required
-    @role_required(['admin', 'owner']) # 🚨 ΤΩΡΑ ΕΙΝΑΙ ΟΡΑΤΟ
+    @role_required(['admin', 'owner']) 
     def admin_panel():
         return render_template('admin_panel.html')
 
-    # --- ADMIN PANEL & RADIO API ROUTES (Σημαντικά για τη λειτουργία) ---
+    # --- ADMIN PANEL & RADIO API ROUTES ---
 
     @app.route('/check_login')
     @login_required
     def check_login():
-        # ... (Λογική) ...
         current_user = get_current_user_from_session()
         return jsonify({
             'id': current_user.id,
@@ -240,7 +233,6 @@ def create_app(test_config=None):
     @app.route('/radio_proxy')
     @login_required 
     def radio_proxy():
-        # ... (Λογική) ...
         settings = get_settings()
         radio_url = settings.get('radio_stream_url')
         
@@ -248,7 +240,6 @@ def create_app(test_config=None):
             return "", 204
             
         try:
-            # 🚨 Χρησιμοποιούμε requests για stream, όπως συζητήθηκε
             response = requests.get(radio_url, stream=True, timeout=10)
             res = make_response(response.iter_content(chunk_size=1024))
             res.status_code = response.status_code
@@ -265,14 +256,12 @@ def create_app(test_config=None):
     @app.route('/api/v1/settings', methods=['GET'])
     @role_required(['admin', 'owner'])
     def get_all_settings_api():
-        # ... (Λογική) ...
         settings = db.session.execute(select(Setting)).scalars().all()
         return jsonify([{'key': s.key, 'value': s.value, 'description': s.description} for s in settings]), 200
 
     @app.route('/api/v1/settings', methods=['POST'])
     @role_required(['admin', 'owner'])
     def update_settings_api():
-        # ... (Λογική) ...
         data = request.get_json()
         updates = data.get('settings', [])
         
@@ -289,19 +278,34 @@ def create_app(test_config=None):
         except Exception as e:
             db.session.rollback()
             return jsonify({"error": "Database error during update."}), 500
-
-
-    # --- SOCKETIO EVENT HANDLERS ---
-    # ... (Υποθέτουμε ότι τα handlers για 'connect', 'disconnect', 'send_message' υπάρχουν) ...
-    # 🚨 ΣΗΜΕΙΩΣΗ: Πρέπει να διασφαλιστεί ότι τα handlers όπως το 'send_message' έχουν πρόσβαση
-    # στον χρήστη μέσω του session/socket (όπως ορίστηκε στις βοηθητικές συναρτήσεις).
-
+            
+    # --- SOCKETIO EVENT HANDLERS (Sample for completeness) ---
+    
+    @socketio.on('connect')
+    def handle_connect():
+        user = get_current_user_from_session()
+        if user:
+            join_room(GLOBAL_ROOM)
+            ONLINE_SIDS[request.sid] = user.id
+            # TODO: Add logic to update and broadcast user list
+            
+    @socketio.on('disconnect')
+    def handle_disconnect():
+        if request.sid in ONLINE_SIDS:
+            user_id = ONLINE_SIDS.pop(request.sid)
+            # TODO: Add logic to update and broadcast user list
+            
+    @socketio.on('send_message')
+    def handle_send_message(data):
+        # ... (Λογική αποστολής μηνύματος) ...
+        pass # Placeholder: Η πλήρης λογική υπήρχε στο snippetFromBack του προηγούμενου βήματος
+    
     return app
+
 
 # --- Τερματικό Σημείο: Εκτέλεση του Server ---
 if __name__ == '__main__':
     app = create_app()
-    # ... (eventlet setup) ...
     print("Starting Flask-SocketIO server locally...")
     port = int(os.environ.get('PORT', 10000)) 
     try:
@@ -310,5 +314,4 @@ if __name__ == '__main__':
         from eventlet import wsgi
         wsgi.server(eventlet.listen(('', port)), app)
     except ImportError:
-        # Fallback for local testing without eventlet
         app.run(debug=True, port=port)
