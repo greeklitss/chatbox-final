@@ -177,7 +177,7 @@ def create_app(test_config=None):
         return redirect(url_for('login'))
         
     @app.route('/login/google')
-    def login_google(): 
+    def login_google(): # <--- ΣΩΣΤΟ ENDPOINT
         redirect_uri = url_for('auth_google', _external=True) 
         return oauth.google.authorize_redirect(redirect_uri)
 
