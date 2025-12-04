@@ -14,7 +14,7 @@ from sqlalchemy import select, or_
 
 # Βιβλιοθήκες για Google OAuth
 from authlib.integrations.flask_client import OAuth as AuthlibOAuth
-from authlib.oauth2.client import OAuthError as AuthlibOAuthError
+from authlib.integrations.base_client.errors import OAuthError as AuthlibOAuthError
 
 # --- 1. Αρχικοποίηση Εξωτερικών Αντικειμένων ---
 db = SQLAlchemy()
