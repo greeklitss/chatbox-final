@@ -1,98 +1,391 @@
 <!DOCTYPE html>
-<html>
+<html lang="el">
 <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
-    <title>RADIO PAREA</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radioparea - Live Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="icon" href="{{ url_for('static', filename='default_avatar.png') }}" type="image/png">
+    <style>
+        /* ================================================= */
+        /* 🎨 ΧΑΡΟΥΜΕΝΟ ΘΕΜΑ / COLORS & FONTS */
+        /* ================================================= */
+        :root {
+            --bg-main: #1a1a2e;         /* Σκούρο Μπλε/Μοβ (Νύχτα) */
+            --bg-chat-box: rgba(25, 25, 50, 0.85); /* Διαφανές Σκούρο */
+            --color-primary: #FFD700;   /* Χρυσό (Primary Accent) */
+            --color-secondary: #00CC00; /* Πράσινο (Secondary Accent) */
+            --color-text: #F0F0F0;      /* Ανοιχτό Γκρι/Λευκό */
+            --color-owner: #FF3399;     /* Έντονο Ροζ */
+            --color-admin: #00CC00;     /* Πράσινο */
+        }
+        
+        body {
+            background-color: var(--bg-main);
+            color: var(--color-text);
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: auto;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            background: var(--bg-chat-box);
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header / User Info */
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 2px solid var(--color-primary);
+        }
+        .chat-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--color-primary);
+            font-size: 1.5em;
+            margin: 0;
+        }
+        .user-controls button {
+            background: var(--color-secondary);
+            color: var(--bg-main);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin-left: 10px;
+        }
+        .user-controls button:hover { background: #4caf50; }
+
+        /* Messages */
+        #messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            list-style: none;
+            margin: 0;
+        }
+        .message-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .message-header {
+            font-size: 0.9em;
+            margin-bottom: 3px;
+        }
+        .username {
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .message-content {
+            word-wrap: break-word;
+        }
+
+        /* Message Input */
+        #message-form {
+            display: flex;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid var(--color-secondary);
+        }
+        #message-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid var(--color-secondary);
+            border-radius: 5px 0 0 5px;
+            background: var(--bg-main);
+            color: var(--color-text);
+            font-size: 1em;
+            outline: none;
+        }
+        #message-form button {
+            background: var(--color-primary);
+            color: var(--bg-main);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        #message-form button:hover { background: #ffe066; }
+
+        /* ================================================= */
+        /* ⚙️ USER SETTINGS MODAL CSS */
+        /* ================================================= */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.7); 
+        }
+        .modal-content {
+            background-color: var(--bg-chat-box);
+            margin: 15% auto; 
+            padding: 30px;
+            border: 1px solid var(--color-primary);
+            width: 80%; 
+            max-width: 500px;
+            border-radius: 10px;
+            position: relative;
+        }
+        .close-button {
+            color: var(--color-primary);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .modal-content h3 { color: var(--color-secondary); margin-top: 0; }
+        .modal-content label { display: block; margin-top: 10px; font-weight: bold; }
+        .modal-content input[type="text"], 
+        .modal-content input[type="url"],
+        .modal-content input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+            border: 1px solid var(--color-secondary);
+            background: var(--bg-main);
+            color: var(--color-text);
+            border-radius: 5px;
+        }
+        .modal-content button {
+             background: var(--color-primary);
+             color: var(--bg-main);
+             margin-top: 15px;
+        }
+        .modal-content #update-password-form { border-top: 1px dashed var(--color-text); padding-top: 15px; }
+
+    </style>
 </head>
-
-<body style="background-image: url('{{ url_for('static', filename='radioparea_background.jpg') }}'); 
-             background-size: cover; 
-             background-repeat: no-repeat;
-             background-position: center center;
-             background-attachment: fixed;">
-
-    <div class="chat-wrapper">
-        <div class="chat-container">
-
-            <div class="chat-header">
-                <div class="user-info">
-                    <img src="{{ user.avatar_url }}" alt="Avatar" class="user-avatar">
-                    <span class="user-display-name">{{ user.display_name }}</span>
-                    <span class="user-role-text">({{ user.role }})</span>
-                </div>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🎉 Radioparea Live Chat</h1>
+            <div class="user-controls">
+                <span style="margin-right: 15px;">
+                    Role: <span style="font-weight: bold; color: {{ color }}">{{ role.upper() }}</span>
+                </span>
                 
-                <div class="header-tools">
-                    
-                    <audio id="audio-stream" 
-                        src="{% if settings.get('feature_radio') == 'True' %}{{ url_for('radio_proxy') }}{% endif %}" 
-                        loop preload="auto" 
-                        style="display:none;">
-                    </audio>
-                    
-                    <button id="radio-toggle-button" title="Web Radio ON/OFF" class="radio-off">
-                        <i class="fas fa-compact-disc"></i> 
-                    </button>
-                    
-                    <button id="notification-sound-btn" title="Notification Sound ON" class="active">
-                        <i class="fas fa-bell"></i>
-                    </button>
+                <button onclick="openSettingsModal()"><i class="fas fa-cog"></i> Settings</button>
 
-                    {% if user.role in ['admin', 'owner'] %}
-                    <a href="{{ url_for('admin_panel') }}" class="admin-link" title="Admin Panel">
-                        <i class="fas fa-tools"></i> Admin
+                {% if role == 'admin' or role == 'owner' %}
+                    <a href="{{ url_for('admin_panel') }}" target="_blank">
+                        <button style="background: var(--color-owner);"><i class="fas fa-shield-alt"></i> Admin</button>
                     </a>
-                    {% endif %}
-                    
-                    <a href="{{ url_for('logout') }}" class="logout-link" title="Logout">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
-                </div>
+                {% endif %}
+                <a href="{{ url_for('logout') }}"><button><i class="fas fa-sign-out-alt"></i> Logout</button></a>
             </div>
+        </div>
 
-            <div class="chat-main-content">
-                <div class="message-area" id="chat-box">
-                    </div>
-                
-                <div class="online-users-list" id="online-users-list">
-                    <h2><i class="fas fa-users"></i> Online Users</h2>
-                    <ul id="users-list">
-                        </ul>
-                </div>
-            </div>
+        <ul id="messages">
+            </ul>
+
+        <form id="message-form">
+            <input type="text" id="message-input" placeholder="Your festive message...">
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <div id="user-settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeSettingsModal()">&times;</span>
+            <h2><i class="fas fa-user-cog"></i> User Settings</h2>
             
-            <div id="chat-input-container" class="message-input-area">
-                <div class="format-tools">
-                    </div>
-                <div class="input-send-container">
-                    <div id="emoticon-selector-popup" class="emoticon-selector-popup" style="display: none;">
-                        <div class="emoticon-grid" id="emoticon-grid"></div>
-                    </div>
+            <form id="update-profile-form">
+                <h3>Profile</h3>
+                <label for="setting-nickname">Nickname:</label>
+                <input type="text" id="setting-nickname" name="display_name" required>
 
-                    <input type="text" id="message-input" placeholder="Type your message here..." maxlength="500">
-                    <button id="send-btn"><i class="fas fa-paper-plane"></i> Send</button>
-                </div>
-            </div>
+                <label for="setting-avatar">Avatar URL:</label>
+                <input type="url" id="setting-avatar" name="avatar_url" placeholder="Paste image URL">
+                
+                <button type="submit" class="settings-btn"><i class="fas fa-user-edit"></i> Update Profile</button>
+                <div id="profile-message" class="message-status"></div>
+            </form>
+
+            <form id="update-password-form" style="display: none;">
+                 <h3>Change Password</h3>
+                 <label for="setting-old-password">Old Password:</label>
+                 <input type="password" id="setting-old-password" name="old_password" required>
+                 
+                 <label for="setting-new-password">New Password:</label>
+                 <input type="password" id="setting-new-password" name="new_password" required>
+                 
+                 <button type="submit" class="settings-btn"><i class="fas fa-key"></i> Change Password</button>
+                 <div id="password-message" class="message-status"></div>
+            </form>
+            
+            <hr>
+            
+            <h3>Client Settings</h3>
+            <label>
+                <input type="checkbox" id="setting-mute-sound"> Mute Chat Sounds
+            </label>
         </div>
     </div>
     
-    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
     <script>
-// 🚨 ΚΡΙΣΙΜΟ: ΠΕΡΝΑΜΕ ΤΑ GLOBAL SETTINGS ΚΑΙ EMOTICONS ΑΠΟ ΤΟ FLASK ΣΤΟ JAVASCRIPT
-        const globalSettings = {{ settings | tojson }};
-        const globalEmoticons = {{ emoticons | tojson }};
+        // ----------------------------------------------------
+        // GLOBAL DATA & SOCKET.IO INIT
+        // ----------------------------------------------------
+        const userId = {{ user_id }};
+        const userName = "{{ display_name }}";
+        const userRole = "{{ role }}";
+        const socket = io();
+        let hasPasswordHash = {{ 'true' if password_hash is not none else 'false' }}; // Πρέπει να περάσετε το password_hash status από το server
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // ... Η DOMContentLoaded logic στο main.js θα χρησιμοποιήσει αυτά.
-            // ... Ο socket.io client πρέπει να αρχικοποιηθεί στο main.js.
+        // ----------------------------------------------------
+        // USER SETTINGS MODAL LOGIC
+        // ----------------------------------------------------
+
+        function openSettingsModal() {
+            document.getElementById('user-settings-modal').style.display = 'block';
+            
+            // 1. Προφορτώνουμε τις τρέχουσες τιμές
+            document.getElementById('setting-nickname').value = userName;
+            // Ανάκτηση avatar_url και mute status
+            
+            // 2. Εμφάνιση/Απόκρυψη φόρμας κωδικού
+            const passwordForm = document.getElementById('update-password-form');
+            // Αυτή η μεταβλητή (hasPasswordHash) πρέπει να έρθει από το server.py
+            if (hasPasswordHash) {
+                 passwordForm.style.display = 'block';
+            } else {
+                 passwordForm.style.display = 'none';
+            }
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('user-settings-modal').style.display = 'none';
+            // Καθαρισμός μηνυμάτων κατάστασης
+            document.getElementById('profile-message').textContent = '';
+            document.getElementById('password-message').textContent = '';
+        }
+
+        // 🚨 Λογική για υποβολή φόρμας προφίλ (nickname, avatar)
+        document.getElementById('update-profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const msgDiv = document.getElementById('profile-message');
+
+            try {
+                const response = await fetch('/api/v1/user/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ display_name: data.display_name, avatar_url: data.avatar_url })
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    msgDiv.textContent = result.message + '. Refresh to see nickname changes.';
+                    msgDiv.style.color = 'green';
+                    // Ενημερώνουμε τη global μεταβλητή userName
+                    // userName = result.new_display_name; 
+                } else {
+                    msgDiv.textContent = `Error: ${result.error}`;
+                    msgDiv.style.color = 'red';
+                }
+            } catch (error) {
+                 msgDiv.textContent = 'Network error during profile update.';
+                 msgDiv.style.color = 'red';
+            }
         });
+
+        // 🚨 Λογική για υποβολή φόρμας κωδικού
+        document.getElementById('update-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const msgDiv = document.getElementById('password-message');
+            
+            // Ελέγχουμε αν τα πεδία κωδικών είναι ίδια
+            if (data.old_password === data.new_password) {
+                 msgDiv.textContent = 'New password must be different from the old one.';
+                 msgDiv.style.color = 'orange';
+                 return;
+            }
+
+            try {
+                const response = await fetch('/api/v1/user/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ old_password: data.old_password, new_password: data.new_password })
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    msgDiv.textContent = result.message;
+                    msgDiv.style.color = 'green';
+                    e.target.reset(); // Καθαρισμός πεδίων
+                } else {
+                    msgDiv.textContent = `Error: ${result.error}`;
+                    msgDiv.style.color = 'red';
+                }
+            } catch (error) {
+                 msgDiv.textContent = 'Network error during password update.';
+                 msgDiv.style.color = 'red';
+            }
+        });
+
+
+        // ----------------------------------------------------
+        // SOCKET.IO RECEIVE EVENTS (Example)
+        // ----------------------------------------------------
+        socket.on('message', function(msg) {
+            const messages = document.getElementById('messages');
+            const item = document.createElement('li');
+            item.className = 'message-item';
+            
+            // Εδώ πρέπει να βάζετε το avatar_url και το χρώμα
+            item.innerHTML = `<div class="message-header"><span class="username" style="color: ${msg.color || '#fff'};">${msg.display_name}</span><span class="timestamp">${new Date(msg.timestamp).toLocaleTimeString()}</span></div><div class="message-content">${msg.content}</div>`;
+            messages.appendChild(item);
+            messages.scrollTop = messages.scrollHeight; // Αυτόματο scroll
+        });
+
+        // ----------------------------------------------------
+        // SOCKET.IO SEND EVENTS
+        // ----------------------------------------------------
+        document.getElementById('message-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('message-input');
+            if (input.value) {
+                socket.emit('message', { 
+                    content: input.value, 
+                    display_name: userName, 
+                    role: userRole 
+                });
+                input.value = '';
+            }
+        });
+
     </script>
 </body>
 </html>
