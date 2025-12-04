@@ -168,11 +168,13 @@ def login_submit():
     # Βρες τον χρήστη με βάση το display name
     user = db.session.execute(select(User).where(User.display_name == display_name)).scalar_one_or_none()
 
-    # Έλεγχος: Ο χρήστης υπάρχει ΚΑΙ έχει password_hash (δηλαδή δεν είναι μόνο Google user)
+   # Έλεγχος: Ο χρήστης υπάρχει ΚΑΙ έχει password_hash
     if user and user.password_hash and check_password_hash(user.password_hash, password):
         session['user_id'] = user.id
+        print(f"--- SUCCESS LOGIN: User {user.display_name} (ID: {user.id}) logged in and ID saved to session.") # 🚨 Νέα γραμμή
         return redirect(url_for('chat'))
     else:
+        print("--- FAILED LOGIN: Invalid credentials or hash mismatch.") # 🚨 Νέα γραμμή
         return render_template('login.html', error='Invalid display name or password.')
 
 
