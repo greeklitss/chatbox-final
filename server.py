@@ -210,8 +210,8 @@ def create_app():
                     display_name=user_info.get('name', 'NewUser'),
                     role=default_role,     
                     color=default_color    
-                    # 🚨 ΠΡΟΣΘΕΣΤΕ ΕΔΩ ΟΠΟΙΑ ΑΛΛΑ NOT NULL πεδία λείπουν από το μοντέλο User
-                )
+                    avatar_url='static/default_avatar.png' # 🚨 Αν το avatar_url είναι NOT NULL, ΠΡΕΠΕΙ να μπει default τιμή!
+               )
                 db.session.add(user)
                 
                 # 4. ΧΕΙΡΙΣΜΟΣ ΣΦΑΛΜΑΤΟΣ DB ΑΜΕΣΩΣ ΜΕΤΑ ΤΟ COMMIT
