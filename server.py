@@ -195,29 +195,28 @@ def create_app():
             user_info = token.get('userinfo')
             
             # Εύρεση ή δημιουργία χρήστη
-            user = db.session.execute(select(User).where(User.google_id == user_info['id'])).scalar_one_or_none()
-            
-            if user is None:
-                # 1. Ορίζουμε τον default ρόλο
-                default_role = 'user'
-                
-                # 2. Βρίσκουμε το χρώμα με βάση τον default ρόλο
-                default_color = get_default_color_by_role(default_role)
-                
-                # 3. Δημιουργία νέου χρήστη με ΟΛΑ τα υποχρεωτικά πεδία
-                user = User(
-                    google_id=user_info['id'], 
-                    display_name=user_info.get('name', 'NewUser'),
-                    role=default_role,     
-                    color=default_color    
-                    avatar_url='static/default_avatar.png' # 🚨 Αν το avatar_url είναι NOT NULL, ΠΡΕΠΕΙ να μπει default τιμή!
-               )
-                db.session.add(user)
-                
-                # 4. ΧΕΙΡΙΣΜΟΣ ΣΦΑΛΜΑΤΟΣ DB ΑΜΕΣΩΣ ΜΕΤΑ ΤΟ COMMIT
-                try:
-                    db.session.commit()
-                except Exception as e:
+            user = db.session.execute(select(User).where(User.google_id == user_info['id'])).scalar_one_or_none()
+            
+            if user is None:
+                # 1. Ορίζουμε τον default ρόλο
+                default_role = 'user'
+                
+                # 2. Βρίσκουμε το χρώμα με βάση τον default ρόλο
+                default_color = get_default_color_by_role(default_role)
+                
+                # 3. Δημιουργία νέου χρήστη με ΟΛΑ τα υποχρεωτικά πεδία
+                user = User(
+                    google_id=user_info['id'], 
+                    display_name=user_info.get('name', 'NewUser'),
+                    role=default_role,     
+                    color=default_color,   
+                    avatar_url='static/default_avatar.png' 
+               )
+                db.session.add(user)
+                
+                # 4. ΧΕΙΡΙΣΜΟΣ ΣΦΑΛΜΑΤΟΣ DB ΑΜΕΣΩΣ ΜΕΤΑ ΤΟ COMMIT
+                try:
+                    db.session.commit()
                     db.session.rollback()
                     # Εκτύπωση του σφάλματος για debugging στον Render
                     print(f"Database Integrity/Commit Failed during user creation: {e}") 
