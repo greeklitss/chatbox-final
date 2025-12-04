@@ -136,8 +136,8 @@ def create_app():
     @app.route('/login', methods=['GET'])
     def login():
         if current_user.is_authenticated:
-            return redirect(url_for('chat'))
-        return render_template('index')
+            return redirect(url_for('chat.html'))
+        return render_template('index.html')
 
     # Ρουτίνα POST API: Χειρίζεται τη σύνδεση username/password (AJAX)
     @app.route('/api/v1/login', methods=['POST'])
@@ -171,7 +171,7 @@ def create_app():
     def logout():
         logout_user()
         flash('Έχετε αποσυνδεθεί επιτυχώς.', 'success')
-        return redirect(url_for('index'))
+        return redirect(url_for('index.html'))
 
     # --- Routes Google OAuth ---
 
@@ -190,7 +190,7 @@ def create_app():
             token = oauth.google.authorize_access_token()
         except AuthlibOAuthError as e:
             flash(f'Authentication failed: {e.description}', 'error')
-            return redirect(url_for('chat')) 
+            return redirect(url_for('chat.html')) 
 
         userinfo = oauth.google.parse_id_token(token, nonce=session.get('nonce'))
         user_google_id = userinfo.get('sub')
@@ -219,7 +219,7 @@ def create_app():
         login_user(user_to_login)
         flash(f"Επιτυχής σύνδεση ως {user_to_login.display_name} (Google).", 'success')
         
-        return redirect(url_for('chat'))
+        return redirect(url_for('chat.html'))
     
     # --- API Routes ---
 
@@ -248,7 +248,7 @@ def create_app():
             return jsonify({'error': 'Unauthorized. Please log in.'}), 401
             
         flash("Πρέπει να συνδεθείτε για να δείτε αυτή τη σελίδα.", 'warning')
-        return redirect(url_for('login'))
+        return redirect(url_for('login.html'))
 
     return app
 
