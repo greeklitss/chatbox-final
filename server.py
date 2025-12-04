@@ -100,13 +100,17 @@ def create_app():
     # Ρυθμίσεις Google OAuth (Authlib)
     oauth.init_app(app)
     oauth.register(
-        'google',
-        client_id=app.config.get('GOOGLE_CLIENT_ID'),
-        client_secret=app.config.get('GOOGLE_CLIENT_SECRET'),
-        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        name='google',
+        client_id=os.environ.get("GOOGLE_CLIENT_ID"),
+        client_secret=os.environ.get("GOOGLE_CLIENT_SECRET"),
+        access_token_url='https://accounts.google.com/o/oauth2/token',
+        access_token_params=None,
+        authorize_url='https://accounts.google.com/o/oauth2/auth',
+        authorize_params=None,
+        api_base_url='https://www.googleapis.com/oauth2/v1/',
         client_kwargs={'scope': 'openid email profile'},
-        # ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε τη στατική διαδρομή /oauth/authorize για να αποφύγουμε το RuntimeError κατά την εκκίνηση
-        redirect_uri='/oauth/authorize' 
+        # ❌ ΑΦΑΙΡΟΥΜΕ ΤΟ redirect_uri
+        # redirect_uri=url_for('authorize', _external=True)
     )
 
     # --- Routes της Εφαρμογής ---
@@ -183,15 +187,16 @@ def create_app():
     def authorize():
         """Google OAuth callback route."""
     
-    redirect_uri = url_for('authorize', _external=True) 
+        # 🟢 ΣΩΣΤΗ ΚΛΗΣΗ: Αυτή η γραμμή είναι μέσα σε μια route function,
+        # όπου υπάρχει ήδη Application Context και Request Context.
+        redirect_uri = url_for('authorize', _external=True) 
 
-    try:  # Γραμμή 186
-        # 🟢 ΠΡΟΣΟΧΗ: Αυτές οι γραμμές έχουν 4 κενά στοίχισης
+    try:
         token = oauth.google.authorize_access_token(redirect_uri=redirect_uri)
+        
     except AuthlibOAuthError as e:
-
-        flash(f'Authentication failed: {e.description}', 'error')
-        return redirect(url_for('login')) 
+        flash(f'Authentication failed: {e.description}', 'error') 
+        return redirect(url_for('login'))
 
         userinfo = oauth.google.parse_id_token(token) # Πιο συμβατό με Authlib
         user_google_id = userinfo.get('sub')
