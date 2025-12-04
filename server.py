@@ -115,6 +115,13 @@ def create_app():
     def index():
         return render_template('index.html')
 
+    @app.route('/login', methods=['GET'])
+    def login():
+        if current_user.is_authenticated:
+            # ✅ ΔΙΟΡΘΩΣΗ: Πηγαίνουμε κατευθείαν στο chat
+            return redirect(url_for('chat')) 
+        return render_template('login.html')
+
     @app.route('/chat')
     @login_required # Βεβαιώνει ότι μόνο συνδεδεμένοι χρήστες έχουν πρόσβαση
     def chat():
