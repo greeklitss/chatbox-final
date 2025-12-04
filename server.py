@@ -15,8 +15,8 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 from flask import jsonify, url_for, request 
 
-# Εισαγωγές DB & Auth
-from werkzeug.middleware.proxy_fix import ProxyFix # 🚨 ΚΡΙΣΙΜΟ ΓΙΑ RENDER/PROXY
+# --- ΒΙΒΛΙΟΘΗΚΕΣ ΓΙΑ DB & AUTH ---
+from werkzeug.middleware.proxy_fix import ProxyFix # ΚΡΙΣΙΜΟ ΓΙΑ RENDER/PROXY
 from sqlalchemy import select, desc, func 
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
@@ -27,22 +27,39 @@ from sqlalchemy.exc import IntegrityError, ProgrammingError, OperationalError
 from authlib.integrations.base_client.errors import MismatchingStateError, OAuthError
 from sqlalchemy.orm import validates 
 
+
 # --- Global Real-time State (Safe for -w 1 eventlet worker) ---
 ONLINE_SIDS = {} 
 GLOBAL_ROOM = 'main'
+
+# --- ΧΑΡΤΟΓΡΑΦΗΣΗ ΡΟΛΩΝ / ΧΡΩΜΑΤΩΝ (ΚΡΙΣΙΜΟ ΓΙΑ ΤΟ LOGIN) ---
+USER_ROLE_COLORS = {
+    # Χρησιμοποιούμε τα χρώματα από το style.css
+    'owner': '#ff3399',      
+    'admin': '#00e6e6',      
+    'user': '#ffffff',       # Default χρώμα για απλό χρήστη
+}
+
+def get_default_color_by_role(role):
+    """Επιστρέφει το hex color με βάση τον ρόλο."""
+    # Επιστρέφει το χρώμα του ρόλου, αλλιώς επιστρέφει το default χρώμα χρήστη
+    return USER_ROLE_COLORS.get(role, USER_ROLE_COLORS['user'])
+
 
 # --- Αρχικοποίηση Εξαρτήσεων ---
 db = SQLAlchemy()
 oauth = OAuth()
 socketio = SocketIO()
 
-# --- ΥΠΟΘΕΤΙΚΑ ΜΟΝΤΕΛΑ DB (Placeholder) ---
-# Χρειάζονται για να τρέξει ο κώδικας, αλλά τα μοντέλα σας μπορεί να είναι διαφορετικά
+# --- ΥΠΟΘΕΤΙΚΑ ΜΟΝΤΕΛΑ DB ---
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     google_id = db.Column(db.String(120), unique=True, nullable=True)
     display_name = db.Column(db.String(120), nullable=False)
-    # ... άλλα πεδία (role, color, κτλ.)
+    # 🚨 ΚΡΙΣΙΜΟ: Αυτά τα πεδία πρέπει να είναι NOT NULL αν τα ορίζουμε ρητά
+    role = db.Column(db.String(50), default='user', nullable=False) 
+    color = db.Column(db.String(7), default='#ffffff', nullable=False)
+    # ... άλλα πεδία (π.χ. avatar)
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -51,7 +68,7 @@ class Message(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     # ... άλλα πεδία
 
-# --- ΥΠΟΘΕΤΙΚΕΣ ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ (Placeholder) ---
+# --- ΥΠΟΘΕΤΙΚΕΣ ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ ---
 def get_global_settings():
     # Επιστρέφει τις ρυθμίσεις για το chat.html
     return {"feature_bold": "True", "feature_italic": "True"}
@@ -62,7 +79,6 @@ def get_emoticons():
 
 
 # --- DECORATOR ΠΡΟΣΤΑΣΙΑΣ ΣΕΛΙΔΩΝ ---
-# 🚨 Αυτό είναι κρίσιμο για να προστατεύονται τα /chat, /admin κτλ.
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -132,7 +148,6 @@ def create_app():
     # =========================================================================
 
     # 1. ROOT (Αρχική Σελίδα)
-    # -------------------------------------------------------------
     @app.route('/')
     def index():
         # Αν ο χρήστης είναι ήδη συνδεδεμένος, τον στέλνουμε κατευθείαν στο chat (/chat)
@@ -144,7 +159,6 @@ def create_app():
 
 
     # 2. ΣΕΛΙΔΑ CHAT (Προστατευμένη)
-    # -------------------------------------------------------------
     @app.route('/chat')
     @login_required # <-- Προστατεύουμε τη σελίδα chat
     def chat_main():
@@ -155,34 +169,28 @@ def create_app():
         settings = get_global_settings() 
         emoticons = get_emoticons()       
         
-        # chat.html χρειάζεται το 'user', 'settings', 'emoticons'
         return render_template('chat.html', user=user, settings=settings, emoticons=emoticons)
 
 
     # 3. ΣΕΛΙΔΑ LOGIN
-    # -------------------------------------------------------------
     @app.route('/login')
     def login():
         if session.get('user_id'):
             return redirect(url_for('chat_main'))
-        # 🚨 ΣΗΜΑΝΤΙΚΟ: Τώρα η login.html πρέπει να φορτώσει (πρέπει να έχει διορθωθεί το url_for)
         return render_template('login.html')
 
     
     # 4. GOOGLE LOGIN (Redirect to Google)
-    # -------------------------------------------------------------
     @app.route('/login/google')
-    def login_google(): # 🚨 ΔΙΟΡΘΩΜΕΝΟ ΟΝΟΜΑ ΣΥΝΑΡΤΗΣΗΣ (endpoint)
+    def login_google(): # 🚨 ΣΩΣΤΟ ENDPOINT NAME: 'login_google'
         redirect_uri = url_for('authorize', _external=True)
         return oauth.google.authorize_redirect(redirect_uri)
 
     
-    # 5. GOOGLE OAUTH CALLBACK
-    # -------------------------------------------------------------
+    # 5. GOOGLE OAUTH CALLBACK (ΠΛΗΡΩΣ ΔΙΟΡΘΩΜΕΝΟ)
     @app.route('/authorize')
     def authorize():
         try:
-            # Λήψη token και δεδομένων χρήστη
             token = oauth.google.authorize_access_token()
             user_info = token.get('userinfo')
             
@@ -190,45 +198,58 @@ def create_app():
             user = db.session.execute(select(User).where(User.google_id == user_info['id'])).scalar_one_or_none()
             
             if user is None:
-                # Δημιουργία νέου χρήστη
+                # 1. Ορίζουμε τον default ρόλο
+                default_role = 'user'
+                
+                # 2. Βρίσκουμε το χρώμα με βάση τον default ρόλο
+                default_color = get_default_color_by_role(default_role)
+                
+                # 3. Δημιουργία νέου χρήστη με ΟΛΑ τα υποχρεωτικά πεδία
                 user = User(
                     google_id=user_info['id'], 
                     display_name=user_info.get('name', 'NewUser'),
-                    # ... ορισμός default ρόλου, χρώματος, κτλ.
+                    role=default_role,     
+                    color=default_color    
+                    # 🚨 ΠΡΟΣΘΕΣΤΕ ΕΔΩ ΟΠΟΙΑ ΑΛΛΑ NOT NULL πεδία λείπουν από το μοντέλο User
                 )
                 db.session.add(user)
-                db.session.commit()
+                
+                # 4. ΧΕΙΡΙΣΜΟΣ ΣΦΑΛΜΑΤΟΣ DB ΑΜΕΣΩΣ ΜΕΤΑ ΤΟ COMMIT
+                try:
+                    db.session.commit()
+                except Exception as e:
+                    db.session.rollback()
+                    # Εκτύπωση του σφάλματος για debugging στον Render
+                    print(f"Database Integrity/Commit Failed during user creation: {e}") 
+                    return redirect(url_for('login')) 
 
-            # Δημιουργία Session
+            # Δημιουργία Session (Εκτελείται μόνο αν το commit ήταν επιτυχημένο)
             session['user_id'] = user.id
             session['display_name'] = user.display_name
             
-            # 🚨 ΤΕΛΙΚΗ ΑΝΑΚΑΤΕΥΘΥΝΣΗ: Προς το προστατευμένο chat (/chat)
+            # ΤΕΛΙΚΗ ΑΝΑΚΑΤΕΥΘΥΝΣΗ: Προς το προστατευμένο chat (/chat)
             return redirect(url_for('chat_main'))
             
         except MismatchingStateError:
-            # Αυτό διορθώνεται με session_cookie_samesite='Lax'
             print("OAuth State Mismatch Error - Check session settings.")
             return redirect(url_for('login'))
         except OAuthError as e:
             print(f"OAuth Error: {e}")
             return redirect(url_for('login'))
         except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+            print(f"An unexpected error occurred during authorization: {e}")
             return redirect(url_for('login'))
 
 
     # 6. LOGOUT
-    # -------------------------------------------------------------
     @app.route('/logout')
     @login_required
     def logout():
-        # Αφαίρεση του χρήστη από τους online
+        # ... (Λογική αποσύνδεσης χρήστη) ...
         if 'user_id' in session:
             user_id_to_remove = session['user_id']
             sids_to_disconnect = [sid for sid, uid in ONLINE_SIDS.items() if uid == user_id_to_remove]
             for sid in sids_to_disconnect:
-                # Εκπέμπουμε disconnect event για να ενημερωθούν οι clients
                 socketio.emit('disconnect_user', {'user_id': user_id_to_remove}, room=sid) 
                 
         session.pop('user_id', None)
@@ -239,22 +260,20 @@ def create_app():
 
 
     # 7. ADMIN PANEL
-    # -------------------------------------------------------------
     @app.route('/admin_panel')
     @login_required
     def admin_panel():
         user_id = session.get('user_id')
         user = db.session.get(User, user_id)
         
-        # Έλεγχος ρόλου (πρέπει να είναι 'admin' ή 'owner')
+        # Έλεγχος ρόλου 
         if user and user.role in ['admin', 'owner']:
             return render_template('admin_panel.html', user=user)
         else:
-            return redirect(url_for('chat_main')) # ή index
+            return redirect(url_for('chat_main')) 
 
 
     # 8. CHECK LOGIN (Για AJAX κλήσεις από client)
-    # -------------------------------------------------------------
     @app.route('/check_login')
     def check_login():
         if 'user_id' in session:
@@ -270,12 +289,12 @@ def create_app():
 
 
     # =========================================================================
-    # 🚨 SOCKETIO LOGIC (Πρέπει να το μεταφέρετε εδώ)
+    # 🚨 SOCKETIO LOGIC (Πρέπει να περιληφθεί εδώ)
     # =========================================================================
     
-    # ... (Περιλαμβάνουμε εδώ όλες τις συναρτήσεις SocketIO: connect, disconnect, new_message, κτλ.)
-    # ... (Σας τις είχα στείλει σε προηγούμενο βήμα, βεβαιωθείτε ότι είναι μέσα)
-
+    # ... (Υποθέτουμε ότι η λογική SocketIO βρίσκεται εδώ) ...
+    
+    
     return app
 
 
