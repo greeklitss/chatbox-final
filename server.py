@@ -2,9 +2,9 @@
 
 import os
 import json
+import random # Χρησιμοποιείται για τυχαία χρώματα αν χρειαστεί
 from datetime import datetime
 from urllib.parse import urlparse
-import random # Χρησιμοποιείται για τυχαία χρώματα αν χρειαστεί
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
@@ -56,21 +56,31 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.display_name}>'
 
-# --- 4. Login Manager Configuration ---
+# --- 4. Settings Model (Προστέθηκε για να διορθωθεί το ImportError) ---
+
+class Settings(db.Model):
+    __tablename__ = 'settings'
+    # Χρησιμοποιεί το κλειδί ως Primary Key (π.χ. 'radio_stream_url', 'global_chat_enabled')
+    key = db.Column(db.String(64), primary_key=True) 
+    value = db.Column(db.Text, nullable=False)
+
+    def __repr__(self):
+        return f'<Settings {self.key}: {self.value[:20]}>'
+
+# --- 5. Login Manager Configuration ---
 
 @login_manager.user_loader
 def load_user(user_id):
     """Καθορίζει πώς ο LoginManager φορτώνει έναν χρήστη από την ID του."""
     return db.session.get(User, int(user_id))
 
-# --- 5. Application Factory ---
+# --- 6. Application Factory ---
 
 def create_app():
     app = Flask(__name__)
     
     # --- Ρυθμίσεις (Configuration) ---
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key_needs_to_be_long')
-    # 🚨 ΔΙΟΡΘΩΣΗ: Διαβάζει DATABASE_URL, όπως περιμένει ο κώδικάς σας
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
@@ -110,7 +120,6 @@ def create_app():
     def login():
         """Σελίδα σύνδεσης και εγγραφής."""
         if current_user.is_authenticated:
-            # ✅ ΔΙΟΡΘΩΣΗ: Ανακατεύθυνση στο chat
             return redirect(url_for('chat'))
             
         return render_template('login.html')
@@ -186,7 +195,7 @@ def create_app():
             db.session.commit()
             user_to_login = new_user
         else:
-            # Ενημέρωση πληροφοριών αν χρειαστεί (π.χ. avatar, όνομα)
+            # Ενημέρωση πληροφοριών αν χρειαστεί
             user.display_name = userinfo.get('name', user.display_name)
             user.avatar_url = userinfo.get('picture', user.avatar_url)
             db.session.commit()
@@ -195,7 +204,7 @@ def create_app():
         login_user(user_to_login)
         flash(f"Επιτυχής σύνδεση ως {user_to_login.display_name} (Google).", 'success')
         
-        # ✅ ΤΕΛΙΚΗ ΔΙΟΡΘΩΣΗ: Ανακατεύθυνση ΟΛΩΝ στο chat
+        # ✅ Ανακατεύθυνση ΟΛΩΝ στο chat
         return redirect(url_for('chat'))
     
     # --- API Routes ---
@@ -207,7 +216,6 @@ def create_app():
         Επιστρέφει τα δεδομένα του συνδεδεμένου χρήστη.
         Χρησιμοποιείται από το admin_panel.html.
         """
-        # Αυτό το route μπορεί να χρησιμοποιηθεί και για το chat.html
         return jsonify({
             'id': current_user.id,
             'display_name': current_user.display_name,
@@ -235,9 +243,7 @@ def create_app():
 
     return app
 
-# --- 6. Main Run Block (προαιρετικό, για τοπική εκτέλεση) ---
+# --- 7. Main Run Block (προαιρετικό, για τοπική εκτέλεση) ---
 if __name__ == '__main__':
-    # Αυτό το block τρέχει μόνο αν εκτελέσετε 'python server.py' τοπικά
-    # Στο deployment (π.χ. Gunicorn/Render), εκτελείται το 'server:create_app()'
     app = create_app()
     app.run(debug=True)
