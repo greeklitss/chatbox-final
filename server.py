@@ -184,9 +184,10 @@ def create_app():
         """Google OAuth callback route."""
         redirect_uri = url_for('authorize', _external=True)
         try:
-           token = oauth.google.authorize_access_token(redirect_uri=redirect_uri)
+            token = oauth.google.authorize_access_token(redirect_uri=redirect_uri)
 
         except AuthlibOAuthError as e:
+
         flash(f'Authentication failed: {e.description}', 'error')
         return redirect(url_for('login')) 
 
