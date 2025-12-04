@@ -199,54 +199,57 @@ def create_app():
         session.pop('display_name', None)
         return redirect(url_for('index'))
 
-    # 5. GOOGLE OAUTH CALLBACK (ΠΛΗΡΩΣ ΔΙΟΡΘΩΜΕΝΟ)
+    # 5. GOOGLE OAUTH CALLBACK (ΠΛΗΡΩΣ ΔΙΟΡΘΩΜΕΝΟ & ΚΑΘΑΡΟ ΜΕ MANUAL FETCH)
     @app.route('/authorize')
     def authorize():
         try:
+            # 1. Access Token Exchange
             token = oauth.google.authorize_access_token()
             user_info = token.get('userinfo')
             
-            # 🚨 ΔΙΟΡΘΩΣΗ: Έλεγχος αν υπάρχουν τα βασικά δεδομένα (Αντιμετωπίζει το σφάλμα 'id')
+            # 🚨 1.1. MANUAL FETCH: Αν το user_info λείπει από το token, το παίρνουμε χειροκίνητα
+            if not user_info:
+                print("User info missing from token. Manually fetching...")
+                # Χρησιμοποιούμε το endpoint 'userinfo' που ορίσαμε στην αρχικοποίηση του OAuth
+                resp = oauth.google.get('userinfo', token=token)
+                # Ελέγχουμε την απάντηση για σφάλματα HTTP (π.χ. 401 Unauthorized)
+                resp.raise_for_status() 
+                user_info = resp.json()
+            
+            # 2. Safety check against missing ID
             if not user_info or 'id' not in user_info:
-                print(f"CRITICAL ERROR: User info or ID missing after token exchange. Received token: {token}")
+                print(f"CRITICAL ERROR: User info or ID missing after manual fetch. Received user_info: {user_info}")
                 return redirect(url_for('login'))
 
             # Εύρεση ή δημιουργία χρήστη
             user = db.session.execute(select(User).where(User.google_id == user_info['id'])).scalar_one_or_none()
             
             if user is None:
-                # 1. Ορίζουμε τον default ρόλο
                 default_role = 'user'
-                
-                # 2. Βρίσκουμε το χρώμα με βάση τον default ρόλο
                 default_color = get_default_color_by_role(default_role)
                 
-                # 3. Δημιουργία νέου χρήστη με ΟΛΑ τα υποχρεωτικά πεδία
                 user = User(
                     google_id=user_info['id'], 
                     display_name=user_info.get('name', 'NewUser'),
                     role=default_role,     
-                    color=default_color,    # ✅ ΚΡΙΣΙΜΟ: Με το κόμμα για να μη βγάζει Syntax Error
-                    # ΥΠΟΘΕΤΟΥΜΕ ότι το avatar_url είναι υποχρεωτικό
-                    avatar_url=user_info.get('picture', 'static/default_avatar.png'), # Χρησιμοποιούμε την Google photo αν υπάρχει
+                    color=default_color,    
+                    avatar_url=user_info.get('picture', 'static/default_avatar.png'),
                     email=user_info.get('email', None)
                 )
                 db.session.add(user)
                 
-                # 4. ΧΕΙΡΙΣΜΟΣ ΣΦΑΛΜΑΤΟΣ DB ΑΜΕΣΩΣ ΜΕΤΑ ΤΟ COMMIT
                 try:
                     db.session.commit()
                 except Exception as e:
                     db.session.rollback()
-                    # Εκτύπωση του σφάλματος για debugging στον Render
                     print(f"Database Integrity/Commit Failed during user creation: {e}") 
                     return redirect(url_for('login')) 
 
-            # Δημιουργία Session (Εκτελείται μόνο αν το commit ήταν επιτυχημένο)
+            # Δημιουργία Session
             session['user_id'] = user.id
             session['display_name'] = user.display_name
             
-            # ΤΕΛΙΚΗ ΑΝΑΚΑΤΕΥΘΥΝΣΗ: Προς το προστατευμένο chat (/chat)
+            # ΤΕΛΙΚΗ ΑΝΑΚΑΤΕΥΘΥΝΣΗ
             return redirect(url_for('chat_main'))
             
         except MismatchingStateError:
@@ -256,8 +259,7 @@ def create_app():
             print(f"OAuth Error: {e}")
             return redirect(url_for('login'))
         except Exception as e:
-            # Αυτό θα πιάσει τυχόν άλλα γενικά σφάλματα
-            print(f"An unexpected error occurred during authorization: {e}")
+            print(f"An unexpected error occurred during authorization: {e}") 
             return redirect(url_for('login'))
 
     # 6. Chat Main Page (Προστατευμένο)
