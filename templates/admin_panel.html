@@ -1,32 +1,276 @@
 <!DOCTYPE html>
 <html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radioparea - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* ================================================= */
+        /* 🎨 ΧΑΡΟΥΜΕΝΟ/ΓΙΟΡΤΙΝΟ ΘΕΜΑ */
+        /* ================================================= */
+        :root {
+            --bg-main: #2C3E50;         /* Σκούρο Μπλε */
+            --bg-panel: #34495E;        /* Πιο ανοιχτό Σκούρο Μπλε */
+            --color-primary: #E74C3C;   /* Κόκκινο (Accent) */
+            --color-secondary: #2ECC71; /* Πράσινο (Accent) */
+            --color-text: #ECF0F1;      /* Ανοιχτό Γκρι/Λευκό */
+            --color-owner: #E74C3C;     /* Έντονο Ροζ/Κόκκινο */
+            --color-admin: #2ECC71;     /* Πράσινο */
+        }
+        
+        body {
+            background-color: var(--bg-main);
+            color: var(--color-text);
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .admin-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--bg-panel);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+        }
+
+        /* Header */
+        header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--color-primary);
+        }
+        header h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--color-primary);
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .back-link, .user-info {
+            color: var(--color-text);
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 20px;
+        }
+
+        /* Tabs Navigation */
+        .tabs-nav {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .tab-button {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--color-text);
+            font-size: 1.1em;
+            transition: background 0.3s, color 0.3s;
+            flex-grow: 1;
+        }
+        .tab-button.active, .tab-button:hover {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        /* Content */
+        .content-container {
+            padding: 20px;
+        }
+        .tab-content {
+            display: none;
+            padding: 10px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-content h2 {
+            color: var(--color-secondary);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Forms/Inputs */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="password"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid var(--color-secondary);
+            background: var(--bg-main);
+            color: var(--color-text);
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        
+        /* Buttons */
+        .action-btn, .save-btn, .create-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.3s;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        .save-btn { background: var(--color-secondary); color: var(--bg-main); }
+        .create-btn { background: var(--color-primary); color: white; }
+        .save-btn:hover, .create-btn:hover { opacity: 0.8; }
+        .btn-edit { background: #3498db; color: white; }
+        .btn-delete { background: #e74c3c; color: white; }
+        .btn-role { background: #f39c12; color: white; }
+
+
+        /* User List / Tables */
+        #current-users-list table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        #current-users-list th, #current-users-list td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #current-users-list th {
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--color-secondary);
+        }
+        .role-owner { color: var(--color-owner); font-weight: bold; }
+        .role-admin { color: var(--color-admin); font-weight: bold; }
+        
+        .user-creation-section {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .user-creation-section h3 {
+            color: var(--color-primary);
+        }
+
+    </style>
+</head>
 <body>
     <div class="admin-wrapper">
         <header>
-            <h1>Admin Panel</h1>
-            <div class="user-info">
-                Role: <span id="current_user_role" style="font-weight: 900;">Loading...</span>
+            <h1><i class="fas fa-tools"></i> Admin Panel</h1>
+            <div class="user-controls">
+                <div class="user-info">
+                    You are: <span id="current_user_role" style="font-weight: 900;">Loading...</span>
+                </div>
+                <a href="{{ url_for('chat') }}" class="back-link"><i class="fas fa-chevron-left"></i> Back to Chat</a>
             </div>
-            <a href="/" class="back-link"><i class="fas fa-chevron-left"></i> Back to Chat</a>
         </header>
+
+        <nav class="tabs-nav">
+            <button class="tab-button active" onclick="changeTab('settings')"><i class="fas fa-cogs"></i> Global Settings</button>
+            <button class="tab-button" onclick="changeTab('users')"><i class="fas fa-users"></i> User Management</button>
+            <button class="tab-button" onclick="changeTab('emoticons')"><i class="fas fa-smile"></i> Emoticons & Gifs</button>
+        </nav>
 
         <main class="content-container">
             <section id="settings-tab" class="tab-content active">
                 <h2>Global Settings</h2>
                 <div id="settings-list">
+                    <div class="form-group">
+                        <label for="chat-status">Chat Status:</label>
+                        <select id="chat-status" name="CHAT_STATUS">
+                            <option value="on">On (Open to all)</option>
+                            <option value="off">Off (Maintenance Mode)</option>
+                        </select>
                     </div>
-                <button id="save-settings-btn" class="save-btn"><i class="fas fa-save"></i> Save Settings</button>
+                    <div class="form-group">
+                        <label for="max-length">Max Message Length:</label>
+                        <input type="number" id="max-length" name="MAX_MESSAGE_LENGTH" value="250">
+                    </div>
+                    
+                    <div class="owner-only-settings">
+                        <h3><i class="fas fa-crown" style="color: gold;"></i> Owner Theme Settings</h3>
+                        <div class="form-group">
+                            <label for="radio-status">Radio Status:</label>
+                            <select id="radio-status" name="RADIO_STATUS">
+                                <option value="on">On</option>
+                                <option value="off">Off</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="background-image">Background Image URL (Full Chat):</label>
+                            <input type="text" id="background-image" name="BACKGROUND_IMAGE">
+                        </div>
+                    </div>
+                    
+                </div>
+                <button id="save-settings-btn" class="save-btn"><i class="fas fa-save"></i> Save Global Settings</button>
+                <div id="settings-message" style="margin-top: 10px; font-weight: bold;"></div>
             </section>
 
-            <section id="emoticons-tab" class="tab-content">
-                <h2>Emoticon Management</h2>
-                </section>
-            
             <section id="users-tab" class="tab-content">
                 <h2>User Management</h2>
-                </section>
+                
+                <div class="user-creation-section">
+                    <h3><i class="fas fa-user-plus"></i> Create New User (Traditional Login)</h3>
+                    <form id="create-user-form">
+                        <div class="form-group">
+                            <label for="new_display_name">Display Name:</label>
+                            <input type="text" id="new_display_name" name="display_name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="new_password">Password:</label>
+                            <input type="password" id="new_password" name="password" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="new_role">Role:</label>
+                            <select id="new_role" name="role" required>
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                                <option value="owner">Owner</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="create-btn"><i class="fas fa-plus-circle"></i> Create User</button>
+                        <div id="create-user-message" style="margin-top: 10px; font-weight: bold;"></div>
+                    </form>
+                </div>
+                
+                <hr style="border-color: rgba(255, 255, 255, 0.1);">
+                
+                <div id="current-users-list">
+                    <h3>Existing Users</h3>
+                    <p id="users-loading-message">Loading users...</p>
+                </div>
+            </section>
+            
+            <section id="emoticons-tab" class="tab-content">
+                <h2>Emoticon & Gif Management</h2>
+                <p>Functionality to upload and manage custom emoticons and GIFs will be implemented here.</p>
+                <button class="save-btn"><i class="fas fa-upload"></i> Upload New Emoticon</button>
+            </section>
         </main>
     </div>
+
+    <div id="edit-user-modal" class="modal">
+         </div>
+
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
     <script>
@@ -34,26 +278,170 @@
         let currentUserId = null;
         let currentUserRole = null;
         
-        // ... (Λογική loadSettings, loadEmoticons, loadUsers, saveSettings, updateEmoticon, deleteEmoticon, updateUserRole, deleteUser) ...
-        
-        async function loadSettings() {
-             // ... (Υλοποίηση με fetch(API_BASE + '/settings')) ...
+        // ----------------------------------------------------
+        // 1. UTILITY FUNCTIONS
+        // ----------------------------------------------------
+        function changeTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            document.querySelector(`.tab-button[onclick="changeTab('${tabName}')"]`).classList.add('active');
         }
 
-        async function saveSettings() {
-            // ... (Υλοποίηση με fetch(API_BASE + '/settings', { method: 'POST', body: JSON.stringify({ settings: updatedSettingsArray }) })) ...
+        // ----------------------------------------------------
+        // 2. USER MANAGEMENT LOGIC
+        // ----------------------------------------------------
+
+        // A. Load Users from API
+        async function loadUsers() {
+            const listDiv = document.getElementById('current-users-list');
+            listDiv.innerHTML = '<p id="users-loading-message">Loading users...</p>';
+            
+            try {
+                // ΥΠΟΘΕΣΗ: Ένα νέο route /api/v1/admin/users επιστρέφει τη λίστα χρηστών
+                const response = await fetch(`${API_BASE}/admin/users`);
+                if (!response.ok) throw new Error('Failed to fetch users.');
+                
+                const users = await response.json();
+                renderUsers(users);
+
+            } catch (error) {
+                listDiv.innerHTML = `<p style="color: var(--color-primary);">Error loading users: ${error.message}. Check server logs.</p>`;
+            }
         }
 
-        async function loadEmoticons() {
-            // ... (Υλοποίηση με fetch(API_BASE + '/emoticons')) ...
+        // B. Render Users Table
+        function renderUsers(users) {
+            const listDiv = document.getElementById('current-users-list');
+            
+            let tableHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nickname</th>
+                            <th>Role</th>
+                            <th>Login Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            users.forEach(user => {
+                const loginType = user.google_id ? 'Google' : 'Traditional';
+                const roleClass = user.role === 'owner' ? 'role-owner' : (user.role === 'admin' ? 'role-admin' : '');
+                
+                // Owner actions: Edit, Change Role, Delete
+                // Admin actions: Edit, Delete
+                const isOwner = currentUserRole === 'owner';
+                const isAdminOrOwner = isOwner || currentUserRole === 'admin';
+                
+                let actions = `
+                    <button class="action-btn btn-edit" onclick="openEditUserModal(${user.id}, '${user.display_name}', '${user.role}')"><i class="fas fa-edit"></i> Edit</button>
+                `;
+
+                // Owner can change role
+                if (isOwner) {
+                    actions += `<button class="action-btn btn-role" onclick="updateUserRole(${user.id}, '${user.display_name}')"><i class="fas fa-user-tag"></i> Change Role</button>`;
+                }
+                
+                // Admin/Owner can delete
+                if (isAdminOrOwner) {
+                    actions += `<button class="action-btn btn-delete" onclick="deleteUser(${user.id}, '${user.display_name}')"><i class="fas fa-trash-alt"></i> Delete</button>`;
+                }
+
+                tableHtml += `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.display_name}</td>
+                        <td class="${roleClass}">${user.role.toUpperCase()}</td>
+                        <td>${loginType}</td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `</tbody></table>`;
+            listDiv.innerHTML = tableHtml;
+        }
+
+        // C. Handle User Creation (AJAX - όπως συμφωνήθηκε)
+        async function createUser(event) {
+            event.preventDefault(); 
+            const form = document.getElementById('create-user-form');
+            const messageDiv = document.getElementById('create-user-message');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            messageDiv.innerHTML = 'Creating user...';
+            messageDiv.style.color = 'orange';
+
+            try {
+                const response = await fetch('/admin_create_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify(data) 
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    messageDiv.innerHTML = `Success: ${result.message}`;
+                    messageDiv.style.color = 'var(--color-secondary)';
+                    form.reset(); 
+                    await loadUsers(); // Ενημέρωση του πίνακα
+                } else {
+                    messageDiv.innerHTML = `Error: ${result.error || 'Failed to create user.'}`;
+                    messageDiv.style.color = 'var(--color-primary)';
+                }
+            } catch (error) {
+                console.error('Network or system error:', error);
+                messageDiv.innerHTML = 'A critical error occurred.';
+                messageDiv.style.color = 'var(--color-primary)';
+            }
         }
         
-        // ... (Οι υπόλοιπες συναρτήσεις) ...
+        // ----------------------------------------------------
+        // 3. ADMIN ACTIONS STUBS (Χρειάζονται υλοποίηση στο Backend)
+        // ----------------------------------------------------
+
+        function openEditUserModal(id, currentName, currentRole) {
+            // Αυτό θα πρέπει να ανοίγει ένα modal και να επιτρέπει την αλλαγή nickname/password/role
+            alert(`Opening edit modal for user ID: ${id}, Name: ${currentName}`);
+            // Χρήση του /api/v1/admin/user/<user_id>/update
+        }
         
+        function updateUserRole(id, currentName) {
+             const newRole = prompt(`Enter new role for ${currentName} (user, admin, owner):`);
+             if (newRole && ['user', 'admin', 'owner'].includes(newRole.toLowerCase())) {
+                 // Κλήση API για αλλαγή ρόλου: /api/v1/admin/user/<user_id>/update
+                 alert(`Role update initiated for ${currentName} to ${newRole}`);
+             }
+        }
+
+        function deleteUser(id, name) {
+            if (confirm(`Are you sure you want to permanently delete user ${name}?`)) {
+                // Κλήση API για διαγραφή: /api/v1/admin/user/<user_id>/delete
+                alert(`Delete initiated for user: ${name}`);
+            }
+        }
+        
+        // ----------------------------------------------------
+        // 4. Initialization
+        // ----------------------------------------------------
+
         document.addEventListener('DOMContentLoaded', async () => {
-             // 1. Έλεγχος Login & Role
+             // 1. Έλεγχος ταυτότητας χρήστη (Πρέπει να το κάνετε και στο server.py)
              try {
-                 const response = await fetch('/check_login'); // Καλούμε το νέο route
+                 const response = await fetch('/check_login'); // Καλούμε το route που ελέγχει αν είμαστε συνδεδεμένοι
                  if (!response.ok) throw new Error('Not logged in or session expired.');
                  
                  const userData = await response.json();
@@ -63,30 +451,34 @@
                  const roleElement = document.getElementById('current_user_role');
                  roleElement.textContent = currentUserRole.toUpperCase();
 
-                 // 🚨 Έλεγχος Admin/Owner
+                 // 🚨 Έλεγχος Admin/Owner (redundant but safe)
                  if (currentUserRole !== 'admin' && currentUserRole !== 'owner') {
                      alert('Access Denied. Redirecting to chat.');
-                     window.location.pathname = '/';
+                     window.location.pathname = '/chat';
                      return;
                  }
+                 
+                 // 🚨 Εμφάνιση Owner Settings
+                 if (currentUserRole !== 'owner') {
+                    document.querySelector('.owner-only-settings').style.display = 'none';
+                 }
+
               } catch (error) {
                   alert('Authentication Error: Redirecting to login.');
                   window.location.pathname = '/login';
                   return;
               }
 
-              // 2. Φόρτωση ρυθμίσεων
-              await loadSettings();
+              // 2. Attach Listeners
+              // document.getElementById('save-settings-btn').addEventListener('click', saveSettings); // Placeholder
               
-              // 3. Φόρτωση Emoticons
-              await loadEmoticons();
+              const createUserForm = document.getElementById('create-user-form');
+              if (createUserForm) {
+                  createUserForm.addEventListener('submit', createUser);
+              }
 
-              // 4. Φόρτωση χρηστών
-              await loadUsers();
-              
-              // 5. Attach Listeners
-              document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
-              // ... (Attach listeners for Emoticon/User management buttons) ...
+              // 3. Φόρτωση χρηστών (απαιτείται το route /api/v1/admin/users στο server.py)
+              // await loadUsers(); 
          });
     </script>
 </body>
