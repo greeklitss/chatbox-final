@@ -14,7 +14,9 @@ from sqlalchemy import select, or_
 
 # Βιβλιοθήκες για Google OAuth
 from authlib.integrations.flask_client import OAuth as AuthlibOAuth
+# ΔΙΟΡΘΩΣΗ: Σωστή εισαγωγή για το OAuthError
 from authlib.integrations.base_client.errors import OAuthError as AuthlibOAuthError
+
 
 # --- 1. Αρχικοποίηση Εξωτερικών Αντικειμένων ---
 db = SQLAlchemy()
@@ -44,12 +46,12 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(50), default='user', nullable=False)
     color = db.Column(db.String(7), default='#808080', nullable=False)
     avatar_url = db.Column(db.String(255), nullable=True)
-    # messages = db.relationship('Message', backref='user', lazy=True, cascade='all, delete-orphan') # Αφαιρέθηκε για απλοποίηση
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
+        # Χρησιμοποιεί το password_hash για να ελέγξει τον κωδικό.
         return check_password_hash(self.password_hash, password)
 
 class Message(db.Model):
@@ -58,7 +60,6 @@ class Message(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     content = db.Column(db.String(500), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    # user = db.relationship('User', backref='messages') # Προστέθηκε για backref
 
 class Settings(db.Model):
     __tablename__ = 'settings'
@@ -104,7 +105,7 @@ def create_app():
         client_secret=app.config.get('GOOGLE_CLIENT_SECRET'),
         server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
         client_kwargs={'scope': 'openid email profile'},
-        # Το 'authorize' είναι το όνομα του callback route παρακάτω
+        # ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε τη στατική διαδρομή /oauth/authorize για να αποφύγουμε το RuntimeError κατά την εκκίνηση
         redirect_uri='/oauth/authorize' 
     )
 
@@ -123,27 +124,42 @@ def create_app():
             return redirect(url_for('index'))
         return render_template('admin_panel.html')
     
-    # --- Routes Σύνδεσης/Αποσύνδεσης (Password) ---
+    # --- Routes Σύνδεσης/Αποσύνδεσης ---
 
-    @app.route('/login', methods=['GET', 'POST'])
+    # Ρουτίνα GET: Απλώς εμφανίζει το login template
+    @app.route('/login', methods=['GET'])
     def login():
         if current_user.is_authenticated:
             return redirect(url_for('index'))
-            
-        if request.method == 'POST':
-            display_name = request.form.get('display_name')
-            password = request.form.get('password')
-            
-            user = db.session.execute(select(User).where(User.display_name == display_name)).scalar_one_or_none()
-            
-            if user and user.check_password(password):
-                login_user(user)
-                flash('Επιτυχής σύνδεση.', 'success')
-                return redirect(url_for('admin_panel') if user.role in ['owner', 'admin'] else url_for('index'))
-            
-            flash('Λάθος Όνομα Χρήστη ή Κωδικός.', 'error')
-
         return render_template('login.html')
+
+    # Ρουτίνα POST API: Χειρίζεται τη σύνδεση username/password (AJAX)
+    @app.route('/api/v1/login', methods=['POST'])
+    def api_login():
+        """Διαχειρίζεται τη σύνδεση μέσω AJAX/API και επιστρέφει JSON."""
+        if current_user.is_authenticated:
+            return jsonify({'success': True, 'redirect': url_for('index')}), 200
+
+        data = request.get_json()
+        if not data:
+            # 400 Bad Request
+            return jsonify({'error': 'Δεν παρασχέθηκαν δεδομένα.'}), 400
+            
+        display_name = data.get('display_name')
+        password = data.get('password')
+        
+        user = db.session.execute(select(User).where(User.display_name == display_name)).scalar_one_or_none()
+        
+        if user and user.check_password(password):
+            login_user(user)
+            redirect_url = url_for('admin_panel') if user.role in ['owner', 'admin'] else url_for('index')
+            
+            # Επιστρέφουμε JSON με το URL ανακατεύθυνσης
+            return jsonify({'success': True, 'redirect': redirect_url}), 200
+        
+        # 401 Unauthorized
+        return jsonify({'error': 'Λάθος Όνομα Χρήστη ή Κωδικός.'}), 401
+
 
     @app.route('/logout')
     @login_required
@@ -157,6 +173,7 @@ def create_app():
     @app.route('/oauth/login', methods=['GET'])
     def oauth_login():
         """Ανακατευθύνει τον χρήστη στη σελίδα σύνδεσης της Google."""
+        # Χρησιμοποιούμε url_for('authorize', _external=True) εδώ, καθώς εκτελείται εντός του request context
         return oauth.google.authorize_redirect(
             redirect_uri=url_for('authorize', _external=True)
         )
@@ -184,7 +201,7 @@ def create_app():
                 display_name=userinfo.get('name', 'New User'),
                 avatar_url=userinfo.get('picture'),
                 role='user',
-                # Ορίζουμε έναν τυχαίο password_hash, απαραίτητο αν η στήλη είναι NOT NULL
+                # Ορίζουμε έναν τυχαίο password_hash
                 password_hash=generate_password_hash(str(os.urandom(24))),
                 color=get_default_color_by_role('user')
             )
@@ -199,7 +216,7 @@ def create_app():
         
         return redirect(url_for('admin_panel') if user_to_login.role in ['owner', 'admin'] else url_for('index'))
     
-    # --- API Routes (για χρήση από το Admin Panel) ---
+    # --- API Routes ---
 
     @app.route('/api/v1/user', methods=['GET'])
     @login_required
@@ -221,13 +238,15 @@ def create_app():
 
     @app.errorhandler(401)
     def unauthorized(error):
+        # Αν η αίτηση είναι AJAX/API, επιστρέφουμε JSON
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'Unauthorized. Please log in.'}), 401
+            
         flash("Πρέπει να συνδεθείτε για να δείτε αυτή τη σελίδα.", 'warning')
         return redirect(url_for('login'))
 
     return app
 
-# --- Τέλος του server.py ---
-
 # if __name__ == '__main__':
 #     app = create_app()
-#     # app.run(debug=True) # Τρέξτε μόνο για τοπική ανάπτυξη, ΟΧΙ στο Render
+#     # app.run(debug=True)
