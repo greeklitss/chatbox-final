@@ -6,6 +6,8 @@
     <title>Radioparea - On Air & Festive!</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    
     <style>
         /* ================================================= */
         /* 🚨 ΧΡΙΣΤΟΥΓΕΝΝΙΑΤΙΚΑ ΧΡΩΜΑΤΑ (Override Neon) */
@@ -31,20 +33,19 @@
             min-height: 100vh;
             overflow: hidden; 
 
-            /* 🚨 ΝΕΟ: ΕΙΚΟΝΑ BACKGROUND */
-            background-color: #1a1a2e; /* Fallback χρώμα */
-            background-image: url("{{ url_for('static', filename='christmas_background.jpg') }}"); /* ⚠️ ΑΛΛΑΞΤΕ ΤΟ ΟΝΟΜΑ ΑΡΧΕΙΟΥ ΕΑΝ ΧΡΕΙΑΣΤΕΙ */
+            /* 🚨 ΔΙΟΡΘΩΜΕΝΟ: ΕΙΚΟΝΑ BACKGROUND */
+            background-image: url("../static/christmas_background.jpg"); 
             background-size: cover; 
             background-position: center center;
             background-repeat: no-repeat;
             background-attachment: fixed; 
         }
         .container { 
-            background: var(--box-bg); /* Χρησιμοποιούμε το σκούρο διαφανές χρώμα */
+            background: var(--box-bg); 
             padding: 30px 40px; 
             border-radius: 12px; 
             box-shadow: 0 0 20px var(--shadow-color); 
-            max-width: 450px; 
+            max-width: 550px; 
             text-align: center;
             z-index: 10;
         }
@@ -149,6 +150,37 @@
                 transform: translateY(110vh) translateX(var(--fall-x-offset)); 
             }
         }
+
+        /* ================================================= */
+        /* ✒️ ΝΕΟ ΚΑΛΛΙΓΡΑΦΙΚΟ ΣΤΥΛ ΓΙΑ DJ / ΕΝΤΑΣΗ */
+        /* ================================================= */
+
+        .calligraphy-block {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+
+        /* 1. ΒΑΣΙΚΟ ΣΤΥΛ (για το 'ΕΛΑ ΝΑ ΠΕΤΑΜΕ ΜΕ') - ΧΡΥΣΟ */
+        .calligraphy-text-base {
+            font-family: 'Dancing Script', cursive; /* Χρησιμοποιούμε Dancing Script */
+            font-size: 1.8em; 
+            font-weight: bold;
+            color: var(--shadow-color); /* Χρυσό/Κίτρινο */
+            display: block; 
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.8); 
+        }
+
+        /* 2. ΕΙΔΙΚΟ ΣΤΥΛ ΓΙΑ ΤΟ ΟΝΟΜΑ ΤΟΥ DJ - ΛΕΥΚΟ & ΜΕΓΑΛΥΤΕΡΟ */
+        .dj-name-style {
+            font-family: 'Dancing Script', cursive; /* Χρησιμοποιούμε Dancing Script */
+            font-size: 1.5em; 
+            color: var(--text-color); /* Λευκό (F0F0F0) */
+            text-shadow: 0 0 12px rgba(240, 240, 240, 1.0); /* Έντονη λευκή λάμψη */
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -165,6 +197,21 @@
 
         <div class="player">
             <iframe src="https://or.mysonicserver.com/cp/widgets/player/single/?p=8050" height="110" width="100%" scrolling="no" style="border:none;"></iframe>
+            
+            <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+            
+            <div class="metadata-box">
+                <div class="calligraphy-block">
+                    <span class="calligraphy-text-base">
+                        ΕΛΑ ΝΑ ΠΕΤΑΜΕ ΜΕ <span id='sonic_dj' class='dj-name-style'></span>
+                    </span>
+                    <div id="jplayer_volume_control"> </div>
+                </div>
+
+                <div id='sonic_title'></div>
+                <div id='dj_profile'></div>
+                <div id='sonic_listeners'>ΑΚΡΟΑΤΕΣ</div>
+            </div>
         </div>
 
         <div class="countdown" id="countdown-timer">
