@@ -178,15 +178,16 @@ def create_app():
             redirect_uri=url_for('authorize', _external=True)
         )
 
+
     @app.route('/oauth/authorize')
-    def authorize():
-        
-        """Google OAuth callback route."""
-        redirect_uri = url_for('authorize', _external=True)
-        try:
-        # 🟢 ΠΡΩΤΟ ΜΠΛΟΚ: Σωστά indented
+def authorize():
+    """Google OAuth callback route."""
+    
+    redirect_uri = url_for('authorize', _external=True) 
+
+    try:  # Γραμμή 186
+        # 🟢 ΠΡΟΣΟΧΗ: Αυτές οι γραμμές έχουν 4 κενά στοίχισης
         token = oauth.google.authorize_access_token(redirect_uri=redirect_uri)
-        
     except AuthlibOAuthError as e:
 
         flash(f'Authentication failed: {e.description}', 'error')
