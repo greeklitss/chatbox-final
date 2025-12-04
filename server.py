@@ -113,66 +113,7 @@ def create_app():
         # redirect_uri=url_for('authorize', _external=True)
     )
 
-    # --- Routes της Εφαρμογής ---
-
-    @app.route('/')
-    def index():
-        return render_template('index.html')
-
-    @app.route('/admin_panel')
-    @login_required
-    def admin_panel():
-        """Προστατευμένη ρουτίνα για το admin panel."""
-        if current_user.role not in ['admin', 'owner']:
-            flash('Δεν έχετε δικαίωμα πρόσβασης.', 'error')
-            return redirect(url_for('index'))
-        return render_template('admin_panel.html')
-    
-    # --- Routes Σύνδεσης/Αποσύνδεσης ---
-
-    # Ρουτίνα GET: Απλώς εμφανίζει το login template
-    @app.route('/login', methods=['GET'])
-    def login():
-        if current_user.is_authenticated:
-            return redirect(url_for('index'))
-        return render_template('login.html')
-
-    # Ρουτίνα POST API: Χειρίζεται τη σύνδεση username/password (AJAX)
-    @app.route('/api/v1/login', methods=['POST'])
-    def api_login():
-        """Διαχειρίζεται τη σύνδεση μέσω AJAX/API και επιστρέφει JSON."""
-        if current_user.is_authenticated:
-            return jsonify({'success': True, 'redirect': url_for('index')}), 200
-
-        data = request.get_json()
-        if not data:
-            # 400 Bad Request
-            return jsonify({'error': 'Δεν παρασχέθηκαν δεδομένα.'}), 400
-            
-        display_name = data.get('display_name')
-        password = data.get('password')
-        
-        user = db.session.execute(select(User).where(User.display_name == display_name)).scalar_one_or_none()
-        
-        if user and user.check_password(password):
-            login_user(user)
-            redirect_url = url_for('admin_panel') if user.role in ['owner', 'admin'] else url_for('index')
-            
-            # Επιστρέφουμε JSON με το URL ανακατεύθυνσης
-            return jsonify({'success': True, 'redirect': redirect_url}), 200
-        
-        # 401 Unauthorized
-        return jsonify({'error': 'Λάθος Όνομα Χρήστη ή Κωδικός.'}), 401
-
-
-    @app.route('/logout')
-    @login_required
-    def logout():
-        logout_user()
-        flash('Έχετε αποσυνδεθεί επιτυχώς.', 'success')
-        return redirect(url_for('login'))
-
-    # --- Routes Google OAuth ---
+# --- Routes Google OAuth ---
 
     @app.route('/oauth/login', methods=['GET'])
     def oauth_login():
@@ -187,15 +128,15 @@ def create_app():
     def authorize():
         """Google OAuth callback route."""
     
-        # 🟢 ΣΩΣΤΗ ΚΛΗΣΗ: Αυτή η γραμμή είναι μέσα σε μια route function,
-        # όπου υπάρχει ήδη Application Context και Request Context.
+        # 🟢 1. Ορίζουμε τη μεταβλητή redirect_uri
         redirect_uri = url_for('authorize', _external=True) 
 
-    try:
-        token = oauth.google.authorize_access_token(redirect_uri=redirect_uri)        
-    except AuthlibOAuthError as e:
-        flash(f'Authentication failed: {e.description}', 'error') 
-        return redirect(url_for('login'))
+        try:
+            # 🟢 2. ΤΩΡΑ ΤΟ authorize_access_token ΕΚΤΕΛΕΙΤΑΙ ΜΕΣΑ ΣΤΟ VIEW FUNCTION
+            token = oauth.google.authorize_access_token(redirect_uri=redirect_uri)        
+        except AuthlibOAuthError as e:
+            flash(f'Authentication failed: {e.description}', 'error') 
+            return redirect(url_for('login'))
 
         userinfo = oauth.google.parse_id_token(token) # Πιο συμβατό με Authlib
         user_google_id = userinfo.get('sub')
@@ -224,8 +165,7 @@ def create_app():
         login_user(user_to_login)
         flash(f"Επιτυχής σύνδεση ως {user_to_login.display_name} (Google).", 'success')
         
-        return redirect(url_for('admin_panel') if user_to_login.role in ['owner', 'admin'] else url_for('index'))
-    
+        return redirect(url_for('admin_panel') if user_to_login.role in ['owner', 'admin'] else url_for('index'))    
     # --- API Routes ---
 
     @app.route('/api/v1/user', methods=['GET'])
