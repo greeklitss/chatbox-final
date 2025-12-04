@@ -180,14 +180,17 @@ def create_app():
 
     @app.route('/oauth/authorize')
     def authorize():
+        
         """Google OAuth callback route."""
+        redirect_uri = url_for('authorize', _external=True)
         try:
-            token = oauth.google.authorize_access_token()
-        except AuthlibOAuthError as e:
-            flash(f'Authentication failed: {e.description}', 'error')
-            return redirect(url_for('login')) 
+        token = oauth.google.authorize_access_token(redirect_uri=redirect_uri)
 
-        userinfo = oauth.google.parse_id_token(token, nonce=session.get('nonce'))
+        except AuthlibOAuthError as e:
+        flash(f'Authentication failed: {e.description}', 'error')
+        return redirect(url_for('login')) 
+
+        userinfo = oauth.google.parse_id_token(token) # Πιο συμβατό με Authlib
         user_google_id = userinfo.get('sub')
         
         user = db.session.execute(
