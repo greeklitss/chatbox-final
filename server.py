@@ -105,7 +105,7 @@ def create_app():
         server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
         client_kwargs={'scope': 'openid email profile'},
         # Το 'authorize' είναι το όνομα του callback route παρακάτω
-        redirect_uri=url_for('authorize', _external=True) 
+        redirect_uri='/oauth/authorize' 
     )
 
     # --- Routes της Εφαρμογής ---
