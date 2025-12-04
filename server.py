@@ -180,8 +180,8 @@ def create_app():
 
 
     @app.route('/oauth/authorize')
-def authorize():
-    """Google OAuth callback route."""
+    def authorize():
+        """Google OAuth callback route."""
     
     redirect_uri = url_for('authorize', _external=True) 
 
