@@ -178,10 +178,9 @@
     </div>
 
     <div id="login-tab" class="tab-content active">
-        <input type="text" id="login-email" placeholder="Email / Username" required> 
-        <input type="password" id="login-password" placeholder="Password" required>
-        
-        <button id="login-button" class="login-button">Login</button>
+        <form id="login-form"> <input type="text" id="login-username-email" placeholder="Username or Email" required>
+    <input type="password" id="login-password" placeholder="Password" required>
+    <button id="login-button" type="submit">Login</button> </form>
         <div id="login-error-message" class="error-message"></div>
     </div>
     
@@ -232,7 +231,8 @@
                         'Content-Type': 'application/json'
                     },
                     // ✅ Στέλνουμε το πεδίο login_id
-                    body: JSON.stringify({ login_id: loginId, password: password }) 
+                    // login.html - ΔΙΟΡΘΩΜΕΝΟ
+                body: JSON.stringify({ display_name: loginId, password: password }) 
                 });
 
                 const result = await response.json();
