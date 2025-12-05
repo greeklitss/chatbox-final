@@ -129,6 +129,12 @@ def create_app():
             flash('Δεν έχετε δικαίωμα πρόσβασης.', 'error')
             return redirect(url_for('chat'))
         return render_template('admin_panel.html')
+
+    @app.route('/chat')
+    @login_required
+    def chat():
+        """Προστατευμένη ρουτίνα για τη σελίδα συνομιλίας."""
+        return render_template('chat.html')
     
     # --- Routes Σύνδεσης/Αποσύνδεσης ---
 
