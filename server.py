@@ -115,22 +115,18 @@ def create_app():
     def index():
         return render_template('index.html')
 
-    @app.route('/chat')
-    @login_required # Βεβαιώνει ότι μόνο συνδεδεμένοι χρήστες έχουν πρόσβαση
-    def chat():
-        """Η κεντρική σελίδα Chat."""
-        return render_template('chat.html')
-
     @app.route('/admin_panel')
     @login_required
     def admin_panel():
         """Προστατευμένη ρουτίνα για το admin panel."""
         if current_user.role not in ['admin', 'owner']:
             flash('Δεν έχετε δικαίωμα πρόσβασης.', 'error')
-            return redirect(url_for('chat'))
+            # ΔΙΟΡΘΩΣΗ: Χρήση του σωστού endpoint name
+            return redirect(url_for('chat_page')) 
         return render_template('admin_panel.html')
 
-    @app.route('/chat')
+    # // ΝΕΑ ΡΟΥΤΙΝΑ CHAT (Μοναδική Ορισμός)
+    @app.route('/chat', endpoint='chat_page') 
     @login_required
     def chat():
         """Προστατευμένη ρουτίνα για τη σελίδα συνομιλίας."""
@@ -142,7 +138,8 @@ def create_app():
     @app.route('/login', methods=['GET'])
     def login():
         if current_user.is_authenticated:
-            return redirect(url_for('chat.html'))
+            # ΔΙΟΡΘΩΣΗ: Χρήση του σωστού endpoint name (όχι .html)
+            return redirect(url_for('chat_page')) 
         return render_template('login.html')
 
     # Ρουτίνα POST API: Χειρίζεται τη σύνδεση username/password (AJAX)
@@ -150,7 +147,8 @@ def create_app():
     def api_login():
         """Διαχειρίζεται τη σύνδεση μέσω AJAX/API και επιστρέφει JSON."""
         if current_user.is_authenticated:
-            return jsonify({'success': True, 'redirect': url_for('index')}), 200
+            # ΔΙΟΡΘΩΣΗ: Χρήση του σωστού endpoint name
+            return jsonify({'success': True, 'redirect': url_for('chat_page')}), 200
 
         data = request.get_json()
         if not data:
@@ -164,7 +162,9 @@ def create_app():
         
         if user and user.check_password(password):
             login_user(user)
-            redirect_url = url_for('chat')            
+            # ΔΙΟΡΘΩΣΗ: Χρήση του σωστού endpoint name
+            redirect_url = url_for('admin_panel') if user.role in ['owner', 'admin'] else url_for('chat_page')
+            
             # Επιστρέφουμε JSON με το URL ανακατεύθυνσης
             return jsonify({'success': True, 'redirect': redirect_url}), 200
         
@@ -177,7 +177,8 @@ def create_app():
     def logout():
         logout_user()
         flash('Έχετε αποσυνδεθεί επιτυχώς.', 'success')
-        return redirect(url_for('index.html'))
+        # ΔΙΟΡΘΩΣΗ: Χρήση του σωστού endpoint name (όχι .html)
+        return redirect(url_for('login')) 
 
     # --- Routes Google OAuth ---
 
@@ -196,7 +197,8 @@ def create_app():
             token = oauth.google.authorize_access_token()
         except AuthlibOAuthError as e:
             flash(f'Authentication failed: {e.description}', 'error')
-            return redirect(url_for('chat.html')) 
+            # ΔΙΟΡΘΩΣΗ: Χρήση του σωστού endpoint name
+            return redirect(url_for('login')) 
 
         userinfo = oauth.google.parse_id_token(token, nonce=session.get('nonce'))
         user_google_id = userinfo.get('sub')
@@ -225,7 +227,8 @@ def create_app():
         login_user(user_to_login)
         flash(f"Επιτυχής σύνδεση ως {user_to_login.display_name} (Google).", 'success')
         
-        return redirect(url_for('chat.html'))
+        # ΔΙΟΡΘΩΣΗ: Χρήση του σωστού endpoint name
+        return redirect(url_for('admin_panel') if user_to_login.role in ['owner', 'admin'] else url_for('chat_page'))
     
     # --- API Routes ---
 
@@ -254,7 +257,8 @@ def create_app():
             return jsonify({'error': 'Unauthorized. Please log in.'}), 401
             
         flash("Πρέπει να συνδεθείτε για να δείτε αυτή τη σελίδα.", 'warning')
-        return redirect(url_for('login.html'))
+        # ΔΙΟΡΘΩΣΗ: Χρήση του σωστού endpoint name
+        return redirect(url_for('login')) 
 
     return app
 
