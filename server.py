@@ -137,7 +137,7 @@ def create_app():
     def login():
         if current_user.is_authenticated:
             return redirect(url_for('chat.html'))
-        return render_template('index.html')
+        return render_template('login.html')
 
     # Ρουτίνα POST API: Χειρίζεται τη σύνδεση username/password (AJAX)
     @app.route('/api/v1/login', methods=['POST'])
