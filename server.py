@@ -40,7 +40,15 @@ def get_default_color_by_role(role):
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
+    # 🚨 ΠΡΟΣΘΗΚΗ ΤΟΥ EMAIL
+    email = db.Column(db.String(120), unique=True, nullable=True) 
+    
+    # 🚨 ΠΡΟΣΘΗΚΗ ΤΟΥ OAUTH PROVIDER (για να ξέρουμε πού συνδέθηκε)
+    oauth_provider = db.Column(db.String(50), nullable=True) 
+    
+    # Διατηρούμε το google_id για συμβατότητα με το υπάρχον OAuth
     google_id = db.Column(db.String(120), unique=True, nullable=True)
+    
     password_hash = db.Column(db.String(255), nullable=True)
     display_name = db.Column(db.String(80), unique=True, nullable=False)
     role = db.Column(db.String(50), default='user', nullable=False)
@@ -51,9 +59,7 @@ class User(UserMixin, db.Model):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        # Χρησιμοποιεί το password_hash για να ελέγξει τον κωδικό.
         return check_password_hash(self.password_hash, password)
-
 class Message(db.Model):
     __tablename__ = 'message'
     id = db.Column(db.Integer, primary_key=True)
