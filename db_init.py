@@ -16,7 +16,16 @@ app = create_app()
 with app.app_context():
     print("--- 🛠️ Database Initialization Started ---")
 
-    # 3. Εκτέλεση μεταναστεύσεων (Flask-Migrate upgrade)
+    # 🚨 ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ (ΒΗΜΑ 3): Δημιουργία όλων των πινάκων ως fallback/αρχική ρύθμιση
+    # Αυτό εγγυάται ότι οι πίνακες υπάρχουν πριν από οποιοδήποτε query.
+    try:
+        db.create_all()
+        print("✅ Database tables created/ensured successfully via db.create_all().")
+    except Exception as e:
+        # Αν η βάση έχει ήδη δεδομένα/σχήμα, αυτό μπορεί να αποτύχει. Είναι συνήθως ασφαλές να συνεχίσετε.
+        print(f"⚠️ Warning: db.create_all() failed: {e}. If tables exist, this is normal.")
+
+    # 4. Εκτέλεση μεταναστεύσεων (Flask-Migrate upgrade)
     try:
         upgrade()
         print("✅ Database migration (upgrade) completed successfully.")
@@ -24,7 +33,7 @@ with app.app_context():
         print(f"❌ Error during migration: {e}")
         # Αν το σφάλμα είναι κρίσιμο, μπορεί να χρειαστεί έξοδος
 
-    # 4. Έλεγχος/Δημιουργία Owner χρήστη
+    # 5. Έλεγχος/Δημιουργία Owner χρήστη (Τώρα αυτό το query θα λειτουργήσει!)
     owner_role = 'owner'
     # Χρησιμοποιούμε select(User).filter_by για συμβατότητα με SQLAlchemy 2.0
     owner_check = db.session.execute(select(User).filter_by(role=owner_role)).first()
@@ -54,7 +63,7 @@ with app.app_context():
     else:
         print(f"ℹ️ Owner user already exists: {owner_check[0].display_name}")
 
-    # 5. Έλεγχος/Δημιουργία Global Settings
+    # 6. Έλεγχος/Δημιουργία Global Settings
     settings_check = db.session.execute(select(Settings)).first()
 
     if settings_check is None:
