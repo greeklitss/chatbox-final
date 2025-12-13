@@ -63,12 +63,13 @@ with app.app_context():
     else:
         print(f"ℹ️ Owner user already exists: {owner_check[0].display_name}")
 
-    # 6. Έλεγχος/Δημιουργία Global Settings
+# 6. Έλεγχος/Δημιουργία Global Settings
     settings_check = db.session.execute(select(Settings)).first()
 
     if settings_check is None:
         print("⚠️ No Global Settings found. Creating default settings.")
-        default_settings = Settings()
+        # ΕΙΣΑΓΩΓΗ ΕΓΚΥΡΩΝ ΤΙΜΩΝ για να περάσει το NOT NULL constraint
+        default_settings = Settings(key='APP_NAME', value='ChatApp') 
         db.session.add(default_settings)
         db.session.commit()
         print("✅ Default settings created successfully.")
