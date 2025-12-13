@@ -131,13 +131,17 @@ def create_app():
             return redirect(url_for('chat_page')) 
         return render_template('admin_panel.html')
 
-    # // ΝΕΑ ΡΟΥΤΙΝΑ CHAT (Μοναδική Ορισμός)
-    @app.route('/chat', endpoint='chat_page') 
-    @login_required
-    def chat():
-        """Προστατευμένη ρουτίνα για τη σελίδα συνομιλίας."""
-        return render_template('chat.html')
-    
+# // ΝΕΑ ΡΟΥΤΙΝΑ CHAT (Μοναδική Ορισμός)
+@app.route('/chat', endpoint='chat_page') 
+@login_required
+def chat():
+    """Προστατευμένη ρουτίνα για τη σελίδα συνομιλίας."""
+    # ΠΕΡΝΑΜΕ ΤΟΝ ΡΟΛΟ ΚΑΙ ΤΟ ΧΡΩΜΑ, ΚΑΘΩΣ ΤΟ TEMPLATE ΤΑ ΧΡΕΙΑΖΕΤΑΙ
+    return render_template(
+        'chat.html',
+        role=current_user.role,
+        color=current_user.color
+    )    
     # --- Routes Σύνδεσης/Αποσύνδεσης ---
 
     # Ρουτίνα GET: Απλώς εμφανίζει το login template
