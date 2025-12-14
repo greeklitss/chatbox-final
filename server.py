@@ -6,9 +6,8 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, curren
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import select
 from datetime import datetime
-from authlib.integrations.flask_client import OAuth, OAuthError as AuthlibOAuthError
 from flask_socketio import SocketIO, emit, join_room, leave_room # Νέα εισαγωγή
-import eventlet # Απαραίτητο για το gunicorn eventlet worker
+# import eventlet # Απαραίτητο για το eventlet worker
 
 # --------------------------------------------------------------------------
 # 1. ΕΚΤΑΣΕΙΣ (Extensions)
@@ -16,11 +15,9 @@ import eventlet # Απαραίτητο για το gunicorn eventlet worker
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
-oauth = OAuth() 
-socketio = SocketIO() # Νέα αρχικοποίηση
+socketio = SocketIO() # Αρχικοποίηση Socket.IO
 
-# --- Λίστα ενεργών χρηστών (Global/Memory Store) ---
-# Στην παραγωγή, αυτό θα ήταν Redis/DB. Εδώ το κρατάμε στη μνήμη του Master Process.
+# --- Λίστα ενεργών χρηστών (Memory Store, απλουστευμένη) ---
 ONLINE_USERS = {} 
 
 # --------------------------------------------------------------------------
@@ -28,25 +25,24 @@ ONLINE_USERS = {}
 # --------------------------------------------------------------------------
 def get_default_color_by_role(role):
     colors = {
-        'owner': '#FF0000', # Κόκκινο
-        'admin': '#00CC00', # Πράσινο (Άλλαξε από Μπλε για να ξεχωρίζει από το user)
-        'user': '#00bfff', # Light Blue
-        'guest': '#808080' # Γκρι
+        'owner': '#FF3399', 
+        'admin': '#00CC00', 
+        'user': '#00bfff', 
+        'guest': '#808080' 
     }
     return colors.get(role.lower(), '#000000') 
 
 def get_online_users_list():
     """Επιστρέφει τη λίστα των online χρηστών για το frontend."""
-    # Απαιτείται κλείδωμα αν είχαμε πολλούς workers, αλλά με eventlet worker=1 είναι εντάξει
+    # Επιστρέφουμε μια λίστα μόνο με τις τιμές (τα SIDs είναι τα keys)
     return list(ONLINE_USERS.values())
 
 
 # --------------------------------------------------------------------------
-# 3. ΜΟΝΤΕΛΑ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ (Database Models)
-# (Διατηρούνται ως έχουν)
+# 3. ΜΟΝΤΕΛΑ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ (Database Models - Παραμένουν ως έχουν)
 # --------------------------------------------------------------------------
 class User(UserMixin, db.Model):
-    # ... (ο κώδικας User παραμένει ως έχει) ...
+    # ... (Ο κώδικας User παραμένει ως έχει) ...
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=True) 
     oauth_provider = db.Column(db.String(50), nullable=True) 
@@ -66,14 +62,14 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 class Message(db.Model):
-    # ... (ο κώδικας Message παραμένει ως έχει) ...
+    # ... (Ο κώδικας Message παραμένει ως έχει) ...
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     content = db.Column(db.String(500), nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
 class Settings(db.Model):
-    # ... (ο κώδικας Settings παραμένει ως έχει) ...
+    # ... (Ο κώδικας Settings παραμένει ως έχει) ...
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(50), unique=True, nullable=False)
     value = db.Column(db.String(255), nullable=False)
@@ -85,39 +81,19 @@ class Settings(db.Model):
 def create_app(test_config=None):
     # --- 1. Αρχικοποίηση Flask App & Ρυθμίσεις ---
     app = Flask(__name__)
-    # ... (οι ρυθμίσεις παραμένουν ως έχουν) ...
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key_needs_to_be_long')
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_dev_key')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'sqlite:///db.sqlite'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER_EXTERNAL_URL') else False
-    app.config['REMEMBER_COOKIE_SECURE'] = True if os.environ.get('RENDER_EXTERNAL_URL') else False
-    app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
-    app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET')
     
-    # 🚨 Ρυθμίσεις SocketIO
-    app.config['SOCKETIO_MESSAGE_QUEUE'] = os.environ.get('REDIS_URL') or None
-    # Χρησιμοποιούμε eventlet/gevent αν υπάρχει, αλλιώς Flask default.
-    socketio.init_app(app, cors_allowed_origins="*", async_mode='eventlet') 
+    # Ρυθμίσεις SocketIO (Χρησιμοποιούμε eventlet αν είναι διαθέσιμο)
+    socketio.init_app(app, cors_allowed_origins="*", async_mode='eventlet' if 'eventlet' in os.environ.get('FLASK_RUN_ENV', '') else None) 
 
     # --- 2. Αρχικοποίηση Extensions ---
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'login_page'
-    login_manager.session_protection = 'strong'
 
-    # ... (Ο κώδικας OAuth παραμένει ως έχει) ...
-    oauth.init_app(app)
-    oauth.register(
-        'google',
-        client_id=app.config.get('GOOGLE_CLIENT_ID'),
-        client_secret=app.config.get('GOOGLE_CLIENT_SECRET'),
-        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-        client_kwargs={'scope': 'openid email profile'},
-        redirect_uri='/oauth/authorize' 
-    )
-
-    # Flask-Login: Συνάρτηση φόρτωσης χρήστη
     @login_manager.user_loader
     def load_user(user_id):
         return db.session.get(User, int(user_id))
@@ -131,33 +107,9 @@ def create_app(test_config=None):
     def index():
         return render_template('index.html')
 
-    @app.route('/admin_panel')
-    @login_required
-    def admin_panel():
-        if current_user.role not in ['admin', 'owner']:
-            flash('Δεν έχετε δικαίωμα πρόσβασης.', 'error')
-            return redirect(url_for('chat_page')) 
-        return render_template('admin_panel.html')
-
-    # ΡΟΥΤΙΝΑ CHAT (Η διορθωμένη ρουτίνα σας)
-    @app.route('/chat', endpoint='chat_page') 
-    @login_required
-    def chat():
-        """Προστατευμένη ρουτίνα για τη σελίδα συνομιλίας."""
-        return render_template(
-            'chat.html',
-            role=current_user.role,
-            color=current_user.color,
-            # Περνάμε τις μεταβλητές για το JS
-            user_id=current_user.id,
-            display_name=current_user.display_name,
-            password_hash_status=current_user.password_hash is not None 
-        )
-
-    # Ρουτίνα Σύνδεσης (Endpoint: login_page)
     @app.route('/login', methods=['GET', 'POST'], endpoint='login_page')
     def login():
-        # ... (ο κώδικας login παραμένει ως έχει) ...
+        # ... (Ο κώδικας login παραμένει ως έχει) ...
         if current_user.is_authenticated:
             return redirect(url_for('chat_page'))
         
@@ -174,19 +126,35 @@ def create_app(test_config=None):
             login_user(user)
             return redirect(url_for('chat_page'))
             
-        return render_template('login.html')
+        # Εδώ επιστρέφετε το template. Πρέπει να ορίσετε το form action στο login.html
+        return render_template('login.html') 
 
     @app.route('/logout', endpoint='logout_page')
     @login_required
     def logout():
-        # ... (ο κώδικας logout παραμένει ως έχει) ...
         logout_user()
         flash('Έχετε αποσυνδεθεί επιτυχώς.', 'success')
-        return redirect(url_for('login_page')) 
-    
-    # ... (Οι ρουτίνες OAuth και API παραμένουν ως έχουν) ...
+        return redirect(url_for('index_page'))
+
+
+    # ΡΟΥΤΙΝΑ CHAT (Η διορθωμένη ρουτίνα σας)
+    @app.route('/chat', endpoint='chat_page') 
+    @login_required
+    def chat():
+        """Προστατευμένη ρουτίνα για τη σελίδα συνομιλίας."""
+        return render_template(
+            'chat.html',
+            role=current_user.role,
+            color=current_user.color,
+            # 🚨 ΠΕΡΝΑΜΕ ΤΙΣ ΑΠΑΡΑΙΤΗΤΕΣ ΜΕΤΑΒΛΗΤΕΣ ΓΙΑ ΤΟ JS
+            user_id=current_user.id,
+            display_name=current_user.display_name,
+            # Αυτό πρέπει να γίνει boolean για το JS
+            password_hash_status=current_user.password_hash is not None 
+        )
+
     # --------------------------------------------------------------------------
-    # 6. SOCKET.IO EVENTS
+    # 6. SOCKET.IO EVENTS (ΤΟ ΚΛΕΙΔΙ ΓΙΑ ΤΟ CHAT)
     # --------------------------------------------------------------------------
 
     @socketio.on('connect')
@@ -200,12 +168,9 @@ def create_app(test_config=None):
                 'role': current_user.role,
                 'color': current_user.color
             }
-            # Ενημέρωση όλων των χρηστών για τη νέα λίστα
+            # Ενημέρωση όλων των χρηστών για τη νέα λίστα (για τη sidebar)
             socketio.emit('users_update', get_online_users_list(), broadcast=True)
-            print(f'User connected: {current_user.display_name}. Total: {len(ONLINE_USERS)}')
-        else:
-            # Για χρήστες που δεν έχουν συνδεθεί
-            pass 
+            print(f"User connected: {current_user.display_name}. Online: {len(ONLINE_USERS)}")
 
     @socketio.on('disconnect')
     def handle_disconnect():
@@ -214,13 +179,13 @@ def create_app(test_config=None):
             del ONLINE_USERS[request.sid]
             # Ενημέρωση όλων των χρηστών για την αλλαγή
             socketio.emit('users_update', get_online_users_list(), broadcast=True)
-            print(f'User disconnected. Remaining: {len(ONLINE_USERS)}')
+            print(f"User disconnected. Online: {len(ONLINE_USERS)}")
 
     @socketio.on('message')
     def handle_message(data):
         """Χειρίζεται την αποστολή ενός νέου μηνύματος."""
         if not current_user.is_authenticated:
-            return # Αγνοούμε μηνύματα από μη συνδεδεμένους χρήστες
+            return 
 
         # 1. Αποθήκευση στη βάση δεδομένων
         new_message = Message(
@@ -236,7 +201,7 @@ def create_app(test_config=None):
             'content': data['content'],
             'timestamp': datetime.utcnow().isoformat(),
             'role': current_user.role,
-            'color': current_user.color
+            'color': current_user.color # Στέλνουμε το χρώμα για στυλ
         }, broadcast=True)
 
 
