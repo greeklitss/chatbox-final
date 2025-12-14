@@ -281,7 +281,7 @@
                     {% if role == 'admin' or role == 'owner' %}
                         <button onclick="openAdminModal()" style="background: var(--color-owner); color: white;"><i class="fas fa-shield-alt"></i> Admin Panel</button>
                     {% endif %}
-                    <a href="{{ url_for('logout_page') }}"><button><i class="fas fa-sign-out-alt"></i> Logout</button></a>
+                    <a href="{{ url_for('logout') }}"><button><i class="fas fa-sign-out-alt"></i> Logout</button></a>
                 </div>
             </div>
 
