@@ -146,6 +146,7 @@ def create_app():
         api_base_url='https://www.googleapis.com/oauth2/v1/',
         client_kwargs={'scope': 'openid email profile'},
         server_metadata_url='https://accounts.google.com/.well-known/openid-configuration'
+        id_token_in_access_token_response=False
     )
     
     # ----------------------------------------------------
