@@ -138,17 +138,15 @@ def create_app():
     oauth.init_app(app)
     oauth.register(
         name='google',
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
         client_id=app.config['GOOGLE_CLIENT_ID'],
         client_secret=app.config['GOOGLE_CLIENT_SECRET'],
-        access_token_url='https://accounts.google.com/o/oauth2/token',
-        access_token_params=None,
-        authorize_url='https://accounts.google.com/o/oauth2/auth',
-        api_base_url='https://www.googleapis.com/oauth2/v1/',
         client_kwargs={'scope': 'openid email profile'},
-        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-        id_token_in_access_token_response=False
+        
+        # 🔥 P2 FIX 3: ΠΡΟΣΘΗΚΗ ISSUER για να περάσει την επικύρωση 'iss' claim
+        issuer='https://accounts.google.com'
     )
-    
+  
     # ----------------------------------------------------
     # 5. ΟΡΙΣΜΟΣ ΡΟΥΤΙΝΩΝ (Routes) - ΟΛΕΣ ΜΕΣΑ ΣΤΟ create_app()
     # ----------------------------------------------------
