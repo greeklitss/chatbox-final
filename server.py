@@ -211,13 +211,24 @@ def create_app():
         """Χειρίζεται την απάντηση (callback) από τον Google Auth Server."""
         try:
             token = oauth.google.authorize_access_token()
-            user_info = oauth.google.get('userinfo').json()
             
-            google_id = user_info['id']
+            # 🔥 ΔΙΟΡΘΩΣΗ: Χρήση του ID Token για τα δεδομένα χρήστη
+            if 'id_token' in token:
+                # 1. Προτεραιότητα: Χρησιμοποιούμε το parse_id_token (πιο ασφαλές)
+                user_info = oauth.google.parse_id_token(token) 
+            else:
+                # 2. Fallback: Χρησιμοποιούμε το userinfo endpoint
+                user_info = oauth.google.get('userinfo').json()
+            
+            # 🔥 ΔΙΟΡΘΩΣΗ: Το Google ID (Subject) στο ID Token είναι το 'sub'
+            google_id = user_info['sub'] 
+            
+            # Τα υπόλοιπα στοιχεία χρήστη
             email = user_info.get('email')
             display_name = user_info.get('name', email.split('@')[0] if email else f"User{google_id[:5]}")
             avatar_url = user_info.get('picture')
             
+            # --- Έλεγχος & Δημιουργία Χρήστη ---
             user = User.query.filter_by(google_id=google_id).first()
 
             if user is None:
@@ -244,6 +255,7 @@ def create_app():
             else:
                 user_to_login = user
                 
+            # --- Σύνδεση & Ανακατεύθυνση ---
             login_user(user_to_login)
             flash(f"Επιτυχής σύνδεση ως {user_to_login.display_name} (Google).", 'success')
             
@@ -254,6 +266,7 @@ def create_app():
             print(f"Google Auth Error (Authlib): {e}")
             return redirect(url_for('index'))
         except Exception as e:
+            # Αυτός ο handler πιθανότατα σας έστελνε στο login page πριν
             flash(f'Προέκυψε σφάλμα κατά τη σύνδεση Google: {e}', 'error')
             print(f"Google Auth Error: {e}")
             return redirect(url_for('login_page'))
