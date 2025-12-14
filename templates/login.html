@@ -362,6 +362,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
     <script>
         // ----------------------------------------------------
+        // GLOBAL DATA & SOCKET.IO INIT (Fixed)
+        // ----------------------------------------------------
+        const userId = {{ user_id | tojson }};
+        const userName = {{ display_name | tojson }};
+        const userRole = {{ role | tojson }};
+        const userColor = {{ color | tojson }}; 
+        const socket = io();
+        let hasPasswordHash = {{ password_hash_status | tojson }}; 
 
         // ----------------------------------------------------
         // SOCKET.IO RECEIVE EVENTS 
