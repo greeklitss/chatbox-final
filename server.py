@@ -38,11 +38,7 @@ def get_default_color_by_role(role):
 def get_online_users_list():
     """Επιστρέφει τη λίστα των συνδεδεμένων χρηστών για το SocketIO."""
     users_data = []
-    # Χρησιμοποιούμε set για να αφαιρέσουμε τους διπλούς χρήστες
-    seen_users = set() 
-    
-    # Το request.sid είναι η session ID του SocketIO, το οποίο αλλάζει ανά σύνδεση.
-    # Πρέπει να ομαδοποιήσουμε ανά User ID.
+    # Χρησιμοποιούμε dict για να κρατήσουμε μόνο τους μοναδικούς χρήστες ανά ID
     unique_users = {}
     for user_data in ONLINE_USERS.values():
         unique_users[user_data['id']] = user_data
@@ -97,6 +93,16 @@ class Message(db.Model):
 
     def __repr__(self):
         return f'<Message {self.content[:20]}>'
+
+# 🚨 ΕΠΑΝΑΦΟΡΑ του Settings model για να λειτουργήσει το db_init.py
+class Settings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(80), unique=True, nullable=False)
+    value = db.Column(db.String(256), nullable=False)
+
+    def __repr__(self):
+        return f'<Setting {self.key}: {self.value}>'
+
 
 # --------------------------------------------------------------------------
 # 4. ΕΡΓΟΣΤΑΣΙΟ ΕΦΑΡΜΟΓΗΣ (Application Factory)
@@ -392,7 +398,7 @@ def create_app():
             }
             # Ενημέρωση όλων των χρηστών για τη νέα λίστα
             emit('users_update', get_online_users_list(), broadcast=True)
-            print(f"User connected: {current_user.display_name}. Online: {len(ONLINE_USERS)}")
+            print(f"User connected: {current_user.display_name}. Online connections: {len(ONLINE_USERS)}")
 
     @socketio.on('disconnect')
     def handle_disconnect():
@@ -401,7 +407,7 @@ def create_app():
             del ONLINE_USERS[request.sid]
             # Ενημέρωση όλων των χρηστών για την αλλαγή
             socketio.emit('users_update', get_online_users_list(), broadcast=True)
-            print(f"User disconnected. Remaining: {len(ONLINE_USERS)}")
+            print(f"User disconnected. Remaining connections: {len(ONLINE_USERS)}")
 
     @socketio.on('message')
     def handle_message(data):
@@ -437,21 +443,11 @@ if __name__ == '__main__':
     with app.app_context():
         # Δημιουργία των πινάκων της βάσης δεδομένων αν δεν υπάρχουν
         # ΣΗΜΕΙΩΣΗ: Σε παραγωγή, χρησιμοποιήστε 'flask db upgrade'
-        db.create_all() 
-
-        # Δημιουργία ενός admin χρήστη αν δεν υπάρχει
-        if not User.query.filter_by(role='owner').first():
-            print("Δημιουργία Owner User...")
-            owner = User(
-                display_name='owner_admin',
-                role='owner',
-                color=get_default_color_by_role('owner')
-            )
-            owner.set_password('ownerpass') # Αλλάξτε τον κωδικό αυτόν!
-            db.session.add(owner)
-            db.session.commit()
-            print("Owner User created. Username: owner_admin, Password: ownerpass")
+        # db.create_all() # Το σχολιάζουμε γιατί το αναλαμβάνει το Flask-Migrate/deployment script
+        
+        # Το db_init.py θα πρέπει να τρέξει τώρα χωρίς το σφάλμα ImportError
+        pass
 
     print("Starting Radioparea server...")
-    # Χρησιμοποιούμε το eventlet αν είναι διαθέσιμο (κατάλληλο για SocketIO)
+    # Χρησιμοποιούμε το socketio.run() για να τρέξει ο server με SocketIO
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)
