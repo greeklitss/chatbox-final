@@ -186,7 +186,7 @@ def create_app():
     def logout():
         logout_user()
         flash('Αποσυνδεθήκατε επιτυχώς.', 'success')
-        return redirect(url_for('login_page'))
+        return redirect(url_for('index_page'))
 
 
     # --- ΡΟΥΤΙΝΕΣ GOOGLE OAUTH ---
