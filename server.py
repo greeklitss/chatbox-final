@@ -156,11 +156,11 @@ def create_app():
    @app.route('/')
    def index():
     # 1. Αν ο χρήστης ΕΙΝΑΙ συνδεδεμένος, τον στέλνουμε στο Chat
-       if current_user.is_authenticated:
+        if current_user.is_authenticated:
             return redirect(url_for('chat_page'))
         
     # 2. Αν ο χρήστης ΔΕΝ είναι συνδεδεμένος, εμφάνισε τη δημόσια Index
-            return render_template('index.html')
+        return render_template('index.html')
 
     @app.route('/login', methods=['GET', 'POST'])
     def login_page():
