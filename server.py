@@ -153,14 +153,14 @@ def create_app():
     # 5. ΟΡΙΣΜΟΣ ΡΟΥΤΙΝΩΝ (Routes) - ΟΛΕΣ ΜΕΣΑ ΣΤΟ create_app()
     # ----------------------------------------------------
 
-    @app.route('/') 
-    def index(): 
-    # 1. Αν ο χρήστης ΔΕΝ είναι συνδεδεμένος, βλέπει την Index 
-        if not current_user.is_authenticated: 
-                return render_template('index.html') 
-    # 2. Αν ο χρήστης ΕΙΝΑΙ συνδεδεμένος, τον στέλνουμε στο Chat 
-    # ΥΠΟΘΕΣΗ: το chat page endpoint είναι 'chat_page' 
-                return redirect(url_for('chat_page'))
+   @app.route('/')
+   def index():
+    # 1. Αν ο χρήστης ΕΙΝΑΙ συνδεδεμένος, τον στέλνουμε στο Chat
+       if current_user.is_authenticated:
+            return redirect(url_for('chat_page'))
+        
+    # 2. Αν ο χρήστης ΔΕΝ είναι συνδεδεμένος, εμφάνισε τη δημόσια Index
+            return render_template('index.html')
 
     @app.route('/login', methods=['GET', 'POST'])
     def login_page():
@@ -184,7 +184,7 @@ def create_app():
 
         return render_template('login.html')
 
-    @app.route('/logout')
+   @app.route('/logout') 
     @login_required
     def logout():
         logout_user()
