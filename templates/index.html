@@ -34,11 +34,12 @@
             overflow: hidden; 
 
             /* 🚨 ΔΙΟΡΘΩΜΕΝΟ: ΕΙΚΟΝΑ BACKGROUND */
-            background-image: url("../static/christmas_background.jpg"); 
-            background-size: cover; 
+            background-image: url("{{ url_for('static', filename='radioparea_background.jpg') }}"); 
+            background-size: cover;
+            background-attachment: fixed; /* Κάνει το φόντο σταθερό */
             background-position: center center;
             background-repeat: no-repeat;
-            background-attachment: fixed; 
+            background-color: #1a1a2e; /* Fallback */
         }
         .container { 
             background: var(--box-bg); 

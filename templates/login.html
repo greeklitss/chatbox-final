@@ -29,10 +29,15 @@
             
             /* Background */
             background-color: transparent;
+            /* ❌ ΑΦΑΙΡΕΣΗ: Η εικόνα ορίζεται τώρα από το style του index/base template 
             background-image: url("{{ url_for('static', filename='radioparea_background.jpg') }}"); 
             background-size: cover; 
-            background-position: center;
             background-attachment: fixed;
+            background-position: center center;
+            */
+            
+            overflow-y: hidden;
+        }
             
             color: var(--text-color);
         }
