@@ -143,10 +143,12 @@ def create_app():
         access_token_url='https://accounts.google.com/o/oauth2/token',
         access_token_params=None,
         authorize_url='https://accounts.google.com/o/oauth2/auth',
-        api_base_url='https://www.googleapis.com/oauth2/v1/',
+        api_base_url='https://www.googleapis.com/oauth2/v1/', # 🛑 Επαναφορά αυτής της γραμμής
         client_kwargs={'scope': 'openid email profile'},
         server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-        id_token_in_access_token_response=False
+        id_token_in_access_token_response=False,
+        # 🔥 P2 FIX 3: Η κρίσιμη προσθήκη για το 'iss' (Τελική προσθήκη)
+        issuer='https://accounts.google.com' 
     )
   
     # ----------------------------------------------------
