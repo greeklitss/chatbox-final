@@ -111,6 +111,8 @@ class Settings(db.Model):
 
 @login_manager.user_loader
 def load_user(user_id):
+    print(f"DEBUG LOAD: Attempting to load user with ID: {user_id}") # 🛑 ΠΡΟΣΘΕΣΤΕ ΑΥΤΟ
+    """Flask-Login callback για φόρτωση χρήστη από το ID."""
     """Flask-Login callback για φόρτωση χρήστη από το ID."""
     return User.query.get(int(user_id))
 
@@ -122,6 +124,7 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
     app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER_EXTERNAL_URL') else False
     app.config['REMEMBER_COOKIE_SECURE'] = True if os.environ.get('RENDER_EXTERNAL_URL') else False
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax' # Μπορεί να βοηθήσει
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -257,6 +260,7 @@ def create_app():
                 
             # --- Σύνδεση & Ανακατεύθυνση ---
             login_user(user_to_login)
+            print(f"DEBUG AUTH: User {user_to_login.display_name} logged in successfully. Redirecting to chat.")
             flash(f"Επιτυχής σύνδεση ως {user_to_login.display_name} (Google).", 'success')
             
             return redirect(url_for('admin_panel') if user_to_login.role in ['owner', 'admin'] else url_for('chat_page'))
@@ -275,6 +279,7 @@ def create_app():
     @app.route('/chat')
     @login_required
     def chat_page():
+        print(f"DEBUG CHAT: User {current_user.display_name} accessed chat.") # 🛑 ΠΡΟΣΘΕΣΤΕ ΑΥΤΟ
         return render_template('chat.html',
             user_id=current_user.id,
             display_name=current_user.display_name,

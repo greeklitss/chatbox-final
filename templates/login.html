@@ -136,9 +136,18 @@
     <div class="auth-container">
         <h1>Radioparea</h1>
 
-        
-
         <div id="login-section">
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages" style="margin-bottom: 20px;">
+                        {% for category, message in messages %}
+                            <div class="message-status {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
             <h2>Login</h2>
             <form id="login-form" class="auth-form">
                 <input type="text" id="login-username" placeholder="Username" required>
@@ -153,20 +162,14 @@
                 </button>
             </div>
             
-            <div class="switch-mode">
+            <div class="switch-mode" style="display: none;">
                 Δεν έχεις λογαριασμό; <a onclick="showSignup()">Εγγραφή</a>
             </div>
             <div id="login-message" class="message-status"></div>
         </div>
 
-        <div id="signup-section" class="hidden">
+        <div id="signup-section" class="hidden" style="display: none;">
             <h2>Sign Up</h2>
-            <form id="signup-form" class="auth-form">
-                <input type="text" id="signup-username" placeholder="Username" required>
-                <input type="password" id="signup-password" placeholder="Password" required>
-                <input type="password" id="signup-confirm-password" placeholder="Confirm Password" required>
-                <button type="submit" id="signup-btn"><i class="fas fa-user-plus"></i> Register</button>
-            </form>
             <div class="switch-mode">
                 Έχεις ήδη λογαριασμό; <a onclick="showLogin()">Σύνδεση</a>
             </div>
