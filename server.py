@@ -156,7 +156,7 @@ def create_app():
     @app.route('/')
     def index():
         if current_user.is_authenticated:
-            return redirect(url_for('chat_page'))
+            return render_template('index.html')
         return redirect(url_for('login_page'))
 
     @app.route('/login', methods=['GET', 'POST'])
@@ -186,7 +186,7 @@ def create_app():
     def logout():
         logout_user()
         flash('Αποσυνδεθήκατε επιτυχώς.', 'success')
-        return redirect(url_for('index_page'))
+        return redirect(url_for('index'))
 
 
     # --- ΡΟΥΤΙΝΕΣ GOOGLE OAUTH ---
@@ -245,7 +245,7 @@ def create_app():
         except AuthlibOAuthError as e:
             flash(f'Η σύνδεση μέσω Google ακυρώθηκε ή απέτυχε. {e}', 'error')
             print(f"Google Auth Error (Authlib): {e}")
-            return redirect(url_for('login_page'))
+            return redirect(url_for('index'))
         except Exception as e:
             flash(f'Προέκυψε σφάλμα κατά τη σύνδεση Google: {e}', 'error')
             print(f"Google Auth Error: {e}")
