@@ -11,17 +11,18 @@
     
     <style>
         /* ================================================= */
-        /* 🎨 ΒΑΣΙΚΟ ΣΤΥΛ: ΚΡΑΤΑΕΙ ΤΑ ΧΡΩΜΑΤΑ, ΟΧΙ ΤΟ INDEX.HTML LOOK */
+        /* 🎨 ΧΑΡΟΥΜΕΝΟ ΘΕΜΑ / COLORS & FONTS */
         /* ================================================= */
         :root {
-            --bg-main: #1a1a2e;         
-            --bg-chat-box: rgba(25, 25, 50, 0.85); 
-            --color-primary: #FFD700;   /* Χρυσό */
-            --color-secondary: #00CC00; /* Πράσινο */
-            --color-text: #F0F0F0;      
-            --color-owner: #FF3399;     
-            --color-admin: #00CC00;     
-            --color-user: #00bfff;      /* Light Blue for Users */
+            --bg-main: #14142a;         /* Πολύ Σκούρο Μπλε */
+            --bg-chat-box: rgba(20, 20, 40, 0.9); /* Διαφανές Σκούρο Μπλε */
+            --color-primary: #FF5733;   /* Ζωντανό Κοραλλί/Πορτοκαλί */
+            --color-secondary: #00FFC0; /* Φωτεινό Aqua (Secondary Accent) */
+            --color-text: #F0F0F0;
+            --color-owner: #FF3399;     /* Φούξια */
+            --color-admin: #00CC00;     /* Πράσινο */
+            --color-user: #00bfff;      /* Γαλάζιο */
+            --shadow-glow: 0 0 8px rgba(0, 255, 192, 0.4); /* Ελαφριά λάμψη */
         }
         
         body {
@@ -35,17 +36,23 @@
             align-items: center;
             min-height: 100vh;
             overflow: hidden; 
+            
+            /* ΣΤΑΘΕΡΟ ΦΟΝΤΟ */
+            background-image: url("{{ url_for('static', filename='radioparea_background.jpg') }}"); 
+            background-size: cover;
+            background-attachment: fixed; 
+            background-position: center center;
+            background-repeat: no-repeat;
         }
 
         /* ================================================= */
-        /* 📐 GRID LAYOUT: 3 ΣΤΗΛΕΣ */
+        /* 📐 GRID LAYOUT: 3 ΣΤΗΛΕΣ (Player | Chat | Users) */
         /* ================================================= */
         .main-layout {
             width: 95%;
-            max-width: 1300px; 
+            max-width: 1400px;
             height: 90vh;
             display: grid;
-            /* Player (250px) | Chat (auto) | Users (250px) */
             grid-template-columns: 250px 1fr 250px; 
             gap: 15px;
         }
@@ -53,105 +60,59 @@
         .left-sidebar, .right-sidebar, .chat-main-container {
             background: var(--bg-chat-box);
             border-radius: 15px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
             padding: 15px;
             overflow-y: auto;
         }
         
         .chat-main-container {
-            display: flex;
-            flex-direction: column;
             padding: 0; 
-        }
-        
-        /* ------------------ Left Sidebar (PLAYER) ------------------ */
-        .left-sidebar {
+            overflow: hidden; 
             display: flex;
             flex-direction: column;
-            /* Για να μπει ο player στην κορυφή και το υπόλοιπο να τυλίγεται */
-        }
-
-        .left-sidebar h2 {
-            color: var(--color-primary);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2em;
-            text-align: center;
-            margin-top: 0;
-        }
-
-        .left-sidebar iframe { 
-            width: 100%; 
-            border-radius: 5px; 
-            margin-bottom: 15px; 
-        }
-
-        /* Στυλ για DJ/Metadata */
-        .calligraphy-block { text-align: center; margin: 15px 0; }
-        .calligraphy-text-base {
-            font-family: 'Dancing Script', cursive; 
-            font-size: 1.2em; 
-            font-weight: bold;
-            color: var(--color-secondary); 
-            display: block; 
-            text-shadow: 0 0 8px rgba(0, 204, 0, 0.8); 
-        }
-        .dj-name-style {
-            font-family: 'Dancing Script', cursive; 
-            font-size: 1.1em; 
-            color: var(--color-text); 
-            text-shadow: 0 0 10px rgba(240, 240, 240, 1.0);
-            display: inline-block;
         }
         
-        /* ------------------ Right Sidebar (USERS) ------------------ */
-        .right-sidebar h2 {
-            color: var(--color-secondary);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2em;
-            text-align: center;
-            margin-top: 0;
-            border-bottom: 1px solid rgba(0, 204, 0, 0.3);
-            padding-bottom: 10px;
-        }
-        #online-users-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .online-user-item {
-            padding: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--color-text);
-        }
-        .user-role-label {
-            font-size: 0.7em;
-            padding: 2px 5px;
-            border-radius: 3px;
-            margin-left: 5px;
-            font-weight: bold;
-        }
-        
-        /* ------------------ Chat Main (Κεντρική Στήλη) ------------------ */
+        /* ------------------ Header & Controls ------------------ */
         .chat-header {
-            /* ... (keep existing chat-header styles) ... */
             padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .user-controls button, .user-controls a button {
+        .chat-header h1 {
+            color: var(--color-secondary);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8em;
+            text-shadow: 0 0 10px rgba(0, 255, 192, 0.8);
+            margin: 0;
+        }
+        .user-controls button {
             background: none;
             border: 1px solid var(--color-primary);
             color: var(--color-primary);
             padding: 5px 10px;
             cursor: pointer;
             margin-left: 10px;
-            border-radius: 5px;
-            transition: background 0.3s;
+            border-radius: 20px; /* Πιο στρογγυλεμένα */
+            transition: background 0.3s, box-shadow 0.3s;
         }
-        .user-controls button:hover, .user-controls a button:hover {
-            background: rgba(255, 215, 0, 0.2);
+        .user-controls button:hover {
+            background: rgba(255, 87, 51, 0.2);
+            box-shadow: 0 0 10px var(--color-primary);
         }
+        .user-controls button:nth-child(3) { /* Admin button style */
+             background: var(--color-owner); 
+             border: none;
+             color: white;
+             box-shadow: 0 0 10px var(--color-owner);
+        }
+        .user-controls button:nth-child(3):hover {
+            background: #ff55aa;
+            box-shadow: 0 0 20px var(--color-owner);
+        }
+        
+        /* ------------------ Message Area ------------------ */
         #messages {
             list-style: none;
             padding: 20px 15px;
@@ -159,168 +120,129 @@
             flex-grow: 1;
             overflow-y: auto;
         }
-        
-        /* Message Input & Toolbar */
+        .message-item {
+            margin-bottom: 12px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .message-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .message-header {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 3px;
+        }
+        .username {
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 1.1em;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+        .timestamp {
+            font-size: 0.75em;
+            color: #aaa;
+        }
+        .message-content {
+            padding-left: 5px;
+            line-height: 1.4;
+        }
+
+
+        /* ------------------ Input Form ------------------ */
         #message-form {
             display: flex;
             padding: 15px;
-            background: var(--bg-chat-box);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.5); 
+            border-top: 2px solid var(--color-secondary); 
         }
         #message-input {
             flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #333;
+            padding: 12px;
+            border: none;
             border-radius: 5px 0 0 5px;
             background: #0d0d1a;
             color: var(--color-text);
             outline: none;
+            font-size: 1em;
         }
         #message-form button {
-            padding: 10px 15px;
-            background: var(--color-secondary);
-            color: var(--bg-main);
+            padding: 12px 20px;
+            background: var(--color-primary);
+            color: white;
             border: none;
             border-radius: 0 5px 5px 0;
             cursor: pointer;
             font-weight: bold;
-            transition: background 0.3s;
+            transition: background 0.3s, box-shadow 0.3s;
+            text-transform: uppercase;
         }
-        #message-form button:hover { background: #00e600; }
-
-        .message-toolbar {
-            display: flex;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 8px 20px;
-            border-top: 1px solid var(--color-secondary);
-        }
-        .message-toolbar button {
-             /* ... (Toolbar button styles - Keep previous styles) ... */
-             background: var(--bg-main);
-            color: var(--color-text);
-            border: 1px solid var(--color-secondary);
-            padding: 5px 10px;
-            margin-right: 5px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
+        #message-form button:hover { 
+            background: #ff7f50;
+            box-shadow: 0 0 15px var(--color-primary);
         }
         
-        /* Message Styling */
-        .message-item {
-            margin-bottom: 10px;
-        }
-        .message-header {
-            font-size: 0.8em;
-            margin-bottom: 2px;
-            display: flex;
-            align-items: baseline;
-        }
-        .username {
-            font-weight: bold;
-            margin-right: 10px;
-        }
-        .timestamp {
-            color: #aaa;
-            font-size: 0.9em;
-        }
-        .message-content {
-            padding: 5px 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 0 10px 10px 10px;
-            word-wrap: break-word;
-        }
-
-        /* Media Embeds Styling */
-        .media-embed {
-            max-width: 100%;
-            margin-top: 5px;
-            border-radius: 8px;
-            overflow: hidden;
-            display: block; /* Απαραίτητο για το YouTube/Image */
-        }
-        .media-embed img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-        }
-        .media-embed iframe {
-            width: 100%;
-            height: 250px; 
-            border: none;
-        }
-
-        /* ================================================= */
-        /* ⚙️ USER SETTINGS MODAL CSS (Simple) */
-        /* ================================================= */
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 100;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.8);
-        }
-        .modal-content {
-            background-color: var(--bg-chat-box);
-            margin: 10% auto;
-            padding: 20px;
-            border: 1px solid var(--color-primary);
-            width: 80%;
-            max-width: 500px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px var(--color-primary);
-        }
-        .close-button {
+        /* ------------------ Player Sidebar (Left) ------------------ */
+        .left-sidebar h2 {
             color: var(--color-primary);
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+            border-bottom: 2px solid var(--color-primary);
+            padding-bottom: 10px;
+            margin-top: 0;
         }
-        .close-button:hover,
-        .close-button:focus {
-            color: #fff;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .modal-content input[type="text"], 
-        .modal-content input[type="password"] {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin: 8px 0;
-            display: inline-block;
-            border: 1px solid #555;
-            box-sizing: border-box;
-            background: #222;
-            color: var(--color-text);
-            border-radius: 5px;
-        }
-        .modal-content button {
-            background-color: var(--color-secondary);
-            color: var(--bg-main);
-            padding: 10px 15px;
-            margin-top: 10px;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            border-radius: 5px;
-            font-weight: bold;
+        .left-sidebar iframe { 
+            box-shadow: var(--shadow-glow);
         }
         
-        /* Media Queries (Keep existing) */
+        /* ------------------ Users Sidebar (Right) ------------------ */
+        .right-sidebar h2 {
+            color: var(--color-secondary);
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+            border-bottom: 2px solid var(--color-secondary);
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .online-user-item {
+            cursor: pointer;
+        }
+        .online-user-item:hover {
+            background: rgba(0, 255, 192, 0.05);
+            border-radius: 5px;
+        }
+        
+        /* ------------------ MODAL STYLING ------------------ */
+        .modal { z-index: 1000; }
+        .modal-content {
+            border: 3px solid var(--color-secondary);
+            box-shadow: 0 0 30px rgba(0, 255, 192, 0.8);
+            max-width: 650px;
+        }
+        .admin-tab-btn {
+            padding: 10px 15px;
+            border: 1px solid var(--color-secondary);
+            background: none;
+            color: var(--color-secondary);
+            cursor: pointer;
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+        .admin-tab-btn.active {
+            background: var(--color-secondary);
+            color: var(--bg-main);
+            font-weight: bold;
+        }
+
+        /* ------------------ Responsive ------------------ */
         @media (max-width: 1100px) {
             .main-layout {
                 grid-template-columns: 1fr;
                 height: 100vh;
-                padding: 10px;
+                padding: 5px;
             }
             .left-sidebar, .right-sidebar { display: none; } 
-            .chat-main-container {
-                max-width: 100%;
-            }
         }
     </style>
 </head>
@@ -328,42 +250,36 @@
     <div class="main-layout">
         
         <div class="left-sidebar">
-            <h2>📻 Radio Parea Live</h2>
+            <h2>📻 Live Radio </h2>
             <div id="radio-player">
-                <iframe src="https://or.mysonicserver.com/cp/widgets/player/single/?p=8050" height="110" width="100%" scrolling="no" style="border:none;"></iframe>
+                <iframe src="https://or.mysonicserver.com/cp/widgets/player/single/?p=8050" height="110" width="100%" scrolling="no" style="border:none; border-radius: 5px;"></iframe>
                 
                 <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
                 
                 <div class="metadata-box">
                     <div class="calligraphy-block">
                         <span class="calligraphy-text-base">
-                            ΕΛΑ ΝΑ ΠΕΤΑΜΕ ΜΕ <span id='sonic_dj' class='dj-name-style'></span>
+                            ΣΤΟ ΑΕΡΑ ΜΕ <span id='sonic_dj' class='dj-name-style'></span>
                         </span>
-                        <div id="jplayer_volume_control"> </div>
                     </div>
     
-                    <div id='sonic_title'></div>
-                    <div id='dj_profile'></div>
-                    <div id='sonic_listeners'>ΑΚΡΟΑΤΕΣ</div>
+                    <div id='sonic_title' style="color: var(--color-secondary); font-weight: bold; margin-top: 10px;"></div>
+                    <div id='sonic_listeners' style="font-size: 0.9em; color: #ccc;"></div>
                 </div>
             </div>
-            
-            </div>
+        </div>
 
         <div class="chat-main-container">
             <div class="chat-header">
-                <h1>🎉 Radioparea Live Chat</h1>
+                <h1>🎵 Live Chat & Vibes</h1>
                 <div class="user-controls">
                     <span style="margin-right: 15px;">
-                        Role: <span style="font-weight: bold; color: {{ color }}">{{ role.upper() }}</span>
                     </span>
                     
                     <button onclick="openSettingsModal()"><i class="fas fa-cog"></i> Settings</button>
 
                     {% if role == 'admin' or role == 'owner' %}
-                        <a href="{{ url_for('admin_panel') }}" target="_blank">
-                            <button style="background: var(--color-owner); color: white;"><i class="fas fa-shield-alt"></i> Admin</button>
-                        </a>
+                        <button onclick="openAdminModal()" style="background: var(--color-owner); color: white;"><i class="fas fa-shield-alt"></i> Admin Panel</button>
                     {% endif %}
                     <a href="{{ url_for('logout_page') }}"><button><i class="fas fa-sign-out-alt"></i> Logout</button></a>
                 </div>
@@ -372,14 +288,6 @@
             <ul id="messages">
                 </ul>
 
-            <div class="message-toolbar">
-                <button title="Emoticons (Σύντομα)"><i class="fas fa-grin-beam"></i></button>
-                <button title="Format Bold (Σύντομα)"><i class="fas fa-bold"></i></button>
-                <button title="Format Italic (Σύντομα)"><i class="fas fa-italic"></i></button>
-                <button title="Gifs (Σύντομα)"><i class="fas fa-gift"></i></button>
-                <button title="Embed URL/Image"><i class="fas fa-link"></i></button>
-            </div>
-
             <form id="message-form">
                 <input type="text" id="message-input" placeholder="Στείλε το μήνυμά σου...">
                 <button type="submit">Send</button>
@@ -387,7 +295,7 @@
         </div>
 
         <div class="right-sidebar">
-            <h2>👥 Online Users <span id="online-count">(0)</span></h2>
+            <h2>👥 Online Listeners <span id="online-count">(0)</span></h2>
             <ul id="online-users-list">
                 </ul>
         </div>
@@ -397,132 +305,97 @@
     <div id="user-settings-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeSettingsModal()">&times;</span>
-            <h2>User Settings</h2>
+            <h2><i class="fas fa-user-cog"></i> User Settings</h2>
             
             <form id="update-profile-form">
-                <h3>Update Profile</h3>
+                <h3>Profile</h3>
                 <label for="setting-nickname">Nickname:</label>
                 <input type="text" id="setting-nickname" name="display_name" required>
-                <button type="submit">Update Profile</button>
-                <p id="profile-message" style="margin-top: 10px; color: var(--color-secondary);"></p>
+
+                <label for="setting-avatar">Avatar URL:</label>
+                <input type="url" id="setting-avatar" name="avatar_url" placeholder="Paste image URL">
+                
+                <button type="submit" class="settings-btn" style="margin-top: 15px; background: var(--color-primary);"><i class="fas fa-user-edit"></i> Update Profile</button>
+                <div id="profile-message" class="message-status"></div>
             </form>
 
-            <hr style="border-color: #333; margin: 20px 0;">
-
-            <form id="update-password-form" style="display: none;">
-                <h3>Change Password</h3>
-                <label for="setting-current-password">Current Password:</label>
-                <input type="password" id="setting-current-password" name="current_password" placeholder="Enter current password" required>
-                
-                <label for="setting-new-password">New Password:</label>
-                <input type="password" id="setting-new-password" name="new_password" placeholder="Enter new password" required>
-                
-                <button type="submit">Update Password</button>
-                <p id="password-message" style="margin-top: 10px; color: var(--color-secondary);"></p>
+            <form id="update-password-form" style="display: none; margin-top: 20px; border-top: 1px dashed #555; padding-top: 20px;">
+                 <h3>Change Password</h3>
+                 <label for="setting-old-password">Old Password:</label>
+                 <input type="password" id="setting-old-password" name="old_password" required>
+                 
+                 <label for="setting-new-password">New Password:</label>
+                 <input type="password" id="setting-new-password" name="new_password" required>
+                 
+                 <button type="submit" class="settings-btn" style="margin-top: 15px; background: var(--color-secondary);"><i class="fas fa-key"></i> Change Password</button>
+                 <div id="password-message" class="message-status"></div>
             </form>
         </div>
     </div>
 
+    <div id="admin-panel-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeAdminModal()">&times;</span>
+            <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
+            <p style="color: var(--color-owner); font-weight: bold;">Welcome, **{{ display_name }}**! This is the Admin/Owner interface.</p>
+            
+            <div id="admin-tabs" style="margin-bottom: 15px;">
+                <button class="admin-tab-btn active" onclick="showAdminTab('user-management')">User Management</button>
+                <button class="admin-tab-btn" onclick="showAdminTab('site-settings')">Site Settings</button>
+            </div>
+
+            <div id="user-management" class="admin-tab-content active">
+                <h3>User Management</h3>
+                <p>Διαχείριση Χρηστών: Ban, Kick, Αλλαγή Ρόλου. (Απαιτούνται API endpoints).</p>
+                <button style="background: var(--color-owner); color: white; border: none; padding: 10px 15px; border-radius: 5px;">Load All Users</button>
+            </div>
+            
+            <div id="site-settings" class="admin-tab-content" style="display: none;">
+                <h3>Site Settings</h3>
+                <p>Ρυθμίσεις ραδιοφώνου, τίτλων, και γενικών ανακοινώσεων.</p>
+            </div>
+
+        </div>
+    </div>
+
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
     <script>
         // ----------------------------------------------------
-        // GLOBAL DATA & SOCKET.IO INIT
-        // ----------------------------------------------------
-        const userId = {{ user_id | tojson }};
-        const userName = {{ display_name | tojson }};
-        const userRole = {{ role | tojson }};
-        const userColor = {{ color | tojson }}; 
-        const socket = io();
-        let hasPasswordHash = {{ password_hash_status | tojson }}; 
-
-        // ----------------------------------------------------
-        // USER SETTINGS MODAL LOGIC (openSettingsModal)
-        // ----------------------------------------------------
-
-        function openSettingsModal() {
-            document.getElementById('user-settings-modal').style.display = 'block';
-            document.getElementById('setting-nickname').value = userName;
-            
-            const passwordForm = document.getElementById('update-password-form');
-            if (hasPasswordHash) {
-                 passwordForm.style.display = 'block';
-            } else {
-                 passwordForm.style.display = 'none';
-            }
-        }
-
-        function closeSettingsModal() {
-            document.getElementById('user-settings-modal').style.display = 'none';
-            document.getElementById('profile-message').textContent = '';
-            document.getElementById('password-message').textContent = '';
-        }
-        
-        // Window click handler to close modal
-        window.onclick = function(event) {
-            const modal = document.getElementById('user-settings-modal');
-            if (event.target == modal) {
-                closeSettingsModal();
-            }
-        }
-
-        // ----------------------------------------------------
-        // SOCKET.IO RECEIVE EVENTS (Media Embedding/Formatting)
+        // 1. ΟΡΙΣΜΟΣ GLOBAL METAVARIABLES & SOCKET.IO INIT
         // ----------------------------------------------------
         
-        function processContentForEmbeds(content) {
-            const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|[^#]*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-            const imageRegex = /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|jpeg|gif|png|webp)(\?.*)?$/i;
-            const linkRegex = /(((https?:\/\/)|www\.)[^ \n\r\t]+)/g;
+        // 🚨 ΚΡΙΣΙΜΟ: Αυτές οι μεταβλητές ορίζονται από το server.py/chat (render_template)
+        const userName = "{{ display_name }}";
+        const userRole = "{{ role }}";
+        const userColor = "{{ color }}";
+        const userId = "{{ user_id }}";
+        // Χρησιμοποιούμε το | lower για να το μετατρέψουμε σε JS boolean
+        const hasPasswordHash = {{ password_hash_status | lower }}; 
 
-            // 1. YouTube Embeds
-            let embeddedHtml = content.replace(youtubeRegex, (match, videoId) => {
-                const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0`;
-                return `<div class="media-embed"><iframe src="${embedUrl}" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
-            });
-
-            // 2. Image Embeds
-            embeddedHtml = embeddedHtml.replace(imageRegex, (match) => {
-                // Ensure the match is not already part of an embed (simple check)
-                 if (embeddedHtml.includes(match) && embeddedHtml.indexOf(match) < 100) return `<div class="media-embed"><img src="${match}" alt="Embedded image"></div>`;
-
-                 return `<div class="media-embed"><img src="${match}" alt="Embedded image"></div>`;
-            });
-            
-            // 3. Formatting (Bold: **text**)
-            embeddedHtml = embeddedHtml.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
-
-            // 4. Hyperlinks (Must run last to ensure embeds are correctly wrapped)
-            embeddedHtml = embeddedHtml.replace(linkRegex, (match) => {
-                // Check if the link is already wrapped in a media-embed
-                if (match.startsWith('http') && embeddedHtml.includes(`<img src="${match}"`) || embeddedHtml.includes(`src="${match}"`)) {
-                    return match;
-                }
-                const href = match.startsWith('http') ? match : `https://${match}`;
-                return `<a href="${href}" target="_blank">${match}</a>`;
-            });
-
-            return embeddedHtml;
-        }
-
-
+        // 🚨 ΚΡΙΣΙΜΟ: Αρχικοποίηση Socket.IO Client.
+        const socket = io(); 
+        
+        // ----------------------------------------------------
+        // SOCKET.IO RECEIVE EVENTS 
+        // ----------------------------------------------------
+        
         socket.on('message', function(msg) {
             const messages = document.getElementById('messages');
             const item = document.createElement('li');
             item.className = 'message-item';
             
-            const processedContent = processContentForEmbeds(msg.content);
-
             item.innerHTML = `
                 <div class="message-header">
                     <span class="username" style="color: ${msg.color || userColor};">${msg.display_name}</span>
                     <span class="timestamp">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
-                <div class="message-content">${processedContent}</div>`;
+                <div class="message-content">${msg.content}</div>`;
                 
             messages.appendChild(item);
             messages.scrollTop = messages.scrollHeight; 
         });
-        
+
         socket.on('users_update', function(users) {
             const list = document.getElementById('online-users-list');
             const count = document.getElementById('online-count');
@@ -533,15 +406,14 @@
                 item.className = 'online-user-item';
                 item.style.color = user.color || '#F0F0F0'; 
                 
-                const roleLabel = `<span class="user-role-label" style="background: ${user.color};">${user.role.toUpperCase()}</span>`;
+                const roleLabel = `<span class="user-role-label" style="background: ${user.color}; color: var(--bg-main);">${user.role.toUpperCase()}</span>`;
                 
                 item.innerHTML = `${user.display_name} ${user.id === userId ? '<span class="user-role-label" style="background: #ccc; color: black;">YOU</span>' : roleLabel}`;
                 list.appendChild(item);
             });
             count.textContent = `(${users.length})`;
         });
-
-
+        
         // ----------------------------------------------------
         // SOCKET.IO SEND EVENTS
         // ----------------------------------------------------
@@ -558,6 +430,64 @@
                 input.value = '';
             }
         });
+        
+        // ----------------------------------------------------
+        // MODAL LOGIC (Settings & Admin)
+        // ----------------------------------------------------
+        function openSettingsModal() {
+            document.getElementById('user-settings-modal').style.display = 'block';
+            document.getElementById('setting-nickname').value = userName;
+            
+            const passwordForm = document.getElementById('update-password-form');
+            if (hasPasswordHash) {
+                 passwordForm.style.display = 'block';
+            } else {
+                 passwordForm.style.display = 'none';
+            }
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('user-settings-modal').style.display = 'none';
+        }
+        
+        function openAdminModal() {
+            if (userRole === 'admin' || userRole === 'owner') {
+                document.getElementById('admin-panel-modal').style.display = 'block';
+            } else {
+                alert('Δεν έχετε δικαίωμα πρόσβασης στο Admin Panel.');
+            }
+        }
+
+        function closeAdminModal() {
+            document.getElementById('admin-panel-modal').style.display = 'none';
+        }
+
+        function showAdminTab(tabId) {
+            const contents = document.querySelectorAll('.admin-tab-content');
+            contents.forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(tabId).style.display = 'block';
+            
+            const buttons = document.querySelectorAll('.admin-tab-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.admin-tab-btn[onclick="showAdminTab('${tabId}')"]`).classList.add('active');
+        }
+
+        window.onclick = function(event) {
+            const settingsModal = document.getElementById('user-settings-modal');
+            const adminModal = document.getElementById('admin-panel-modal');
+            
+            if (event.target == settingsModal) {
+                closeSettingsModal();
+            }
+            if (event.target == adminModal) {
+                closeAdminModal();
+            }
+        }
+        
     </script>
 </body>
 </html>
