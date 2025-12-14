@@ -117,7 +117,11 @@ def load_user(user_id):
 def create_app():
     # --- 1. Αρχικοποίηση Εφαρμογής ---
     app = Flask(__name__)
+    # 🚨 ΠΡΟΣΘΗΚΗ: Διόρθωση για το HTTPS/Proxy (Render/Gunicorn)
+    app.wsgi_app = ProxyFix(app.wsgi_app, num_proxies=1)) 
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_secret_key_must_be_strong')
+    app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER_EXTERNAL_URL') else False
+    app.config['REMEMBER_COOKIE_SECURE'] = True if os.environ.get('RENDER_EXTERNAL_URL') else False
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
