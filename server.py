@@ -120,7 +120,7 @@ def create_app():
     # --- 1. Αρχικοποίηση Εφαρμογής ---
     app = Flask(__name__)
     # 🚨 ΠΡΟΣΘΗΚΗ: Διόρθωση για το HTTPS/Proxy (Render/Gunicorn)
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1) 
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1, x_port=1, x_prefix=1) 
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
     app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER_EXTERNAL_URL') else False
     app.config['REMEMBER_COOKIE_SECURE'] = True if os.environ.get('RENDER_EXTERNAL_URL') else False
@@ -215,23 +215,21 @@ def create_app():
         try:
             token = oauth.google.authorize_access_token()
             
-            # 🔥 ΔΙΟΡΘΩΣΗ: Χρήση του ID Token για τα δεδομένα χρήστη
+            # 🔥 ΔΙΟΡΘΩΣΗ: Χρήση του ID Token (πιο ασφαλές και αξιόπιστο)
             if 'id_token' in token:
-                # 1. Προτεραιότητα: Χρησιμοποιούμε το parse_id_token (πιο ασφαλές)
                 user_info = oauth.google.parse_id_token(token) 
             else:
-                # 2. Fallback: Χρησιμοποιούμε το userinfo endpoint
+                # Fallback: Χρησιμοποιούμε το userinfo endpoint
                 user_info = oauth.google.get('userinfo').json()
             
-            # 🔥 ΔΙΟΡΘΩΣΗ: Το Google ID (Subject) στο ID Token είναι το 'sub'
+            # 🔥 ΔΙΟΡΘΩΣΗ: Το Google ID στο ID Token είναι το 'sub', όχι το 'id'
             google_id = user_info['sub'] 
             
-            # Τα υπόλοιπα στοιχεία χρήστη
             email = user_info.get('email')
             display_name = user_info.get('name', email.split('@')[0] if email else f"User{google_id[:5]}")
             avatar_url = user_info.get('picture')
             
-            # --- Έλεγχος & Δημιουργία Χρήστη ---
+            # --- Έλεγχος & Δημιουργία Χρήστη (Το υπόλοιπο παραμένει ίδιο) ---
             user = User.query.filter_by(google_id=google_id).first()
 
             if user is None:
@@ -258,19 +256,17 @@ def create_app():
             else:
                 user_to_login = user
                 
-            # --- Σύνδεση & Ανακατεύθυνση ---
             login_user(user_to_login)
-            print(f"DEBUG AUTH: User {user_to_login.display_name} logged in successfully. Redirecting to chat.")
             flash(f"Επιτυχής σύνδεση ως {user_to_login.display_name} (Google).", 'success')
             
             return redirect(url_for('admin_panel') if user_to_login.role in ['owner', 'admin'] else url_for('chat_page'))
 
         except AuthlibOAuthError as e:
+            # Το invalid_claim: Invalid claim 'iss' εμφανίζεται εδώ
             flash(f'Η σύνδεση μέσω Google ακυρώθηκε ή απέτυχε. {e}', 'error')
             print(f"Google Auth Error (Authlib): {e}")
             return redirect(url_for('index'))
         except Exception as e:
-            # Αυτός ο handler πιθανότατα σας έστελνε στο login page πριν
             flash(f'Προέκυψε σφάλμα κατά τη σύνδεση Google: {e}', 'error')
             print(f"Google Auth Error: {e}")
             return redirect(url_for('login_page'))
