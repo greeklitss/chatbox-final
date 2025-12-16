@@ -183,6 +183,7 @@ def create_app():
             return redirect(url_for('chat_page'))
 
         if request.method == 'POST':
+            data = request.get_json()
             username = request.form.get('username')
             password = request.form.get('password')
             
