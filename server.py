@@ -120,11 +120,19 @@ def create_app():
     # --- 1. Αρχικοποίηση Εφαρμογής ---
     app = Flask(__name__)
     # 🚨 ΠΡΟΣΘΗΚΗ: Διόρθωση για το HTTPS/Proxy (Render/Gunicorn)
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1, x_port=1, x_prefix=1) 
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1, x_port=1, x_prefix=1)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
+    
+    # ===================================================================================
+    # 🔥 ΔΙΟΡΘΩΣΗ: ΑΣΦΑΛΕΙΑ COOKIEΣ ΚΑΙ URL SCHEME ΓΙΑ HTTPS (RENDER) 
+    # Αυτό λύνει το πρόβλημα του session login loop (redirected back to login)
+    # ===================================================================================
     app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER_EXTERNAL_URL') else False
     app.config['REMEMBER_COOKIE_SECURE'] = True if os.environ.get('RENDER_EXTERNAL_URL') else False
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax' # Μπορεί να βοηθήσει
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['PREFERRED_URL_SCHEME'] = 'https' # Αυτή η γραμμή είναι ΚΡΙΣΙΜΗ για το Render/HTTPS
+    # ===================================================================================
+
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -191,7 +199,7 @@ def create_app():
 
         return render_template('login.html')
 
-    @app.route('/logout') 
+    @app.route('/logout')
     @login_required
     def logout():
         logout_user()
@@ -217,13 +225,13 @@ def create_app():
             
             # 🔥 ΔΙΟΡΘΩΣΗ: Χρήση του ID Token (πιο ασφαλές και αξιόπιστο)
             if 'id_token' in token:
-                user_info = oauth.google.parse_id_token(token) 
+                user_info = oauth.google.parse_id_token(token)
             else:
                 # Fallback: Χρησιμοποιούμε το userinfo endpoint
                 user_info = oauth.google.get('userinfo').json()
             
             # 🔥 ΔΙΟΡΘΩΣΗ: Το Google ID στο ID Token είναι το 'sub', όχι το 'id'
-            google_id = user_info['sub'] 
+            google_id = user_info['sub']
             
             email = user_info.get('email')
             display_name = user_info.get('name', email.split('@')[0] if email else f"User{google_id[:5]}")
@@ -358,7 +366,7 @@ def create_app():
 
         user = User.query.get_or_404(user_id)
         
-        # Αποτροπή διαγραφής/αλλαγής του ίδιου του owner
+        # Αποτροπή διαφής/αλλαγής του ίδιου του owner
         if user.role == 'owner' and current_user.role != 'owner':
             return jsonify({'error': 'Only the owner can manage the owner account.'}), 403
             
@@ -440,7 +448,7 @@ def create_app():
     def handle_message(data):
         """Χειρίζεται την αποστολή ενός νέου μηνύματος."""
         if not current_user.is_authenticated:
-            return 
+            return
 
         # 1. Αποθήκευση στη βάση δεδομένων
         new_message = Message(

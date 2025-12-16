@@ -3,307 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radioparea - Login/Sign Up</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <style>
-        /* ================================================= */
-        /* 🎨 AUTH STYLING (Based on Chat Theme) */
-        /* ================================================= */
-        :root {
-            --bg-main: #14142a;
-            --color-primary: #FF5733;
-            --color-secondary: #00FFC0;
-            --color-text: #F0F0F0;
-            --bg-card: rgba(20, 20, 40, 0.95);
-        }
-
-        body {
-            background-color: var(--bg-main);
-            color: var(--color-text);
-            font-family: 'Roboto', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-image: url("{{ url_for('static', filename='radioparea_background.jpg') }}"); 
-            background-size: cover;
-        }
-
-        .auth-container {
-            background: var(--bg-card);
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 0 25px rgba(0, 255, 192, 0.5);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        h1 {
-            color: var(--color-secondary);
-            font-family: 'Orbitron', sans-serif;
-            margin-bottom: 25px;
-            font-size: 2em;
-        }
-
-        .auth-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        input[type="text"], input[type="password"] {
-            padding: 12px;
-            border: 1px solid var(--color-primary);
-            border-radius: 8px;
-            background: #0d0d1a;
-            color: var(--color-text);
-            font-size: 1em;
-            outline: none;
-        }
-
-        button {
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1em;
-            transition: background 0.3s, box-shadow 0.3s;
-            text-transform: uppercase;
-            width: 100%; /* Για να πιάνει όλο το πλάτος */
-        }
-
-        #login-btn {
-            background: var(--color-primary);
-            color: white;
-        }
-        #login-btn:hover {
-            background: #ff7f50;
-            box-shadow: 0 0 10px var(--color-primary);
-        }
-
-        #signup-btn {
-            background: var(--color-secondary);
-            color: var(--bg-main);
-        }
-        #signup-btn:hover {
-            background: #33ffdb;
-            box-shadow: 0 0 10px var(--color-secondary);
-        }
-        
-        #google-login-btn {
-            background: white;
-            color: #444; 
-            border: 1px solid #ccc; 
-            font-size: 1em;
-        }
-        #google-login-btn:hover {
-            background: #f0f0f0;
-        }
-
-        .switch-mode {
-            margin-top: 20px;
-            font-size: 0.9em;
-            color: #aaa;
-        }
-        .switch-mode a {
-            color: var(--color-primary);
-            text-decoration: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .message-status {
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 15px;
-            display: none;
-            text-align: left;
-            font-weight: bold;
-        }
-        .message-status.success { background: #4CAF50; color: white; }
-        .message-status.error { background: #f44336; color: white; }
-        .message-status.warning { background: #ff9800; color: white; }
-        
-        .hidden { display: none; }
-    </style>
+    <title>Σύνδεση | Chatbox</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-<body>
+<body class="{{ 'dark-theme' if session.get('theme') == 'dark' else '' }}">
+    <div class="container">
+        <header>
+            <h1>Καλώς ήρθατε στο Radioparea</h1>
+        </header>
 
-    <div class="auth-container">
-        <h1>Radioparea</h1>
-
-        <div id="login-section">
-            
+        <main>
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    <div class="flash-messages" style="margin-bottom: 20px;">
+                    <ul class="flashes">
                         {% for category, message in messages %}
-                            <div class="message-status {{ category }}">{{ message }}</div>
+                            <li class="{{ category }}">{{ message }}</li>
                         {% endfor %}
-                    </div>
+                    </ul>
                 {% endif %}
             {% endwith %}
 
-            <h2>Login</h2>
-            <form id="login-form" class="auth-form">
-                <input type="text" id="login-username" placeholder="Username" required>
-                <input type="password" id="login-password" placeholder="Password" required>
-                <button type="submit" id="login-btn"><i class="fas fa-sign-in-alt"></i> Login</button>
-            </form>
-            
-            <div style="margin: 20px 0; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 20px;">
-                <button type="button" id="google-login-btn" onclick="window.location.href='{{ url_for('google_login') }}'" >
-                    <i class="fab fa-google" style="margin-right: 10px;"></i>
-                    Sign in with Google
-                </button>
-            </div>
-            
-            <div class="switch-mode" style="display: none;">
-                Δεν έχεις λογαριασμό; <a onclick="showSignup()">Εγγραφή</a>
-            </div>
-            <div id="login-message" class="message-status"></div>
-        </div>
+            <div class="login-container">
+                <h2>Σύνδεση</h2>
 
-        <div id="signup-section" class="hidden" style="display: none;">
-            <h2>Sign Up</h2>
-            <div class="switch-mode">
-                Έχεις ήδη λογαριασμό; <a onclick="showLogin()">Σύνδεση</a>
+                <form method="POST" action="{{ url_for('login_page') }}">
+                    <div class="input-group">
+                        <label for="username">Όνομα Χρήστη:</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Κωδικός:</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Σύνδεση</button>
+                </form>
+
+                <div class="separator">
+                    <span>Ή συνδεθείτε με</span>
+                </div>
+
+                <a href="{{ url_for('google.login') }}" class="btn btn-google">
+                    <i class="fab fa-google"></i> Σύνδεση με Google
+                </a>
+
+                <div class="register-link">
+                    <p>Δεν έχετε λογαριασμό; <a href="{{ url_for('register') }}">Εγγραφείτε</a></p>
+                </div>
             </div>
-            <div id="signup-message" class="message-status"></div>
-        </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 Radioparea</p>
+        </footer>
     </div>
 
     <script>
-        const API_BASE = '/api/v1';
-        
-        // Λογική εναλλαγής μεταξύ Login και Sign Up
-        function showLogin() {
-            document.getElementById('login-section').classList.remove('hidden');
-            document.getElementById('signup-section').classList.add('hidden');
-            document.getElementById('login-message').style.display = 'none';
-            document.getElementById('signup-message').style.display = 'none';
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Έλεγχος αποθηκευμένου θέματος κατά τη φόρτωση της σελίδας
+            const savedTheme = localStorage.getItem('theme');
+            const body = document.body;
 
-        function showSignup() {
-            document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('signup-section').classList.remove('hidden');
-            document.getElementById('login-message').style.display = 'none';
-            document.getElementById('signup-message').style.display = 'none';
-        }
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-theme');
+            } else if (savedTheme === 'light') {
+                body.classList.remove('dark-theme');
+            }
 
-        // Χειρισμός Σύνδεσης (Login)
-        async function handleLogin(e) {
-            e.preventDefault();
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-            const msgDiv = document.getElementById('login-message');
+            // Εναλλαγή Θέματος (Διορθωμένος Κώδικας)
+            const themeToggle = document.getElementById('theme-toggle');
 
-            msgDiv.className = 'message-status warning';
-            msgDiv.textContent = 'Attempting to log in...';
-            msgDiv.style.display = 'block';
-
-            try {
-                // Χρησιμοποιούμε POST στην κλασική Flask /login ρουτίνα
-                const response = await fetch('/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams({
-                        'username': username,
-                        'password': password
-                    })
+            // --- ΑΥΤΟΣ ΕΙΝΑΙ Ο ΔΙΟΡΘΩΜΕΝΟΣ ΕΛΕΓΧΟΣ ΓΙΑ ΤΟ ΣΦΑΛΜΑ TypeError ---
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    body.classList.toggle('dark-theme');
+                    // Αποθήκευση της προτίμησης
+                    localStorage.setItem('theme', body.classList.contains('dark-theme') ? 'dark' : 'light');
                 });
-
-                // Το Flask-Login χειρίζεται την ανακατεύθυνση. 
-                if (response.redirected) {
-                    window.location.href = response.url; // Ανακατευθύνει στο /chat (αν επιτυχής)
-                    return;
-                }
-                
-                // Αν δεν ανακατευθυνθεί, σημαίνει αποτυχία (Flask απαντά με 200 και ξαναφορτώνει τη φόρμα)
-                if (response.status === 200) {
-                    // Αναγκάζουμε έναν αργό reload για να δείξει τα flash messages του Flask
-                    setTimeout(() => {
-                        window.location.href = '/login';
-                    }, 50);
-                } else {
-                    msgDiv.className = 'message-status error';
-                    msgDiv.textContent = 'Server error during login.';
-                }
-
-            } catch (error) {
-                msgDiv.className = 'message-status error';
-                msgDiv.textContent = 'Network error or server unavailable.';
-                console.error('Login Error:', error);
             }
-        }
-
-        // Χειρισμός Εγγραφής (Sign Up)
-        async function handleSignUp(e) {
-            e.preventDefault();
-            const username = document.getElementById('signup-username').value;
-            const password = document.getElementById('signup-password').value;
-            const confirmPassword = document.getElementById('signup-confirm-password').value;
-            const msgDiv = document.getElementById('signup-message');
-
-            if (password !== confirmPassword) {
-                msgDiv.className = 'message-status error';
-                msgDiv.textContent = 'Passwords do not match.';
-                msgDiv.style.display = 'block';
-                return;
-            }
-
-            msgDiv.className = 'message-status warning';
-            msgDiv.textContent = 'Registering user...';
-            msgDiv.style.display = 'block';
-
-            try {
-                const response = await fetch(`${API_BASE}/sign_up`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    msgDiv.className = 'message-status success';
-                    msgDiv.textContent = 'Registration successful! Redirecting to login...';
-                    setTimeout(showLogin, 2000); 
-                } else {
-                    msgDiv.className = 'message-status error';
-                    msgDiv.textContent = data.error || 'Registration failed. Username may be taken.';
-                }
-            } catch (error) {
-                msgDiv.className = 'message-status error';
-                msgDiv.textContent = 'Network error or server unavailable.';
-                console.error('Sign Up Error:', error);
-            }
-        }
-        
-        // Σύνδεση Event Listeners
-        document.getElementById('login-form').addEventListener('submit', handleLogin);
-        document.getElementById('signup-form').addEventListener('submit', handleSignUp);
-
-        // Έλεγχος για Flash Messages στην αρχική φόρτωση
-        document.addEventListener('DOMContentLoaded', () => {
-            const flashMessages = document.querySelector('.flash-messages');
-            if (flashMessages) {
-                const isLoginError = flashMessages.querySelector('.error');
-                if (isLoginError) {
-                    showLogin();
-                }
-            }
+            // ------------------------------------------------------------------
         });
     </script>
 </body>
