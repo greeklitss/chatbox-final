@@ -119,20 +119,13 @@ def load_user(user_id):
 def create_app():
     # --- 1. Αρχικοποίηση Εφαρμογής ---
     app = Flask(__name__)
-    # 🚨 ΠΡΟΣΘΗΚΗ: Διόρθωση για το HTTPS/Proxy (Render/Gunicorn)
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1, x_port=1, x_prefix=1)
+    # 🚨 ΔΙΟΡΘΩΣΗ: Πιο επιθετικό ProxyFix (για Render/Gunicorn)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1, x_port=1, x_prefix=1) 
+    is_secure_env = os.environ.get('RENDER_EXTERNAL_URL') is not None or os.environ.get('PORT') == '10000'
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
-    
-    # ===================================================================================
-    # 🔥 ΔΙΟΡΘΩΣΗ: ΑΣΦΑΛΕΙΑ COOKIEΣ ΚΑΙ URL SCHEME ΓΙΑ HTTPS (RENDER) 
-    # Αυτό λύνει το πρόβλημα του session login loop (redirected back to login)
-    # ===================================================================================
-    app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER_EXTERNAL_URL') else False
-    app.config['REMEMBER_COOKIE_SECURE'] = True if os.environ.get('RENDER_EXTERNAL_URL') else False
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['PREFERRED_URL_SCHEME'] = 'https' # Αυτή η γραμμή είναι ΚΡΙΣΙΜΗ για το Render/HTTPS
-    # ===================================================================================
-
+    app.config['SESSION_COOKIE_SECURE'] = is_secure_env
+    app.config['REMEMBER_COOKIE_SECURE'] = is_secure_env
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax' # Μπορεί να βοηθήσει
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -147,6 +140,8 @@ def create_app():
     login_manager.login_view = 'login_page'
 
     oauth.init_app(app)
+    # 🔥 ΕΙΝΑΙ ΣΩΣΤΟ: Το socketio πρέπει να αρχικοποιείται εδώ
+    socketio.init_app(app) 
     oauth.register(
         name='google',
         client_id=app.config['GOOGLE_CLIENT_ID'],
@@ -156,7 +151,7 @@ def create_app():
         authorize_url='https://accounts.google.com/o/oauth2/auth',
         api_base_url='https://www.googleapis.com/oauth2/v1/',
         client_kwargs={'scope': 'openid email profile'},
-        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        # server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
         
         # 🛑 ΑΦΑΙΡΕΣΗ: id_token_in_access_token_response=False
         
@@ -178,29 +173,33 @@ def create_app():
         return render_template('index.html')
 
     @app.route('/login', methods=['GET', 'POST'])
-    def login_page():
+    def login_page(): # <--- ΔΙΟΡΘΩΣΗ: Αλλαγή από handle_login σε login_page
         if current_user.is_authenticated:
             return redirect(url_for('chat_page'))
 
         if request.method == 'POST':
+            # 🔥 ΔΙΟΡΘΩΣΗ: Χρήση request.get_json() για AJAX/JSON POST
             data = request.get_json()
-            username = request.form.get('username')
-            password = request.form.get('password')
+            username = data.get('username')
+            password = data.get('password')
             
             user = User.query.filter_by(display_name=username).first()
 
+            # 🔥 ΔΙΟΡΘΩΣΗ: Σωστή εσοχή και χρήση user.check_password
             if user and user.check_password(password):
                 login_user(user, remember=True)
-                flash(f'Συνδεθήκατε ως {user.display_name}.', 'success')
+                flash(f"Welcome back, {user.display_name}!", 'success')
                 
                 next_page = request.args.get('next')
-                return redirect(next_page or url_for('chat_page'))
+                return jsonify({'redirect': url_for('chat_page')}), 200
             else:
                 flash('Λάθος Όνομα Χρήστη ή Κωδικός.', 'error')
+                # 🔥 ΔΙΟΡΘΩΣΗ: Επιστροφή JSON σφάλματος για AJAX
+                return jsonify({'error': 'Λάθος Όνομα Χρήστη ή Κωδικός.'}), 401
 
         return render_template('login.html')
 
-    @app.route('/logout')
+    @app.route('/logout') 
     @login_required
     def logout():
         logout_user()
@@ -226,13 +225,13 @@ def create_app():
             
             # 🔥 ΔΙΟΡΘΩΣΗ: Χρήση του ID Token (πιο ασφαλές και αξιόπιστο)
             if 'id_token' in token:
-                user_info = oauth.google.parse_id_token(token)
+                user_info = oauth.google.parse_id_token(token) 
             else:
                 # Fallback: Χρησιμοποιούμε το userinfo endpoint
                 user_info = oauth.google.get('userinfo').json()
             
             # 🔥 ΔΙΟΡΘΩΣΗ: Το Google ID στο ID Token είναι το 'sub', όχι το 'id'
-            google_id = user_info['sub']
+            google_id = user_info['sub'] 
             
             email = user_info.get('email')
             display_name = user_info.get('name', email.split('@')[0] if email else f"User{google_id[:5]}")
@@ -240,7 +239,6 @@ def create_app():
             
             # --- Έλεγχος & Δημιουργία Χρήστη (Το υπόλοιπο παραμένει ίδιο) ---
             user = User.query.filter_by(google_id=google_id).first()
-
             if user is None:
                 # Δημιουργία μοναδικού display_name
                 unique_name = display_name
@@ -263,6 +261,10 @@ def create_app():
                 user_to_login = new_user
                 flash('Καλώς ήρθες! Ο λογαριασμός σου μέσω Google δημιουργήθηκε.', 'success')
             else:
+                user.email = email
+                if user.avatar_url is None: # Ενημερώνουμε την εικόνα αν δεν την είχαμε πριν
+                   user.avatar_url = avatar_url
+                db.session.commit()
                 user_to_login = user
                 
             login_user(user_to_login)
@@ -337,7 +339,7 @@ def create_app():
         new_user.set_password(password)
         db.session.add(new_user)
         db.session.commit()
-
+        # 🔥 ΔΙΟΡΘΩΣΗ: Αφαίρεση της λάθος γραμμής user_to_login = user
         return jsonify({'message': 'User registered successfully'}), 201
 
     @app.route('/api/v1/users', methods=['GET'])
@@ -367,7 +369,7 @@ def create_app():
 
         user = User.query.get_or_404(user_id)
         
-        # Αποτροπή διαφής/αλλαγής του ίδιου του owner
+        # Αποτροπή διαγραφής/αλλαγής του ίδιου του owner
         if user.role == 'owner' and current_user.role != 'owner':
             return jsonify({'error': 'Only the owner can manage the owner account.'}), 403
             
@@ -449,7 +451,7 @@ def create_app():
     def handle_message(data):
         """Χειρίζεται την αποστολή ενός νέου μηνύματος."""
         if not current_user.is_authenticated:
-            return
+            return 
 
         # 1. Αποθήκευση στη βάση δεδομένων
         new_message = Message(
