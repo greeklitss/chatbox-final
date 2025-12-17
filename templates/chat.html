@@ -1,162 +1,227 @@
 <!DOCTYPE html>
-<html>
+<html lang="el">
 <head>
-    <title>Radio Parea Chat</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Parea Chat - Festive Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@300;400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    
     <style>
-        body { margin: 0; font-family: sans-serif; background: #121212; color: white; overflow: hidden; }
-        
-        /* 1. Player Bar */
-        .player-bar { height: 60px; background: #1a1a1a; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 2px solid #00ffc0; }
-        .metadata { font-weight: bold; color: #00ffc0; }
-        .volume-ctrl { display: flex; align-items: center; gap: 10px; }
+        :root {
+            --primary-accent: #C0392B;    /* Χριστουγεννιάτικο Κόκκινο */
+            --secondary-accent: #27AE60;  /* Χριστουγεννιάτικο Πράσινο */
+            --gold-glow: #F1C40F;         /* Χρυσό */
+            --glass-bg: rgba(0, 0, 0, 0.7); /* Διαφάνεια όπως στην index */
+        }
 
-        /* 2. Main Layout */
-        .main-container { display: flex; height: calc(100vh - 62px); }
-        #chat-column { flex: 1; display: flex; flex-direction: column; background: #1e1e1e; }
-        #sidebar { width: 250px; background: #181818; border-left: 1px solid #333; padding: 10px; }
+        body { 
+            margin: 0; 
+            font-family: 'Roboto', sans-serif; 
+            /* Φόντο από την index */
+            background-image: url("{{ url_for('static', filename='radioparea_background.jpg') }}"); 
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            color: #F0F0F0; 
+            overflow: hidden; 
+            height: 100vh;
+        }
 
-        /* 3. Messages Area */
+        /* --- 1. FESTIVE PLAYER BAR --- */
+        .player-bar { 
+            height: 80px; 
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 0 30px; 
+            border-bottom: 3px solid var(--primary-accent);
+            z-index: 1000;
+        }
+
+        .metadata-area { flex: 1; }
+        .on-air-label { font-family: 'Dancing Script', cursive; color: var(--gold-glow); font-size: 1.4em; }
+        #track-info { 
+            font-family: 'Orbitron', sans-serif; 
+            color: white; 
+            font-size: 1em;
+            text-shadow: 0 0 8px var(--primary-accent);
+        }
+
+        .controls { display: flex; align-items: center; gap: 20px; }
+        #play-btn { background: none; border: none; color: var(--secondary-accent); font-size: 2.2em; cursor: pointer; }
+        input[type=range] { accent-color: var(--secondary-accent); cursor: pointer; }
+
+        /* --- 2. LAYOUT ΔΥΟ ΣΤΗΛΩΝ --- */
+        .main-content { display: flex; height: calc(100vh - 83px); }
+
+        /* Chat Column (Μεγάλη - Διαφανής) */
+        #chat-column { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            background: var(--glass-bg);
+            backdrop-filter: blur(5px);
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Online Users Column (Μικρή ~30 χαρακτήρες) */
+        #sidebar { 
+            width: 280px; 
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+        }
+
+        .sidebar-title { 
+            font-family: 'Dancing Script', cursive; 
+            color: var(--gold-glow); 
+            font-size: 1.5em; 
+            border-bottom: 1px solid var(--secondary-accent);
+            margin-bottom: 15px;
+        }
+
+        /* --- 3. MESSAGES --- */
         #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .msg-item { background: #2a2a2a; padding: 8px 12px; border-radius: 8px; max-width: 80%; }
-        .msg-avatar { width: 30px; height: 30px; border-radius: 50%; vertical-align: middle; margin-right: 8px; }
-        .embed-img img { max-width: 300px; border-radius: 10px; margin-top: 10px; }
-        .embed-video iframe { width: 100%; max-width: 400px; height: 225px; margin-top: 10px; }
+        .msg-box { 
+            background: rgba(255, 255, 255, 0.07); 
+            padding: 10px 15px; 
+            border-radius: 12px; 
+            max-width: 85%;
+            border-left: 3px solid var(--primary-accent);
+        }
+        .msg-avatar { width: 32px; height: 32px; border-radius: 50%; vertical-align: middle; margin-right: 8px; border: 1px solid var(--gold-glow); }
 
-        /* 4. Input Area & Toolbar */
-        .input-area { padding: 15px; background: #1a1a1a; border-top: 1px solid #333; }
-        .toolbar { display: flex; gap: 15px; margin-bottom: 10px; }
-        .toolbar button, .toolbar input { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1.1em; }
-        .input-row { display: flex; gap: 10px; }
-        #message-input { flex: 1; padding: 10px; border-radius: 5px; border: none; background: #333; color: white; }
-        #send-btn { background: #00ffc0; color: black; border: none; padding: 0 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        /* --- 4. INPUT AREA --- */
+        .input-area { padding: 15px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary-accent); }
+        .tools { display: flex; gap: 15px; margin-bottom: 10px; }
+        .tools button, .tools input { background: none; border: none; color: var(--gold-glow); cursor: pointer; font-size: 1.2em; }
+        
+        .input-box { display: flex; gap: 10px; }
+        #message-input { 
+            flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--secondary-accent); 
+            background: rgba(255,255,255,0.1); color: white;
+        }
+        #send-btn { background: var(--primary-accent); color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* Sidebar Users */
-        .user-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 0.9em; }
-
-        /* Modals */
-        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
-        .modal-content { background: #222; margin: 10% auto; padding: 20px; width: 40%; border-radius: 10px; position: relative; }
-        .close { position: absolute; right: 20px; top: 10px; font-size: 25px; cursor: pointer; }
+        /* --- 5. ΕΦΕ ΧΙΟΝΙΟΥ & ΛΑΜΠΑΚΙΑ (Από index) --- */
+        .snowflake { position: absolute; background: #fff; border-radius: 50%; opacity: 0.8; animation: fall linear infinite; pointer-events: none; z-index: 5; }
+        @keyframes fall { 0% { transform: translateY(-10vh); } 100% { transform: translateY(110vh) translateX(var(--fall-x-offset)); } }
     </style>
 </head>
 <body>
 
-<div class="player-bar">
-    <div class="metadata" id="track-info">Radio Parea - Live Stream</div>
-    <audio id="radio-player" src="ΣΥΝΔΕΣΜΟΣ_ΕΔΩ"></audio>
-    <div class="volume-ctrl">
-        <i class="fas fa-volume-up"></i>
-        <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5">
-    </div>
-</div>
-
-<div class="main-container">
-    <div id="chat-column">
-        <div id="messages">
-            {% for msg in messages %}
-            <div class="msg-item">
-                <img src="{{ msg.author.avatar_url or '/static/default.png' }}" class="msg-avatar">
-                <b style="color: {{ msg.author.color }}">{{ msg.author.display_name }}:</b>
-                <span class="text-content">{{ msg.content | safe }}</span>
-            </div>
-            {% endfor %}
+    <div class="player-bar">
+        <div class="metadata-area">
+            <div class="on-air-label">ΕΛΑ ΝΑ ΠΕΤΑΜΕ ΜΕ <span id="sonic_dj" style="color:white;">...</span></div>
+            <div id="track-info">Φόρτωση τίτλου...</div>
         </div>
         
-        <div class="input-area">
-            <div class="toolbar">
-                <button onclick="applyBold()"><i class="fas fa-bold"></i></button>
-                <input type="color" id="text-color" value="#ffffff">
-                <button onclick="showEmoji()"><i class="far fa-smile"></i></button>
-                <button onclick="toggleModal('admin-modal')"><i class="fas fa-cog"></i></button>
+        <audio id="radio-player" src="https://or.mysonicserver.com/cp/widgets/player/single/?p=8050"></audio>
+
+        <div class="controls">
+            <button id="play-btn" onclick="togglePlay()"><i class="fas fa-play-circle"></i></button>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-volume-up" style="color:var(--gold-glow)"></i>
+                <input type="range" id="volume" min="0" max="1" step="0.05" value="0.5">
             </div>
-            <div class="input-row">
-                <input type="text" id="message-input" placeholder="Πληκτρολογήστε μήνυμα...">
-                <button id="send-btn">Αποστολή</button>
-            </div>
+            <button onclick="toggleModal('admin-modal')" style="background:none; border:none; color:white; cursor:pointer;"><i class="fas fa-cog"></i></button>
         </div>
     </div>
 
-    <div id="sidebar">
-        <h4>Online Users</h4>
-        <div id="user-list"></div>
-    </div>
-</div>
-
-<div id="admin-modal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="toggleModal('admin-modal')">&times;</span>
-        <h3>Ρυθμίσεις Διαχειριστή</h3>
-        <p>Εδώ θα μπουν οι λειτουργίες του Admin Panel.</p>
-    </div>
-</div>
-
-<script>
-    const socket = io();
-    const msgInput = document.getElementById('message-input');
-    const msgContainer = document.getElementById('messages');
-
-    // 1. YouTube & Image Parser
-    function parseContent(text) {
-        const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif))/g;
-        const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/watch\?v=([^&\s]+)/g;
-        
-        text = text.replace(imgRegex, '<div class="embed-img"><img src="$1"></div>');
-        text = text.replace(ytRegex, '<div class="embed-video"><iframe src="https://www.youtube.com/embed/$1" frameborder="0" allowfullscreen></iframe></div>');
-        return text;
-    }
-
-    // 2. Send Message
-    document.getElementById('send-btn').onclick = () => {
-        const color = document.getElementById('text-color').value;
-        let content = msgInput.value;
-        if(content.trim() === "") return;
-        
-        // Wrap with color span
-        content = `<span style="color: ${color}">${content}</span>`;
-        socket.emit('message', {content: content});
-        msgInput.value = '';
-    };
-
-    // 3. Receive Message
-    socket.on('message', (data) => {
-        const div = document.createElement('div');
-        div.className = 'msg-item';
-        div.innerHTML = `
-            <img src="${data.avatar_url || '/static/default.png'}" class="msg-avatar">
-            <b style="color: ${data.color}">${data.display_name}:</b>
-            <span>${parseContent(data.content)}</span>
-        `;
-        msgContainer.appendChild(div);
-        msgContainer.scrollTop = msgContainer.scrollHeight;
-    });
-
-    // 4. Update Online Users
-    socket.on('users_update', (users) => {
-        const list = document.getElementById('user-list');
-        list.innerHTML = users.map(u => `
-            <div class="user-row">
-                <img src="${u.avatar_url || '/static/default.png'}" class="msg-avatar" style="width:20px;height:20px;">
-                <span style="color:${u.color}">${u.display_name}</span>
+    <div class="main-content">
+        <div id="chat-column">
+            <div id="messages">
+                {% for msg in messages %}
+                <div class="msg-box">
+                    <img src="{{ msg.author.avatar_url or '/static/default.png' }}" class="msg-avatar">
+                    <b style="color: {{ msg.author.color }}">{{ msg.author.display_name }}:</b>
+                    <span>{{ msg.content | safe }}</span>
+                </div>
+                {% endfor %}
             </div>
-        `).join('');
-    });
 
-    // 5. Volume Control
-    document.getElementById('volume').oninput = (e) => {
-        document.getElementById('radio-player').volume = e.target.value;
-    };
+            <div class="input-area">
+                <div class="tools">
+                    <button onclick="addTag('b')"><i class="fas fa-bold"></i></button>
+                    <input type="color" id="text-color" value="#F1C40F">
+                    <button><i class="far fa-smile"></i></button>
+                    <button><i class="fas fa-file-video"></i> GIF</button>
+                </div>
+                <div class="input-box">
+                    <input type="text" id="message-input" placeholder="Γράψτε ένα μήνυμα..." autocomplete="off">
+                    <button id="send-btn">SEND</button>
+                </div>
+            </div>
+        </div>
 
-    function toggleModal(id) {
-        const m = document.getElementById(id);
-        m.style.display = (m.style.display === 'block') ? 'none' : 'block';
-    }
+        <div id="sidebar">
+            <div class="sidebar-title">ONLINE PAREA</div>
+            <div id="user-list"></div>
+        </div>
+    </div>
 
-    function applyBold() {
-        msgInput.value += "<b></b>";
-        msgInput.focus();
-    }
-</script>
+    <div id="snow-container"></div>
+
+    <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+    <script>
+        const socket = io();
+        const radio = document.getElementById('radio-player');
+        const playBtn = document.getElementById('play-btn');
+
+        // --- Radio Controls ---
+        function togglePlay() {
+            // Ο player της SonicServer συνήθως ελέγχεται από το iframe/widget, 
+            // αλλά εδώ έχουμε το audio tag για το volume slider.
+            if (radio.paused) { radio.play(); playBtn.innerHTML = '<i class="fas fa-pause-circle"></i>'; }
+            else { radio.pause(); playBtn.innerHTML = '<i class="fas fa-play-circle"></i>'; }
+        }
+        document.getElementById('volume').oninput = (e) => { radio.volume = e.target.value; };
+
+        // --- Chat Logic ---
+        document.getElementById('send-btn').onclick = () => {
+            const color = document.getElementById('text-color').value;
+            let content = document.getElementById('message-input').value.trim();
+            if(!content) return;
+            
+            content = `<span style="color: ${color}">${content}</span>`;
+            socket.emit('message', {content: content});
+            document.getElementById('message-input').value = '';
+        };
+
+        socket.on('message', (data) => {
+            const div = document.createElement('div');
+            div.className = 'msg-box';
+            div.innerHTML = `<img src="${data.avatar_url || '/static/default.png'}" class="msg-avatar">
+                             <b style="color:${data.color}">${data.display_name}:</b> <span>${data.content}</span>`;
+            document.getElementById('messages').appendChild(div);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        });
+
+        socket.on('users_update', (users) => {
+            const list = document.getElementById('user-list');
+            list.innerHTML = users.map(u => `<div style="margin-bottom:8px; display:flex; align-items:center;">
+                <img src="${u.avatar_url || '/static/default.png'}" class="msg-avatar" style="width:24px; height:24px;">
+                <span style="color:${u.color}">${u.display_name}</span></div>`).join('');
+        });
+
+        // --- Χιόνι (Όπως στην index) ---
+        const createSnow = () => {
+            const snow = document.createElement("div");
+            snow.className = "snowflake";
+            snow.style.width = snow.style.height = `${Math.random() * 5 + 2}px`;
+            snow.style.left = `${Math.random() * 100}vw`;
+            const duration = Math.random() * 10 + 10;
+            snow.style.animationDuration = `${duration}s`;
+            snow.style.setProperty('--fall-x-offset', `${Math.random() * 20 - 10}vw`);
+            document.getElementById("snow-container").appendChild(snow);
+            setTimeout(() => snow.remove(), duration * 1000);
+        }
+        setInterval(createSnow, 200);
+
+        function addTag(t) { document.getElementById('message-input').value += `<${t}></${t}>`; }
+    </script>
 </body>
 </html>
