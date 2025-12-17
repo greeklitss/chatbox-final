@@ -3,75 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Σύνδεση & Εγγραφή | Radioparea</title>
+    <title>Σύνδεση | Radioparea</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body { font-family: sans-serif; background: #14142a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .container { background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 10px; width: 100%; max-width: 400px; text-align: center; }
         input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; box-sizing: border-box; }
-        .btn { width: 100%; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .btn-primary { background: #FF5733; color: white; }
-        .btn-google { background: #white; color: #444; text-decoration: none; display: block; margin-top: 15px; line-height: 40px; }
-        .hidden { display: none; }
-        .toggle-link { color: #00FFC0; cursor: pointer; text-decoration: underline; }
-        .flash { color: #ff4444; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; text-decoration: none; display: block; }
+        .btn-primary { background: #FF5733; color: white; width: 100%; }
+        .btn-google { background: white; color: #444; margin-top: 15px; line-height: 25px; }
+        .flash { color: #ff4444; margin-bottom: 10px; background: rgba(255, 68, 68, 0.1); padding: 5px; border-radius: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="login-section">
             <h2>Σύνδεση</h2>
+            
             {% with messages = get_flashed_messages() %}
-              {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
+              {% if messages %}
+                <div class="flash">{{ messages[0] }}</div>
+              {% endif %}
             {% endwith %}
+
             <form method="POST" action="{{ url_for('login_page') }}">
                 <input type="text" name="username" placeholder="Όνομα Χρήστη" required>
                 <input type="password" name="password" placeholder="Κωδικός" required>
                 <button type="submit" class="btn btn-primary">Είσοδος</button>
             </form>
-            <p>Δεν έχετε λογαριασμό; <span class="toggle-link" onclick="toggleAuth()">Εγγραφείτε εδώ</span></p>
-        </div>
-
-        <div id="signup-section" class="hidden">
-            <h2>Εγγραφή</h2>
-            <div id="signup-msg"></div>
-            <input type="text" id="reg-username" placeholder="Νέο Όνομα Χρήστη">
-            <input type="password" id="reg-password" placeholder="Νέος Κωδικός">
-            <button onclick="handleSignup()" class="btn btn-primary">Δημιουργία Λογαριασμού</button>
-            <p>Έχετε ήδη λογαριασμό; <span class="toggle-link" onclick="toggleAuth()">Σύνδεση</span></p>
         </div>
 
         <hr style="margin: 20px 0; opacity: 0.2;">
+        
         <a href="{{ url_for('google_login') }}" class="btn btn-google">
             <i class="fab fa-google"></i> Σύνδεση με Google
         </a>
     </div>
-
-    <script>
-        function toggleAuth() {
-            document.getElementById('login-section').classList.toggle('hidden');
-            document.getElementById('signup-section').classList.toggle('hidden');
-        }
-
-        async function handleSignup() {
-            const username = document.getElementById('reg-username').value;
-            const password = document.getElementById('reg-password').value;
-            const msgDiv = document.getElementById('signup-msg');
-
-            const res = await fetch('/api/v1/sign_up', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-                alert('Επιτυχής εγγραφή! Τώρα συνδεθείτε.');
-                location.reload();
-            } else {
-                msgDiv.innerHTML = `<span style="color:red">${data.error}</span>`;
-            }
-        }
-    </script>
 </body>
 </html>
