@@ -169,7 +169,7 @@ def create_app():
             
             if not user_info:
                 flash("Αποτυχία λήψης στοιχείων από τη Google.", "error")
-                return redirect(url_for('login_page'))
+                return redirect(url_for('index'))
 
             # Λογική εύρεσης ή δημιουργίας χρήστη
             email = user_info.get('email')
@@ -191,7 +191,7 @@ def create_app():
         except Exception as e:
             print(f"Auth Error: {e}")
             flash("Σφάλμα κατά τη σύνδεση με τη Google.", "error")
-            return redirect(url_for('login_page'))
+            return redirect(url_for('index'))
 
     # Η ΣΥΝΑΡΤΗΣΗ CHAT ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ ΕΞΩ ΑΠΟ ΤΗΝ GOOGLE_AUTH
     @app.route('/chat')
