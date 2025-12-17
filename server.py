@@ -152,6 +152,7 @@ def create_app():
 
     @app.route('/google_login')
     def google_login():
+        import secrets
         nonce = secrets.token_urlsafe(16)
         session['nonce'] = nonce
         redirect_uri = url_for('google_auth', _external=True)
@@ -161,20 +162,48 @@ def create_app():
     def google_auth():
         try:
             token = oauth.google.authorize_access_token()
-            nonce = session.pop('nonce', None) # Παίρνουμε και διαγράφουμε το nonce από το session
-        
-            # Προσθήκη του nonce εδώ για να λυθεί το TypeError
+            nonce = session.pop('nonce', None)
+            
+            # Επαλήθευση του token με το nonce
             user_info = oauth.google.parse_id_token(token, nonce=nonce)
-        
+            
             if not user_info:
                 flash("Αποτυχία λήψης στοιχείων από τη Google.", "error")
                 return redirect(url_for('login_page'))
 
+            # Λογική εύρεσης ή δημιουργίας χρήστη
+            email = user_info.get('email')
+            user = User.query.filter_by(username=email).first()
 
+            if not user:
+                user = User(
+                    username=email,
+                    display_name=user_info.get('name', email),
+                    role='user',
+                    color='#00FFC0'
+                )
+                db.session.add(user)
+                db.session.commit()
+
+            login_user(user)
+            return redirect(url_for('chat_page'))
+
+        except Exception as e:
+            print(f"Auth Error: {e}")
+            flash("Σφάλμα κατά τη σύνδεση με τη Google.", "error")
+            return redirect(url_for('login_page'))
+
+    # Η ΣΥΝΑΡΤΗΣΗ CHAT ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ ΕΞΩ ΑΠΟ ΤΗΝ GOOGLE_AUTH
     @app.route('/chat')
     @login_required
     def chat_page():
-        return render_template('chat.html', user_id=current_user.id, display_name=current_user.display_name, role=current_user.role, color=current_user.color, avatar_url=current_user.avatar_url)
+        return render_template('chat.html', 
+                             user_id=current_user.id, 
+                             display_name=current_user.display_name, 
+                             role=current_user.role, 
+                             color=current_user.color, 
+                             avatar_url=current_user.avatar_url)
+
 
     @app.route('/api/v1/sign_up', methods=['POST'])
     def api_sign_up():
