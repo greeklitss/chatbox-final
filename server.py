@@ -17,6 +17,12 @@ login_manager = LoginManager()
 oauth = OAuth()
 socketio = SocketIO()
 
+from sqlalchemy import select
+
+def get_default_color_by_role(role):
+    colors = {'owner': '#FF0000', 'admin': '#0000FF', 'user': '#008000', 'guest': '#808080'}
+    return colors.get(role.lower(), '#000000')
+
 ONLINE_USERS = {} 
 
 # --- ΜΟΝΤΕΛΑ ---
