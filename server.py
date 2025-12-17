@@ -10,6 +10,7 @@ from datetime import datetime
 from authlib.integrations.flask_client import OAuth, OAuthError as AuthlibOAuthError
 from flask_socketio import SocketIO, emit
 import eventlet
+import secrets
 
 # --------------------------------------------------------------------------
 # 1. ΕΚΤΑΣΕΙΣ (Extensions)
@@ -151,20 +152,24 @@ def create_app():
 
     @app.route('/google_login')
     def google_login():
-        return oauth.google.authorize_redirect(url_for('google_auth', _external=True))
+        nonce = secrets.token_urlsafe(16)
+        session['nonce'] = nonce
+        redirect_uri = url_for('google_auth', _external=True)
+        return oauth.google.authorize_redirect(redirect_uri, nonce=nonce)
 
     @app.route('/google_auth')
     def google_auth():
-        token = oauth.google.authorize_access_token()
-        user_info = oauth.google.parse_id_token(token)
-        google_id = user_info['sub']
-        user = User.query.filter_by(google_id=google_id).first()
-        if not user:
-            user = User(display_name=user_info['name'], email=user_info['email'], google_id=google_id, role='user', color=get_default_color_by_role('user'), avatar_url=user_info.get('picture'))
-            db.session.add(user)
-            db.session.commit()
-        login_user(user)
-        return redirect(url_for('chat_page'))
+        try:
+            token = oauth.google.authorize_access_token()
+            nonce = session.pop('nonce', None) # Παίρνουμε και διαγράφουμε το nonce από το session
+        
+            # Προσθήκη του nonce εδώ για να λυθεί το TypeError
+            user_info = oauth.google.parse_id_token(token, nonce=nonce)
+        
+            if not user_info:
+                flash("Αποτυχία λήψης στοιχείων από τη Google.", "error")
+                return redirect(url_for('login_page'))
+
 
     @app.route('/chat')
     @login_required
