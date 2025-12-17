@@ -95,7 +95,9 @@ def create_app():
     # HTTPS FIXES FOR RENDER
     app.config['SESSION_COOKIE_SECURE'] = True if os.environ.get('RENDER_EXTERNAL_URL') else False
     app.config['PREFERRED_URL_SCHEME'] = 'https'
-
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ
+   
     # GOOGLE OAUTH
     app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
     app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET')
