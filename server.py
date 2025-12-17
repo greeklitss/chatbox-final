@@ -171,29 +171,35 @@ def create_app():
             
             if not user_info:
                 flash("Αποτυχία λήψης στοιχείων από τη Google.", "error")
-                return redirect(url_for('index'))
+                return redirect(url_for('login_page'))
 
             # Λογική εύρεσης ή δημιουργίας χρήστη
             email = user_info.get('email')
-            user = User.query.filter_by(username=email).first()
+            
+            # ΔΙΟΡΘΩΣΗ 1: Ψάχνουμε με βάση το 'email' (αυτό έχεις στο μοντέλο σου)
+            user = User.query.filter_by(email=email).first()
 
             if not user:
+                # ΔΙΟΡΘΩΣΗ 2: Δημιουργούμε τον χρήστη χρησιμοποιώντας τα σωστά πεδία
                 user = User(
-                    username=email,
+                    email=email,
                     display_name=user_info.get('name', email),
                     role='user',
-                    color='#00FFC0'
+                    color='#00FFC0',
+                    avatar_url=user_info.get('picture') # Παίρνουμε και τη φωτογραφία αν θέλουμε
                 )
                 db.session.add(user)
                 db.session.commit()
 
-            login_user(user)
+            # ΔΙΟΡΘΩΣΗ 3: Χρησιμοποιούμε remember=True για να μην σε πετάει έξω
+            login_user(user, remember=True)
             return redirect(url_for('chat_page'))
 
         except Exception as e:
+            # Αυτό θα εκτυπώσει το σφάλμα στα logs του Render αν κάτι πάει στραβά
             print(f"Auth Error: {e}")
             flash("Σφάλμα κατά τη σύνδεση με τη Google.", "error")
-            return redirect(url_for('index'))
+            return redirect(url_for('login_page'))
 
     # Η ΣΥΝΑΡΤΗΣΗ CHAT ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ ΕΞΩ ΑΠΟ ΤΗΝ GOOGLE_AUTH
     @app.route('/chat')
