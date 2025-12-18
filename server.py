@@ -12,6 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth
 from flask_socketio import SocketIO, emit
+import random
 
 # --- INITIALIZATION ---
 app = Flask(__name__)
@@ -123,27 +124,65 @@ def google_auth():
     email = user_info.get('email')
     user = User.query.filter_by(email=email).first()
     if not user:
-        user = User(email=email, display_name=user_info.get('name', email), avatar_url=user_info.get('picture'))
+        user = User(email=email, display_name=user_info.get('name', email),role='user', color=generate_random_color(), avatar_url=user_info.get('picture'))
         db.session.add(user)
         db.session.commit()
     login_user(user, remember=True)
     return redirect(url_for('chat_page'))
 
+def generate_random_color():
+    # Παράγει ένα τυχαίο φωτεινό χρώμα σε HEX
+    return "#{:06x}".format(random.randint(0, 0xFFFFFF))
+
+def get_online_users_list():
+    users_data = []
+    # Χρησιμοποιούμε set για να μην εμφανίζεται ο ίδιος χρήστης πολλές φορές
+    seen_ids = set()
+    for user_data in ONLINE_USERS.values():
+        if user_data['id'] not in seen_ids:
+            users_data.append({
+                'id': user_data['id'],
+                'display_name': user_data['display_name'],
+                'color': user_data['color'], # Το τυχαίο χρώμα του
+                'avatar_url': user_data.get('avatar_url')
+            })
+            seen_ids.add(user_data['id'])
+    # Τυχαία σειρά στη λίστα για να μην προδίδεται ο Owner από τη θέση
+    random.shuffle(users_data)
+    return users_data
 @app.route('/chat')
 @login_required
 def chat_page():
+    # Επιβολή τυχαίου χρώματος αν δεν έχει (Mystery Mode)
+    if not current_user.color or current_user.color == '#008000':
+        current_user.color = generate_random_color()
+        db.session.commit()
+    
+    # ΠΡΟΣΟΧΗ: Εδώ στέλνουμε το role και το id για να ξεκλειδώσουν τα κουμπιά
     return render_template('chat.html', 
                            user_id=current_user.id, 
                            display_name=current_user.display_name, 
                            role=current_user.role, 
                            color=current_user.color, 
-                           avatar_url=current_user.avatar_url)
-
-# --- SOCKETIO ---
+                           avatar_url=current_user.avatar_url)# --- SOCKETIO ---
 @socketio.on('message')
 def handle_message(data):
     if current_user.is_authenticated:
-        emit('message', {'display_name': current_user.display_name, 'content': data['content']}, broadcast=True)
+        # Εδώ αποθηκεύουμε το μήνυμα
+        new_msg = Message(user_id=current_user.id, content=data['content'])
+        db.session.add(new_msg)
+        db.session.commit()
+
+# Εδώ στέλνουμε το μήνυμα σε όλους με τα στοιχεία που χρειάζονται για τα εικονίδια
+        emit('message', {
+            'id': new_msg.id,
+            'user_id': current_user.id,
+            'display_name': current_user.display_name, 
+            'content': data['content'], 
+            'role': current_user.role, 
+            'color': current_user.color,
+            'avatar_url': current_user.avatar_url
+        }, broadcast=True)
 
 # --- START ---
 with app.app_context():

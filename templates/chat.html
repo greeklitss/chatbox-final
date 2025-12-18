@@ -3,97 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Parea - Live Chat</title>
+    <title>Radio Parea - Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <style>
-        :root { --gold: #D4AF37; --accent: #ff4d4d; }
+        :root { --gold: #D4AF37; --bg-dark: rgba(20, 20, 20, 0.9); }
         body { 
             margin: 0; font-family: 'Roboto', sans-serif;
             background: url("{{ url_for('static', filename='radioparea_background.jpg') }}") no-repeat center center fixed;
-            background-size: cover; height: 100vh; color: white; overflow: hidden;
+            background-size: cover; height: 100vh; overflow: hidden;
         }
-        .main-container { display: flex; flex-direction: column; height: 100vh; background: rgba(0,0,0,0.6); }
+        .main-wrapper { display: flex; flex-direction: column; height: 100vh; background: rgba(0,0,0,0.5); }
         
         /* PLAYER BAR */
         .player-bar { 
             display: flex; align-items: center; justify-content: space-between; 
-            background: rgba(0,0,0,0.9); padding: 10px 20px; border-bottom: 2px solid var(--gold);
+            background: rgba(0,0,0,0.85); padding: 10px 25px; border-bottom: 2px solid var(--gold);
         }
 
-        /* CHAT AREA */
-        .content-area { display: flex; flex: 1; overflow: hidden; }
-        #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .online-list { width: 200px; background: rgba(0,0,0,0.5); border-left: 1px solid rgba(255,255,255,0.1); padding: 15px; }
-        
-        /* INPUT AREA */
-        .input-panel { background: rgba(0,0,0,0.8); padding: 15px; border-top: 1px solid var(--gold); }
-        .format-bar { margin-bottom: 10px; display: flex; gap: 10px; }
-        .format-bar button { background: none; border: 1px solid #444; color: white; cursor: pointer; padding: 5px 10px; border-radius: 4px; }
-        .format-bar button:hover { border-color: var(--gold); }
-        
-        .input-row { display: flex; gap: 10px; }
-        input[type="text"] { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #222; color: white; }
-        .send-btn { background: var(--gold); border: none; padding: 0 20px; border-radius: 25px; cursor: pointer; font-weight: bold; }
+        /* LAYOUT */
+        .content { display: flex; flex: 1; overflow: hidden; }
+        #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .sidebar { width: 220px; background: rgba(0,0,0,0.6); border-left: 1px solid rgba(255,255,255,0.1); padding: 15px; }
 
-        /* MESSAGE BUBBLES */
-        .msg { background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 15px; max-width: 80%; width: fit-content; }
+        /* INPUT & FORMATTING */
+        .input-area { background: var(--bg-dark); padding: 20px; border-top: 1px solid var(--gold); }
+        .toolbar { margin-bottom: 10px; display: flex; gap: 15px; }
+        .toolbar i { cursor: pointer; color: #ccc; font-size: 1.2em; transition: 0.3s; }
+        .toolbar i:hover { color: var(--gold); }
+
+        .input-box { display: flex; gap: 10px; }
+        input[type="text"] { flex: 1; padding: 12px 20px; border-radius: 30px; border: 1px solid #444; background: #111; color: white; outline: none; }
+        .send-btn { background: var(--gold); border: none; padding: 10px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; }
+
+        .msg-line { background: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 12px; width: fit-content; max-width: 85%; }
     </style>
 </head>
 <body>
 
-<div class="main-container">
+<div class="main-wrapper">
     <div class="player-bar">
-        <div style="font-family: 'Dancing Script', cursive; color: var(--gold); font-size: 1.5em;">Radioparea Live 🎙️</div>
-        <div style="display:flex; align-items:center; gap:20px;">
-            <button onclick="togglePlay()" id="play-btn" style="background:none; border:none; color:var(--gold); font-size: 2.5em; cursor:pointer;">
+        <div style="font-family: 'Dancing Script', cursive; color: var(--gold); font-size: 1.6em;">Radioparea Live 🎙️</div>
+        
+        <div style="display:flex; align-items:center; gap:25px;">
+            <button onclick="togglePlay()" id="play-btn" style="background:none; border:none; color:var(--gold); font-size: 2.8em; cursor:pointer; line-height:0;">
                 <i class="fas fa-play-circle" id="play-icon"></i>
             </button>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" style="width:80px;">
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" style="width:100px; cursor:pointer;">
+            
             {% if role == 'owner' %}
-            <i class="fas fa-cog" style="cursor:pointer; color:var(--gold); font-size: 1.2em;" title="Ρυθμίσεις"></i>
+            <i class="fas fa-cog" onclick="alert('Άνοιγμα Ρυθμίσεων Χρυσού Πάνελ')" style="cursor:pointer; color:var(--gold); font-size: 1.3em;"></i>
             {% endif %}
         </div>
     </div>
 
-    <div class="content-area">
+    <div class="content">
         <div id="messages"></div>
-        <div class="online-list">
-            <h4 style="color:var(--gold); margin-top:0;"><i class="fas fa-users"></i> Παρέα</h4>
+        <div class="sidebar">
+            <h3 style="color:var(--gold); margin-top:0; font-size: 1.1em;"><i class="fas fa-users"></i> Στην Παρέα</h3>
             <div id="user-list"></div>
         </div>
     </div>
 
-    <div class="input-panel">
-        <div class="format-bar">
-            <button onclick="addFormat('b')"><i class="fas fa-bold"></i></button>
-            <button onclick="addFormat('i')"><i class="fas fa-italic"></i></button>
+    <div class="input-area">
+        <div class="toolbar">
+            <i class="fas fa-bold" onclick="format('b')" title="Έντονα"></i>
+            <i class="fas fa-italic" onclick="format('i')" title="Πλάγια"></i>
             {% if role == 'owner' %}
-            <button onclick="addFormat('crown')" style="color:var(--gold)"><i class="fas fa-crown"></i></button>
+            <i class="fas fa-crown" onclick="format('crown')" style="color:var(--gold)" title="Owner Message"></i>
             {% endif %}
         </div>
-        <div class="input-row">
-            <input type="text" id="msg-input" placeholder="Πες κάτι στην παρέα...">
-            <button class="send-btn" onclick="send()">Αποστολή</button>
+        <div class="input-box">
+            <input type="text" id="m-input" placeholder="Γράψε κάτι στην παρέα...">
+            <button class="send-btn" onclick="sendMsg()">Αποστολή</button>
         </div>
     </div>
 </div>
 
-<audio id="radio-player"><source src="https://or.mysonicserver.com:8050/stream" type="audio/mpeg"></audio>
+<audio id="radio-player" crossorigin="anonymous">
+    <source src="https://or.mysonicserver.com:8050/stream" type="audio/mpeg">
+</audio>
 
 <script>
     const socket = io();
     const radio = document.getElementById('radio-player');
-    const input = document.getElementById('msg-input');
+    const msgInput = document.getElementById('m-input');
 
-    // PLAYER LOGIC
+    // PLAYER LOGIC (HTTPS)
     function togglePlay() {
         const icon = document.getElementById('play-icon');
         if (radio.paused) {
             radio.load();
-            radio.play();
-            icon.className = 'fas fa-pause-circle';
+            radio.play().then(() => {
+                icon.className = 'fas fa-pause-circle';
+            }).catch(e => alert("Κάντε κλικ στη σελίδα για να επιτραπεί ο ήχος!"));
         } else {
             radio.pause();
             icon.className = 'fas fa-play-circle';
@@ -101,41 +105,46 @@
     }
     document.getElementById('volume-slider').oninput = (e) => radio.volume = e.target.value;
 
-    // CHAT LOGIC
-    function send() {
-        if(input.value.trim()) {
-            socket.emit('message', { content: input.value });
-            input.value = '';
+    // SEND MESSAGE
+    function sendMsg() {
+        if(msgInput.value.trim() !== "") {
+            socket.emit('message', { content: msgInput.value });
+            msgInput.value = "";
         }
     }
 
+    // RECEIVE MESSAGE
     socket.on('message', (data) => {
         const div = document.createElement('div');
-        div.className = 'msg';
-        // Αν είναι ο owner, βάζουμε κορώνα δίπλα στο όνομα
-        let crown = (data.role === 'owner') ? '👑 ' : '';
-        div.innerHTML = `<strong style="color:${data.color}">${crown}${data.display_name}:</strong> <span>${data.content}</span>`;
+        div.className = 'msg-line';
+        let ownerTag = (data.role === 'owner') ? '👑 ' : '';
+        
+        div.innerHTML = `<strong style="color:${data.color}">${ownerTag}${data.display_name}:</strong> 
+                         <span style="color:white; margin-left:5px;">${data.content}</span>`;
+        
         document.getElementById('messages').appendChild(div);
         document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
     });
 
+    // ONLINE LIST
     socket.on('users_update', (users) => {
-        const list = document.getElementById('user-list');
-        list.innerHTML = users.map(u => `
-            <div style="margin-bottom:8px; font-size:0.9em;">
-                <span style="color:${u.color}">●</span> ${u.display_name}
+        const listDiv = document.getElementById('user-list');
+        listDiv.innerHTML = users.map(u => `
+            <div style="margin-bottom:10px; color:#eee; font-size:0.95em;">
+                <span style="color:${u.color}; font-size:1.2em;">●</span> ${u.display_name}
             </div>
         `).join('');
     });
 
-    function addFormat(type) {
-        if(type === 'b') input.value += '<b></b>';
-        if(type === 'i') input.value += '<i></i>';
-        if(type === 'crown') input.value += '👑';
-        input.focus();
+    // TOOLBAR FORMAT
+    function format(type) {
+        if(type === 'b') msgInput.value += '<b></b>';
+        if(type === 'i') msgInput.value += '<i></i>';
+        if(type === 'crown') msgInput.value += ' 👑 ';
+        msgInput.focus();
     }
 
-    input.addEventListener("keypress", (e) => { if(e.key === "Enter") send(); });
+    msgInput.addEventListener("keypress", (e) => { if(e.key === "Enter") sendMsg(); });
 </script>
 
 </body>
