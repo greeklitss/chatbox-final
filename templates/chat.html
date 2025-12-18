@@ -2,185 +2,155 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Parea - Crystal Live</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@300;400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <title>Radio Parea - Crystal Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    
     <style>
         :root { --gold: #D4AF37; --danger: #e74c3c; }
-
-        /* 1. Η ΕΙΚΟΝΑ ΦΟΝΤΟΥ - ΟΛΟΚΛΗΡΗ ΚΑΙ ΚΑΘΑΡΗ */
         body { 
-            margin: 0; padding: 0;
-            background: url("{{ url_for('static', filename='radioparea_background.jpg') }}") no-repeat center center fixed; 
-            background-size: cover; /* Καλύπτει όλη την οθόνη χωρίς κενά */
-            height: 100vh; width: 100vw;
-            font-family: 'Roboto', sans-serif;
-            color: white; overflow: hidden;
+            margin: 0; background: url("{{ url_for('static', filename='radioparea_background.jpg') }}") no-repeat center center fixed; 
+            background-size: cover; color: white; height: 100vh; overflow: hidden; font-family: 'Roboto';
         }
 
-        /* 2. ΦΩΤΟΡΥΘΜΙΚΑ (Ambient Lighting) */
-        .disco-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; pointer-events: none;
+        /* ΦΩΤΟΡΥΘΜΙΚΑ */
+        .disco {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;
             background: radial-gradient(circle at 50% 50%, rgba(212,175,55,0.1), rgba(192,57,43,0.05), transparent);
-            animation: discoMove 8s infinite alternate;
+            animation: moveDisco 10s infinite alternate;
         }
-        @keyframes discoMove {
-            0% { filter: hue-rotate(0deg) opacity(0.4); }
-            100% { filter: hue-rotate(360deg) opacity(0.7); }
-        }
+        @keyframes moveDisco { 0% { filter: hue-rotate(0deg); opacity: 0.3; } 100% { filter: hue-rotate(360deg); opacity: 0.6; } }
 
-        /* 3. Η ΠΑΝΩ ΓΡΑΜΜΗ (DJ & INFO) - GLASS STYLE */
-        .header-bar {
-            position: relative; z-index: 10;
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px);
-            border-bottom: 2px solid var(--gold);
-            display: flex; align-items: center; padding: 10px 20px; gap: 15px;
+        /* HEADER */
+        .header {
+            position: relative; z-index: 10; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
+            border-bottom: 2px solid var(--gold); display: flex; align-items: center; padding: 8px 20px; gap: 15px;
         }
-        .dj-avatar-circle {
-            width: 50px; height: 50px; border-radius: 50%;
-            border: 2px solid var(--gold); box-shadow: 0 0 15px var(--gold);
-            object-fit: cover; background: #000;
-        }
+        .dj-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--gold); box-shadow: 0 0 10px var(--gold); }
 
-        /* 4. CHAT AREA - ΤΕΛΕΙΩΣ ΔΙΑΦΑΝΟ */
-        .main-content {
-            display: flex; height: calc(100vh - 72px); position: relative; z-index: 5;
-        }
-        #chat-section { 
-            flex: 1; display: flex; flex-direction: column; 
-            background: transparent; /* ΚΑΤΑΡΓΗΣΗ ΦΟΝΤΟΥ */
-        }
-        #messages { 
-            flex: 1; overflow-y: auto; padding: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,1); /* Σκιά για να διαβάζονται τα γράμματα */
-            scrollbar-width: thin; scrollbar-color: var(--gold) transparent;
-        }
-
-        /* Μηνύματα & Admin Κουμπιά */
-        .msg-line { margin-bottom: 8px; font-size: 1.1em; line-height: 1.4; animation: slideIn 0.2s ease; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        /* CHAT AREA */
+        .main { display: flex; height: calc(100vh - 70px); position: relative; z-index: 5; }
+        #chat-col { flex: 1; display: flex; flex-direction: column; background: transparent; }
+        #messages { flex: 1; overflow-y: auto; padding: 20px; text-shadow: 2px 2px 4px #000; }
+        
+        .msg-line { margin-bottom: 10px; font-size: 1.1em; position: relative; }
         .del-btn { color: var(--danger); cursor: pointer; visibility: hidden; margin-left: 10px; font-size: 0.8em; }
         .msg-line:hover .del-btn { visibility: visible; }
 
-        /* PREVIEW CARDS (Για Links) */
-        .link-card {
-            display: flex; background: rgba(0,0,0,0.5); border: 1px solid var(--gold);
-            border-radius: 8px; margin: 10px 0; max-width: 400px; overflow: hidden;
-            text-decoration: none; color: white;
+        /* LINK PREVIEW */
+        .preview-card {
+            display: flex; background: rgba(0,0,0,0.6); border: 1px solid var(--gold);
+            border-radius: 8px; margin: 8px 0; max-width: 380px; overflow: hidden; text-decoration: none; color: white;
         }
-        .link-card img { width: 100px; height: 100px; object-fit: cover; }
+        .preview-card img { width: 80px; height: 80px; object-fit: cover; }
+        .preview-info { padding: 8px; font-size: 0.85em; }
 
-        /* INPUT AREA */
-        .input-wrapper {
-            background: rgba(0, 0, 0, 0.8); padding: 15px 25px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        #message-input {
-            width: 100%; padding: 12px 20px; border-radius: 25px;
-            border: 1px solid var(--gold); background: rgba(255,255,255,0.1);
-            color: white; outline: none; font-size: 1em;
-        }
+        /* INPUT & TOOLS */
+        .input-box { background: rgba(0,0,0,0.85); padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .tools { display: flex; gap: 15px; margin-bottom: 10px; align-items: center; }
+        #message-input { width: 100%; padding: 12px 20px; border-radius: 25px; border: 1px solid var(--gold); background: rgba(255,255,255,0.05); color: white; outline: none; }
 
-        /* SIDEBAR */
-        #sidebar { 
-            width: 250px; background: rgba(0, 0, 0, 0.5); 
-            backdrop-filter: blur(15px); border-left: 1px solid rgba(255,255,255,0.1);
+        /* SETTINGS MODAL */
+        #settings { 
+            display: none; position: fixed; top: 80px; left: 20px; z-index: 100;
+            background: rgba(0,0,0,0.95); padding: 20px; border: 1px solid var(--gold); border-radius: 10px; width: 250px;
         }
+        .sidebar { width: 250px; background: rgba(0,0,0,0.6); backdrop-filter: blur(15px); border-left: 1px solid #333; }
     </style>
 </head>
 <body>
-
-    <div class="disco-overlay"></div>
-
-    <div class="header-bar">
-        <img src="/static/dj_default.png" id="dj-img" class="dj-avatar-circle">
-        <div style="flex: 1; overflow: hidden;">
-            <div style="font-family: 'Orbitron'; color: var(--gold); font-size: 0.9em; white-space: nowrap;">
-                🎙️ <span id="t_dj">...</span> | 🎵 <span id="t_title">Loading...</span> | 👥 <span id="t_listeners">0</span>
-            </div>
+    <div class="disco"></div>
+    <div class="header">
+        <img src="/static/dj_default.png" id="dj-img" class="dj-avatar">
+        <div style="flex:1; font-family:'Orbitron'; color:var(--gold); font-size:0.85em; white-space:nowrap; overflow:hidden;">
+            🎙️ <span id="t_dj">...</span> | 🎵 <span id="t_title">Loading...</span> | 👥 <span id="t_listeners">0</span>
         </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-            <i class="fas fa-play-circle" id="play-icon" onclick="togglePlay()" style="font-size: 2em; color: var(--gold); cursor:pointer;"></i>
-            <input type="range" id="vol-control" min="0" max="1" step="0.05" value="0.5" style="width:60px;">
-        </div>
+        <i class="fas fa-cog" style="cursor:pointer;" onclick="toggleSet()"></i>
     </div>
 
-    <div class="main-content">
-        <div id="chat-section">
-            <div id="messages">
+    <div class="main">
+        <div id="chat-col">
+            <div id="messages">{% for m in messages %}<div class="msg-line" id="msg-{{m.id}}"><span style="color:{{m.author.color}}; font-weight:bold;">{{m.author.display_name}}:</span> {{m.content}}{% if current_user.role in ['admin','owner'] %}<i class="fas fa-trash del-btn" onclick="deleteMsg({{m.id}})"></i>{% endif %}</div>{% endfor %}</div>
+            <div class="input-box">
+                <div class="tools">
+                    <i class="fas fa-bell" id="bell" onclick="toggleMute()" style="cursor:pointer; color:var(--gold);"></i>
+                    {% if current_user.role in ['admin','owner'] %}<button onclick="clearChat()" style="background:var(--danger); border:none; color:white; padding:3px 8px; border-radius:4px; font-size:0.7em;">CLEAR CHAT</button>{% endif %}
                 </div>
-            <div class="input-wrapper">
-                <input type="text" id="message-input" placeholder="Πες κάτι στην παρέα...">
+                <input type="text" id="message-input" placeholder="Γράψε στην παρέα...">
             </div>
         </div>
-
-        <div id="sidebar">
-            <div style="padding:15px; text-align:center; color:var(--gold); font-family:'Dancing Script'; font-size:1.4em;">Online</div>
+        <div class="sidebar">
+            <div style="padding:15px; border-bottom:1px solid #333; color:var(--gold); font-family:'Dancing Script'; font-size:1.4em;">Online</div>
             <div id="user-list" style="padding:15px;"></div>
         </div>
     </div>
 
-    <audio id="stream-player" crossorigin="anonymous"><source src="https://or.mysonicserver.com:8050/stream" type="audio/mpeg"></audio>
+    <div id="settings">
+        <h4 style="margin:0 0 10px 0; color:var(--gold);">Προφίλ</h4>
+        <input type="text" id="new-name" placeholder="Όνομα" style="width:100%; margin-bottom:10px;" {% if not current_user.can_change_name and current_user.role == 'user' %}disabled{% endif %}>
+        <input type="color" id="new-color" value="{{current_user.color}}" style="width:100%; height:30px; margin-bottom:10px;">
+        <button onclick="saveSet()" style="width:100%; background:var(--gold); border:none; padding:8px; cursor:pointer;">Αποθήκευση</button>
+    </div>
+
+    <audio id="notif" src="https://www.soundjay.com/buttons/beep-07a.mp3"></audio>
     <div style="display:none;"><span id="sonic_dj"></span><span id="sonic_title"></span><span id="sonic_listeners"></span></div>
     <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
 
     <script>
         const socket = io();
-        const userRole = "{{ current_user.role }}";
+        let muted = false;
 
-        // ΧΡΩΜΑΤΑ ΟΝΟΜΑΤΩΝ
-        function getNameColor(name) {
-            const colors = ['#D4AF37', '#C0C0C0', '#FFD700', '#B5EAD7', '#FFB7B2', '#E2F0CB'];
-            let hash = 0;
-            for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-            return colors[Math.abs(hash) % colors.length];
+        function toggleSet() { const s = document.getElementById('settings'); s.style.display = s.style.display === 'block' ? 'none' : 'block'; }
+        function toggleMute() { muted = !muted; document.getElementById('bell').className = muted ? 'fas fa-bell-slash' : 'fas fa-bell'; }
+
+        async function saveSet() {
+            const name = document.getElementById('new-name').value;
+            const color = document.getElementById('new-color').value;
+            await fetch('/api/update_profile', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({display_name: name, color: color})
+            });
+            location.reload();
         }
 
-        // ΑΠΟΣΤΟΛΗ
         document.getElementById('message-input').onkeypress = (e) => {
-            if (e.key === 'Enter' && e.target.value.trim()) {
+            if(e.key === 'Enter' && e.target.value.trim()){
                 socket.emit('message', {content: e.target.value});
                 e.target.value = '';
             }
         };
 
-        // ΛΗΨΗ ΜΥΝΗΜΑΤΟΣ
-        socket.on('message', (data) => {
+        socket.on('message', async (data) => {
             const div = document.createElement('div');
-            div.className = 'msg-line';
-            const color = getNameColor(data.display_name);
-            const delBtn = (userRole === 'admin' || userRole === 'owner') ? `<i class="fas fa-trash del-btn" onclick="deleteMsg(${data.id})"></i>` : '';
+            div.className = 'msg-line'; div.id = `msg-${data.id}`;
+            const del = (userRole === 'admin' || userRole === 'owner') ? `<i class="fas fa-trash del-btn" onclick="deleteMsg(${data.id})"></i>` : '';
+            div.innerHTML = `<span style="color:${data.color}; font-weight:bold;">${data.display_name}:</span> <span id="txt-${data.id}">${data.content}</span>${del}`;
+            document.getElementById('messages').appendChild(div);
             
-            div.innerHTML = `<span style="color:${color}; font-weight:bold;">${data.display_name}:</span> <span>${data.content}</span>${delBtn}`;
-            const box = document.getElementById('messages');
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
+            if(data.content.includes('http')) fetchPreview(data.content, `txt-${data.id}`);
+            if(!muted && data.display_name !== "{{current_user.display_name}}") document.getElementById('notif').play();
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         });
 
-        // PLAYER
-        const player = document.getElementById('stream-player');
-        function togglePlay() {
-            if (player.paused) { player.load(); player.play(); document.getElementById('play-icon').className = 'fas fa-pause-circle'; }
-            else { player.pause(); document.getElementById('play-icon').className = 'fas fa-play-circle'; }
+        async function fetchPreview(text, id) {
+            const url = text.match(/(https?:\/\/[^\s]+)/g)[0];
+            const res = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
+            const d = await res.json();
+            if(d.title) {
+                document.getElementById(id).innerHTML += `<a href="${url}" target="_blank" class="preview-card">${d.image ? `<img src="${d.image}">`:''}<div class="preview-info"><b>${d.title}</b></div></a>`;
+            }
         }
-        document.getElementById('vol-control').oninput = (e) => { player.volume = e.target.value; };
 
-        // SYNC METADATA & DJ IMAGE
+        function deleteMsg(id) { socket.emit('delete_message', {id: id}); }
+        socket.on('message_deleted', (d) => document.getElementById(`msg-${d.id}`)?.remove());
+        function clearChat() { if(confirm("Clear All?")) socket.emit('clear_chat'); }
+        socket.on('chat_cleared', () => document.getElementById('messages').innerHTML = '');
+
         setInterval(() => {
-            const djName = document.getElementById('sonic_dj').innerText || 'Auto DJ';
-            document.getElementById('t_dj').innerText = djName;
-            document.getElementById('t_title').innerText = document.getElementById('sonic_title').innerText || 'Radio Parea Live';
+            document.getElementById('t_dj').innerText = document.getElementById('sonic_dj').innerText || 'Auto DJ';
+            document.getElementById('t_title').innerText = document.getElementById('sonic_title').innerText || 'Radio Parea';
             document.getElementById('t_listeners').innerText = document.getElementById('sonic_listeners').innerText.replace(/\D/g,'') || '0';
-            
-            // Παράδειγμα αλλαγής εικόνας DJ ανάλογα το όνομα
-            if(djName.toLowerCase().includes("makis")) document.getElementById('dj-img').src = "/static/makis.jpg";
-            else document.getElementById('dj-img').src = "/static/dj_default.png";
         }, 3000);
-
     </script>
 </body>
 </html>
