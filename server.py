@@ -34,6 +34,26 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 ONLINE_USERS = {}
 
+@socketio.on('connect')
+def handle_connect():
+    if current_user.is_authenticated:
+        # Προσθήκη του χρήστη στη λίστα των online
+        ONLINE_USERS[request.sid] = {
+            'id': current_user.id, 
+            'display_name': current_user.display_name, 
+            'role': current_user.role, 
+            'color': current_user.color, 
+            'avatar_url': current_user.avatar_url
+        }
+        # Ενημέρωση όλων για τη νέα λίστα
+        emit('users_update', list(ONLINE_USERS.values()), broadcast=True)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    if request.sid in ONLINE_USERS:
+        del ONLINE_USERS[request.sid]
+        emit('users_update', list(ONLINE_USERS.values()), broadcast=True)
+
 # --- MODELS ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -112,7 +132,12 @@ def google_auth():
 @app.route('/chat')
 @login_required
 def chat_page():
-    return render_template('chat.html')
+    return render_template('chat.html', 
+                           user_id=current_user.id, 
+                           display_name=current_user.display_name, 
+                           role=current_user.role, 
+                           color=current_user.color, 
+                           avatar_url=current_user.avatar_url)
 
 # --- SOCKETIO ---
 @socketio.on('message')
