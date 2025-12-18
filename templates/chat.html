@@ -3,132 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Parea Chat - Festive Edition</title>
+    <title>Radio Parea Chat - Live Studio</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@300;400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     
     <style>
         :root {
-            --primary-accent: #C0392B;    /* Χριστουγεννιάτικο Κόκκινο */
-            --secondary-accent: #27AE60;  /* Χριστουγεννιάτικο Πράσινο */
-            --gold-glow: #F1C40F;         /* Χρυσό */
-            --glass-bg: rgba(0, 0, 0, 0.7); /* Διαφάνεια όπως στην index */
+            --primary-accent: #C0392B;
+            --secondary-accent: #27AE60;
+            --gold-glow: #F1C40F;
+            --glass-bg: rgba(0, 0, 0, 0.75);
         }
 
         body { 
-            margin: 0; 
-            font-family: 'Roboto', sans-serif; 
-            /* Φόντο από την index */
+            margin: 0; font-family: 'Roboto', sans-serif; 
             background-image: url("{{ url_for('static', filename='radioparea_background.jpg') }}"); 
-            background-size: cover;
-            background-attachment: fixed;
-            background-position: center;
-            color: #F0F0F0; 
-            overflow: hidden; 
-            height: 100vh;
+            background-size: cover; background-attachment: fixed; background-position: center;
+            color: #F0F0F0; overflow: hidden; height: 100vh;
         }
 
-        /* --- 1. FESTIVE PLAYER BAR --- */
+        /* --- 1. METADATA TICKER --- */
+        .ticker-wrap {
+            width: 100%; overflow: hidden; background: rgba(0, 0, 0, 0.9);
+            border-bottom: 1px solid var(--gold-glow); padding: 5px 0;
+        }
+        .ticker {
+            display: inline-block; white-space: nowrap; padding-left: 100%;
+            animation: ticker 30s linear infinite; font-family: 'Orbitron', sans-serif;
+            font-size: 0.85em; color: var(--gold-glow);
+        }
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+
+        /* --- 2. PLAYER BAR --- */
         .player-bar { 
-            height: 80px; 
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            padding: 0 30px; 
-            border-bottom: 3px solid var(--primary-accent);
-            z-index: 1000;
+            height: 70px; background: var(--glass-bg); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 20px; border-bottom: 2px solid var(--primary-accent);
         }
 
-        .metadata-area { flex: 1; }
-        .on-air-label { font-family: 'Dancing Script', cursive; color: var(--gold-glow); font-size: 1.4em; }
-        #track-info { 
-            font-family: 'Orbitron', sans-serif; 
-            color: white; 
-            font-size: 1em;
-            text-shadow: 0 0 8px var(--primary-accent);
-        }
+        /* --- 3. LAYOUT --- */
+        .main-content { display: flex; height: calc(100vh - 105px); }
+        #chat-column { flex: 1; display: flex; flex-direction: column; background: var(--glass-bg); }
+        #sidebar { width: 260px; background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column; }
 
-        .controls { display: flex; align-items: center; gap: 20px; }
-        #play-btn { background: none; border: none; color: var(--secondary-accent); font-size: 2.2em; cursor: pointer; }
-        input[type=range] { accent-color: var(--secondary-accent); cursor: pointer; }
-
-        /* --- 2. LAYOUT ΔΥΟ ΣΤΗΛΩΝ --- */
-        .main-content { display: flex; height: calc(100vh - 83px); }
-
-        /* Chat Column (Μεγάλη - Διαφανής) */
-        #chat-column { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            background: var(--glass-bg);
-            backdrop-filter: blur(5px);
-            border-right: 1px solid rgba(255,255,255,0.1);
-        }
-
-        /* Online Users Column (Μικρή ~30 χαρακτήρες) */
-        #sidebar { 
-            width: 280px; 
-            background: rgba(0, 0, 0, 0.8);
-            padding: 20px;
-        }
-
-        .sidebar-title { 
-            font-family: 'Dancing Script', cursive; 
-            color: var(--gold-glow); 
-            font-size: 1.5em; 
-            border-bottom: 1px solid var(--secondary-accent);
-            margin-bottom: 15px;
-        }
-
-        /* --- 3. MESSAGES --- */
+        /* --- 4. MESSAGES & SCROLL --- */
         #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary-accent); border-radius: 10px; }
+
         .msg-box { 
-            background: rgba(255, 255, 255, 0.07); 
-            padding: 10px 15px; 
-            border-radius: 12px; 
-            max-width: 85%;
-            border-left: 3px solid var(--primary-accent);
+            background: rgba(255, 255, 255, 0.08); padding: 8px 12px; 
+            border-radius: 12px; border-left: 3px solid var(--secondary-accent);
         }
-        .msg-avatar { width: 32px; height: 32px; border-radius: 50%; vertical-align: middle; margin-right: 8px; border: 1px solid var(--gold-glow); }
 
-        /* --- 4. INPUT AREA --- */
-        .input-area { padding: 15px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary-accent); }
-        .tools { display: flex; gap: 15px; margin-bottom: 10px; }
-        .tools button, .tools input { background: none; border: none; color: var(--gold-glow); cursor: pointer; font-size: 1.2em; }
-        
-        .input-box { display: flex; gap: 10px; }
-        #message-input { 
-            flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--secondary-accent); 
-            background: rgba(255,255,255,0.1); color: white;
+        /* --- 5. INPUT AREA & TOOLS --- */
+        .input-area { padding: 15px; background: #000; border-top: 1px solid var(--primary-accent); }
+        .emoji-bar { display: flex; gap: 10px; margin-bottom: 8px; font-size: 1.2em; }
+        .emoji-bar span { cursor: pointer; transition: transform 0.2s; }
+        .emoji-bar span:hover { transform: scale(1.3); }
+
+        /* --- 6. SETTINGS DROPDOWN --- */
+        #settings-menu {
+            display: none; position: absolute; top: 100px; right: 20px;
+            background: #111; border: 1px solid var(--gold-glow); padding: 10px;
+            border-radius: 8px; z-index: 2000;
         }
-        #send-btn { background: var(--primary-accent); color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-        /* --- 5. ΕΦΕ ΧΙΟΝΙΟΥ & ΛΑΜΠΑΚΙΑ (Από index) --- */
-        .snowflake { position: absolute; background: #fff; border-radius: 50%; opacity: 0.8; animation: fall linear infinite; pointer-events: none; z-index: 5; }
-        @keyframes fall { 0% { transform: translateY(-10vh); } 100% { transform: translateY(110vh) translateX(var(--fall-x-offset)); } }
+        .set-link { color: white; text-decoration: none; display: block; padding: 8px; font-size: 0.9em; }
+        .set-link:hover { background: var(--primary-accent); }
     </style>
 </head>
 <body>
 
-    <div class="player-bar">
-        <div class="metadata-area">
-            <div class="on-air-label">ΕΛΑ ΝΑ ΠΕΤΑΜΕ ΜΕ <span id="sonic_dj" style="color:white;">...</span></div>
-            <div id="track-info">Φόρτωση τίτλου...</div>
+    <div class="ticker-wrap">
+        <div class="ticker">
+            🎙️ ON AIR: <span id="tick_dj">Loading...</span> | 🎵 TRACK: <span id="tick_title">Loading...</span> | 👥 PAREA: <span id="tick_listeners">0</span>
         </div>
-        
-        <audio id="radio-player" src="https://or.mysonicserver.com/cp/widgets/player/single/?p=8050"></audio>
+    </div>
 
-        <div class="controls">
-            <button id="play-btn" onclick="togglePlay()"><i class="fas fa-play-circle"></i></button>
-            <div style="display:flex; align-items:center; gap:8px;">
-                <i class="fas fa-volume-up" style="color:var(--gold-glow)"></i>
-                <input type="range" id="volume" min="0" max="1" step="0.05" value="0.5">
-            </div>
-            <button onclick="toggleModal('admin-modal')" style="background:none; border:none; color:white; cursor:pointer;"><i class="fas fa-cog"></i></button>
+    <div class="player-bar">
+        <div style="font-family: 'Dancing Script', cursive; color: var(--gold-glow); font-size: 1.4em;">Radioparea Studio</div>
+        <audio id="radio-player" src="https://or.mysonicserver.com/cp/widgets/player/single/?p=8050"></audio>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <button onclick="togglePlay()" id="play-btn" style="background:none; border:none; color:var(--secondary-accent); font-size: 2em; cursor:pointer;"><i class="fas fa-play-circle"></i></button>
+            <input type="range" id="volume" min="0" max="1" step="0.05" value="0.5" style="width:70px;">
+            <i class="fas fa-cog" onclick="toggleSettings()" style="cursor:pointer; color:white;"></i>
         </div>
+    </div>
+
+    <div id="settings-menu">
+        <a href="/logout" class="set-link"><i class="fas fa-sign-out-alt"></i> Αποσύνδεση</a>
     </div>
 
     <div class="main-content">
@@ -136,7 +103,6 @@
             <div id="messages">
                 {% for msg in messages %}
                 <div class="msg-box">
-                    <img src="{{ msg.author.avatar_url or '/static/default.png' }}" class="msg-avatar">
                     <b style="color: {{ msg.author.color }}">{{ msg.author.display_name }}:</b>
                     <span>{{ msg.content | safe }}</span>
                 </div>
@@ -144,84 +110,74 @@
             </div>
 
             <div class="input-area">
-                <div class="tools">
-                    <button onclick="addTag('b')"><i class="fas fa-bold"></i></button>
-                    <input type="color" id="text-color" value="#F1C40F">
-                    <button><i class="far fa-smile"></i></button>
-                    <button><i class="fas fa-file-video"></i> GIF</button>
+                <div class="emoji-bar">
+                    <span onclick="addEmoji('❤️')">❤️</span><span onclick="addEmoji('🎧')">🎧</span>
+                    <span onclick="addEmoji('🎙️')">🎙️</span><span onclick="addEmoji('🔥')">🔥</span>
+                    <span onclick="addEmoji('😂')">😂</span><span onclick="addEmoji('🎵')">🎵</span>
                 </div>
-                <div class="input-box">
-                    <input type="text" id="message-input" placeholder="Γράψτε ένα μήνυμα..." autocomplete="off">
-                    <button id="send-btn">SEND</button>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="message-input" placeholder="Γράψε στην παρέα..." autocomplete="off" style="flex:1; padding:10px; border-radius:5px; border:1px solid var(--secondary-accent); background:#222; color:white;">
+                    <button id="send-btn" style="background:var(--primary-accent); color:white; border:none; padding:0 15px; border-radius:5px; cursor:pointer;">SEND</button>
                 </div>
             </div>
         </div>
 
         <div id="sidebar">
-            <div class="sidebar-title">ONLINE PAREA</div>
-            <div id="user-list"></div>
+            <div style="padding:15px; border-bottom:1px solid #333; font-family:'Dancing Script'; color:var(--gold-glow); font-size:1.2em;">ONLINE PAREA</div>
+            <div id="user-list" style="padding:15px; overflow-y:auto;"></div>
         </div>
     </div>
 
-    <div id="snow-container"></div>
-
+    <div style="display:none;">
+        <span id="sonic_dj"></span><span id="sonic_title"></span><span id="sonic_listeners"></span>
+    </div>
     <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+
     <script>
         const socket = io();
-        const radio = document.getElementById('radio-player');
-        const playBtn = document.getElementById('play-btn');
+        const msgInput = document.getElementById('message-input');
 
-        // --- Radio Controls ---
-        function togglePlay() {
-            // Ο player της SonicServer συνήθως ελέγχεται από το iframe/widget, 
-            // αλλά εδώ έχουμε το audio tag για το volume slider.
-            if (radio.paused) { radio.play(); playBtn.innerHTML = '<i class="fas fa-pause-circle"></i>'; }
-            else { radio.pause(); playBtn.innerHTML = '<i class="fas fa-play-circle"></i>'; }
+        // --- ENTER & SEND ---
+        msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
+        document.getElementById('send-btn').onclick = send;
+
+        function send() {
+            const val = msgInput.value.trim();
+            if(!val) return;
+            socket.emit('message', {content: val});
+            msgInput.value = '';
         }
-        document.getElementById('volume').oninput = (e) => { radio.volume = e.target.value; };
-
-        // --- Chat Logic ---
-        document.getElementById('send-btn').onclick = () => {
-            const color = document.getElementById('text-color').value;
-            let content = document.getElementById('message-input').value.trim();
-            if(!content) return;
-            
-            content = `<span style="color: ${color}">${content}</span>`;
-            socket.emit('message', {content: content});
-            document.getElementById('message-input').value = '';
-        };
 
         socket.on('message', (data) => {
             const div = document.createElement('div');
             div.className = 'msg-box';
-            div.innerHTML = `<img src="${data.avatar_url || '/static/default.png'}" class="msg-avatar">
-                             <b style="color:${data.color}">${data.display_name}:</b> <span>${data.content}</span>`;
-            document.getElementById('messages').appendChild(div);
-            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+            div.innerHTML = `<b style="color:${data.color}">${data.display_name}:</b> <span>${data.content}</span>`;
+            const container = document.getElementById('messages');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
         });
 
         socket.on('users_update', (users) => {
-            const list = document.getElementById('user-list');
-            list.innerHTML = users.map(u => `<div style="margin-bottom:8px; display:flex; align-items:center;">
-                <img src="${u.avatar_url || '/static/default.png'}" class="msg-avatar" style="width:24px; height:24px;">
-                <span style="color:${u.color}">${u.display_name}</span></div>`).join('');
+            document.getElementById('user-list').innerHTML = users.map(u => `<div style="color:${u.color}; margin-bottom:5px;">● ${u.display_name}</div>`).join('');
         });
 
-        // --- Χιόνι (Όπως στην index) ---
-        const createSnow = () => {
-            const snow = document.createElement("div");
-            snow.className = "snowflake";
-            snow.style.width = snow.style.height = `${Math.random() * 5 + 2}px`;
-            snow.style.left = `${Math.random() * 100}vw`;
-            const duration = Math.random() * 10 + 10;
-            snow.style.animationDuration = `${duration}s`;
-            snow.style.setProperty('--fall-x-offset', `${Math.random() * 20 - 10}vw`);
-            document.getElementById("snow-container").appendChild(snow);
-            setTimeout(() => snow.remove(), duration * 1000);
-        }
-        setInterval(createSnow, 200);
+        // --- METADATA SYNC ---
+        setInterval(() => {
+            document.getElementById('tick_dj').innerText = document.getElementById('sonic_dj').innerText || 'Auto DJ';
+            document.getElementById('tick_title').innerText = document.getElementById('sonic_title').innerText || 'Music Flowing...';
+            document.getElementById('tick_listeners').innerText = document.getElementById('sonic_listeners').innerText.replace(/\D/g,'') || '0';
+        }, 3000);
 
-        function addTag(t) { document.getElementById('message-input').value += `<${t}></${t}>`; }
+        // --- UTILS ---
+        function addEmoji(e) { msgInput.value += e; msgInput.focus(); }
+        function toggleSettings() { const m = document.getElementById('settings-menu'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
+        
+        const radio = document.getElementById('radio-player');
+        function togglePlay() {
+            if(radio.paused) { radio.play(); document.getElementById('play-btn').innerHTML = '<i class="fas fa-pause-circle"></i>'; }
+            else { radio.pause(); document.getElementById('play-btn').innerHTML = '<i class="fas fa-play-circle"></i>'; }
+        }
+        document.getElementById('volume').oninput = (e) => { radio.volume = e.target.value; };
     </script>
 </body>
 </html>
