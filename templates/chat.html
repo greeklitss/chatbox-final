@@ -86,7 +86,9 @@
 
     <div class="player-bar">
         <div style="font-family: 'Dancing Script', cursive; color: var(--gold-glow); font-size: 1.4em;">Radioparea Studio</div>
-        <audio id="radio-player" src="https://or.mysonicserver.com/cp/widgets/player/single/?p=8050"></audio>
+        <audio id="radio-player" crossorigin="anonymous">
+    <source src="https://or.mysonicserver.com:8050/stream" type="audio/mpeg">
+</audio>
         <div style="display:flex; align-items:center; gap:15px;">
             <button onclick="togglePlay()" id="play-btn" style="background:none; border:none; color:var(--secondary-accent); font-size: 2em; cursor:pointer;"><i class="fas fa-play-circle"></i></button>
             <input type="range" id="volume" min="0" max="1" step="0.05" value="0.5" style="width:70px;">
