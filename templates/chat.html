@@ -1,97 +1,176 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Parea - Admin Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@300;400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    
     <style>
-        /* ΤΟ ΦΟΝΤΟ ΣΟΥ */
-        body {
-            margin: 0;
-            background: url("{{ url_for('static', filename='radioparea_background.jpg') }}") no-repeat center center fixed;
-            background-size: cover;
-            overflow: hidden;
-            position: relative;
+        :root { --gold: #D4AF37; --danger: #C0392B; }
+        body { 
+            margin: 0; font-family: 'Roboto', sans-serif; 
+            background: url("{{ url_for('static', filename='radioparea_background.jpg') }}") no-repeat center center fixed; 
+            background-size: cover; color: #fff; height: 100vh; overflow: hidden;
         }
 
-        /* ΤΑ ΦΩΤΟΡΥΘΜΙΚΑ (Disco Overlay) */
-        .disco-lights {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; /* Πίσω από το περιεχόμενο */
-            pointer-events: none;
-            background: radial-gradient(circle at 20% 30%, rgba(255, 0, 0, 0.1), transparent 40%),
-                        radial-gradient(circle at 80% 70%, rgba(0, 0, 255, 0.1), transparent 40%),
-                        radial-gradient(circle at 50% 50%, rgba(0, 255, 0, 0.05), transparent 60%);
-            animation: moveLights 10s ease-in-out infinite alternate;
+        /* Ambient Disco Light */
+        body::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(212,175,55,0.05), rgba(192,57,43,0.05));
+            z-index: -1; animation: disco 12s linear infinite; pointer-events: none;
+        }
+        @keyframes disco { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+        .ticker-wrap { width: 100%; overflow: hidden; background: rgba(0, 0, 0, 0.9); border-bottom: 2px solid var(--gold); padding: 8px 0; }
+        .ticker { display: inline-block; white-space: nowrap; padding-left: 100%; animation: ticker 30s linear infinite; color: var(--gold); font-family: 'Orbitron'; }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
+        .main-container { display: flex; height: calc(100vh - 110px); }
+        #chat-column { flex: 1; display: flex; flex-direction: column; background: rgba(0, 0, 0, 0.3); }
+        
+        #messages { 
+            flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 10px;
+            overflow-wrap: anywhere; text-shadow: 2px 2px 4px #000;
         }
 
-        @keyframes moveLights {
-            0% { filter: hue-rotate(0deg) brightness(1); }
-            100% { filter: hue-rotate(360deg) brightness(1.3); }
+        /* MESSAGE STYLE & ADMIN DELETE */
+        .message-line { position: relative; group: hover; animation: fadeIn 0.3s ease; }
+        .del-btn { 
+            display: none; color: var(--danger); cursor: pointer; margin-left: 10px; font-size: 0.8em; 
+            background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px;
         }
+        .message-line:hover .del-btn { display: inline-block; }
 
-        /* DJ TICKER LINE - ΔΙΟΡΘΩΜΕΝΗ */
-        .dj-info-bar {
-            background: rgba(0, 0, 0, 0.85);
-            border-bottom: 2px solid var(--gold);
-            padding: 10px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-family: 'Orbitron', sans-serif;
-        }
+        .user-name { font-weight: 700; margin-right: 8px; }
 
-        .dj-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 2px solid var(--gold);
-            object-fit: cover;
-            box-shadow: 0 0 10px var(--gold);
+        /* PREVIEW CARD */
+        .preview-card {
+            display: flex; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; margin-top: 8px;
+            max-width: 400px; text-decoration: none; color: inherit; overflow: hidden;
         }
+        .preview-card img { width: 100px; height: 100px; object-fit: cover; }
+        .preview-content { padding: 10px; font-size: 0.85em; }
 
-        /* ΠΕΡΙΟΧΗ ΜΥΝΗΜΑΤΩΝ - ΚΡΥΣΤΑΛΛΟ */
-        #messages {
-            background: rgba(0, 0, 0, 0.1); /* Πολύ διάφανο για να φαίνεται το φόντο */
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            word-wrap: break-word;
-        }
+        .input-area { padding: 20px; background: rgba(0, 0, 0, 0.85); border-top: 1px solid rgba(255,255,255,0.1); }
+        .admin-tools { display: flex; gap: 15px; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .admin-btn { background: var(--danger); border: none; color: white; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8em; }
 
-        .message-line {
-            padding: 5px;
-            font-size: 1.1em;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-        }
+        #sidebar { width: 280px; background: rgba(0, 0, 0, 0.8); border-left: 1px solid #333; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--gold); }
     </style>
 </head>
 <body>
-    <div class="disco-lights"></div>
 
-    <div class="dj-info-bar">
-        <img src="/static/dj_default.png" id="dj-image" class="dj-avatar" alt="DJ">
-        <div style="overflow: hidden; white-space: nowrap; flex: 1;">
-            <div class="ticker" style="color: var(--gold); display: inline-block; animation: ticker 25s linear infinite;">
-                🎙️ ON AIR: <span id="t_dj">Loading DJ...</span> | 
-                🎵 ΤΩΡΑ: <span id="t_title">Loading Track...</span> | 
-                👥 ΠΑΡΕΑ: <span id="t_listeners">0</span>
+    <div class="ticker-wrap"><div class="ticker">🎙️ <span id="t_dj">...</span> | 🎵 <span id="t_title">Loading Stream...</span> | 👥 <span id="t_listeners">0</span></div></div>
+
+    <div class="main-container">
+        <div id="chat-column">
+            <div id="messages">
+                {% for msg in messages %}
+                <div class="message-line" id="msg-{{ msg.id }}">
+                    <span class="user-name" data-user="{{ msg.author.display_name }}">{{ msg.author.display_name }}:</span>
+                    <span class="text">{{ msg.content | safe }}</span>
+                    {% if current_user.role in ['admin', 'owner'] %}
+                    <i class="fas fa-trash del-btn" onclick="deleteMessage({{ msg.id }})"></i>
+                    {% endif %}
+                </div>
+                {% endfor %}
             </div>
+
+            <div class="input-area">
+                {% if current_user.role in ['admin', 'owner'] %}
+                <div class="admin-tools">
+                    <button class="admin-btn" onclick="clearAndSave()"><i class="fas fa-eraser"></i> Clear & Save History</button>
+                    <span style="color: var(--gold); font-size: 0.8em;">Admin Mode Active</span>
+                </div>
+                {% endif %}
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <i class="far fa-smile" style="font-size: 1.5em; cursor:pointer;"></i>
+                    <input type="text" id="message-input" placeholder="Γράψε στην παρέα..." style="flex:1; padding:12px; border-radius:20px; border:none; background:rgba(255,255,255,0.1); color:white; outline:none;">
+                </div>
+            </div>
+        </div>
+        
+        <div id="sidebar">
+            <div style="padding:20px; font-family:'Dancing Script'; color:var(--gold); font-size:1.5em; border-bottom:1px solid #333;">Online Parea</div>
+            <div id="user-list" style="padding:20px;"></div>
         </div>
     </div>
 
+    <div style="display:none;"><span id="sonic_dj"></span><span id="sonic_title"></span><span id="sonic_listeners"></span></div>
+    <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+
     <script>
-        // ΣΥΓΧΡΟΝΙΣΜΟΣ DJ ΚΑΙ ΕΙΚΟΝΑΣ
-        setInterval(() => {
-            const currentDJ = document.getElementById('sonic_dj').innerText || 'Auto DJ';
-            document.getElementById('t_dj').innerText = currentDJ;
-            document.getElementById('t_title').innerText = document.getElementById('sonic_title').innerText || 'Radio Parea';
-            
-            // Αν ο DJ είναι συγκεκριμένο πρόσωπο, μπορείς να αλλάζεις την εικόνα
-            const djImg = document.getElementById('dj-image');
-            if (currentDJ.includes("Makis")) {
-                djImg.src = "/static/makis.jpg";
-            } else {
-                djImg.src = "/static/dj_default.png";
+        const socket = io();
+        const userRole = "{{ current_user.role }}";
+        const msgInput = document.getElementById('message-input');
+
+        // --- ADMIN FUNCTIONS ---
+        function deleteMessage(id) {
+            if(confirm("Διαγραφή μηνύματος;")) {
+                socket.emit('delete_message', {id: id});
             }
+        }
+
+        function clearAndSave() {
+            if(!confirm("Θέλετε να κατεβάσετε το ιστορικό και να καθαρίσετε το chat;")) return;
+            
+            // 1. Save: Συλλογή μηνυμάτων σε αρχείο κειμένου
+            let content = "RADIO PAREA CHAT LOG - " + new Date().toLocaleString() + "\n\n";
+            document.querySelectorAll('.message-line').forEach(m => {
+                content += m.innerText.replace('🗑️', '') + "\n";
+            });
+            
+            const blob = new Blob([content], {type: 'text/plain'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `chat_backup_${Date.now()}.txt`;
+            a.click();
+
+            // 2. Clear: Ειδοποίηση στον server
+            socket.emit('clear_chat');
+        }
+
+        // --- SOCKET EVENTS ---
+        socket.on('message_deleted', (data) => {
+            const el = document.getElementById(`msg-${data.id}`);
+            if(el) el.style.opacity = '0'; setTimeout(() => el?.remove(), 300);
+        });
+
+        socket.on('chat_cleared', () => {
+            document.getElementById('messages').innerHTML = '<div style="text-align:center; color:var(--gold);">--- Το chat καθαρίστηκε από τον Admin ---</div>';
+        });
+
+        // --- MSG LOGIC ---
+        msgInput.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter' && msgInput.value.trim()){
+                socket.emit('message', {content: msgInput.value});
+                msgInput.value = '';
+            }
+        });
+
+        socket.on('message', (data) => {
+            const div = document.createElement('div');
+            div.className = 'message-line';
+            div.id = `msg-${data.id || Date.now()}`;
+            const adminIcon = (userRole === 'admin' || userRole === 'owner') ? 
+                `<i class="fas fa-trash del-btn" onclick="deleteMessage(${data.id})"></i>` : '';
+            
+            div.innerHTML = `<span class="user-name" style="color:${data.color}">${data.display_name}:</span><span>${data.content}</span>${adminIcon}`;
+            document.getElementById('messages').appendChild(div);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        });
+
+        // --- AUTO METADATA ---
+        setInterval(() => {
+            document.getElementById('t_dj').innerText = document.getElementById('sonic_dj').innerText || 'Auto DJ';
+            document.getElementById('t_title').innerText = document.getElementById('sonic_title').innerText || 'Radio Parea';
+            document.getElementById('t_listeners').innerText = document.getElementById('sonic_listeners').innerText.replace(/\D/g,'') || '0';
         }, 3000);
     </script>
 </body>
