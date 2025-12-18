@@ -1,186 +1,98 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Parea - Crystal Live</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@300;400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    
     <style>
-        :root { --gold: #D4AF37; --danger: #e74c3c; }
-
-        /* 1. Η ΕΙΚΟΝΑ ΦΟΝΤΟΥ - ΟΛΟΚΛΗΡΗ ΚΑΙ ΚΑΘΑΡΗ */
-        body { 
-            margin: 0; padding: 0;
-            background: url("{{ url_for('static', filename='radioparea_background.jpg') }}") no-repeat center center fixed; 
-            background-size: cover; /* Καλύπτει όλη την οθόνη χωρίς κενά */
-            height: 100vh; width: 100vw;
-            font-family: 'Roboto', sans-serif;
-            color: white; overflow: hidden;
+        /* ΤΟ ΦΟΝΤΟ ΣΟΥ */
+        body {
+            margin: 0;
+            background: url("{{ url_for('static', filename='radioparea_background.jpg') }}") no-repeat center center fixed;
+            background-size: cover;
+            overflow: hidden;
+            position: relative;
         }
 
-        /* 2. ΦΩΤΟΡΥΘΜΙΚΑ (Ambient Lighting) */
-        .disco-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; pointer-events: none;
-            background: radial-gradient(circle at 50% 50%, rgba(212,175,55,0.1), rgba(192,57,43,0.05), transparent);
-            animation: discoMove 8s infinite alternate;
-        }
-        @keyframes discoMove {
-            0% { filter: hue-rotate(0deg) opacity(0.4); }
-            100% { filter: hue-rotate(360deg) opacity(0.7); }
+        /* ΤΑ ΦΩΤΟΡΥΘΜΙΚΑ (Disco Overlay) */
+        .disco-lights {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; /* Πίσω από το περιεχόμενο */
+            pointer-events: none;
+            background: radial-gradient(circle at 20% 30%, rgba(255, 0, 0, 0.1), transparent 40%),
+                        radial-gradient(circle at 80% 70%, rgba(0, 0, 255, 0.1), transparent 40%),
+                        radial-gradient(circle at 50% 50%, rgba(0, 255, 0, 0.05), transparent 60%);
+            animation: moveLights 10s ease-in-out infinite alternate;
         }
 
-        /* 3. Η ΠΑΝΩ ΓΡΑΜΜΗ (DJ & INFO) - GLASS STYLE */
-        .header-bar {
-            position: relative; z-index: 10;
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px);
+        @keyframes moveLights {
+            0% { filter: hue-rotate(0deg) brightness(1); }
+            100% { filter: hue-rotate(360deg) brightness(1.3); }
+        }
+
+        /* DJ TICKER LINE - ΔΙΟΡΘΩΜΕΝΗ */
+        .dj-info-bar {
+            background: rgba(0, 0, 0, 0.85);
             border-bottom: 2px solid var(--gold);
-            display: flex; align-items: center; padding: 10px 20px; gap: 15px;
-        }
-        .dj-avatar-circle {
-            width: 50px; height: 50px; border-radius: 50%;
-            border: 2px solid var(--gold); box-shadow: 0 0 15px var(--gold);
-            object-fit: cover; background: #000;
-        }
-
-        /* 4. CHAT AREA - ΤΕΛΕΙΩΣ ΔΙΑΦΑΝΟ */
-        .main-content {
-            display: flex; height: calc(100vh - 72px); position: relative; z-index: 5;
-        }
-        #chat-section { 
-            flex: 1; display: flex; flex-direction: column; 
-            background: transparent; /* ΚΑΤΑΡΓΗΣΗ ΦΟΝΤΟΥ */
-        }
-        #messages { 
-            flex: 1; overflow-y: auto; padding: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,1); /* Σκιά για να διαβάζονται τα γράμματα */
-            scrollbar-width: thin; scrollbar-color: var(--gold) transparent;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-family: 'Orbitron', sans-serif;
         }
 
-        /* Μηνύματα & Admin Κουμπιά */
-        .msg-line { margin-bottom: 8px; font-size: 1.1em; line-height: 1.4; animation: slideIn 0.2s ease; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-        .del-btn { color: var(--danger); cursor: pointer; visibility: hidden; margin-left: 10px; font-size: 0.8em; }
-        .msg-line:hover .del-btn { visibility: visible; }
-
-        /* PREVIEW CARDS (Για Links) */
-        .link-card {
-            display: flex; background: rgba(0,0,0,0.5); border: 1px solid var(--gold);
-            border-radius: 8px; margin: 10px 0; max-width: 400px; overflow: hidden;
-            text-decoration: none; color: white;
-        }
-        .link-card img { width: 100px; height: 100px; object-fit: cover; }
-
-        /* INPUT AREA */
-        .input-wrapper {
-            background: rgba(0, 0, 0, 0.8); padding: 15px 25px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        #message-input {
-            width: 100%; padding: 12px 20px; border-radius: 25px;
-            border: 1px solid var(--gold); background: rgba(255,255,255,0.1);
-            color: white; outline: none; font-size: 1em;
+        .dj-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            object-fit: cover;
+            box-shadow: 0 0 10px var(--gold);
         }
 
-        /* SIDEBAR */
-        #sidebar { 
-            width: 250px; background: rgba(0, 0, 0, 0.5); 
-            backdrop-filter: blur(15px); border-left: 1px solid rgba(255,255,255,0.1);
+        /* ΠΕΡΙΟΧΗ ΜΥΝΗΜΑΤΩΝ - ΚΡΥΣΤΑΛΛΟ */
+        #messages {
+            background: rgba(0, 0, 0, 0.1); /* Πολύ διάφανο για να φαίνεται το φόντο */
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            word-wrap: break-word;
+        }
+
+        .message-line {
+            padding: 5px;
+            font-size: 1.1em;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
         }
     </style>
 </head>
 <body>
+    <div class="disco-lights"></div>
 
-    <div class="disco-overlay"></div>
-
-    <div class="header-bar">
-        <img src="/static/dj_default.png" id="dj-img" class="dj-avatar-circle">
-        <div style="flex: 1; overflow: hidden;">
-            <div style="font-family: 'Orbitron'; color: var(--gold); font-size: 0.9em; white-space: nowrap;">
-                🎙️ <span id="t_dj">...</span> | 🎵 <span id="t_title">Loading...</span> | 👥 <span id="t_listeners">0</span>
+    <div class="dj-info-bar">
+        <img src="/static/dj_default.png" id="dj-image" class="dj-avatar" alt="DJ">
+        <div style="overflow: hidden; white-space: nowrap; flex: 1;">
+            <div class="ticker" style="color: var(--gold); display: inline-block; animation: ticker 25s linear infinite;">
+                🎙️ ON AIR: <span id="t_dj">Loading DJ...</span> | 
+                🎵 ΤΩΡΑ: <span id="t_title">Loading Track...</span> | 
+                👥 ΠΑΡΕΑ: <span id="t_listeners">0</span>
             </div>
         </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-            <i class="fas fa-play-circle" id="play-icon" onclick="togglePlay()" style="font-size: 2em; color: var(--gold); cursor:pointer;"></i>
-            <input type="range" id="vol-control" min="0" max="1" step="0.05" value="0.5" style="width:60px;">
-        </div>
     </div>
-
-    <div class="main-content">
-        <div id="chat-section">
-            <div id="messages">
-                </div>
-            <div class="input-wrapper">
-                <input type="text" id="message-input" placeholder="Πες κάτι στην παρέα...">
-            </div>
-        </div>
-
-        <div id="sidebar">
-            <div style="padding:15px; text-align:center; color:var(--gold); font-family:'Dancing Script'; font-size:1.4em;">Online</div>
-            <div id="user-list" style="padding:15px;"></div>
-        </div>
-    </div>
-
-    <audio id="stream-player" crossorigin="anonymous"><source src="https://or.mysonicserver.com:8050/stream" type="audio/mpeg"></audio>
-    <div style="display:none;"><span id="sonic_dj"></span><span id="sonic_title"></span><span id="sonic_listeners"></span></div>
-    <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
 
     <script>
-        const socket = io();
-        const userRole = "{{ current_user.role }}";
-
-        // ΧΡΩΜΑΤΑ ΟΝΟΜΑΤΩΝ
-        function getNameColor(name) {
-            const colors = ['#D4AF37', '#C0C0C0', '#FFD700', '#B5EAD7', '#FFB7B2', '#E2F0CB'];
-            let hash = 0;
-            for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-            return colors[Math.abs(hash) % colors.length];
-        }
-
-        // ΑΠΟΣΤΟΛΗ
-        document.getElementById('message-input').onkeypress = (e) => {
-            if (e.key === 'Enter' && e.target.value.trim()) {
-                socket.emit('message', {content: e.target.value});
-                e.target.value = '';
-            }
-        };
-
-        // ΛΗΨΗ ΜΥΝΗΜΑΤΟΣ
-        socket.on('message', (data) => {
-            const div = document.createElement('div');
-            div.className = 'msg-line';
-            const color = getNameColor(data.display_name);
-            const delBtn = (userRole === 'admin' || userRole === 'owner') ? `<i class="fas fa-trash del-btn" onclick="deleteMsg(${data.id})"></i>` : '';
-            
-            div.innerHTML = `<span style="color:${color}; font-weight:bold;">${data.display_name}:</span> <span>${data.content}</span>${delBtn}`;
-            const box = document.getElementById('messages');
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        });
-
-        // PLAYER
-        const player = document.getElementById('stream-player');
-        function togglePlay() {
-            if (player.paused) { player.load(); player.play(); document.getElementById('play-icon').className = 'fas fa-pause-circle'; }
-            else { player.pause(); document.getElementById('play-icon').className = 'fas fa-play-circle'; }
-        }
-        document.getElementById('vol-control').oninput = (e) => { player.volume = e.target.value; };
-
-        // SYNC METADATA & DJ IMAGE
+        // ΣΥΓΧΡΟΝΙΣΜΟΣ DJ ΚΑΙ ΕΙΚΟΝΑΣ
         setInterval(() => {
-            const djName = document.getElementById('sonic_dj').innerText || 'Auto DJ';
-            document.getElementById('t_dj').innerText = djName;
-            document.getElementById('t_title').innerText = document.getElementById('sonic_title').innerText || 'Radio Parea Live';
-            document.getElementById('t_listeners').innerText = document.getElementById('sonic_listeners').innerText.replace(/\D/g,'') || '0';
+            const currentDJ = document.getElementById('sonic_dj').innerText || 'Auto DJ';
+            document.getElementById('t_dj').innerText = currentDJ;
+            document.getElementById('t_title').innerText = document.getElementById('sonic_title').innerText || 'Radio Parea';
             
-            // Παράδειγμα αλλαγής εικόνας DJ ανάλογα το όνομα
-            if(djName.toLowerCase().includes("makis")) document.getElementById('dj-img').src = "/static/makis.jpg";
-            else document.getElementById('dj-img').src = "/static/dj_default.png";
+            // Αν ο DJ είναι συγκεκριμένο πρόσωπο, μπορείς να αλλάζεις την εικόνα
+            const djImg = document.getElementById('dj-image');
+            if (currentDJ.includes("Makis")) {
+                djImg.src = "/static/makis.jpg";
+            } else {
+                djImg.src = "/static/dj_default.png";
+            }
         }, 3000);
-
     </script>
 </body>
 </html>
