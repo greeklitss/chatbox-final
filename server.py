@@ -45,8 +45,9 @@ ONLINE_USERS = {}
 # --- ROUTES ---
 @app.route('/')
 def health_check():
-    # Αυτό χρειάζεται το Render για να ξέρει ότι ο server ζει
-    return "Radio Parea Server is Online", 200
+    if current_user.is_authenticated:
+        return redirect(url_for('chat_page'))
+    return redirect(url_for('index'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
