@@ -10,22 +10,22 @@
     <style>
         :root { --gold: #D4AF37; --bg: #0d0d1a; --sidebar: #161625; }
         body { margin: 0; font-family: 'Roboto', sans-serif; background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        .header { background: #000; padding: 10px 20px; border-bottom: 2px solid var(--gold); display: flex; align-items: center; justify-content: space-between; height: 60px; }
+        .header { background: #000; padding: 10px 20px; border-bottom: 2px solid var(--gold); display: flex; align-items: center; justify-content: space-between; height: 60px; flex-shrink: 0; }
         .logo { font-family: 'Dancing Script'; color: var(--gold); font-size: 1.8em; }
         .main { display: flex; flex: 1; overflow: hidden; }
-        #chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.3); }
+        #chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.3); position: relative; }
         #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .sidebar { width: 250px; background: var(--sidebar); border-left: 1px solid #333; padding: 15px; }
+        .sidebar { width: 250px; background: var(--sidebar); border-left: 1px solid #333; padding: 15px; overflow-y: auto; }
         .user-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.03); }
         .avatar { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--gold); object-fit: cover; }
-        .message { background: rgba(255,255,255,0.07); padding: 10px 15px; border-radius: 15px; max-width: 80%; align-self: flex-start; }
-        .message img { max-width: 100%; border-radius: 10px; margin-top: 8px; }
-        .yt-container { position: relative; padding-bottom: 56.25%; height: 0; margin-top: 10px; }
-        .yt-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 10px; }
-        .input-area { background: #1a1a2e; padding: 15px; border-top: 1px solid #333; }
-        .input-group { display: flex; gap: 10px; }
+        .message { background: rgba(255,255,255,0.07); padding: 10px 15px; border-radius: 15px; max-width: 85%; align-self: flex-start; word-wrap: break-word; }
+        .nickname { font-weight: bold; font-size: 0.9em; margin-bottom: 4px; }
+        .message img { max-width: 100%; border-radius: 10px; margin-top: 8px; display: block; }
+        .yt-container { position: relative; padding-bottom: 56.25%; height: 0; margin-top: 10px; width: 100%; min-width: 250px; }
+        .yt-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 10px; border: none; }
+        .input-area { background: #1a1a2e; padding: 15px; border-top: 1px solid #333; flex-shrink: 0; }
+        .input-group { display: flex; gap: 10px; max-width: 1000px; margin: 0 auto; }
         input[type="text"] { flex: 1; padding: 12px 20px; border-radius: 25px; border: 1px solid #444; background: #0d0d1a; color: white; outline: none; }
-        /* Modal Style */
         #settings-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a2e; padding: 25px; border-radius: 15px; border: 2px solid var(--gold); z-index: 1001; width: 300px; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; }
     </style>
@@ -37,23 +37,32 @@
     <div style="display:flex; align-items:center; gap:20px;">
         <audio id="radio-player" src="https://or.mysonicserver.com:8050/stream"></audio>
         <i class="fas fa-play-circle" id="play-btn" style="font-size: 2em; color: var(--gold); cursor:pointer;" onclick="toggleRadio()"></i>
-        <i class="fas fa-star" style="color: var(--gold); cursor:pointer; font-size: 1.5em;" onclick="toggleSettings()"></i>
-        {% if role == 'owner' %}
-        <i class="fas fa-trash-alt" style="color: #ff4d4d; cursor:pointer;" onclick="socket.emit('clear_chat_request')"></i>
+        <i class="fas fa-user-cog" style="color: var(--gold); cursor:pointer; font-size: 1.5em;" onclick="toggleSettings()"></i>
+        {% if current_user.role == 'owner' %}
+        <i class="fas fa-trash-alt" style="color: #ff4d4d; cursor:pointer;" onclick="if(confirm('Καθαρισμός;')) socket.emit('clear_chat_request')"></i>
         {% endif %}
     </div>
 </div>
 
 <div class="main">
     <div id="chat-window">
-        <div id="messages"></div>
+        <div id="messages">
+            {% for msg in history %}
+            <div class="message">
+                <div class="nickname" style="color: {{ msg.author.color }}">{{ msg.author.display_name }}</div>
+                <div class="content">{{ msg.content | safe }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
         <div class="input-area">
             <div class="input-group">
                 <input type="text" id="chat-input" placeholder="Γράψε ένα μήνυμα..." autocomplete="off">
-                <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:0 25px; border-radius:25px; font-weight:bold; cursor:pointer;">Στείλε</button>
+                <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:0 25px; border-radius:25px; font-weight:bold; cursor:pointer; color:#000;">Στείλε</button>
             </div>
         </div>
     </div>
+
     <div class="sidebar">
         <h4 style="color:var(--gold); margin-top:0;">Παρέα Online</h4>
         <div id="user-list"></div>
@@ -62,13 +71,10 @@
 
 <div class="modal-overlay" id="overlay" onclick="toggleSettings()"></div>
 <div id="settings-modal">
-    <h3 style="color:var(--gold); margin-top:0;">Ρυθμίσεις</h3>
-    {% if not has_changed_name %}
-    <input type="text" id="new-nick" placeholder="Νέο Nickname (1 φορά)" style="width:100%; padding:10px; margin-bottom:10px; background:#000; color:#fff; border:1px solid #444;">
-    {% endif %}
-    <input type="text" id="new-avatar" placeholder="URL Φωτογραφίας" style="width:100%; padding:10px; margin-bottom:15px; background:#000; color:#fff; border:1px solid #444;">
-    <button onclick="saveProfile()" style="width:100%; background:var(--gold); padding:10px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">Αποθήκευση</button>
-    <hr style="margin:20px 0; opacity:0.2;">
+    <h3 style="color:var(--gold); margin-top:0;">Προφίλ</h3>
+    <input type="text" id="new-avatar" placeholder="URL Φωτογραφίας (Avatar)" style="width:100%; padding:10px; margin-bottom:15px; background:#000; color:#fff; border:1px solid #444; border-radius:5px;">
+    <button onclick="saveProfile()" style="width:100%; background:var(--gold); padding:10px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; color:#000;">Αποθήκευση</button>
+    <hr style="margin:20px 0; opacity:0.1;">
     <a href="{{ url_for('logout') }}" style="display:block; text-align:center; color:#ff4d4d; text-decoration:none; font-weight:bold;"><i class="fas fa-sign-out-alt"></i> Έξοδος</a>
 </div>
 
@@ -77,17 +83,21 @@
     const msgDiv = document.getElementById('messages');
     const input = document.getElementById('chat-input');
 
+    // Αυτόματο scroll στο τέλος
+    msgDiv.scrollTop = msgDiv.scrollHeight;
+
     function parseContent(text) {
         const imgRegex = /(https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif))/gi;
-        text = text.replace(imgRegex, '<img src="$1" style="max-width:100%;">');
+        text = text.replace(imgRegex, '<img src="$1">');
         const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
-        text = text.replace(ytRegex, '<div class="yt-container"><iframe src="https://www.youtube.com/embed/$1" frameborder="0" allowfullscreen></iframe></div>');
+        text = text.replace(ytRegex, '<div class="yt-container"><iframe src="https://www.youtube.com/embed/$1" allowfullscreen></iframe></div>');
         return text;
     }
 
     function sendMessage() {
-        if(input.value.trim()) {
-            socket.emit('message', { content: input.value });
+        const text = input.value.trim();
+        if(text) {
+            socket.emit('message', { content: text });
             input.value = '';
         }
     }
@@ -97,7 +107,7 @@
     socket.on('message', (data) => {
         const div = document.createElement('div');
         div.className = 'message';
-        div.innerHTML = `<strong style="color:${data.color}">${data.display_name}:</strong> <div>${parseContent(data.content)}</div>`;
+        div.innerHTML = `<div class="nickname" style="color:${data.color}">${data.display_name}</div><div class="content">${parseContent(data.content)}</div>`;
         msgDiv.appendChild(div);
         msgDiv.scrollTop = msgDiv.scrollHeight;
     });
@@ -105,7 +115,7 @@
     socket.on('users_update', (users) => {
         document.getElementById('user-list').innerHTML = users.map(u => `
             <div class="user-item">
-                <img src="${u.avatar_url}" class="avatar">
+                <img src="${u.avatar_url || 'https://www.gravatar.com/avatar/000?d=mp'}" class="avatar">
                 <span style="color:${u.color}; font-weight:bold;">${u.display_name}</span>
             </div>
         `).join('');
@@ -116,21 +126,29 @@
     function toggleSettings() {
         const m = document.getElementById('settings-modal');
         const o = document.getElementById('overlay');
-        m.style.display = m.style.display === 'block' ? 'none' : 'block';
-        o.style.display = o.style.display === 'block' ? 'none' : 'block';
+        const isVisible = m.style.display === 'block';
+        m.style.display = isVisible ? 'none' : 'block';
+        o.style.display = isVisible ? 'none' : 'block';
     }
 
     function saveProfile() {
-        const nick = document.getElementById('new-nick')?.value;
         const avatar = document.getElementById('new-avatar').value;
-        socket.emit('update_profile', { new_nickname: nick, new_avatar: avatar });
-        location.reload();
+        if(avatar) {
+            socket.emit('update_profile', { new_avatar: avatar });
+            setTimeout(() => location.reload(), 500);
+        }
     }
 
     const audio = document.getElementById('radio-player');
     function toggleRadio() {
-        if (audio.paused) { audio.play(); document.getElementById('play-btn').className = 'fas fa-pause-circle'; }
-        else { audio.pause(); document.getElementById('play-btn').className = 'fas fa-play-circle'; }
+        const btn = document.getElementById('play-btn');
+        if (audio.paused) { 
+            audio.play(); 
+            btn.className = 'fas fa-pause-circle'; 
+        } else { 
+            audio.pause(); 
+            btn.className = 'fas fa-play-circle'; 
+        }
     }
 </script>
 </body>
