@@ -3,229 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Parea - Crystal Live</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@300;400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <title>Radio Parea - Live Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    
     <style>
-        :root { --gold: #D4AF37; --danger: #e74c3c; --bg-dark: rgba(15, 15, 15, 0.95); }
+        :root { --gold: #D4AF37; --bg: #0d0d1a; --sidebar: #161625; }
+        body { margin: 0; font-family: 'Roboto', sans-serif; background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        /* HEADER & RADIO PLAYER */
+        .header { background: #000; padding: 10px 20px; border-bottom: 2px solid var(--gold); display: flex; align-items: center; justify-content: space-between; height: 60px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .logo { font-family: 'Dancing Script'; color: var(--gold); font-size: 1.8em; }
 
-        body { 
-            margin: 0; padding: 0;
-            background: url("{{ url_for('static', filename='radioparea_background.jpg') }}") no-repeat center center fixed; 
-            background-size: cover; height: 100vh; width: 100vw;
-            font-family: 'Roboto', sans-serif; color: white; overflow: hidden;
-        }
+        /* MAIN LAYOUT */
+        .main { display: flex; flex: 1; overflow: hidden; }
+        #chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.3); position: relative; }
+        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        
+        /* SIDEBAR ONLINE USERS */
+        .sidebar { width: 260px; background: var(--sidebar); border-left: 1px solid #333; padding: 15px; display: flex; flex-direction: column; }
+        .user-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 8px; border-radius: 10px; background: rgba(255,255,255,0.03); transition: 0.3s; }
+        .user-item:hover { background: rgba(255,255,255,0.08); }
+        .avatar { width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--gold); object-fit: cover; }
 
-        .disco-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; pointer-events: none;
-            background: radial-gradient(circle at 50% 50%, rgba(212,175,55,0.1), rgba(192,57,43,0.05), transparent);
-            animation: discoMove 8s infinite alternate;
-        }
-        @keyframes discoMove { 0% { filter: hue-rotate(0deg) opacity(0.4); } 100% { filter: hue-rotate(360deg) opacity(0.7); } }
+        /* MESSAGE BUBBLES */
+        .message { background: rgba(255,255,255,0.06); padding: 12px 18px; border-radius: 18px; max-width: 80%; align-self: flex-start; border: 1px solid rgba(255,255,255,0.1); animation: slideIn 0.3s ease-out; }
+        .message.self { align-self: flex-end; background: rgba(212, 175, 55, 0.1); border-color: var(--gold); }
+        .message img { max-width: 100%; border-radius: 12px; margin-top: 10px; border: 1px solid #444; }
+        
+        /* YOUTUBE EMBED */
+        .yt-container { position: relative; padding-bottom: 56.25%; height: 0; margin-top: 10px; width: 100%; min-width: 300px; }
+        .yt-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; }
 
-        .header-bar {
-            position: relative; z-index: 10; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px);
-            border-bottom: 2px solid var(--gold); display: flex; align-items: center; padding: 10px 20px; gap: 15px;
-        }
-        .dj-avatar-circle { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold); box-shadow: 0 0 15px var(--gold); object-fit: cover; }
+        /* INPUT AREA */
+        .input-area { background: #1a1a2e; padding: 20px; border-top: 1px solid #333; box-shadow: 0 -5px 15px rgba(0,0,0,0.3); }
+        .toolbar { display: flex; gap: 20px; margin-bottom: 10px; color: var(--gold); font-size: 1.2em; }
+        .toolbar i { cursor: pointer; transition: 0.2s; }
+        .toolbar i:hover { transform: scale(1.2); color: white; }
+        .input-group { display: flex; gap: 12px; }
+        input[type="text"] { flex: 1; padding: 14px 25px; border-radius: 30px; border: 1px solid #444; background: #0d0d1a; color: white; outline: none; font-size: 1em; }
+        .send-btn { background: var(--gold); border: none; padding: 0 30px; border-radius: 30px; font-weight: bold; cursor: pointer; transition: 0.3s; color: #000; }
+        .send-btn:hover { background: #fff; color: var(--gold); }
 
-        .main-content { display: flex; height: calc(100vh - 72px); position: relative; z-index: 5; }
-        #chat-section { flex: 1; display: flex; flex-direction: column; background: transparent; }
-        #messages { flex: 1; overflow-y: auto; padding: 20px; text-shadow: 1px 1px 3px rgba(0,0,0,1); }
-
-        .msg-line { background: rgba(255,255,255,0.07); padding: 8px 15px; border-radius: 12px; width: fit-content; max-width: 85%; margin-bottom: 8px; line-height: 1.4; position: relative; }
-        .del-btn { color: var(--danger); cursor: pointer; visibility: hidden; margin-left: 10px; font-size: 0.8em; }
-        .msg-line:hover .del-btn { visibility: visible; }
-
-        /* TOOLBAR & INPUT */
-        .input-wrapper { background: rgba(0, 0, 0, 0.85); padding: 15px 25px; border-top: 1px solid var(--gold); position: relative; }
-        .toolbar { display: flex; gap: 18px; margin-bottom: 10px; align-items: center; }
-        .toolbar i { cursor: pointer; color: #ccc; font-size: 1.2em; transition: 0.3s; }
-        .toolbar i:hover { color: var(--gold); }
-
-        #message-input { width: 100%; padding: 12px 20px; border-radius: 25px; border: 1px solid var(--gold); background: rgba(255,255,255,0.1); color: white; outline: none; }
-
-        /* PICKERS */
-        #emoji-picker, #color-picker { 
-            display: none; position: absolute; bottom: 80px; background: #222; border: 1px solid var(--gold); 
-            padding: 15px; border-radius: 15px; z-index: 100; box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-        #emoji-picker { grid-template-columns: repeat(6, 1fr); gap: 10px; }
-        #emoji-picker span { cursor: pointer; font-size: 1.4em; }
-
-        /* SIDEBAR */
-        #sidebar { width: 220px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(15px); border-left: 1px solid rgba(255,255,255,0.1); }
-
-        /* MODAL */
-        #settings-modal {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #1a1a1a; border: 2px solid var(--gold); padding: 30px; border-radius: 20px; z-index: 1000; text-align: center;
-        }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
     </style>
 </head>
 <body>
-    <div class="disco-overlay"></div>
 
-    <div class="header-bar">
-        <img src="/static/dj_default.png" id="dj-img" class="dj-avatar-circle">
-        <div style="flex: 1; overflow: hidden;">
-            <div style="font-family: 'Orbitron'; color: var(--gold); font-size: 0.85em;">
-                🎙️ <span id="t_dj">...</span> | 🎵 <span id="t_title">Loading...</span> | 👥 <span id="t_listeners">0</span>
+<div class="header">
+    <div class="logo">Radio Parea Live</div>
+    <div style="display:flex; align-items:center; gap:20px;">
+        <audio id="radio-player" src="https://or.mysonicserver.com:8050/stream"></audio>
+        <i class="fas fa-play-circle" id="play-btn" style="font-size: 2.2em; color: var(--gold); cursor:pointer;" onclick="toggleRadio()"></i>
+        
+        {% if role == 'owner' %}
+        <i class="fas fa-trash-alt" style="color: #ff4d4d; cursor:pointer; font-size: 1.2em;" onclick="clearChat()" title="Καθαρισμός Chat"></i>
+        {% endif %}
+        
+        <a href="{{ url_for('logout') }}" style="color:white; text-decoration:none; font-size: 1.3em;"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</div>
+
+<div class="main">
+    <div id="chat-window">
+        <div id="messages"></div>
+        
+        <div class="input-area">
+            <div class="toolbar">
+                <i class="fas fa-bold" onclick="wrapText('<b>','</b>')"></i>
+                <i class="fas fa-italic" onclick="wrapText('<i>','</i>')"></i>
+                <i class="fas fa-link" onclick="insertLink()"></i>
+                <i class="far fa-smile" onclick="insertEmoji('😊')"></i>
+            </div>
+            <div class="input-group">
+                <input type="text" id="chat-input" placeholder="Γράψε ένα μήνυμα..." autocomplete="off">
+                <button class="send-btn" onclick="sendMessage()">Στείλε</button>
             </div>
         </div>
-        <div style="display:flex; align-items:center; gap:15px;">
-            <i class="fas fa-play-circle" id="play-icon" onclick="togglePlay()" style="font-size: 2.2em; color: var(--gold); cursor:pointer;"></i>
-            <input type="range" id="vol-control" min="0" max="1" step="0.05" value="0.5" style="width:60px;">
-            {% if role == 'owner' %}
-            <i class="fas fa-cog" onclick="toggleSettings()" style="cursor:pointer; color:var(--gold); font-size: 1.4em;"></i>
-            {% endif %}
-        </div>
     </div>
 
-    <div class="main-content">
-        <div id="chat-section">
-            <div id="messages"></div>
-            
-            <div class="input-wrapper">
-                <div id="emoji-picker">
-                    <span onclick="addEmoji('😊')">😊</span> <span onclick="addEmoji('😂')">😂</span> <span onclick="addEmoji('❤️')">❤️</span>
-                    <span onclick="addEmoji('🔥')">🔥</span> <span onclick="addEmoji('🎶')">🎶</span> <span onclick="addEmoji('🎧')">🎧</span>
-                    <span onclick="addEmoji('🍺')">🍺</span> <span onclick="addEmoji('🥂')">🥂</span> <span onclick="addEmoji('🇬🇷')">🇬🇷</span>
-                    <span onclick="addEmoji('🎸')">🎸</span> <span onclick="addEmoji('🌹')">🌹</span> <span onclick="addEmoji('👏')">👏</span>
-                </div>
+    <div class="sidebar">
+        <h3 style="color:var(--gold); font-size: 1.1em; border-bottom: 1px solid #333; padding-bottom: 12px; margin-top: 0;">Παρέα Online</h3>
+        <div id="user-list"></div>
+    </div>
+</div>
 
-                <div id="color-picker" style="display:none; gap:8px;">
-                    <div onclick="applyColor('#ff4d4d')" style="width:22px; height:22px; background:#ff4d4d; cursor:pointer; border-radius:50%;"></div>
-                    <div onclick="applyColor('#4dff4d')" style="width:22px; height:22px; background:#4dff4d; cursor:pointer; border-radius:50%;"></div>
-                    <div onclick="applyColor('#4da6ff')" style="width:22px; height:22px; background:#4da6ff; cursor:pointer; border-radius:50%;"></div>
-                    <div onclick="applyColor('#D4AF37')" style="width:22px; height:22px; background:#D4AF37; cursor:pointer; border-radius:50%;"></div>
-                </div>
+<script>
+    const socket = io();
+    const msgDiv = document.getElementById('messages');
+    const input = document.getElementById('chat-input');
+    const currentUser = "{{ display_name }}"; // Από το server.py
 
-                <div class="toolbar">
-                    <i class="fas fa-bold" onclick="wrapText('b')" title="Bold"></i>
-                    <i class="fas fa-italic" onclick="wrapText('i')" title="Italic"></i>
-                    <i class="fas fa-underline" onclick="wrapText('u')" title="Underline"></i>
-                    <i class="fas fa-strikethrough" onclick="wrapText('s')" title="Strike"></i>
-                    <i class="fas fa-palette" onclick="togglePicker('color-picker')" title="Color"></i>
-                    <i class="far fa-smile" onclick="togglePicker('emoji-picker')" title="Emoji"></i>
-                </div>
-                <input type="text" id="message-input" placeholder="Πες κάτι στην παρέα..." autocomplete="off">
+    // Media Parser (Εικόνες & YouTube)
+    function formatMessage(text) {
+        // Εικόνες
+        const imgRegex = /(https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif))/gi;
+        text = text.replace(imgRegex, '<img src="$1">');
+        // YouTube
+        const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
+        text = text.replace(ytRegex, '<div class="yt-container"><iframe src="https://www.youtube.com/embed/$1" frameborder="0" allowfullscreen></iframe></div>');
+        return text;
+    }
+
+    function sendMessage() {
+        const content = input.value.trim();
+        if (content) {
+            socket.emit('message', { content: content });
+            input.value = '';
+        }
+    }
+
+    input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+    socket.on('message', (data) => {
+        const div = document.createElement('div');
+        div.className = 'message' + (data.display_name === currentUser ? ' self' : '');
+        div.innerHTML = `
+            <div style="font-size: 0.85em; font-weight: bold; color: ${data.color}; margin-bottom: 4px;">
+                ${data.display_name} <span style="font-weight: normal; opacity: 0.6; font-size: 0.9em;">(${data.role})</span>
             </div>
-        </div>
+            <div class="text">${formatMessage(data.content)}</div>
+        `;
+        msgDiv.appendChild(div);
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+    });
 
-        <div id="sidebar">
-            <div style="padding:15px; text-align:center; color:var(--gold); font-family:'Dancing Script'; font-size:1.4em; border-bottom:1px solid rgba(255,255,255,0.1);">Online</div>
-            <div id="user-list" style="padding:15px;"></div>
-        </div>
-    </div>
+    socket.on('users_update', (users) => {
+        const list = document.getElementById('user-list');
+        list.innerHTML = users.map(u => `
+            <div class="user-item">
+                <img src="https://ui-avatars.com/api/?name=${u.display_name}&background=random" class="avatar">
+                <span style="color: ${u.color}; font-weight: bold;">${u.display_name}</span>
+            </div>
+        `).join('');
+    });
 
-    <div id="settings-modal">
-        <h3 style="color:var(--gold); font-family:'Orbitron';">Admin Panel</h3>
-        <button onclick="clearChat()" style="background:#c0392b; color:white; border:none; padding:12px; border-radius:10px; cursor:pointer; width:100%; font-weight:bold; margin-bottom:10px;">ΚΑΘΑΡΙΣΜΟΣ CHAT</button>
-        <button onclick="toggleSettings()" style="background:#444; color:white; border:none; padding:10px; width:100%; border-radius:10px; cursor:pointer;">Κλείσιμο</button>
-    </div>
+    socket.on('clear_chat_client', () => { msgDiv.innerHTML = ''; });
 
-    <audio id="stream-player" crossorigin="anonymous"><source src="https://or.mysonicserver.com:8050/stream" type="audio/mpeg"></audio>
-    <div style="display:none;"><span id="sonic_dj"></span><span id="sonic_title"></span><span id="sonic_listeners"></span></div>
-    <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+    function clearChat() { socket.emit('clear_chat_request'); }
 
-    <script>
-        const socket = io();
-        const userRole = "{{ role }}";
-        const msgInput = document.getElementById('message-input');
+    // Radio Player Logic
+    const audio = document.getElementById('radio-player');
+    const playBtn = document.getElementById('play-btn');
+    function toggleRadio() {
+        if (audio.paused) { audio.load(); audio.play(); playBtn.className = 'fas fa-pause-circle'; }
+        else { audio.pause(); playBtn.className = 'fas fa-play-circle'; }
+    }
 
-        // --- CONTENT PARSER (IMAGES & YOUTUBE) ---
-        function parseContent(content) {
-            const imgRegex = /(https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif|\.webp))/gi;
-            content = content.replace(imgRegex, '<br><a href="$1" target="_blank"><img src="$1" style="max-width: 100%; max-height: 250px; border-radius: 10px; margin-top: 5px; border: 1px solid var(--gold);"></a><br>');
-            
-            const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
-            content = content.replace(ytRegex, '<br><iframe width="100%" height="200" src="https://www.youtube.com/embed/$1" frameborder="0" allowfullscreen style="border-radius:10px;"></iframe><br>');
-            
-            return content;
-        }
-
-        // --- SEND/RECEIVE ---
-        msgInput.onkeypress = (e) => {
-            if (e.key === 'Enter' && e.target.value.trim()) {
-                socket.emit('message', {content: e.target.value});
-                e.target.value = '';
-                document.getElementById('emoji-picker').style.display = 'none';
-            }
-        };
-
-        socket.on('message', (data) => {
-            const div = document.createElement('div');
-            div.className = 'msg-line';
-            const delBtn = (userRole === 'admin' || userRole === 'owner') ? `<i class="fas fa-trash del-btn" onclick="deleteMsg(${data.id})"></i>` : '';
-            const richContent = parseContent(data.content);
-            
-            div.innerHTML = `<span style="color:${data.color}; font-weight:bold;">${data.display_name}:</span> <span>${richContent}</span>${delBtn}`;
-            const box = document.getElementById('messages');
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        });
-
-        // --- ONLINE LIST ---
-        socket.on('users_update', (users) => {
-            document.getElementById('user-list').innerHTML = users.map(u => `
-                <div style="margin-bottom:8px; font-size:0.95em;"><span style="color:${u.color}">●</span> ${u.display_name}</div>
-            `).join('');
-        });
-
-        // --- TOOLBAR LOGIC ---
-        function wrapText(tag) {
-            const start = msgInput.selectionStart, end = msgInput.selectionEnd;
-            const text = msgInput.value;
-            msgInput.value = text.substring(0, start) + `<${tag}>` + text.substring(start, end) + `</${tag}>` + text.substring(end);
-            msgInput.focus();
-        }
-
-        function applyColor(color) {
-            const start = msgInput.selectionStart, end = msgInput.selectionEnd;
-            msgInput.value = msgInput.value.substring(0, start) + `<span style="color:${color}">` + msgInput.value.substring(start, end) + `</span>` + msgInput.value.substring(end);
-            document.getElementById('color-picker').style.display = 'none';
-            msgInput.focus();
-        }
-
-        function togglePicker(id) {
-            const el = document.getElementById(id);
-            el.style.display = (el.style.display === 'none' || el.style.display === '') ? (id === 'emoji-picker' ? 'grid' : 'flex') : 'none';
-        }
-
-        function addEmoji(emoji) { msgInput.value += emoji; msgInput.focus(); }
-
-        // --- SETTINGS & PLAYER ---
-        function toggleSettings() {
-            const m = document.getElementById('settings-modal');
-            m.style.display = (m.style.display === 'block') ? 'none' : 'block';
-        }
-
-        function clearChat() {
-            if(confirm("Διαγραφή όλων των μηνυμάτων;")) {
-                socket.emit('clear_chat_request');
-                toggleSettings();
-            }
-        }
-
-        socket.on('clear_chat_client', () => { document.getElementById('messages').innerHTML = ""; });
-
-        const player = document.getElementById('stream-player');
-        function togglePlay() {
-            if (player.paused) { player.load(); player.play(); document.getElementById('play-icon').className = 'fas fa-pause-circle'; }
-            else { player.pause(); document.getElementById('play-icon').className = 'fas fa-circle-play'; }
-        }
-        document.getElementById('vol-control').oninput = (e) => { player.volume = e.target.value; };
-
-        // METADATA SYNC
-        setInterval(() => {
-            document.getElementById('t_dj').innerText = document.getElementById('sonic_dj').innerText || 'Auto DJ';
-            document.getElementById('t_title').innerText = document.getElementById('sonic_title').innerText || 'Radio Parea Live';
-            document.getElementById('t_listeners').innerText = document.getElementById('sonic_listeners').innerText.replace(/\D/g,'') || '0';
-        }, 3000);
-    </script>
+    // Toolbar Helpers
+    function wrapText(o, c) { input.value = input.value + o + c; input.focus(); }
+    function insertEmoji(e) { input.value += e; input.focus(); }
+    function insertLink() { const url = prompt("Επικόλληση URL:"); if(url) input.value += url; }
+</script>
 </body>
 </html>
