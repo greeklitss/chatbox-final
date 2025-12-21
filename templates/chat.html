@@ -15,13 +15,12 @@
 
         body { 
             margin: 0; 
-            font-family: 'Roboto', sans-serif; 
             background: var(--bg-image) no-repeat center center fixed; 
-            background-size: cover; 
+            background-size: 100% 100%; 
             color: white; 
             height: 100vh; 
             display: flex; 
-            flex-direction: column; 
+            flex-direction: column;
             overflow: hidden;
         }
 
@@ -33,15 +32,14 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid rgba(212, 175, 55, 0.3);
-            z-index: 10;
+            z-index: 100;
         }
 
         .main { 
             display: flex; 
             flex: 1; 
             overflow: hidden; 
-            background: rgba(0, 0, 0, 0.4); 
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.3); /* Ελαφριά σκίαση για να φαίνεται η εικόνα */
         }
 
         /* CHAT WINDOW */
@@ -58,40 +56,44 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 2px; /* Πιο κοντά τα μηνύματα */
         }
 
+        /* ΠΛΗΡΗΣ ΔΙΑΦΑΝΕΙΑ ΜΗΝΥΜΑΤΩΝ */
         .message { 
-            background: rgba(255, 255, 255, 0.1) !important; 
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 10px 15px;
-            max-width: 85%;
+            background: transparent !important; 
+            border: none !important; 
+            box-shadow: none !important;
+            padding: 2px 15px;
+            margin-bottom: 0px;
+        }
+
+        .content {
+            text-shadow: 2px 2px 4px rgba(0,0,0,1); /* Ενισχυμένη σκιά για αναγνωσιμότητα */
+            font-size: 1.1em;
             word-wrap: break-word;
         }
 
         .nickname { 
             font-weight: bold; 
             font-size: 0.9em; 
-            margin-bottom: 4px; 
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8); 
+            margin-bottom: 2px; 
+            text-shadow: 1px 1px 3px rgba(0,0,0,1); 
         }
 
-        /* ΠΕΡΙΟΡΙΣΜΟΣ ΕΙΚΟΝΩΝ ΜΕΣΑ ΣΤΟ CHAT */
         .message img { 
-            max-width: 150px; 
+            max-width: 150px;
             max-height: 150px; 
-            border-radius: 10px; 
-            margin-top: 8px; 
-            display: block; 
-            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid var(--gold); 
+            margin-top: 5px;
+            display: block;
         }
 
-        /* SIDEBAR ΣΥΝΔΕΔΕΜΕΝΩΝ */
+        /* SIDEBAR */
         .sidebar { 
-            width: 120px; 
-            background: rgba(0, 0, 0, 0.6); 
+            width: 110px; 
+            background: rgba(0, 0, 0, 0.5); 
             border-left: 1px solid rgba(255,255,255,0.1);
             display: flex;
             flex-direction: column;
@@ -104,7 +106,7 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
             align-items: center;
         }
 
@@ -117,8 +119,8 @@
         }
 
         .user-item .avatar {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             border: 2px solid var(--gold);
             object-fit: cover;
@@ -126,24 +128,25 @@
         }
 
         .user-item span {
-            font-size: 0.75em;
+            font-size: 0.7em;
             font-weight: bold;
             max-width: 90px;
             overflow: hidden;
             text-overflow: ellipsis;
+            text-shadow: 1px 1px 2px black;
         }
 
         /* INPUT AREA */
         .input-area { 
-            background: rgba(26, 26, 46, 0.9); 
+            background: rgba(20, 20, 30, 0.9); 
             padding: 10px 15px; 
-            border-top: 1px solid #333; 
+            border-top: 1px solid rgba(255,255,255,0.1); 
             z-index: 100;
         }
 
         .music-bar {
             display: flex;
-            gap: 12px;
+            gap: 15px;
             padding-bottom: 8px;
             justify-content: center;
             font-size: 1.2em;
@@ -156,7 +159,7 @@
 
         input[type="text"] { 
             flex: 1; 
-            padding: 12px 20px; 
+            padding: 10px 20px; 
             border-radius: 25px; 
             border: 1px solid #444; 
             background: #0d0d1a; 
@@ -167,7 +170,7 @@
         button.send-btn {
             background: var(--gold); 
             border: none; 
-            padding: 0 25px; 
+            padding: 0 20px; 
             border-radius: 25px; 
             font-weight: bold; 
             cursor: pointer; 
@@ -175,17 +178,17 @@
         }
 
         /* MODALS */
-        #settings-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a2e; padding: 25px; border-radius: 15px; border: 2px solid var(--gold); z-index: 1001; width: 300px; }
+        #settings-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a2e; padding: 25px; border-radius: 15px; border: 2px solid var(--gold); z-index: 1001; width: 280px; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; }
         .color-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
-        .color-opt { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+        .color-opt { width: 25px; height: 25px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
         .color-opt.selected { border-color: white; transform: scale(1.1); }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="logo" style="font-weight: bold; color: var(--gold);">
+    <div class="logo">
         <i class="fas fa-music"></i> Radio Parea Live
     </div>
     <div style="display:flex; align-items:center; gap:20px;">
@@ -228,7 +231,7 @@
     </div>
 
     <div class="sidebar">
-        <h5 style="color:var(--gold); margin-top:0; font-size: 0.7em; text-transform: uppercase;">Online</h5>
+        <h5 style="color:var(--gold); margin-top:0; font-size: 0.75em; text-align:center;">ONLINE (<span id="user-count">0</span>)</h5>
         <div id="user-list"></div>
     </div>
 </div>
@@ -244,7 +247,12 @@
     <div class="color-picker" id="color-picker"></div>
     <label style="font-size:0.8em; color:#888;">URL Avatar:</label>
     <input type="text" id="new-avatar" style="width:100%; padding:10px; margin-bottom:15px; background:#000; color:#fff; border:1px solid #444;">
-    <button onclick="saveProfile()" style="width:100%; background:var(--gold); padding:10px; border:none; font-weight:bold; cursor:pointer;">Αποθήκευση</button>
+    
+    <button onclick="saveProfile()" style="width:100%; background:var(--gold); padding:10px; border:none; font-weight:bold; cursor:pointer; color:#000;">Αποθήκευση</button>
+    <hr style="margin:20px 0; border:0; border-top:1px solid rgba(255,255,255,0.1);">
+    <a href="{{ url_for('logout') }}" style="display:block; text-align:center; color:#ff4d4d; text-decoration:none; font-weight:bold; padding:8px; border:1px solid #ff4d4d; border-radius:5px;">
+        <i class="fas fa-sign-out-alt"></i> Έξοδος
+    </a>
 </div>
 
 <script>
@@ -254,29 +262,24 @@
 
     function parseContent(text) {
         if(!text) return '';
-        // Ασφάλεια
         let safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        
-        // Bold/Italic
-        safeText = safeText.replace(/\*(.*?)\*/g, '<b>$1</b>');
-        safeText = safeText.replace(/_(.*?)_/g, '<i>$1</i>');
-
-        // Emojis
+        safeText = safeText.replace(/\*(.*?)\*/g, '<b>$1</b>').replace(/_(.*?)_/g, '<i>$1</i>');
         const emojis = { ':)': '😊', ':D': '😁', '<3': '❤️', ';)': '😉', ':(': '😟' };
         for (let [key, val] of Object.entries(emojis)) { safeText = safeText.split(key).join(val); }
-
-        // Media
         const imgRegex = /(https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif))/gi;
         safeText = safeText.replace(imgRegex, '<img src="$1">');
         const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
-        safeText = safeText.replace(ytRegex, '<div class="yt-container"><iframe src="https://www.youtube.com/embed/$1" allowfullscreen></iframe></div>');
-        
+        safeText = safeText.replace(ytRegex, '<div style="position:relative;padding-bottom:56.25%;height:0;margin-top:10px;"><iframe src="https://www.youtube.com/embed/$1" style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:10px;border:none;" allowfullscreen></iframe></div>');
         return safeText;
     }
 
-    // Φόρτωση ιστορικού
-    document.querySelectorAll('.content').forEach(div => { div.innerHTML = parseContent(div.innerText); });
-    msgDiv.scrollTop = msgDiv.scrollHeight;
+    // ΣΩΣΤΗ ΦΟΡΤΩΣΗ ΙΣΤΟΡΙΚΟΥ ΜΕΤΑ ΑΠΟ REFRESH
+    window.onload = () => {
+        document.querySelectorAll('.content').forEach(div => {
+            div.innerHTML = parseContent(div.innerText);
+        });
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+    };
 
     function sendMessage() {
         const text = input.value.trim();
@@ -299,6 +302,7 @@
     });
 
     socket.on('users_update', (users) => {
+        document.getElementById('user-count').innerText = users.length;
         document.getElementById('user-list').innerHTML = users.map(u => `
             <div class="user-item">
                 <img src="${u.avatar_url || 'https://www.gravatar.com/avatar/000?d=mp'}" class="avatar">
@@ -316,7 +320,6 @@
         o.style.display = isVisible ? 'none' : 'block';
     }
 
-    // ΠΑΛΕΤΑ ΧΡΩΜΑΤΩΝ
     let selectedColor = "{{ current_user.color }}";
     const colors = ['#D4AF37', '#C0C0C0', '#F08080', '#E5E4E2', '#FFD700', '#50C878', '#00FFFF', '#E0115F', '#9B59B6', '#FFFFFF'];
     const picker = document.getElementById('color-picker');
