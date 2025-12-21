@@ -54,6 +54,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), default='user')
     color = db.Column(db.String(20), default='#008000')
     avatar_url = db.Column(db.String(256), nullable=True) 
+    nickname_changed = db.Column(db.Boolean, default=False)
     messages = db.relationship('Message', backref='author', lazy='dynamic')
 
     def set_password(self, password):
@@ -190,7 +191,24 @@ def create_app():
     def update_profile(data):
         if current_user.is_authenticated:
             user = User.query.get(current_user.id)
-            if 'new_avatar' in data: user.avatar_url = data['new_avatar']
+            
+            # Αλλαγή Nickname (Μόνο μία φορά)
+            if 'new_nickname' in data and not user.nickname_changed:
+                new_name = data['new_nickname'].strip()
+                if 2 <= len(new_name) <= 20:
+                    existing_user = User.query.filter_by(display_name=new_name).first()
+                    if not existing_user:
+                        user.display_name = new_name
+                        user.nickname_changed = True
+            
+            # Αλλαγή Χρώματος (Απεριόριστες φορές)
+            if 'new_color' in data:
+                user.color = data['new_color']
+            
+            # Αλλαγή Avatar
+            if 'new_avatar' in data: 
+                user.avatar_url = data['new_avatar']
+                
             db.session.commit()
             emit('profile_updated', broadcast=True)
 
