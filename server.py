@@ -153,11 +153,16 @@ def create_app():
                          history=history)
 
 
-    @socketio.on('connect')
-    def handle_connect():
-        if current_user.is_authenticated:
-            ONLINE_USERS[request.sid] = {'id': current_user.id, 'display_name': current_user.display_name, 'role': current_user.role, 'color': current_user.color, 'avatar_url': current_user.avatar_url}
-            emit('users_update', get_online_users_list(), broadcast=True)
+    login_required
+    def chat_page():
+        # ΠΡΟΣΟΧΗ: Αυτές οι γραμμές πρέπει να έχουν 8 κενά στην αρχή
+        history = Message.query.order_by(Message.timestamp.asc()).limit(50).all()
+        return render_template('chat.html', 
+                             display_name=current_user.display_name, 
+                             role=current_user.role, 
+                             color=current_user.color, 
+                             avatar_url=current_user.avatar_url,
+                             history=history)
 
     @socketio.on('disconnect')
     def handle_disconnect():
@@ -166,20 +171,20 @@ def create_app():
             emit('users_update', get_online_users_list(), broadcast=True)
 
     @socketio.on('message')
-def handle_message(data):
-    if current_user.is_authenticated:
-        # Δημιουργία και αποθήκευση του μηνύματος στη βάση δεδομένων
-        new_msg = Message(content=data['content'], author=current_user)
-        db.session.add(new_msg)
-        db.session.commit()
-        
-        # Αποστολή του μηνύματος σε όλους τους συνδεδεμένους χρήστες
-        emit('message', {
-            'display_name': current_user.display_name, 
-            'content': data['content'], 
-            'color': current_user.color, 
-            'avatar_url': current_user.avatar_url
-        }, broadcast=True)
+    def handle_message(data):
+        if current_user.is_authenticated:
+            # Αποθήκευση στη βάση για να μην χάνονται τα μηνύματα
+            new_msg = Message(content=data['content'], author=current_user)
+            db.session.add(new_msg)
+            db.session.commit()
+            
+            # Αποστολή στους άλλους
+            emit('message', {
+                'display_name': current_user.display_name, 
+                'content': data['content'], 
+                'color': current_user.color, 
+                'avatar_url': current_user.avatar_url
+            }, broadcast=True)
 
     @socketio.on('update_profile')
     def update_profile(data):
