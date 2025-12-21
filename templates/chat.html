@@ -8,17 +8,49 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <style>
-        :root { --gold: #D4AF37; --bg: #0d0d1a; --sidebar: #161625; }
-        body { margin: 0; font-family: 'Roboto', sans-serif; background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        .header { background: #000; padding: 10px 20px; border-bottom: 2px solid var(--gold); display: flex; align-items: center; justify-content: space-between; height: 60px; flex-shrink: 0; }
-        .logo { font-family: 'Dancing Script'; color: var(--gold); font-size: 1.8em; }
-        .main { display: flex; flex: 1; overflow: hidden; }
-        #chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.3); position: relative; }
-        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .sidebar { width: 250px; background: var(--sidebar); border-left: 1px solid #333; padding: 15px; overflow-y: auto; }
-        .user-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.03); }
-        .avatar { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--gold); object-fit: cover; }
-        .message { background: rgba(255,255,255,0.07); padding: 10px 15px; border-radius: 15px; max-width: 85%; align-self: flex-start; word-wrap: break-word; }
+        :root { 
+    --gold: #D4AF37; 
+    /* Εδώ βάλε το link της εικόνας που θέλεις για φόντο */
+    --bg-image: url('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070'); 
+}
+
+body { 
+    margin: 0; 
+    font-family: 'Roboto', sans-serif; 
+    /* Το background μπαίνει σε όλο το σώμα */
+    background: var(--bg-image) no-repeat center center fixed; 
+    background-size: cover; 
+    color: white; 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+}
+
+.main { 
+    display: flex; 
+    flex: 1; 
+    overflow: hidden; 
+    /* Προσθέτουμε ένα σκούρο φίλτρο για να διαβάζονται τα γράμματα */
+    background: rgba(0, 0, 0, 0.5); 
+    backdrop-filter: blur(8px); /* Εφέ θολώματος πίσω από το chat */
+}
+
+#chat-window { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    background: transparent; /* Τέρμα διαφανές το κεντρικό παράθυρο */
+}
+
+.message { 
+    /* Τα μηνύματα γίνονται σαν "γυάλινα" πλακίδια */
+    background: rgba(255, 255, 255, 0.1) !important; 
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 10px 15px;
+    margin-bottom: 5px;
+}
         .nickname { 
             font-weight: bold; 
             font-size: 0.9em; 
