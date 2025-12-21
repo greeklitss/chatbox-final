@@ -36,42 +36,43 @@
             height: 70px; /* Σταθερό ύψος header */
         }
 
-        /* ΕΦΕ ΦΛΟΓΑΣ ΓΙΑ ΤΟΝ DJ */
-        #sonic_dj {
-            font-family: 'Orbitron', sans-serif !important;
-            font-size: 1.2em !important;
-            font-weight: bold !important;
-            text-transform: uppercase;
-            color: #FFD700 !important; /* Χρυσό */
+/* ΕΦΕ ΦΛΟΓΑΣ ΜΕ ΚΟΚΚΙΝΟ ΚΑΙ ΚΕΝΑ ΣΤΑ ΓΡΑΜΜΑΤΑ - ΔΙΟΡΘΩΜΕΝΟ */
+#sonic_dj {
+    font-family: 'Orbitron', sans-serif !important;
+    font-size: 1.2em !important;
+    font-weight: bold !important;
+    text-transform: uppercase;
     
-        /* Χώρος για να φαίνονται οι φλόγες που ανεβαίνουν */
-            display: inline-block;
-            padding-top: 10px; 
-            margin-top: 5px;
-
-        /* Εφέ Φλόγας */
-            text-shadow: 
-                0 0 4px #fff, 
-                0 -5px 4px #ff3, 
-                2px -10px 6px #fd3, 
-                -2px -15px 11px #f80, 
-                2px -25px 18px #f20 !important;
+    /* 🔴 Αύξηση κενού ανάμεσα στα γράμματα (Letter Spacing) */
+    letter-spacing: 5px !important; 
     
-            animation: burn 1.5s infinite alternate ease-in-out;
-        }
+    color: #FFD700 !important; /* Χρυσό κείμενο για αντίθεση */
+    
+    display: inline-block;
+    padding-top: 15px; /* Περισσότερος χώρος για να μην κόβεται η φλόγα */
+    margin-top: 5px;
 
-        @keyframes burn {
-            0% { 
-               text-shadow: 0 0 4px #fff, 0 -5px 4px #ff3, 2px -10px 6px #fd3, -2px -15px 11px #f80, 2px -20px 15px #f20;
-               transform: scale(1);
-           }
-           100% { 
-                text-shadow: 0 0 5px #fff, 0 -8px 7px #ff3, 3px -12px 9px #fd3, -3px -18px 14px #f80, 3px -28px 22px #f20;
-                transform: scale(1.02);
-        }
+    /* 🔴 Φλόγες με κυρίαρχο το κόκκινο χρώμα */
+    text-shadow: 
+        0 0 4px #fff,                /* Λευκό κέντρο για λάμψη */
+        0 -5px 8px #ffcc00,          /* Κίτρινη βάση */
+        2px -12px 12px #ff0000,      /* Καθαρό Κόκκινο */
+        -2px -18px 18px #e74c3c,     /* Ανοιχτό Κόκκινο */
+        2px -28px 25px #c0392b !important; /* Βαθύ Κόκκινο στην κορυφή */
+    
+    animation: burn 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes burn {
+    0% { 
+        text-shadow: 0 0 4px #fff, 0 -5px 8px #ffcc00, 2px -12px 12px #ff0000, -2px -18px 18px #e74c3c, 2px -25px 20px #c0392b;
+        transform: scale(1);
     }
-
-        /* ΠΕΡΙΟΡΙΣΜΟΣ ΕΙΚΟΝΑΣ ΠΡΟΦΙΛ DJ */
+    100% { 
+        text-shadow: 0 0 5px #fff, 0 -8px 10px #ffcc00, 3px -18px 18px #ff0000, -3px -25px 22px #e74c3c, 3px -35px 30px #c0392b;
+        transform: scale(1.04); /* Λίγο περισσότερο μεγάλωμα για "ζωντάνια" */
+    }
+}        /* ΠΕΡΙΟΡΙΣΜΟΣ ΕΙΚΟΝΑΣ ΠΡΟΦΙΛ DJ */
         #dj_profile img {
             width: 45px !important;
             height: 45px !important;
