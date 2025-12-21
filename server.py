@@ -143,9 +143,15 @@ def create_app():
     @app.route('/chat')
     @login_required
     def chat_page():
-        return render_template('chat.html', display_name=current_user.display_name, 
-                             role=current_user.role, color=current_user.color, 
-                             avatar_url=current_user.avatar_url)
+        # Ανακτούμε τα τελευταία 50 μηνύματα από τη βάση δεδομένων
+    history = Message.query.order_by(Message.timestamp.asc()).limit(50).all()
+        return render_template('chat.html', 
+                         display_name=current_user.display_name, 
+                         role=current_user.role, 
+                         color=current_user.color, 
+                         avatar_url=current_user.avatar_url,
+                         history=history)
+
 
     @socketio.on('connect')
     def handle_connect():
@@ -160,9 +166,20 @@ def create_app():
             emit('users_update', get_online_users_list(), broadcast=True)
 
     @socketio.on('message')
-    def handle_message(data):
-        if current_user.is_authenticated:
-            emit('message', {'display_name': current_user.display_name, 'content': data['content'], 'color': current_user.color, 'avatar_url': current_user.avatar_url}, broadcast=True)
+def handle_message(data):
+    if current_user.is_authenticated:
+        # Δημιουργία και αποθήκευση του μηνύματος στη βάση δεδομένων
+        new_msg = Message(content=data['content'], author=current_user)
+        db.session.add(new_msg)
+        db.session.commit()
+        
+        # Αποστολή του μηνύματος σε όλους τους συνδεδεμένους χρήστες
+        emit('message', {
+            'display_name': current_user.display_name, 
+            'content': data['content'], 
+            'color': current_user.color, 
+            'avatar_url': current_user.avatar_url
+        }, broadcast=True)
 
     @socketio.on('update_profile')
     def update_profile(data):
