@@ -43,7 +43,7 @@ def get_online_users_list():
     return users_data
 
 # --------------------------------------------------------------------------
-# 3. ΜΟΝΤΕΛΑ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ (Αφαίρεση της προβληματικής στήλης)
+# 3. ΜΟΝΤΕΛΑ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ
 # --------------------------------------------------------------------------
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -64,7 +64,7 @@ class User(UserMixin, db.Model):
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    content = db.Column(db.String(500), nullable=False)
+    content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
 # --------------------------------------------------------------------------
@@ -143,19 +143,7 @@ def create_app():
     @app.route('/chat')
     @login_required
     def chat_page():
-        # Ανακτούμε τα τελευταία 50 μηνύματα από τη βάση δεδομένων
-    history = Message.query.order_by(Message.timestamp.asc()).limit(50).all()
-        return render_template('chat.html', 
-                         display_name=current_user.display_name, 
-                         role=current_user.role, 
-                         color=current_user.color, 
-                         avatar_url=current_user.avatar_url,
-                         history=history)
-
-
-    login_required
-    def chat_page():
-        # ΠΡΟΣΟΧΗ: Αυτές οι γραμμές πρέπει να έχουν 8 κενά στην αρχή
+        # Φόρτωση ιστορικού (τελευταία 50 μηνύματα)
         history = Message.query.order_by(Message.timestamp.asc()).limit(50).all()
         return render_template('chat.html', 
                              display_name=current_user.display_name, 
@@ -163,6 +151,18 @@ def create_app():
                              color=current_user.color, 
                              avatar_url=current_user.avatar_url,
                              history=history)
+
+    @socketio.on('connect')
+    def handle_connect():
+        if current_user.is_authenticated:
+            ONLINE_USERS[request.sid] = {
+                'id': current_user.id, 
+                'display_name': current_user.display_name, 
+                'role': current_user.role, 
+                'color': current_user.color, 
+                'avatar_url': current_user.avatar_url
+            }
+            emit('users_update', get_online_users_list(), broadcast=True)
 
     @socketio.on('disconnect')
     def handle_disconnect():
@@ -173,12 +173,12 @@ def create_app():
     @socketio.on('message')
     def handle_message(data):
         if current_user.is_authenticated:
-            # Αποθήκευση στη βάση για να μην χάνονται τα μηνύματα
+            # Αποθήκευση στη βάση
             new_msg = Message(content=data['content'], author=current_user)
             db.session.add(new_msg)
             db.session.commit()
             
-            # Αποστολή στους άλλους
+            # Αποστολή real-time
             emit('message', {
                 'display_name': current_user.display_name, 
                 'content': data['content'], 
@@ -190,10 +190,16 @@ def create_app():
     def update_profile(data):
         if current_user.is_authenticated:
             user = User.query.get(current_user.id)
-            if 'new_nickname' in data: user.display_name = data['new_nickname']
             if 'new_avatar' in data: user.avatar_url = data['new_avatar']
             db.session.commit()
             emit('profile_updated', broadcast=True)
+
+    @socketio.on('clear_chat_request')
+    def clear_chat():
+        if current_user.is_authenticated and current_user.role == 'owner':
+            Message.query.delete()
+            db.session.commit()
+            emit('clear_chat_client', broadcast=True)
 
     with app.app_context():
         db.create_all()
