@@ -82,8 +82,8 @@
         }
 
         .message img { 
-            max-width: 150px;
-            max-height: 150px; 
+            max-width: 180px;
+            max-height: 180px; 
             border-radius: 8px;
             border: 1px solid var(--gold); 
             margin-top: 5px;
@@ -188,19 +188,28 @@
 <body>
 
 <div class="header">
-    <div id='dj_profile'></div>      
+       
     <div class="logo" style="font-weight: bold; color: var(--gold); min-width: 120px;">
         <i class="fas fa-music"></i> Radio Parea
     </div>
 
-    <div id="radio-metadata-container" style="flex: 1; text-align: center; overflow: hidden;">
-        <div style="font-family: 'Dancing Script', cursive; color: var(--gold); font-size: 1.2em; line-height: 1.2;">
-            ΕΛΑ ΝΑ ΠΕΤΑΜΕ ΜΕ <span id="sonic_dj" style="color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8);"> </div></span>
+    <div id="radio-metadata-container" style="flex: 1; text-align: center; display: flex; align-items: center; justify-content: center; gap: 12px;">
+    <div id="dj_profile"></div> 
+
+    <div style="text-align: left;">
+        <div style="font-family: 'Dancing Script', cursive; color: var(--gold); font-size: 1.1em; line-height: 1.1;">
+            ΕΛΑ ΝΑ ΠΕΤΑΜΕ ΜΕ <span id="sonic_dj" style="color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8);"></span>
         </div>
-        <div id="sonic_title" style="font-size: 0.8em; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px; margin: 0 auto;">
-            Φορτώνει...
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+            <div id="sonic_title" style="font-size: 0.75em; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">
+                Φορτώνει...
+            </div>
+            <div style="font-size: 0.7em; color: var(--gold); background: rgba(0,0,0,0.3); padding: 1px 6px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3);">
+                <i class="fas fa-users" style="font-size: 0.9em;"></i> <span id="sonic_listeners">0</span>
+            </div>
         </div>
     </div>
+</div>
 
     <div style="display:flex; align-items:center; gap:20px; min-width: 120px; justify-content: flex-end;">
         <audio id="radio-player" src="https://or.mysonicserver.com:8050/stream"></audio>
