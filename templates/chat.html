@@ -7,6 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Dancing+Script:wght@700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.4/dist/index.min.js"></script>
+
     <style>
         :root { 
             --gold: #D4AF37; 
@@ -33,46 +36,34 @@
             align-items: center;
             border-bottom: 2px solid var(--gold);
             z-index: 100;
-            height: 70px; /* Σταθερό ύψος header */
+            height: 70px; 
         }
 
-/* ΕΦΕ ΦΛΟΓΑΣ ΜΕ ΚΟΚΚΙΝΟ ΚΑΙ ΚΕΝΑ ΣΤΑ ΓΡΑΜΜΑΤΑ - ΔΙΟΡΘΩΜΕΝΟ */
-#sonic_dj {
-    font-family: 'Orbitron', sans-serif !important;
-    font-size: 1.2em !important;
-    font-weight: bold !important;
-    text-transform: uppercase;
-    
-    /* 🔴 Αύξηση κενού ανάμεσα στα γράμματα (Letter Spacing) */
-    letter-spacing: 5px !important; 
-    
-    color: #FFD700 !important; /* Χρυσό κείμενο για αντίθεση */
-    
-    display: inline-block;
-    padding-top: 15px; /* Περισσότερος χώρος για να μην κόβεται η φλόγα */
-    margin-top: 5px;
+        /* ΕΦΕ ΦΛΟΓΑΣ ΜΕ ΚΟΚΚΙΝΟ ΚΑΙ ΚΕΝΑ ΣΤΑ ΓΡΑΜΜΑΤΑ */
+        #sonic_dj {
+            font-family: 'Orbitron', sans-serif !important;
+            font-size: 1.2em !important;
+            font-weight: bold !important;
+            text-transform: uppercase;
+            letter-spacing: 5px !important; 
+            color: #FFD700 !important;
+            display: inline-block;
+            padding-top: 15px; 
+            margin-top: 5px;
+            text-shadow: 
+                0 0 4px #fff, 
+                0 -5px 8px #ffcc00, 
+                2px -12px 12px #ff0000, 
+                -2px -18px 18px #e74c3c, 
+                2px -28px 25px #c0392b !important;
+            animation: burn 1.5s infinite alternate ease-in-out;
+        }
 
-    /* 🔴 Φλόγες με κυρίαρχο το κόκκινο χρώμα */
-    text-shadow: 
-        0 0 4px #fff,                /* Λευκό κέντρο για λάμψη */
-        0 -5px 8px #ffcc00,          /* Κίτρινη βάση */
-        2px -12px 12px #ff0000,      /* Καθαρό Κόκκινο */
-        -2px -18px 18px #e74c3c,     /* Ανοιχτό Κόκκινο */
-        2px -28px 25px #c0392b !important; /* Βαθύ Κόκκινο στην κορυφή */
-    
-    animation: burn 1.5s infinite alternate ease-in-out;
-}
+        @keyframes burn {
+            0% { text-shadow: 0 0 4px #fff, 0 -5px 8px #ffcc00, 2px -12px 12px #ff0000, -2px -18px 18px #e74c3c, 2px -25px 20px #c0392b; transform: scale(1); }
+            100% { text-shadow: 0 0 5px #fff, 0 -8px 10px #ffcc00, 3px -18px 18px #ff0000, -3px -25px 22px #e74c3c, 3px -35px 30px #c0392b; transform: scale(1.04); }
+        }
 
-@keyframes burn {
-    0% { 
-        text-shadow: 0 0 4px #fff, 0 -5px 8px #ffcc00, 2px -12px 12px #ff0000, -2px -18px 18px #e74c3c, 2px -25px 20px #c0392b;
-        transform: scale(1);
-    }
-    100% { 
-        text-shadow: 0 0 5px #fff, 0 -8px 10px #ffcc00, 3px -18px 18px #ff0000, -3px -25px 22px #e74c3c, 3px -35px 30px #c0392b;
-        transform: scale(1.04); /* Λίγο περισσότερο μεγάλωμα για "ζωντάνια" */
-    }
-}        /* ΠΕΡΙΟΡΙΣΜΟΣ ΕΙΚΟΝΑΣ ΠΡΟΦΙΛ DJ */
         #dj_profile img {
             width: 45px !important;
             height: 45px !important;
@@ -83,7 +74,6 @@
             box-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
         }
 
-        /* METADATA CONTAINER */
         #radio-metadata-container {
             flex: 1;
             display: flex;
@@ -100,7 +90,6 @@
             background: rgba(0, 0, 0, 0.3);
         }
 
-        /* CHAT WINDOW */
         #chat-window { 
             flex: 1; 
             display: flex; 
@@ -135,7 +124,6 @@
             text-shadow: 1px 1px 3px rgba(0,0,0,1); 
         }
 
-        /* SIDEBAR */
         .sidebar { 
             width: 110px; 
             background: rgba(0, 0, 0, 0.5); 
@@ -171,14 +159,13 @@
             margin-bottom: 5px;
         }
 
-        /* INPUT AREA */
         .input-area { 
             background: rgba(20, 20, 30, 0.9); 
             padding: 10px 15px; 
             border-top: 1px solid rgba(255,255,255,0.1); 
         }
 
-        .input-group { display: flex; gap: 10px; max-width: 1000px; margin: 0 auto; }
+        .input-group { display: flex; align-items: center; gap: 10px; max-width: 1000px; margin: 0 auto; }
 
         input[type="text"] { 
             flex: 1; 
@@ -193,14 +180,24 @@
         button.send-btn {
             background: var(--gold); 
             border: none; 
-            padding: 0 20px; 
+            padding: 10px 20px; 
             border-radius: 25px; 
             font-weight: bold; 
             cursor: pointer; 
             color: #000;
         }
 
-        /* MODALS */
+        #emoji-btn {
+            background: transparent;
+            border: none;
+            color: var(--gold);
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #emoji-btn:hover { transform: scale(1.2); }
+
         #settings-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a2e; padding: 25px; border-radius: 15px; border: 2px solid var(--gold); z-index: 1001; width: 280px; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; }
         .color-opt { width: 25px; height: 25px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
@@ -259,6 +256,7 @@
 
         <div class="input-area">
             <div class="input-group">
+                <button id="emoji-btn"><i class="far fa-smile"></i></button>
                 <input type="text" id="chat-input" placeholder="Πες κάτι στην παρέα..." autocomplete="off">
                 <button class="send-btn" onclick="sendMessage()">Στείλε</button>
             </div>
@@ -286,6 +284,9 @@
     const socket = io();
     const msgDiv = document.getElementById('messages');
     const input = document.getElementById('chat-input');
+    
+    // 3. ΗΧΟΣ ΕΙΔΟΠΟΙΗΣΗΣ
+    const msgSound = new Audio('https://buttons.altlab.org/sounds/ding.mp3');
 
     function parseContent(text) {
         if(!text) return '';
@@ -313,6 +314,11 @@
         div.innerHTML = `<div class="nickname" style="color:${data.color}">${data.display_name}</div><div class="content">${parseContent(data.content)}</div>`;
         msgDiv.appendChild(div);
         msgDiv.scrollTop = msgDiv.scrollHeight;
+
+        // Παίζει ήχο μόνο για τους ΑΛΛΟΥΣ
+        if (data.display_name !== "{{ current_user.display_name }}") {
+            msgSound.play().catch(e => console.log("Ήχος μπλοκαρισμένος"));
+        }
     });
 
     socket.on('users_update', (users) => {
@@ -323,6 +329,21 @@
                 <span style="color:${u.color}; font-size:0.7em; font-weight:bold;">${u.display_name}</span>
             </div>
         `).join('');
+    });
+
+    // 4. EMOJI PICKER INITIALIZATION
+    const emojiBtn = document.querySelector('#emoji-btn');
+    const picker = new EmojiButton({
+        position: 'top-start',
+        theme: 'dark'
+    });
+
+    emojiBtn.addEventListener('click', () => {
+        picker.togglePicker(emojiBtn);
+    });
+
+    picker.on('emoji', selection => {
+        input.value += selection.emoji;
     });
 
     function toggleSettings() {
@@ -338,16 +359,15 @@
         else { a.pause(); b.className = 'fas fa-play-circle'; }
     }
 
-    // Color Picker Logic
     const colors = ['#D4AF37', '#C0C0C0', '#F08080', '#FFD700', '#50C878', '#00FFFF', '#FFFFFF'];
-    const picker = document.getElementById('color-picker');
+    const pickerContainer = document.getElementById('color-picker');
     let selectedColor = "{{ current_user.color }}";
     colors.forEach(c => {
         const div = document.createElement('div');
         div.className = 'color-opt';
         div.style.background = c;
         div.onclick = () => { selectedColor = c; saveProfile(); };
-        picker.appendChild(div);
+        pickerContainer.appendChild(div);
     });
 
     function saveProfile() {
