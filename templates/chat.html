@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Dancing+Script:wght@700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.4/dist/index.min.js"></script>
 
     <style>
@@ -39,7 +38,6 @@
             height: 70px; 
         }
 
-        /* ΕΦΕ ΦΛΟΓΑΣ ΜΕ ΚΟΚΚΙΝΟ ΚΑΙ ΚΕΝΑ ΣΤΑ ΓΡΑΜΜΑΤΑ */
         #sonic_dj {
             font-family: 'Orbitron', sans-serif !important;
             font-size: 1.2em !important;
@@ -50,12 +48,7 @@
             display: inline-block;
             padding-top: 15px; 
             margin-top: 5px;
-            text-shadow: 
-                0 0 4px #fff, 
-                0 -5px 8px #ffcc00, 
-                2px -12px 12px #ff0000, 
-                -2px -18px 18px #e74c3c, 
-                2px -28px 25px #c0392b !important;
+            text-shadow: 0 0 4px #fff, 0 -5px 8px #ffcc00, 2px -12px 12px #ff0000, -2px -18px 18px #e74c3c, 2px -28px 25px #c0392b !important;
             animation: burn 1.5s infinite alternate ease-in-out;
         }
 
@@ -64,38 +57,9 @@
             100% { text-shadow: 0 0 5px #fff, 0 -8px 10px #ffcc00, 3px -18px 18px #ff0000, -3px -25px 22px #e74c3c, 3px -35px 30px #c0392b; transform: scale(1.04); }
         }
 
-        #dj_profile img {
-            width: 45px !important;
-            height: 45px !important;
-            border-radius: 50%;
-            border: 2px solid var(--gold);
-            object-fit: cover;
-            display: block;
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
-        }
+        .main { display: flex; flex: 1; overflow: hidden; background: rgba(0, 0, 0, 0.3); }
 
-        #radio-metadata-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            overflow: hidden;
-        }
-
-        .main { 
-            display: flex; 
-            flex: 1; 
-            overflow: hidden; 
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        #chat-window { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            background: transparent !important; 
-        }
+        #chat-window { flex: 1; display: flex; flex-direction: column; }
 
         #messages {
             flex: 1;
@@ -103,279 +67,209 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 5px;
         }
 
-        .message { 
-            background: transparent !important; 
-            border: none !important; 
-            padding: 2px 15px;
-        }
+        .message { padding: 4px 15px; border-radius: 5px; }
+        .nickname { font-weight: bold; font-size: 0.95em; text-shadow: 1px 1px 3px rgba(0,0,0,1); }
+        .content { font-size: 1.1em; text-shadow: 2px 2px 4px rgba(0,0,0,1); }
 
-        .content {
-            text-shadow: 2px 2px 4px rgba(0,0,0,1);
-            font-size: 1.1em;
-            word-wrap: break-word;
-        }
-
-        .nickname { 
-            font-weight: bold; 
-            font-size: 0.9em; 
-            text-shadow: 1px 1px 3px rgba(0,0,0,1); 
-        }
-
-        .sidebar { 
-            width: 110px; 
-            background: rgba(0, 0, 0, 0.5); 
-            border-left: 1px solid rgba(255,255,255,0.1);
+        /* INPUT AREA & FORMAT BAR */
+        .input-area { background: rgba(20, 20, 30, 0.95); padding: 10px 15px; border-top: 1px solid var(--gold); }
+        
+        .format-bar {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 15px 5px;
-        }
-
-        #user-list {
-            width: 100%;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
             gap: 15px;
+            padding-bottom: 8px;
             align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 10px;
         }
 
-        .user-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .user-item .avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 2px solid var(--gold);
-            object-fit: cover;
-            margin-bottom: 5px;
-        }
-
-        .input-area { 
-            background: rgba(20, 20, 30, 0.9); 
-            padding: 10px 15px; 
-            border-top: 1px solid rgba(255,255,255,0.1); 
-        }
+        .format-tool { color: var(--gold); cursor: pointer; font-size: 1.1em; transition: 0.2s; }
+        .format-tool:hover { transform: scale(1.2); color: #fff; }
 
         .input-group { display: flex; align-items: center; gap: 10px; max-width: 1000px; margin: 0 auto; }
 
-        input[type="text"] { 
-            flex: 1; 
-            padding: 10px 20px; 
-            border-radius: 25px; 
-            border: 1px solid #444; 
-            background: #0d0d1a; 
-            color: white; 
-            outline: none; 
+        /* CONTENT EDITABLE INPUT */
+        #chat-input {
+            flex: 1;
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid #444;
+            background: #0d0d1a;
+            color: white;
+            outline: none;
+            min-height: 20px;
+            max-height: 80px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        #chat-input:empty:before { content: attr(placeholder); color: #666; }
+
+        #message-color-picker {
+            width: 25px; height: 25px; border: none; background: none; cursor: pointer; padding: 0;
         }
 
         button.send-btn {
-            background: var(--gold); 
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 25px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            color: #000;
+            background: var(--gold); border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; color: #000;
         }
 
-        #emoji-btn {
-            background: transparent;
-            border: none;
-            color: var(--gold);
-            font-size: 1.5em;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        #emoji-btn:hover { transform: scale(1.2); }
+        .sidebar { width: 110px; background: rgba(0, 0, 0, 0.5); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; padding: 15px 5px; }
 
         #settings-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a2e; padding: 25px; border-radius: 15px; border: 2px solid var(--gold); z-index: 1001; width: 280px; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; }
-        .color-opt { width: 25px; height: 25px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
-        .color-opt.selected { border-color: white; transform: scale(1.1); }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="logo">
-        <i class="fas fa-music"></i> Radio Parea
-    </div>
-
+    <div class="logo"><i class="fas fa-music"></i> Radio Parea</div>
     <div id="radio-metadata-container">
         <div id="dj_profile"></div> 
-
         <div style="text-align: left;">
-            <div style="font-family: 'Dancing Script', cursive; color: var(--gold); font-size: 0.9em; margin-bottom: -5px;">
-                ON AIR:
-            </div>
+            <div style="font-family: 'Dancing Script', cursive; color: var(--gold); font-size: 0.9em;">ON AIR:</div>
             <div id="sonic_dj">Φορτώνει...</div>
-            
-            <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
-                <div id="sonic_title" style="font-size: 0.7em; color: #bbb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">
-                    Τίτλος...
-                </div>
-                <div style="font-size: 0.65em; color: var(--gold); background: rgba(0,0,0,0.5); padding: 1px 7px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.4);">
-                    <i class="fas fa-users"></i> <span id="sonic_listeners">0</span>
-                </div>
-            </div>
         </div>
     </div>
-
-    <div style="display:flex; align-items:center; gap:15px; min-width: 120px; justify-content: flex-end;">
+    <div style="display:flex; align-items:center; gap:15px;">
         <audio id="radio-player" src="https://or.mysonicserver.com:8050/stream"></audio>
         <i class="fas fa-play-circle" id="play-btn" style="font-size: 2.2em; color: var(--gold); cursor:pointer;" onclick="toggleRadio()"></i>
         <i class="fas fa-user-cog" style="color: var(--gold); cursor:pointer; font-size: 1.4em;" onclick="toggleSettings()"></i>
-        {% if current_user.role == 'owner' %}
-        <i class="fas fa-trash-alt" style="color: #ff4d4d; cursor:pointer;" onclick="if(confirm('Καθαρισμός;')) socket.emit('clear_chat_request')"></i>
-        {% endif %}
     </div>
 </div>
-
-<script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
 
 <div class="main">
     <div id="chat-window">
         <div id="messages">
             {% for msg in history %}
             <div class="message">
-                <div class="nickname" style="color: {{ msg.author.color }}">{{ msg.author.display_name }}</div>
-                <div class="content">{{ msg.content }}</div>
+                <span class="nickname" style="color: {{ msg.author.color }}">{{ msg.author.display_name }}:</span>
+                <span class="content">{{ msg.content | safe }}</span>
             </div>
             {% endfor %}
         </div>
 
         <div class="input-area">
+            <div class="format-bar">
+                <i class="fas fa-bold format-tool" onclick="execCommand('bold')" title="Έντονα"></i>
+                <i class="fas fa-italic format-tool" onclick="execCommand('italic')" title="Πλάγια"></i>
+                <i class="fas fa-music format-tool" onclick="addIcon('🎶')"></i>
+                <i class="fas fa-headphones format-tool" onclick="addIcon('🎧')"></i>
+                <i class="fas fa-heart format-tool" onclick="addIcon('❤️')"></i>
+                <input type="color" id="message-color-picker" value="#ffffff" title="Χρώμα Γραφής">
+            </div>
             <div class="input-group">
                 <button id="emoji-btn"><i class="far fa-smile"></i></button>
-                <input type="text" id="chat-input" placeholder="Πες κάτι στην παρέα..." autocomplete="off">
+                <div id="chat-input" contenteditable="true" placeholder="Πες κάτι στην παρέα..."></div>
                 <button class="send-btn" onclick="sendMessage()">Στείλε</button>
             </div>
         </div>
     </div>
 
     <div class="sidebar">
-        <h5 style="color:var(--gold); margin-top:0; font-size: 0.75em; text-align:center;">ONLINE (<span id="user-count">0</span>)</h5>
+        <h5 style="color:var(--gold); font-size: 0.75em;">ONLINE (<span id="user-count">0</span>)</h5>
         <div id="user-list"></div>
     </div>
 </div>
 
 <div class="modal-overlay" id="overlay" onclick="toggleSettings()"></div>
 <div id="settings-modal">
-    <h3 style="color:var(--gold); margin-top:0;">Προφίλ</h3>
-    {% if not current_user.nickname_changed %}
-    <input type="text" id="new-nickname" placeholder="Νέο Nickname" style="width:100%; padding:10px; margin-bottom:15px; background:#000; color:#fff; border:1px solid #444;">
-    {% endif %}
+    <h3 style="color:var(--gold);">Προφίλ</h3>
     <div class="color-picker" id="color-picker" style="display:flex; gap:5px; margin-bottom:15px;"></div>
-    <input type="text" id="new-avatar" placeholder="URL Avatar" style="width:100%; padding:10px; margin-bottom:15px; background:#000; color:#fff; border:1px solid #444;">
     <button onclick="saveProfile()" style="width:100%; background:var(--gold); padding:10px; border:none; font-weight:bold; cursor:pointer;">Αποθήκευση</button>
 </div>
+
+<script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
 
 <script>
     const socket = io();
     const msgDiv = document.getElementById('messages');
-    const input = document.getElementById('chat-input');
-    
-    // 3. ΗΧΟΣ ΕΙΔΟΠΟΙΗΣΗΣ
+    const inputArea = document.getElementById('chat-input');
     const msgSound = new Audio('https://buttons.altlab.org/sounds/ding.mp3');
 
-    function parseContent(text) {
-        if(!text) return '';
-        let safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        const imgRegex = /(https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif))/gi;
-        safeText = safeText.replace(imgRegex, '<img src="$1" style="max-width:180px; border-radius:8px; border:1px solid var(--gold); margin-top:5px; display:block;">');
-        return safeText;
+    // 1. ΕΝΤΟΛΕΣ ΜΟΡΦΟΠΟΙΗΣΗΣ (ΧΩΡΙΣ ΝΑ ΦΑΙΝΕΤΑΙ ΚΩΔΙΚΑΣ)
+    function execCommand(command) {
+        document.execCommand(command, false, null);
+        inputArea.focus();
     }
 
-    window.onload = () => {
-        document.querySelectorAll('.content').forEach(div => { div.innerHTML = parseContent(div.innerText); });
-        msgDiv.scrollTop = msgDiv.scrollHeight;
-    };
+    function addIcon(icon) {
+        inputArea.focus();
+        document.execCommand('insertText', false, icon);
+    }
 
+    // 2. ΑΠΟΣΤΟΛΗ ΜΗΝΥΜΑΤΟΣ
     function sendMessage() {
-        const text = input.value.trim();
-        if(text) { socket.emit('message', { content: text }); input.value = ''; }
+        const text = inputArea.innerHTML.trim();
+        const mColor = document.getElementById('message-color-picker').value;
+        
+        if(text && text !== '<br>') {
+            socket.emit('message', { 
+                content: text, 
+                text_color: mColor 
+            });
+            inputArea.innerHTML = '';
+        }
     }
 
-    input.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
-
-    socket.on('message', (data) => {
-        const div = document.createElement('div');
-        div.className = 'message';
-        div.innerHTML = `<div class="nickname" style="color:${data.color}">${data.display_name}</div><div class="content">${parseContent(data.content)}</div>`;
-        msgDiv.appendChild(div);
-        msgDiv.scrollTop = msgDiv.scrollHeight;
-
-        // Παίζει ήχο μόνο για τους ΑΛΛΟΥΣ
-        if (data.display_name !== "{{ current_user.display_name }}") {
-            msgSound.play().catch(e => console.log("Ήχος μπλοκαρισμένος"));
+    inputArea.addEventListener('keypress', (e) => {
+        if(e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
         }
     });
 
-    socket.on('users_update', (users) => {
-        document.getElementById('user-count').innerText = users.length;
-        document.getElementById('user-list').innerHTML = users.map(u => `
-            <div class="user-item">
-                <img src="${u.avatar_url || 'https://www.gravatar.com/avatar/000?d=mp'}" class="avatar">
-                <span style="color:${u.color}; font-size:0.7em; font-weight:bold;">${u.display_name}</span>
-            </div>
-        `).join('');
+    // 3. ΛΗΨΗ ΜΗΝΥΜΑΤΟΣ
+    socket.on('message', (data) => {
+        const div = document.createElement('div');
+        div.className = 'message';
+        const tColor = data.text_color || '#ffffff';
+        
+        div.innerHTML = `
+            <span class="nickname" style="color:${data.color}">${data.display_name}:</span>
+            <span class="content" style="color:${tColor}">${data.content}</span>
+        `;
+        msgDiv.appendChild(div);
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+
+        if (data.display_name !== "{{ current_user.display_name }}") {
+            msgSound.play().catch(e => {});
+        }
     });
 
-    // 4. EMOJI PICKER INITIALIZATION
-    const emojiBtn = document.querySelector('#emoji-btn');
-    const picker = new EmojiButton({
-        position: 'top-start',
-        theme: 'dark'
-    });
-
-    emojiBtn.addEventListener('click', () => {
-        picker.togglePicker(emojiBtn);
-    });
-
+    // 4. EMOJI PICKER
+    const picker = new EmojiButton({ position: 'top-start', theme: 'dark' });
+    document.querySelector('#emoji-btn').addEventListener('click', () => picker.togglePicker(document.querySelector('#emoji-btn')));
     picker.on('emoji', selection => {
-        input.value += selection.emoji;
+        inputArea.focus();
+        document.execCommand('insertText', false, selection.emoji);
     });
 
-    function toggleSettings() {
-        const m = document.getElementById('settings-modal'), o = document.getElementById('overlay');
-        const isVisible = m.style.display === 'block';
-        m.style.display = isVisible ? 'none' : 'block';
-        o.style.display = isVisible ? 'none' : 'block';
-    }
-
+    // ΥΠΟΛΟΙΠΕΣ ΛΕΙΤΟΥΡΓΙΕΣ (RADIO, SETTINGS)
     function toggleRadio() {
         const a = document.getElementById('radio-player'), b = document.getElementById('play-btn');
         if (a.paused) { a.play(); b.className = 'fas fa-pause-circle'; } 
         else { a.pause(); b.className = 'fas fa-play-circle'; }
     }
 
-    const colors = ['#D4AF37', '#C0C0C0', '#F08080', '#FFD700', '#50C878', '#00FFFF', '#FFFFFF'];
-    const pickerContainer = document.getElementById('color-picker');
-    let selectedColor = "{{ current_user.color }}";
-    colors.forEach(c => {
-        const div = document.createElement('div');
-        div.className = 'color-opt';
-        div.style.background = c;
-        div.onclick = () => { selectedColor = c; saveProfile(); };
-        pickerContainer.appendChild(div);
-    });
-
-    function saveProfile() {
-        const nick = document.getElementById('new-nickname')?.value;
-        const avatar = document.getElementById('new-avatar').value;
-        socket.emit('update_profile', { new_color: selectedColor, new_nickname: nick, new_avatar: avatar });
-        setTimeout(() => location.reload(), 500);
+    function toggleSettings() {
+        const m = document.getElementById('settings-modal'), o = document.getElementById('overlay');
+        const v = m.style.display === 'block';
+        m.style.display = v ? 'none' : 'block'; o.style.display = v ? 'none' : 'block';
     }
+
+    socket.on('users_update', (users) => {
+        document.getElementById('user-count').innerText = users.length;
+        document.getElementById('user-list').innerHTML = users.map(u => `
+            <div class="user-item">
+                <img src="${u.avatar_url || 'https://www.gravatar.com/avatar/000?d=mp'}" class="avatar">
+                <span style="color:${u.color}; font-size:0.7em;">${u.display_name}</span>
+            </div>
+        `).join('');
+    });
 </script>
 </body>
 </html>
