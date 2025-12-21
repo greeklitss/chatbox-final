@@ -10,8 +10,8 @@
     <style>
         :root { 
     --gold: #D4AF37; 
-    /* Εδώ βάλε το link της εικόνας που θέλεις για φόντο */
-    --bg-image: url('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070'); 
+    /* Χρησιμοποιούμε την url_for της Flask για να βρει το αρχείο */
+    --bg-image: url("{{ url_for('static', filename='radioparea_background.jpg') }}"); 
 }
 
 body { 
