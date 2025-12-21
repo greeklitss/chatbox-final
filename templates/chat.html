@@ -38,20 +38,38 @@
 
         /* ΕΦΕ ΦΛΟΓΑΣ ΓΙΑ ΤΟΝ DJ */
         #sonic_dj {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.1em;
-            font-weight: bold;
+            font-family: 'Orbitron', sans-serif !important;
+            font-size: 1.2em !important;
+            font-weight: bold !important;
             text-transform: uppercase;
-            color: #FFD700;
-            text-shadow: 0 0 4px #fff, 0 -3px 4px #ff3, 1px -6px 6px #fd3, -1px -10px 11px #f80;
-            animation: burn 1.5s infinite alternate;
+            color: #FFD700 !important; /* Χρυσό */
+    
+        /* Χώρος για να φαίνονται οι φλόγες που ανεβαίνουν */
             display: inline-block;
+            padding-top: 10px; 
+            margin-top: 5px;
+
+        /* Εφέ Φλόγας */
+            text-shadow: 
+                0 0 4px #fff, 
+                0 -5px 4px #ff3, 
+                2px -10px 6px #fd3, 
+                -2px -15px 11px #f80, 
+                2px -25px 18px #f20 !important;
+    
+            animation: burn 1.5s infinite alternate ease-in-out;
         }
 
         @keyframes burn {
-            0% { text-shadow: 0 0 4px #fff, 0 -3px 4px #ff3, 1px -6px 6px #fd3, -1px -8px 10px #f80; }
-            100% { text-shadow: 0 0 5px #fff, 0 -5px 6px #ff3, 2px -9px 8px #fd3, -2px -14px 14px #f80; }
+            0% { 
+               text-shadow: 0 0 4px #fff, 0 -5px 4px #ff3, 2px -10px 6px #fd3, -2px -15px 11px #f80, 2px -20px 15px #f20;
+               transform: scale(1);
+           }
+           100% { 
+                text-shadow: 0 0 5px #fff, 0 -8px 7px #ff3, 3px -12px 9px #fd3, -3px -18px 14px #f80, 3px -28px 22px #f20;
+                transform: scale(1.02);
         }
+    }
 
         /* ΠΕΡΙΟΡΙΣΜΟΣ ΕΙΚΟΝΑΣ ΠΡΟΦΙΛ DJ */
         #dj_profile img {
