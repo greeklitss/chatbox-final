@@ -176,6 +176,44 @@
             cursor: pointer; 
             color: #000;
         }
+        
+        /* ΠΕΡΙΟΡΙΣΜΟΣ ΕΙΚΟΝΑΣ ΠΡΟΦΙΛ DJ */
+        #dj_profile img {
+            width: 42px !important;   /* Σταθερό μέγεθος για να μην ξεχειλώνει το header */
+            height: 42px !important;
+            border-radius: 50%;       /* Στρογγυλή εμφάνιση */
+            border: 2px solid var(--gold);
+            object-fit: cover;
+            display: block;
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
+        }
+
+        /* ΣΤΥΛ ΓΙΑ ΤΟΥΣ ΑΚΡΟΑΤΕΣ (LISTENERS) */
+        #sonic_listeners {
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .listeners-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            font-size: 0.75em;
+            margin-left: 10px;
+        }
+
+        /* ΔΙΟΡΘΩΣΗ ΓΙΑ ΤΟ HEADER CONTENT */
+        #radio-metadata-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex: 1;
+        }
 
         /* MODALS */
         #settings-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a2e; padding: 25px; border-radius: 15px; border: 2px solid var(--gold); z-index: 1001; width: 280px; }
