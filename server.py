@@ -22,8 +22,17 @@ oauth = OAuth()
 socketio = SocketIO()
 
 ONLINE_USERS = {} 
-CHAT_COLORS = ['#D4AF37', '#E57373', '#81C784', '#64B5F6', '#FFD54F', '#BA68C8', '#4DB6AC', '#FF8A65']
-
+CHAT_COLORS = [
+    '#D4AF37', # Metallic Gold
+    '#C0C0C0', # Silver
+    '#B87333', # Copper
+    '#E0115F', # Ruby Shine
+    '#50C878', # Emerald Green
+    '#9B59B6', # Amethyst Purple
+    '#F08080', # Rose Gold (Light Coral)
+    '#00FFFF', # Cyan Glow
+    '#FFD700', # Bright Gold
+    '#E5E4E2'  # Platinum
 # --------------------------------------------------------------------------
 # 2. ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ
 # --------------------------------------------------------------------------
