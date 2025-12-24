@@ -3,225 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Parea - Live Gold Edition</title>
-    
+    <title>Radio Parea - Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Orbitron:wght@700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-
     <style>
-        :root { --gold: #D4AF37; --msg-bg: rgba(25, 25, 25, 0.95); }
-        body { margin: 0; background: url("{{ url_for('static', filename='radioparea_background.jpg') }}") no-repeat center center fixed; background-size: cover; color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-family: 'Roboto', sans-serif; }
-
-        /* HEADER & PLAYER */
-        .header { background: linear-gradient(rgba(0,0,0,0.92), rgba(20,20,20,0.95)), url('https://www.transparenttextures.com/patterns/stardust.png'); padding: 10px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); box-shadow: 0 5px 25px rgba(212, 175, 55, 0.5); min-height: 130px; z-index: 1000; position: relative; }
-        .player-container { background: rgba(212, 175, 55, 0.1); padding: 15px 30px; border-radius: 60px; border: 1px solid rgba(212, 175, 55, 0.5); display: flex; align-items: center; gap: 20px; animation: pulse-gold 3s infinite; }
-        @keyframes pulse-gold { 0%, 100% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); } 50% { box-shadow: 0 0 35px rgba(212, 175, 55, 0.6); } }
+        :root { --gold: #D4AF37; --msg-bg: rgba(25, 25, 25, 0.9); }
+        body { 
+            background: #000; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+            background-attachment: fixed; background-repeat: no-repeat; transition: background 0.5s ease;
+        }
         
-        #play-pause-btn { background: var(--gold); border: none; width: 55px; height: 55px; border-radius: 50%; cursor: pointer; font-size: 1.5em; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-        .calligraphy-block { font-family: 'Dancing Script', cursive; font-size: 1.6em; text-shadow: 2px 2px 4px black; }
+        .header { background: rgba(0,0,0,0.92); padding: 10px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); z-index: 1000; min-height: 120px; position: relative; }
 
-        /* CHAT WINDOW */
+        /* ΦΩΤΟΡΥΘΜΙΚΑ ΣΕ ΟΛΟ ΤΟ CHAT (AMBIENT DISCO) */
+        .disco-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; overflow: hidden; z-index: 1;
+        }
+        .spot {
+            position: absolute; width: 150px; height: 150px; border-radius: 50%;
+            filter: blur(60px); opacity: 0.4; animation: disco-flash 0.6s infinite alternate;
+        }
+        /* Τυχαίες θέσεις και χρώματα */
+        .spot-1 { top: 10%; left: 10%; background: #ff0000; animation-duration: 0.4s; }
+        .spot-2 { top: 20%; right: 15%; background: #00ff00; animation-duration: 0.7s; }
+        .spot-3 { bottom: 20%; left: 20%; background: #0000ff; animation-duration: 0.5s; }
+        .spot-4 { bottom: 10%; right: 10%; background: #ffff00; animation-duration: 0.3s; }
+        .spot-5 { top: 50%; left: 40%; background: #ff00ff; animation-duration: 0.8s; }
+        .spot-6 { top: 40%; right: 40%; background: #00ffff; animation-duration: 0.4s; }
+
+        @keyframes disco-flash {
+            0% { transform: scale(0.8); opacity: 0.1; }
+            100% { transform: scale(1.3); opacity: 0.5; }
+        }
+
+        /* HEADER & DJ ELEMENTS */
+        #sonic_dj { font-family: 'Orbitron'; color: #FFD700; text-shadow: 0 0 10px #ff4500, 0 0 20px #ff0000; animation: burn 1.5s infinite alternate; font-weight: bold; }
+        @keyframes burn { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+        #dj_profile img { 
+            width: 85px !important; height: 85px !important; border-radius: 50% !important; 
+            border: 3px solid var(--gold) !important; object-fit: contain !important;
+            background: #111; box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+        }
+
+        .player-container { background: rgba(212, 175, 55, 0.1); padding: 15px 25px; border-radius: 50px; border: 1px solid rgba(212, 175, 55, 0.4); display: flex; align-items: center; gap: 15px; position: relative; z-index: 1005; }
+        
         .main { display: flex; flex: 1; overflow: hidden; position: relative; }
-        #chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.65); backdrop-filter: blur(12px); position: relative; overflow: hidden; }
-        #chat-box { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 12px; z-index: 5; }
-
-        /* EMOTICON PICKER */
-        #emote-picker { display: none; position: absolute; bottom: 180px; left: 25px; background: #111; border: 2px solid var(--gold); padding: 15px; border-radius: 15px; width: 280px; z-index: 1000; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
-        .emote-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 200px; overflow-y: auto; }
-        .emote-grid img { width: 100%; cursor: pointer; transition: 0.2s; border-radius: 5px; }
-        .emote-grid img:hover { transform: scale(1.2); box-shadow: 0 0 10px var(--gold); }
-
-        /* INPUT AREA */
-        .input-area { background: #000; padding: 15px 25px; border-top: 2px solid var(--gold); z-index: 10; }
-        .emoji-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; background: rgba(212, 175, 55, 0.08); padding: 10px; border-radius: 15px; border: 1px solid rgba(212, 175, 55, 0.3); }
-        .tool-btn-emoji { background: transparent; border: none; font-size: 1.5em; cursor: pointer; transition: 0.2s; }
-        .toolbar { display: flex; align-items: center; gap: 15px; margin-bottom: 12px; }
-        .tool-btn { background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); color: white; padding: 6px 14px; border-radius: 10px; cursor: pointer; }
+        #chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.4); position: relative; backdrop-filter: blur(3px); }
         
-        #chat-input { flex: 1; padding: 15px 20px; border-radius: 35px; border: 1px solid var(--gold); background: #111; color: white; outline: none; font-size: 16px; }
-        #send-btn { background: linear-gradient(45deg, var(--gold), #F5E050); color: black; border: none; padding: 0 35px; border-radius: 35px; font-weight: bold; cursor: pointer; }
-
-        /* SIDEBAR */
-        .sidebar { width: 190px; background: rgba(0,0,0,0.92); border-left: 2px solid var(--gold); display: flex; flex-direction: column; align-items: center; padding-top: 20px; overflow-y: auto; z-index: 5; }
-        .user-avatar { width: 55px; height: 55px; border-radius: 50%; border: 3px solid var(--gold); object-fit: cover; }
-
-        /* MESSAGES */
-        .message { background: var(--msg-bg); padding: 12px 18px; border-radius: 18px; border-left: 5px solid var(--gold); align-self: flex-start; max-width: 85%; }
+        /* CHAT BOX - ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ ΠΑΝΩ ΑΠΟ ΤΑ ΦΩΤΟΡΥΘΜΙΚΑ */
+        #chat-box { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 12px; z-index: 10; position: relative; }
+        .message { background: var(--msg-bg); padding: 12px 18px; border-radius: 18px; border-left: 5px solid var(--gold); align-self: flex-start; max-width: 85%; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         
-        /* SNOW & SPARKLES */
-        .sparkle { position: absolute; width: 4px; height: 4px; background: white; border-radius: 50%; pointer-events: none; box-shadow: 0 0 10px var(--gold); animation: sparkleFade 2s linear forwards; }
-        @keyframes sparkleFade { 0% { transform: scale(0); opacity:0; } 50% { opacity:1; } 100% { transform: scale(1.2); opacity:0; } }
+        .sidebar { width: 190px; background: rgba(0,0,0,0.9); border-left: 2px solid var(--gold); padding-top: 20px; text-align: center; overflow-y: auto; z-index: 20; }
+
+        .input-area { background: #000; padding: 15px; border-top: 2px solid var(--gold); z-index: 30; }
+        #chat-input { 
+            flex: 1; padding: 15px; border-radius: 20px; border: 1px solid var(--gold); 
+            background: #111; color: white; outline: none; min-height: 20px; max-height: 100px;
+            overflow-y: auto; cursor: text; white-space: pre-wrap;
+        }
+        #chat-input:empty:before { content: attr(placeholder); color: #666; font-style: italic; }
+
+        .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .tool-btn { background: rgba(212,175,55,0.1); border: 1px solid var(--gold); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+        .tool-btn.active { background: var(--gold); color: #000; }
+        
+        .holiday-wishes { background: rgba(139, 0, 0, 0.8); color: white; padding: 5px 0; font-family: 'Dancing Script'; border-top: 1px solid var(--gold); overflow: hidden; z-index: 25; }
     </style>
 </head>
 <body>
-
     <div class="header">
-        <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; flex-direction:column; gap:8px; position:relative; z-index:1010;">
             <button onclick="document.getElementById('setModal').style.display='block'" class="tool-btn"><i class="fas fa-user-edit"></i></button>
-            <a href="{{ url_for('logout') }}" class="tool-btn" style="color:#ff4d4d; border-color:#ff4d4d; text-decoration:none;"><i class="fas fa-power-off"></i></a>
+            <a href="{{ url_for('logout') }}" class="tool-btn" style="color:#ff4d4d; border-color:#ff4d4d; text-decoration:none; text-align:center;"><i class="fas fa-power-off"></i></a>
         </div>
-
+        
         <div class="player-container">
-            <button id="play-pause-btn"><i class="fas fa-play" id="play-icon"></i></button>
+            <button id="play-pause-btn" style="background:var(--gold); border:none; width:50px; height:50px; border-radius:50%; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
             <div style="text-align: left;">
-                <div class="calligraphy-block">RADIO PAREA <span id='sonic_dj'></span></div>
-                <div id='sonic_title' style="font-size: 0.9em; color: #ddd;">Συντονιστείτε...</div>
+                <div style="font-family:'Dancing Script'; font-size:1.6em; color:white;">Radio Parea <span id="sonic_dj"></span></div>
+                <div id="sonic_title" style="font-size:0.85em; color:#ddd; font-weight:bold;">Συντονιστείτε...</div>
             </div>
-            <input type="range" id="volume-control" min="0" max="1" step="0.1" value="0.5" style="width:60px; accent-color:var(--gold);">
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="width:60px; accent-color:var(--gold);">
         </div>
 
-        <div style="text-align:center;">
-            <div id='dj_profile'></div>
-            <div style="color:var(--gold); font-weight:bold;">ΑΚΡΟΑΤΕΣ: <span id='sonic_listeners'>0</span></div>
+        <div style="text-align:center; position:relative; z-index:1010;">
+            <div id="dj_profile"></div>
+            <div style="color:var(--gold); font-weight:bold; font-size:0.85em; margin-top:5px;">LISTENERS: <span id="sonic_listeners">0</span></div>
         </div>
     </div>
 
     <div class="main">
-        <div id="emote-picker">
-            <div class="emote-grid">
-                <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJueXF4Znd4Znd4Znd4Znd4Znd4Znd4Znd4Znd4Znd4Znd4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKLlzdb07x645u8/giphy.gif" onclick="addEmote(this.src)">
-                <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJueXF4Znd4Znd4Znd4Znd4Znd4Znd4Znd4Znd4Znd4Znd4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/l41lTjJp9m9zYmXzq/giphy.gif" onclick="addEmote(this.src)">
-                <img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNXp6dmZ4Znd4Znd4Znd4Znd4Znd4Znd4Znd4Znd4Znd4Znd4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.gif" onclick="addEmote(this.src)">
-            </div>
-            <button onclick="toggleEmotePicker()" style="width:100%; margin-top:10px; background:var(--gold); border:none; padding:5px; border-radius:5px; cursor:pointer;">Κλείσιμο</button>
-        </div>
-
         <div id="chat-window">
+            <div class="disco-bg">
+                <div class="spot spot-1"></div>
+                <div class="spot spot-2"></div>
+                <div class="spot spot-3"></div>
+                <div class="spot spot-4"></div>
+                <div class="spot spot-5"></div>
+                <div class="spot spot-6"></div>
+            </div>
+
             <div id="chat-box">
                 {% for msg in history %}
                 <div class="message">
-                    <div style="color: {{ msg.author.color }}; font-weight:bold;">{{ msg.author.display_name }}</div>
-                    <div class="content history-content" data-raw="{{ msg.content }}" style="color: {{ msg.text_color or '#fff' }}"></div>
+                    <div style="color:{{msg.author.color}}; font-weight:bold;">{{msg.author.display_name}}</div>
+                    <div class="content history-content" data-raw="{{msg.content}}" style="color:{{msg.text_color or '#fff'}}"></div>
                 </div>
                 {% endfor %}
             </div>
 
+            <div class="holiday-wishes">
+                <marquee scrollamount="5">🎄 Καλά Χριστούγεννα! 🎁 Υγεία, Αγάπη και Πολλή Μουσική! 🥂 Καλή Χρονιά! ❄️✨</marquee>
+            </div>
+
             <div class="input-area">
-                <div class="emoji-bar">
-                    <button onclick="addEmoji('😊')" class="tool-btn-emoji">😊</button>
-                    <button onclick="addEmoji('😂')" class="tool-btn-emoji">😂</button>
-                    <button onclick="addEmoji('❤️')" class="tool-btn-emoji">❤️</button>
-                    <button onclick="addEmoji('🎄')" class="tool-btn-emoji">🎄</button>
-                    <button onclick="addEmoji('🎁')" class="tool-btn-emoji">🎁</button>
-                    <button onclick="addEmoji('❄️')" class="tool-btn-emoji">❄️</button>
-                    <button onclick="addEmoji('🥂')" class="tool-btn-emoji">🥂</button>
-                </div>
-
                 <div class="toolbar">
-                    <button class="tool-btn" onclick="insertTag('**')"><i class="fas fa-bold"></i></button>
-                    <button class="tool-btn" onclick="insertTag('*')"><i class="fas fa-italic"></i></button>
-                    <button class="tool-btn" onclick="toggleEmotePicker()"><i class="far fa-smile-beam"></i></button>
-                    
-                    <select id="font-size-select" onchange="updateFontSize(this.value)">
-                        <option value="14px">Μικρά</option>
-                        <option value="16px" selected>Μεσαία</option>
-                        <option value="20px">Μεγάλα</option>
-                        <option value="26px">Γιορτινά!</option>
+                    <button id="btn-bold" class="tool-btn" onclick="execCmd('bold', 'btn-bold')"><i class="fas fa-bold"></i></button>
+                    <button id="btn-italic" class="tool-btn" onclick="execCmd('italic', 'btn-italic')"><i class="fas fa-italic"></i></button>
+                    <select id="font-size" onchange="document.execCommand('fontSize', false, this.value)" style="background:#1a1a1a; color:white; border:1px solid var(--gold); border-radius:5px; padding:5px;">
+                        <option value="3">Μεσαία</option>
+                        <option value="2">Μικρά</option>
+                        <option value="5">Μεγάλα</option>
                     </select>
-
-                    <input type="color" id="text-color" value="#ffffff" title="Χρώμα κειμένου" style="width:30px; height:30px; border:none; cursor:pointer; background:none;">
+                    <input type="color" id="text-color" onchange="document.execCommand('foreColor', false, this.value)" value="#ffffff" style="width:35px; height:35px; border:none; background:none; cursor:pointer;">
+                    {% if current_user.role == 'owner' %}
+                        <button class="tool-btn" onclick="clearChat()" style="margin-left:auto; color:#ff4d4d;"><i class="fas fa-broom"></i></button>
+                    {% endif %}
                 </div>
-                
-                <div style="display:flex; gap:12px;">
-                    <input type="text" id="chat-input" placeholder="Γράψε στην παρέα..." autocomplete="off">
-                    <button id="send-btn" onclick="sendMessage()">ΣΤΕΙΛΕ</button>
+
+                <div style="display:flex; gap:10px; align-items: flex-end;">
+                    <div id="chat-input" contenteditable="true" placeholder="Πες κάτι στην παρέα... 🎄"></div>
+                    <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:12px 25px; border-radius:20px; font-weight:bold; cursor:pointer; height:45px;">ΣΤΕΙΛΕ</button>
                 </div>
             </div>
         </div>
-
         <div class="sidebar">
-            <div style="color:var(--gold); font-weight:bold; margin-bottom:20px; border-bottom:1px solid var(--gold); width:80%; text-align:center;">ONLINE</div>
-            <div id="user-list-content" style="width:100%;"></div>
+            <div style="color:var(--gold); font-weight:bold; margin-bottom:15px;">ONLINE</div>
+            <div id="user-list-content"></div>
         </div>
     </div>
 
-    <div id="setModal" class="modal">
-        <div class="modal-content">
+    <div id="setModal" style="display:none;" class="modal">
+        <div style="background:#111; margin:10% auto; padding:30px; border:1px solid var(--gold); width:320px; border-radius:25px; text-align:center;">
             <h3 style="color:var(--gold);">ΠΡΟΦΙΛ</h3>
-            <input type="text" id="new-avatar" value="{{ current_user.avatar_url }}" style="width:90%; padding:10px; margin-bottom:15px; background:#222; color:white; border:1px solid #444; border-radius:8px;">
-            <input type="color" id="new-color" value="{{ current_user.color }}" style="width:100%; height:40px; cursor:pointer; border:none; background:none;">
-            <button onclick="saveSettings()" style="background:var(--gold); border:none; padding:15px; width:100%; font-weight:bold; cursor:pointer; margin-top:20px; border-radius:10px;">ΑΠΟΘΗΚΕΥΣΗ</button>
-            <button onclick="document.getElementById('setModal').style.display='none'" style="background:none; color:gray; border:none; margin-top:10px; cursor:pointer;">Κλείσιμο</button>
+            <input type="text" id="new-avatar" placeholder="Avatar URL" style="width:90%; padding:10px; margin-bottom:10px; background:#222; color:white; border:1px solid #444;">
+            <input type="color" id="new-color" style="width:100%; height:40px; border:none; cursor:pointer; margin-bottom:15px;">
+            <button onclick="saveSettings()" style="background:var(--gold); border:none; padding:12px; width:100%; font-weight:bold; border-radius:10px; cursor:pointer;">ΑΠΟΘΗΚΕΥΣΗ</button>
+            <button onclick="document.getElementById('setModal').style.display='none'" style="background:none; color:gray; border:none; cursor:pointer; margin-top:10px;">Κλείσιμο</button>
         </div>
     </div>
 
     <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+
     <script>
         const socket = io();
         const chatInput = document.getElementById('chat-input');
         const chatBox = document.getElementById('chat-box');
 
-        // AUDIO
-        const radio = new Audio('https://or.mysonicserver.com:8050/;'); 
-        const playBtn = document.getElementById('play-pause-btn');
-        const playIcon = document.getElementById('play-icon');
-        playBtn.onclick = () => {
-            if (radio.paused) { radio.play().then(() => playIcon.className='fas fa-pause'); }
-            else { radio.pause(); playIcon.className='fas fa-play'; }
-        };
-        document.getElementById('volume-control').oninput = (e) => radio.volume = e.target.value;
-
-        // FORMAT MESSAGES (IMAGES/YT/BOLD)
-        function formatMsg(t) {
-            t = t.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*(.*?)\*/g, '<i>$1</i>');
-            const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-            t = t.replace(ytRegex, (match, id) => `<br><iframe width="100%" height="200" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:10px; margin-top:10px; border:1px solid var(--gold);"></iframe>`);
-            const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg))/i;
-            t = t.replace(imgRegex, (url) => {
-                const isEmote = url.includes('giphy') || url.includes('emotes');
-                const size = isEmote ? '50px' : '250px';
-                return `<br><img src="${url}" style="max-width:${size}; border-radius:10px; margin-top:8px; border:1px solid var(--gold); display:inline-block;">`;
-            });
-            return t;
-        }
-
-        // CHAT ACTIONS
-        function sendMessage() {
-            const text = chatInput.value.trim();
-            const color = document.getElementById('text-color').value;
-            if (text) { socket.emit('message', { content: text, text_color: color }); chatInput.value = ''; }
-        }
-        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
-        socket.on('message', (msg) => {
-            const div = document.createElement('div'); div.className = 'message';
-            div.innerHTML = `<div style="color:${msg.color}; font-weight:bold;">${msg.display_name}</div><div class="content" style="color:${msg.text_color}">${formatMsg(msg.content)}</div>`;
-            chatBox.appendChild(div);
-            setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 300);
-        });
-
-        // UI HELPERS
-        function addEmoji(e) { chatInput.value += e; chatInput.focus(); }
-        function addEmote(url) { chatInput.value += url + " "; toggleEmotePicker(); chatInput.focus(); }
-        function toggleEmotePicker() { const p = document.getElementById('emote-picker'); p.style.display = p.style.display==='none'?'block':'none'; }
-        function updateFontSize(s) { chatInput.style.fontSize = s; }
-        function insertTag(tag) {
-            const start = chatInput.selectionStart; const end = chatInput.selectionEnd;
-            chatInput.value = chatInput.value.substring(0, start) + tag + chatInput.value.substring(start, end) + tag + chatInput.value.substring(end);
+        function execCmd(cmd, btnId) {
+            document.execCommand(cmd, false, null);
+            document.getElementById(btnId).classList.toggle('active');
             chatInput.focus();
         }
 
-        // SNOW & SPARKLES
-        function createSnowflake() {
-            const chatWin = document.getElementById('chat-window');
-            const snow = document.createElement('div'); snow.innerHTML = '❄️';
-            snow.style.cssText = `position:absolute; top:-30px; left:${Math.random()*100}%; font-size:${Math.random()*10+12}px; pointer-events:none; z-index:1; opacity:${Math.random()}; color:white;`;
-            chatWin.appendChild(snow);
-            snow.animate([{transform:'translateY(0) rotate(0deg)'}, {transform:`translateY(${chatWin.offsetHeight + 50}px) rotate(360deg)`, opacity:0}], {duration: Math.random()*3000+4000, easing:'linear'}).onfinish = () => snow.remove();
+        function sendMessage() {
+            const htmlContent = chatInput.innerHTML.trim();
+            if (htmlContent) {
+                socket.emit('message', { content: htmlContent });
+                chatInput.innerHTML = '';
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            }
         }
-        setInterval(createSnowflake, 500);
 
-        // USER LIST & SETTINGS
-        socket.on('user_list', (users) => {
-            document.getElementById('user-list-content').innerHTML = users.map(u => `<div style="text-align:center; margin-bottom:18px;"><img src="${u.avatar_url || 'https://ui-avatars.com/api/?name='+u.display_name}" class="user-avatar" style="border-color:${u.color}"><div style="color:${u.color}; font-size:0.85em; font-weight:bold;">${u.display_name}</div></div>`).join('');
+        chatInput.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
         });
-        function saveSettings() { socket.emit('update_profile', { color: document.getElementById('new-color').value, avatar_url: document.getElementById('new-avatar').value }); document.getElementById('setModal').style.display = 'none'; }
 
-        window.onload = () => {
-            document.querySelectorAll('.history-content').forEach(d => { d.innerHTML = formatMsg(d.getAttribute('data-raw')); });
-            chatBox.scrollTop = chatBox.scrollHeight;
-            socket.emit('request_user_list');
+        socket.on('message', (msg) => {
+            if(msg.content === 'CLEAN_EVENT') { chatBox.innerHTML = ''; return; }
+            const div = document.createElement('div');
+            div.className = 'message';
+            div.innerHTML = `<b style="color:${msg.color}">${msg.display_name}</b><br><span>${msg.content}</span>`;
+            chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        const radio = new Audio('https://or.mysonicserver.com:8050/;');
+        document.getElementById('play-pause-btn').onclick = () => {
+            if (radio.paused) { radio.play(); document.getElementById('play-icon').className='fas fa-pause'; }
+            else { radio.pause(); document.getElementById('play-icon').className='fas fa-play'; }
         };
+
+        function createSnow() {
+            const snow = document.createElement('div');
+            snow.innerHTML = '❄️';
+            snow.style.cssText = `position:absolute; top:-30px; left:${Math.random()*100}%; font-size:${Math.random()*10+10}px; color:white; pointer-events:none; z-index:5;`;
+            document.getElementById('chat-window').appendChild(snow);
+            snow.animate([{transform:'translateY(0)'}, {transform:`translateY(${window.innerHeight}px)`, opacity:0}], {duration: 5000}).onfinish = () => snow.remove();
+        }
+        setInterval(createSnow, 450);
+
+        function clearChat() { if(confirm("Σκούπα;")) socket.emit('clear_chat_request'); }
+
+        socket.on('user_list', (users) => {
+            document.getElementById('user-list-content').innerHTML = users.map(u => `
+                <div style="margin-bottom:15px;">
+                    <img src="${u.avatar_url || 'https://ui-avatars.com/api/?name='+u.display_name}" style="width:55px; height:55px; border-radius:50%; border:3px solid ${u.color}; object-fit:cover;">
+                    <div style="color:${u.color}; font-size:0.8em; font-weight:bold;">${u.display_name}</div>
+                </div>`).join('');
+        });
+
+        function saveSettings() {
+            socket.emit('update_profile', { color: document.getElementById('new-color').value, avatar_url: document.getElementById('new-avatar').value });
+            document.getElementById('setModal').style.display = 'none';
+        }
+
+        window.onload = () => { chatBox.scrollTop = chatBox.scrollHeight; };
     </script>
 </body>
 </html>
