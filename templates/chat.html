@@ -16,70 +16,60 @@
         }
         
         /* HEADER - PLAYER & METADATA */
-        .header { background: rgba(0,0,0,0.85); padding: 10px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); z-index: 1000; min-height: 120px; position: relative; }
+        .header { background: rgba(0,0,0,0.85); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); z-index: 1000; min-height: 110px; position: relative; }
         
-        #sonic_dj { font-family: 'Orbitron'; color: #FFD700; text-shadow: 0 0 10px #ff4500; font-weight: bold; }
-        
-        #dj_profile img { 
-            width: 85px !important; height: 85px !important; border-radius: 50% !important; 
-            border: 3px solid var(--gold) !important; object-fit: contain !important;
-            background: #111; box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
-        }
+        /* ΦΩΤΟΡΥΘΜΙΚΑ ΣΕ ΟΛΟ ΤΟ ΦΟΝΤΟ */
+        .disco-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        .light { position: absolute; width: 200px; height: 200px; border-radius: 50%; filter: blur(80px); opacity: 0.3; animation: strobe 0.8s infinite alternate; }
+        .l1 { top: 15%; left: 15%; background: #ff0000; }
+        .l2 { bottom: 15%; right: 15%; background: #0000ff; animation-delay: 0.4s; }
+        @keyframes strobe { from { opacity: 0.1; transform: scale(0.8); } to { opacity: 0.4; transform: scale(1.2); } }
 
-        .player-container { background: rgba(212, 175, 55, 0.1); padding: 15px 25px; border-radius: 50px; border: 1px solid rgba(212, 175, 55, 0.4); display: flex; align-items: center; gap: 15px; }
-
-        /* ΦΩΤΟΡΥΘΜΙΚΑ ΠΑΝΤΟΥ */
-        .spot { position: absolute; width: 250px; height: 250px; border-radius: 50%; filter: blur(80px); opacity: 0.2; animation: disco-flash 0.8s infinite alternate; z-index: 1; }
-        .spot-1 { top: 20%; left: 10%; background: #ff0000; }
-        .spot-2 { bottom: 20%; right: 10%; background: #0000ff; }
-        @keyframes disco-flash { 0% { transform: scale(0.8); opacity: 0.1; } 100% { transform: scale(1.2); opacity: 0.3; } }
+        /* DJ & PLAYER ELEMENTS */
+        #dj_profile img { width: 80px !important; height: 80px !important; border-radius: 50% !important; border: 2px solid var(--gold) !important; object-fit: contain !important; background: #111; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
+        #sonic_dj { font-family: 'Orbitron'; color: var(--gold); text-shadow: 0 0 10px red; font-weight: bold; }
+        .player-container { background: rgba(212, 175, 55, 0.1); padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(212, 175, 55, 0.3); display: flex; align-items: center; gap: 12px; z-index: 1005; }
 
         .main { display: flex; flex: 1; overflow: hidden; position: relative; z-index: 5; }
-        #chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.1); backdrop-filter: blur(3px); }
-        #chat-box { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 12px; }
+        #chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.2); backdrop-filter: blur(4px); }
+        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
         
-        .message { background: rgba(20, 20, 20, 0.75); padding: 12px 18px; border-radius: 18px; border-left: 5px solid var(--gold); align-self: flex-start; max-width: 85%; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        /* MESSAGES */
+        .message { background: rgba(30, 30, 30, 0.8); padding: 12px 15px; border-radius: 15px; border-left: 4px solid var(--gold); align-self: flex-start; max-width: 85%; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
 
-        /* ΕΡΓΑΛΕΙΑ ΓΡΑΦΗΣ */
-        .input-area { background: rgba(0,0,0,0.92); padding: 15px; border-top: 2px solid var(--gold); }
-        .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
-        .emoji-bar { margin-bottom: 8px; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 5px; }
+        /* INPUT AREA & TOOLBAR */
+        .input-area { background: rgba(0,0,0,0.95); padding: 15px; border-top: 2px solid var(--gold); }
+        .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        #chat-input { flex: 1; padding: 12px; border-radius: 15px; border: 1px solid var(--gold); background: #111; color: white; outline: none; min-height: 40px; }
         
-        #chat-input { 
-            flex: 1; padding: 15px; border-radius: 15px; border: 1px solid var(--gold); 
-            background: #111; color: white; outline: none; min-height: 40px; white-space: pre-wrap;
-        }
-        #chat-input:empty:before { content: attr(placeholder); color: #777; font-style: italic; }
+        .tool-btn { background: rgba(212,175,55,0.1); border: 1px solid var(--gold); color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; }
+        .tool-btn:hover { background: var(--gold); color: black; }
 
-        .tool-btn { background: rgba(212,175,55,0.1); border: 1px solid var(--gold); color: white; padding: 6px 10px; border-radius: 5px; cursor: pointer; }
-        .tool-btn.active { background: var(--gold); color: #000; }
-
-        .sidebar { width: 190px; background: rgba(0,0,0,0.85); border-left: 2px solid var(--gold); padding-top: 20px; text-align: center; }
+        .sidebar { width: 180px; background: rgba(0,0,0,0.9); border-left: 2px solid var(--gold); padding-top: 15px; text-align: center; }
         .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
-        .modal-content { background: #111; margin: 5% auto; padding: 25px; border: 1px solid var(--gold); width: 350px; border-radius: 20px; color: white; }
+        .modal-content { background: #111; margin: 10% auto; padding: 25px; border: 1px solid var(--gold); width: 320px; border-radius: 20px; color: white; }
     </style>
 </head>
 <body>
-    <div class="spot spot-1"></div><div class="spot spot-2"></div>
+    <div class="disco-overlay"><div class="light l1"></div><div class="light l2"></div></div>
 
     <div class="header">
-        <div style="display:flex; flex-direction:column; gap:8px;">
-            <button onclick="document.getElementById('setModal').style.display='block'" class="tool-btn"><i class="fas fa-cog"></i></button>
-            <a href="{{ url_for('logout') }}" class="tool-btn" style="color:#ff4d4d; border-color:#ff4d4d;"><i class="fas fa-power-off"></i></a>
+        <div style="display:flex; flex-direction:column; gap:8px; z-index:1010;">
+            <button onclick="document.getElementById('setModal').style.display='block'" class="tool-btn"><i class="fas fa-cog"></i> ΡΥΘΜΙΣΕΙΣ</button>
+            <a href="{{ url_for('logout') }}" class="tool-btn" style="color:#ff4d4d; border-color:#ff4d4d;"><i class="fas fa-power-off"></i> ΕΞΟΔΟΣ</a>
         </div>
         
         <div class="player-container">
             <button id="play-pause-btn" style="background:var(--gold); border:none; width:45px; height:45px; border-radius:50%; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
             <div style="text-align: left;">
-                <div style="font-family:'Dancing Script'; font-size:1.5em; color:white;">Radio Parea <span id="sonic_dj"></span></div>
-                <div id="sonic_title" style="font-size:0.8em; color:#ddd; font-weight:bold;">Φορτώνει...</div>
+                <div style="font-family:'Dancing Script'; font-size:1.6em; color:white;">Radio Parea <span id="sonic_dj"></span></div>
+                <div id="sonic_title" style="font-size:0.85em; color:#ddd; font-weight:bold;">Φορτώνει...</div>
             </div>
-            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="width:50px; accent-color:var(--gold);">
         </div>
 
-        <div style="text-align:center;">
+        <div style="text-align:center; z-index:1010;">
             <div id="dj_profile"></div>
-            <div style="color:var(--gold); font-size:0.75em; margin-top:5px;">LISTENERS: <span id="sonic_listeners">0</span></div>
+            <div style="color:var(--gold); font-size:0.75em; margin-top:5px; font-weight:bold;">LISTENERS: <span id="sonic_listeners">0</span></div>
         </div>
     </div>
 
@@ -95,68 +85,61 @@
             </div>
 
             <div class="input-area">
-                <div class="emoji-bar">
-                    <button onclick="addEmoji('😊')" class="tool-btn">😊</button>
-                    <button onclick="addEmoji('❤️')" class="tool-btn">❤️</button>
-                    <button onclick="addEmoji('🎄')" class="tool-btn">🎄</button>
-                    <button onclick="addEmoji('🥂')" class="tool-btn">🥂</button>
-                    <button onclick="addEmoji('🎶')" class="tool-btn">🎶</button>
-                </div>
                 <div class="toolbar">
-                    <button id="btn-bold" class="tool-btn" onclick="execCmd('bold', 'btn-bold')"><i class="fas fa-bold"></i></button>
-                    <button id="btn-italic" class="tool-btn" onclick="execCmd('italic', 'btn-italic')"><i class="fas fa-italic"></i></button>
-                    <select onchange="document.execCommand('fontSize', false, this.value)" style="background:#222; color:white; border:1px solid var(--gold);">
-                        <option value="3">M</option><option value="2">S</option><option value="5">L</option>
-                    </select>
-                    <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:30px; border:none; background:none;">
+                    <button class="tool-btn" onclick="document.execCommand('bold')"><i class="fas fa-bold"></i></button>
+                    <button class="tool-btn" onclick="document.execCommand('italic')"><i class="fas fa-italic"></i></button>
+                    <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:25px; height:25px; border:none; cursor:pointer; background:none;">
+                    <button onclick="addEmoji('😊')" class="tool-btn">😊</button>
+                    <button onclick="addEmoji('🎄')" class="tool-btn">🎄</button>
+                    <button onclick="addEmoji('🎶')" class="tool-btn">🎶</button>
+                    <button onclick="addEmoji('🥂')" class="tool-btn">🥂</button>
                     {% if current_user.role == 'owner' %}
-                    <button class="tool-btn" onclick="socket.emit('clear_chat_request')" style="color:#ff4d4d; margin-left:auto;"><i class="fas fa-broom"></i></button>
+                    <button class="tool-btn" onclick="socket.emit('clear_chat_request')" style="color:#ff4d4d; margin-left:auto;"><i class="fas fa-broom"></i> ΣΚΟΥΠΑ</button>
                     {% endif %}
                 </div>
+                
                 <div style="display:flex; gap:10px;">
-                    <div id="chat-input" contenteditable="true" placeholder="Πες κάτι στην παρέα... 🎄"></div>
-                    <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 20px; border-radius:15px; font-weight:bold; cursor:pointer;">ΣΤΕΙΛΕ</button>
+                    <div id="chat-input" contenteditable="true" placeholder="Γράψτε στην παρέα..."></div>
+                    <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 25px; border-radius:15px; font-weight:bold; cursor:pointer;">ΣΤΕΙΛΕ</button>
                 </div>
             </div>
         </div>
+        
         <div class="sidebar">
-            <div style="color:var(--gold); font-weight:bold; margin-bottom:10px;">ONLINE</div>
+            <div style="color:var(--gold); font-weight:bold; margin-bottom:12px; font-size:0.9em;">ONLINE</div>
             <div id="user-list-content"></div>
         </div>
     </div>
 
     <div id="setModal" class="modal">
         <div class="modal-content">
-            <h3 style="color:var(--gold); text-align:center;">ΡΥΘΜΙΣΕΙΣ</h3>
+            <h3 style="color:var(--gold); text-align:center; margin-top:0;">ΠΡΟΦΙΛ</h3>
             <label>Avatar URL:</label>
-            <input type="text" id="new-avatar" style="width:95%; padding:8px; margin:10px 0; background:#222; border:1px solid #444; color:white;">
+            <input type="text" id="new-avatar" style="width:100%; padding:8px; margin:10px 0; background:#222; border:1px solid #444; color:white;">
+            
             <label>Χρώμα Ονόματος:</label>
-            <input type="color" id="new-color" style="width:100%; height:40px; margin:10px 0;">
+            <input type="color" id="new-color" style="width:100%; height:40px; margin:10px 0; border:none; cursor:pointer; background:none;">
 
             {% if current_user.role == 'owner' %}
-            <div style="margin-top:20px; padding-top:15px; border-top:1px dashed var(--gold);">
-                <p style="color:var(--gold); font-weight:bold; text-align:center;">ΦΟΝΤΟ ΣΕΛΙΔΑΣ</p>
+            <div style="margin-top:15px; padding-top:15px; border-top:1px dashed #555;">
+                <p style="color:var(--gold); font-weight:bold; text-align:center;">ADMIN: ΦΟΝΤΟ ΣΕΛΙΔΑΣ</p>
                 <input type="file" id="bg-upload" style="display:none;" onchange="handleFileUpload(this)">
-                <button onclick="document.getElementById('bg-upload').click()" style="width:100%; padding:10px; background:var(--gold); font-weight:bold; border:none; border-radius:5px; cursor:pointer;">ΑΛΛΑΓΗ ΕΙΚΟΝΑΣ</button>
-                <div style="margin-top:10px;">
-                    <small>Μέγεθος:</small> <input type="range" id="size-slider" min="50" max="250" value="100" oninput="updateBg()" style="width:100%;">
-                    <small>Θέση:</small> <input type="range" id="pos-slider" min="0" max="100" value="50" oninput="updateBg()" style="width:100%;">
-                </div>
+                <button onclick="document.getElementById('bg-upload').click()" style="width:100%; padding:10px; background:var(--gold); color:black; font-weight:bold; border:none; border-radius:5px; cursor:pointer;">ΑΛΛΑΓΗ ΕΙΚΟΝΑΣ</button>
             </div>
             {% endif %}
 
-            <button onclick="saveSettings()" style="width:100%; padding:12px; background:var(--gold); font-weight:bold; margin-top:20px; border-radius:10px; cursor:pointer;">ΑΠΟΘΗΚΕΥΣΗ</button>
-            <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; background:none; color:gray; border:none; margin-top:10px; cursor:pointer;">Κλείσιμο</button>
+            <button onclick="saveSettings()" style="width:100%; padding:12px; background:var(--gold); color:black; font-weight:bold; margin-top:20px; border-radius:10px; border:none; cursor:pointer;">ΑΠΟΘΗΚΕΥΣΗ</button>
+            <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; background:none; color:gray; border:none; margin-top:10px; cursor:pointer;">Άκυρο</button>
         </div>
     </div>
 
     <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+
     <script>
         const socket = io();
         const chatInput = document.getElementById('chat-input');
         const chatBox = document.getElementById('chat-box');
 
-        function execCmd(cmd, id) { document.execCommand(cmd, false, null); document.getElementById(id).classList.toggle('active'); chatInput.focus(); }
         function addEmoji(emoji) { chatInput.innerHTML += emoji; chatInput.focus(); }
 
         function sendMessage() {
@@ -164,7 +147,6 @@
             if(content && content !== '<br>') {
                 socket.emit('message', { content: content });
                 chatInput.innerHTML = '';
-                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             }
         }
 
@@ -178,31 +160,24 @@
             chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
         });
 
-        // RADIO CONTROLS
+        // RADIO
         const radio = new Audio('https://or.mysonicserver.com:8050/;');
         document.getElementById('play-pause-btn').onclick = () => {
             if (radio.paused) { radio.play(); document.getElementById('play-icon').className='fas fa-pause'; }
             else { radio.pause(); document.getElementById('play-icon').className='fas fa-play'; }
         };
-        document.getElementById('volume').oninput = (e) => radio.volume = e.target.value;
 
-        // BG LOGIC
+        // BACKGROUND ADMIN
         function handleFileUpload(input) {
             const reader = new FileReader();
             reader.onload = (e) => socket.emit('admin_change_bg', { url: e.target.result });
             reader.readAsDataURL(input.files[0]);
         }
-        function updateBg() {
-            socket.emit('admin_bg_transform', { size: document.getElementById('size-slider').value, position: document.getElementById('pos-slider').value });
-        }
         function applyBg(data) {
             if(data.url) document.body.style.backgroundImage = `url('${data.url}')`;
-            document.body.style.backgroundSize = `${data.size || 100}% auto`;
-            document.body.style.backgroundPosition = `center ${data.position || 50}%`;
         }
         socket.on('init_background', applyBg);
         socket.on('update_bg', applyBg);
-        socket.on('update_bg_transform', applyBg);
 
         function saveSettings() {
             socket.emit('update_profile', { color: document.getElementById('new-color').value, avatar_url: document.getElementById('new-avatar').value });
@@ -211,9 +186,9 @@
 
         socket.on('user_list', (users) => {
             document.getElementById('user-list-content').innerHTML = users.map(u => `
-                <div style="margin-bottom:10px;">
+                <div style="margin-bottom:12px;">
                     <img src="${u.avatar_url || 'https://ui-avatars.com/api/?name='+u.display_name}" style="width:45px; height:45px; border-radius:50%; border:2px solid ${u.color}; object-fit:cover;">
-                    <div style="color:${u.color}; font-size:0.7em; font-weight:bold;">${u.display_name}</div>
+                    <div style="color:${u.color}; font-size:0.75em; font-weight:bold;">${u.display_name}</div>
                 </div>`).join('');
         });
     </script>
