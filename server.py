@@ -79,13 +79,13 @@ def login_page():
 # GOOGLE LOGIN ROUTES
 @app.route('/login/google')
 def google_login():
-    redirect_uri = url_for('google_authorize', _external=True)
+    # Νέο: στέλνει ακριβώς εκεί που περιμένει η Google
+    redirect_uri = 'https://www.radioparea.com/google_auth' 
     return google.authorize_redirect(redirect_uri)
 
-@app.route('/login/google/authorize')
 @app.route('/google_auth')
-def google_authorize():
-    try:
+@app.route('/login/google/authorize')
+def google_authorize()    try:
         token = google.authorize_access_token()
         resp = google.get('https://www.googleapis.com/oauth2/v3/userinfo')
         user_info = resp.json()
