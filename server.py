@@ -85,7 +85,10 @@ def google_login():
 
 @app.route('/google_auth')
 @app.route('/login/google/authorize')
-def google_authorize()    try:
+def google_authorize():
+    try:
+        # Ο κώδικας που ακολουθεί πρέπει να είναι 
+        # ένα κλικ (tab) πιο μέσα από το try
         token = google.authorize_access_token()
         resp = google.get('https://www.googleapis.com/oauth2/v3/userinfo')
         user_info = resp.json()
