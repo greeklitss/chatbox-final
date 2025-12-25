@@ -83,6 +83,7 @@ def google_login():
     return google.authorize_redirect(redirect_uri)
 
 @app.route('/login/google/authorize')
+@app.route('/google_auth')
 def google_authorize():
     try:
         token = google.authorize_access_token()
