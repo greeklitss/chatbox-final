@@ -1,8 +1,5 @@
 import eventlet
 eventlet.monkey_patch()
-
-import os
-from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -10,12 +7,10 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, curren
 from flask_socketio import SocketIO, emit
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# Αρχικοποίηση
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 socketio = SocketIO()
-
 ONLINE_USERS = {}
 
 class User(UserMixin, db.Model):
@@ -25,7 +20,6 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), default='user')
     color = db.Column(db.String(20), default='#D4AF37')
     avatar_url = db.Column(db.String(256), nullable=True)
-
     def check_password(self, password):
         if not self.password_hash: return False
         return check_password_hash(self.password_hash, password)
@@ -45,13 +39,10 @@ def create_app():
     app.config['SECRET_KEY'] = 'radio-parea-2025'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///radio.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     socketio.init_app(app, cors_allowed_origins="*")
-
-    # --- ROUTES (ΣΥΝΔΕΣΕΙΣ) ---
 
     @app.route('/')
     def index():
@@ -60,11 +51,9 @@ def create_app():
     @app.route('/login', methods=['GET', 'POST'])
     def login_page():
         if request.method == 'POST':
-            username = request.form.get('username')
-            password = request.form.get('password')
-            user = User.query.filter_by(display_name=username).first()
-            if user and user.check_password(password):
-                login_user(user)
+            u = User.query.filter_by(display_name=request.form.get('username')).first()
+            if u and u.check_password(request.form.get('password')):
+                login_user(u)
                 return redirect(url_for('chat_page'))
             flash('Λάθος όνομα ή κωδικός!')
         return render_template('login.html')
@@ -77,63 +66,38 @@ def create_app():
     @app.route('/admin')
     @login_required
     def admin_panel():
-        if current_user.role not in ['admin', 'owner']:
-            return redirect(url_for('chat_page'))
+        if current_user.role not in ['admin', 'owner']: return redirect(url_for('chat_page'))
         return render_template('admin_panel.html')
 
     @app.route('/check_login')
     def check_login():
-        if current_user.is_authenticated:
-            return jsonify({'id': current_user.id, 'role': current_user.role})
+        if current_user.is_authenticated: return jsonify({'id': current_user.id, 'role': current_user.role})
         return jsonify({'error': 'unauthorized'}), 401
 
     @app.route('/api/v1/admin/users')
     @login_required
     def get_users():
-        users = User.query.all()
-        return jsonify([{'id': u.id, 'display_name': u.display_name, 'role': u.role} for u in users])
-
-    @app.route('/logout')
-    def logout():
-        logout_user()
-        return redirect(url_for('index'))
-
-    # --- SOCKETS ---
+        us = User.query.all()
+        return jsonify([{'id': u.id, 'display_name': u.display_name, 'role': u.role} for u in us])
 
     @socketio.on('connect')
     def handle_connect():
         if current_user.is_authenticated:
-            ONLINE_USERS[request.sid] = {
-                'display_name': current_user.display_name,
-                'avatar_url': current_user.avatar_url,
-                'color': current_user.color
-            }
+            ONLINE_USERS[request.sid] = {'display_name': current_user.display_name, 'avatar_url': current_user.avatar_url, 'color': current_user.color}
             emit('user_list', list(ONLINE_USERS.values()), broadcast=True)
-
-    @socketio.on('message')
-    def handle_msg(data):
-        if current_user.is_authenticated:
-            emit('message', {
-                'display_name': current_user.display_name,
-                'content': data['content'],
-                'color': current_user.color
-            }, broadcast=True)
 
     @socketio.on('clear_chat_request')
     def clear_chat():
-        if current_user.role == 'owner':
-            emit('message', {'content': 'CLEAN_EVENT'}, broadcast=True)
+        if current_user.role == 'owner': emit('message', {'content': 'CLEAN_EVENT'}, broadcast=True)
 
     with app.app_context():
         db.create_all()
         if not User.query.filter_by(display_name="Admin").first():
-            admin = User(display_name="Admin", role="owner", 
-                         password_hash=generate_password_hash("admin123"))
+            admin = User(display_name="Admin", role="owner", password_hash=generate_password_hash("admin123"))
             db.session.add(admin)
             db.session.commit()
-
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
