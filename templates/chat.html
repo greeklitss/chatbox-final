@@ -124,22 +124,31 @@
     </div>
 
     <div id="setModal" class="modal">
-        <div class="modal-content">
-            <h3 style="color:var(--gold); text-align:center; font-family: 'Orbitron';">ΡΥΘΜΙΣΕΙΣ</h3>
-            <label style="font-size:0.8em; color:var(--gold)">ONOMA:</label>
-            <input type="text" id="new-nickname" value="{{ current_user.display_name }}" style="width:100%; padding:12px; margin-bottom:15px; background:#222; border:1px solid var(--gold); color:white; border-radius: 10px;">
-            <label style="font-size:0.8em; color:var(--gold)">URL ΕΙΚΟΝΑΣ ΠΡΟΦΙΛ:</label>
-            <input type="text" id="new-avatar" value="{{ current_user.avatar_url or '' }}" style="width:100%; padding:12px; margin-bottom:20px; background:#222; border:1px solid var(--gold); color:white; border-radius: 10px;">
-            <button onclick="saveProfile()" style="width:100%; padding:12px; background:var(--gold); border:none; font-weight:bold; cursor:pointer; border-radius: 10px; font-size: 1em;">ΑΠΟΘΗΚΕΥΣΗ</button>
-            {% if current_user.role == 'owner' %}
-            <div style="margin-top:20px; border-top:1px dashed #555; padding-top:15px;">
-                <input type="file" id="bg-upload" style="display:none;" onchange="handleFileUpload(this)">
-                <button onclick="document.getElementById('bg-upload').click()" style="width:100%; padding:10px; background:var(--fire); color:white; border:none; cursor:pointer; border-radius: 10px; font-weight: bold;">ΑΛΛΑΓΗ ΦΟΝΤΟΥ (ALL)</button>
-            </div>
-            {% endif %}
-            <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; margin-top:15px; background:none; color:gray; border:none; cursor:pointer;">Ακύρωση</button>
+    <div class="modal-content">
+        <h3 style="color:var(--gold); text-align:center;">ΡΥΘΜΙΣΕΙΣ ΠΡΟΦΙΛ</h3>
+        
+        <label style="font-size:0.8em; color:var(--gold)">ΟΝΟΜΑ:</label>
+        <input type="text" id="new-nickname" value="{{ current_user.display_name }}" style="width:100%; padding:10px; margin-bottom:10px; background:#222; border:1px solid var(--gold); color:white;">
+        
+        <label style="font-size:0.8em; color:var(--gold)">AVATAR URL:</label>
+        <input type="text" id="new-avatar" value="{{ current_user.avatar_url or '' }}" style="width:100%; padding:10px; margin-bottom:10px; background:#222; border:1px solid var(--gold); color:white;">
+
+        <label style="font-size:0.8em; color:var(--gold)">ΧΡΩΜΑ ΟΝΟΜΑΤΟΣ:</label>
+        <input type="color" id="new-color" value="{{ current_user.color or '#D4AF37' }}" style="width:100%; height:40px; margin-bottom:20px; background:none; border:1px solid var(--gold); cursor:pointer;">
+
+        <button onclick="saveProfile()" style="width:100%; padding:12px; background:var(--gold); border:none; font-weight:bold; cursor:pointer; border-radius:10px;">ΑΠΟΘΗΚΕΥΣΗ</button>
+        
+        {% if current_user.role == 'owner' %}
+        <div style="margin-top:20px; border-top:1px dashed #555; padding-top:15px;">
+            <p style="color:var(--gold); font-size:0.8em; text-align:center;">ΔΙΑΧΕΙΡΙΣΗ ΦΟΝΤΟΥ</p>
+            <input type="file" id="bg-upload" style="display:none;" onchange="handleFileUpload(this)">
+            <button onclick="document.getElementById('bg-upload').click()" style="width:100%; padding:10px; background:var(--fire); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">ΑΛΛΑΓΗ ΦΟΝΤΟΥ ΓΙΑ ΟΛΟΥΣ</button>
         </div>
+        {% endif %}
+        
+        <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; margin-top:15px; background:none; color:gray; border:none; cursor:pointer;">Ακύρωση</button>
     </div>
+</div>
 
     <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
     <script>
@@ -170,12 +179,21 @@
         draw();
 
         function saveProfile() {
-            fetch('/update_profile', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ display_name: document.getElementById('new-nickname').value, avatar_url: document.getElementById('new-avatar').value })
-            }).then(r => { if(r.ok) window.location.reload(); else alert("Σφάλμα στην αποθήκευση!"); });
-        }
+    const data = {
+        display_name: document.getElementById('new-nickname').value,
+        avatar_url: document.getElementById('new-avatar').value,
+        color: document.getElementById('new-color').value
+    };
+
+    fetch('/update_profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(r => {
+        if(r.ok) window.location.reload();
+        else alert("Το όνομα χρησιμοποιείται ήδη!");
+    });
+}
 
         function sendMessage() {
             const content = chatInput.innerHTML.trim();
