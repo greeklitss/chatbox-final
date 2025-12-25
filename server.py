@@ -130,8 +130,8 @@ def handle_send_message(data):
         }, broadcast=True)
 
 
-
-create_app = app
+def create_app():
+    return app
 # --- ΕΚΚΙΝΗΣΗ ---
 if __name__ == '__main__':
     with app.app_context():
