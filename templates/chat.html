@@ -153,6 +153,21 @@
     <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
     <script>
         const socket = io();
+    // 1. Μόλις συνδεθεί ο χρήστης, παίρνει το αποθηκευμένο φόντο
+socket.on('update_bg', (data) => {
+    if (data.url) {
+        document.body.style.backgroundImage = `url('${data.url}')`;
+        document.body.style.backgroundSize = "cover";
+        document.body.style.backgroundAttachment = "fixed";
+    }
+});
+
+// 2. Επίσης, αν ο server στείλει 'init_settings' (προαιρετικό ανάλογα τον server.py)
+socket.on('init_settings', (data) => {
+    if (data.background_url) {
+        document.body.style.backgroundImage = `url('${data.background_url}')`;
+    }
+});
         const chatInput = document.getElementById('chat-input');
         const chatBox = document.getElementById('chat-box');
 
@@ -178,30 +193,24 @@
         }
         draw();
 
-        function saveProfile() {
-    const data = {
-        // Στέλνουμε το ήδη υπάρχον όνομα, οπότε ο server δεν θα παραπονεθεί
-        display_name: document.getElementById('new-nickname').value, 
-        avatar_url: document.getElementById('new-avatar').value,
-        color: document.getElementById('new-color').value
-    };
+function saveProfile() {
+    const nick = document.getElementById('new-nickname').value;
+    const avat = document.getElementById('new-avatar').value;
+    const col = document.getElementById('new-color').value;
 
     fetch('/update_profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+            display_name: nick,
+            avatar_url: avat,
+            color: col
+        })
     }).then(r => {
-        if(r.ok) {
-            window.location.reload();
-        } else {
-            // Αν το όνομα είναι το ίδιο, ο server που φτιάξαμε πριν (με το id != current_user.id) 
-            // θα το δεχτεί κανονικά τώρα.
-            alert("Ενημερώθηκε το Χρώμα και το Avatar!");
-            window.location.reload();
-        }
+        if(r.ok) window.location.reload();
+        else alert("Σφάλμα στην αποθήκευση!");
     });
 }
-
         function sendMessage() {
             const content = chatInput.innerHTML.trim();
             if(content && content !== '<br>') { socket.emit('message', { content: content }); chatInput.innerHTML = ''; }
@@ -226,11 +235,16 @@
                 </div>`).join('');
         });
 
-        function handleFileUpload(input) {
-            const reader = new FileReader();
-            reader.onload = (e) => { socket.emit('admin_change_bg', { url: e.target.result }); };
-            reader.readAsDataURL(input.files[0]);
-        }
+function handleFileUpload(input) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const imageUrl = e.target.result;
+        // Στέλνουμε την εικόνα στον server για να την αποθηκεύσει μόνιμα
+        socket.emit('admin_change_bg', { url: imageUrl });
+    };
+    reader.readAsDataURL(input.files[0]);
+
+}
         socket.on('update_bg', (data) => { document.body.style.backgroundImage = `url('${data.url}')`; });
         chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
     </script>
