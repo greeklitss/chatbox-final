@@ -131,7 +131,7 @@ def handle_send_message(data):
 
 
 
-        create_app = app
+create_app = app
 # --- ΕΚΚΙΝΗΣΗ ---
 if __name__ == '__main__':
     with app.app_context():
