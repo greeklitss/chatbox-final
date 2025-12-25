@@ -1,106 +1,138 @@
 import eventlet
 eventlet.monkey_patch()
-import os
-from datetime import datetime
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+import os
+import random
+from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from flask_socketio import SocketIO, emit
+from authlib.integrations.flask_client import OAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 
-db = SQLAlchemy()
-migrate = Migrate()
-login_manager = LoginManager()
-socketio = SocketIO()
-ONLINE_USERS = {}
+# --- ΡΥΘΜΙΣΕΙΣ ΕΦΑΡΜΟΓΗΣ ---
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'radio-parea-secret-2025')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///radio.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# --- ΡΥΘΜΙΣΕΙΣ GOOGLE OAUTH ---
+# Αντικατάστησε αυτά με τα πραγματικά σου κλειδιά
+app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', 'YOUR_GOOGLE_CLIENT_ID')
+app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', 'YOUR_GOOGLE_CLIENT_SECRET')
+
+db = SQLAlchemy(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login_page'
+socketio = SocketIO(app, cors_allowed_origins="*")
+oauth = OAuth(app)
+
+google = oauth.register(
+    name='google',
+    client_id=app.config['GOOGLE_CLIENT_ID'],
+    client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
+)
+
+# --- ΜΟΝΤΕΛΑ ΒΑΣΗΣ ΔΕΔΟΜΕΝΩΝ ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     display_name = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=True)
-    role = db.Column(db.String(20), default='user')
-    color = db.Column(db.String(20), default='#D4AF37')
-    avatar_url = db.Column(db.String(256), nullable=True)
-    def check_password(self, password):
-        if not self.password_hash: return False
-        return check_password_hash(self.password_hash, password)
+    email = db.Column(db.String(120), unique=True, nullable=True)
+    password_hash = db.Column(db.String(256))
+    role = db.Column(db.String(20), default='user') # user, admin, owner
+    avatar_url = db.Column(db.String(255), default='/static/default_avatar.png')
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
+    author = db.relationship('User', backref=db.backref('messages', lazy=True))
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-def create_app():
-    app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'radio-parea-2025'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///radio.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
-    migrate.init_app(app, db)
-    login_manager.init_app(app)
-    socketio.init_app(app, cors_allowed_origins="*")
+# --- ΔΙΑΔΡΟΜΕΣ (ROUTES) ---
 
-    @app.route('/')
-    def index():
-        return render_template('index.html')
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-    @app.route('/login', methods=['GET', 'POST'])
-    def login_page():
-        if request.method == 'POST':
-            u = User.query.filter_by(display_name=request.form.get('username')).first()
-            if u and u.check_password(request.form.get('password')):
-                login_user(u)
-                return redirect(url_for('chat_page'))
-            flash('Λάθος όνομα ή κωδικός!')
-        return render_template('login.html')
+@app.route('/login', methods=['GET', 'POST'])
+def login_page():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = User.query.filter_by(display_name=username).first()
+        if user and check_password_hash(user.password_hash, password):
+            login_user(user)
+            return redirect(url_for('chat_page'))
+        flash('Λάθος όνομα χρήστη ή κωδικός πρόσβασης.')
+    return render_template('login.html')
 
-    @app.route('/chat')
-    @login_required
-    def chat_page():
-        return render_template('chat.html')
+# GOOGLE LOGIN ROUTES
+@app.route('/login/google')
+def google_login():
+    redirect_uri = url_for('google_authorize', _external=True)
+    return google.authorize_redirect(redirect_uri)
 
-    @app.route('/admin')
-    @login_required
-    def admin_panel():
-        if current_user.role not in ['admin', 'owner']: return redirect(url_for('chat_page'))
-        return render_template('admin_panel.html')
+@app.route('/login/google/authorize')
+def google_authorize():
+    try:
+        token = google.authorize_access_token()
+        resp = google.get('https://www.googleapis.com/oauth2/v3/userinfo')
+        user_info = resp.json()
+    except Exception as e:
+        flash(f"Σφάλμα κατά τη σύνδεση με Google: {str(e)}")
+        return redirect(url_for('login_page'))
 
-    @app.route('/check_login')
-    def check_login():
-        if current_user.is_authenticated: return jsonify({'id': current_user.id, 'role': current_user.role})
-        return jsonify({'error': 'unauthorized'}), 401
+    if user_info:
+        user = User.query.filter_by(email=user_info['email']).first()
+        if not user:
+            user = User(
+                display_name=user_info.get('name', user_info['email']),
+                email=user_info['email'],
+                avatar_url=user_info.get('picture', '/static/default_avatar.png'),
+                role='user'
+            )
+            db.session.add(user)
+            db.session.commit()
+        login_user(user)
+        return redirect(url_for('chat_page'))
+    return redirect(url_for('login_page'))
 
-    @app.route('/api/v1/admin/users')
-    @login_required
-    def get_users():
-        us = User.query.all()
-        return jsonify([{'id': u.id, 'display_name': u.display_name, 'role': u.role} for u in us])
+@app.route('/chat')
+@login_required
+def chat_page():
+    return render_template('chat.html')
 
-    @socketio.on('connect')
-    def handle_connect():
-        if current_user.is_authenticated:
-            ONLINE_USERS[request.sid] = {'display_name': current_user.display_name, 'avatar_url': current_user.avatar_url, 'color': current_user.color}
-            emit('user_list', list(ONLINE_USERS.values()), broadcast=True)
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
 
-    @socketio.on('clear_chat_request')
-    def clear_chat():
-        if current_user.role == 'owner': emit('message', {'content': 'CLEAN_EVENT'}, broadcast=True)
+# --- SOCKET.IO EVENTS ---
+@socketio.on('send_message')
+def handle_send_message(data):
+    if current_user.is_authenticated:
+        new_msg = Message(content=data['message'], author=current_user)
+        db.session.add(new_msg)
+        db.session.commit()
+        emit('receive_message', {
+            'message': data['message'],
+            'user': current_user.display_name,
+            'avatar': current_user.avatar_url,
+            'timestamp': new_msg.timestamp.strftime('%H:%M')
+        }, broadcast=True)
 
+# --- ΕΚΚΙΝΗΣΗ ---
+if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        if not User.query.filter_by(display_name="Admin").first():
-            admin = User(display_name="Admin", role="owner", password_hash=generate_password_hash("admin123"))
-            db.session.add(admin)
-            db.session.commit()
-    return app
-
-if __name__ == '__main__':
-    app = create_app()
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    # Στο Koyeb/Heroku χρησιμοποιούμε τη θύρα από το περιβάλλον
+    port = int(os.environ.get('PORT', 8000))
+    socketio.run(app, host='0.0.0.0', port=port)
