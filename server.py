@@ -1,4 +1,4 @@
- @app.route('/')
+    @app.route('/')
     def index():
         if current_user.is_authenticated:
             return redirect(url_for('chat_page'))
