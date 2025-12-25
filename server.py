@@ -10,9 +10,11 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, curren
 from flask_socketio import SocketIO, emit
 from authlib.integrations.flask_client import OAuth
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # --- ΡΥΘΜΙΣΕΙΣ ΕΦΑΡΜΟΓΗΣ ---
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'radio-parea-secret-2025')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///radio.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
