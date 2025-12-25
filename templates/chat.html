@@ -3,113 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Parea - Live</title>
+    <title>Radio Parea - Merry Christmas 🔥🎄</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Orbitron:wght@700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
-        :root { --gold: #D4AF37; }
-        body { background: #000; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background-size: cover !important; background-position: center !important; transition: background 0.5s ease; }
-        .header { background: rgba(0,0,0,0.85); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); z-index: 1000; min-height: 110px; }
+        :root { --gold: #D4AF37; --fire: #ff4500; --red: #ff0000; }
+        body { 
+            background: #000; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; 
+            background-size: cover !important; background-position: center !important; transition: background 0.5s ease;
+        }
+
+        /* ΧΙΟΝΙ & ΣΤΟΛΙΔΙΑ */
+        .snow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        .hanging-ornament { position: absolute; top: 0; font-size: 25px; z-index: 1001; animation: swing 3s infinite ease-in-out; transform-origin: top; }
+        @keyframes swing { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
+
+        /* HEADER & FLAMING DJ NAME */
+        .header { background: rgba(0,0,0,0.9); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); z-index: 1000; min-height: 125px; }
+        
+        #sonic_dj { 
+            font-family: 'Orbitron'; font-size: 1.5em !important; font-weight: bold; 
+            color: var(--gold) !important; text-transform: uppercase;
+            text-shadow: 0 0 10px var(--fire), 0 0 20px var(--fire);
+            animation: text-flicker 0.1s infinite alternate;
+        }
+        @keyframes text-flicker { from { opacity: 0.8; text-shadow: 0 0 10px var(--fire); } to { opacity: 1; text-shadow: 0 0 20px var(--fire), 2px 2px 5px #000; } }
+
+        .player-frame { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.8); padding: 10px 25px; border-radius: 60px; border: 2px solid var(--gold); position: relative; box-shadow: 0 0 25px var(--fire); }
+        .flame-wrapper { position: absolute; bottom: -8px; width: 100%; height: 15px; display: flex; justify-content: center; }
+        .flame { width: 18px; height: 18px; background: var(--fire); border-radius: 50% 0 50% 50%; transform: rotate(-45deg); animation: burn 0.4s infinite alternate; filter: blur(1px); opacity: 0.8; margin: 0 2px; }
+        @keyframes burn { from { transform: rotate(-45deg) scale(1); } to { transform: rotate(-45deg) scale(1.4) translateY(-8px); } }
+
+        #dj_profile img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--gold); box-shadow: 0 0 20px var(--gold); object-fit: cover; }
+
+        /* CHAT BOX */
         .main { display: flex; flex: 1; overflow: hidden; position: relative; z-index: 5; }
-        #chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.2); backdrop-filter: blur(4px); }
-        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .message { background: rgba(30, 30, 30, 0.8); padding: 12px 15px; border-radius: 15px; border-left: 4px solid var(--gold); align-self: flex-start; max-width: 85%; color: white; }
+        #chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); border: 2px solid rgba(212,175,55,0.2); margin: 5px; border-radius: 20px; }
+        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .message { background: rgba(25, 25, 25, 0.95); padding: 15px 20px; border-radius: 20px; border-left: 5px solid var(--gold); align-self: flex-start; max-width: 85%; color: white; font-size: 1.1em; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+
+        /* INPUT AREA & TOOLBAR */
         .input-area { background: rgba(0,0,0,0.95); padding: 15px; border-top: 2px solid var(--gold); }
-        #chat-input { flex: 1; padding: 12px; border-radius: 15px; border: 1px solid var(--gold); background: #111; color: white; outline: none; min-height: 40px; }
-        .sidebar { width: 180px; background: rgba(0,0,0,0.9); border-left: 2px solid var(--gold); padding-top: 15px; text-align: center; overflow-y: auto; }
-        .tool-btn { background: rgba(212,175,55,0.1); border: 1px solid var(--gold); color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
-        .modal-content { background: #111; margin: 10% auto; padding: 25px; border: 1px solid var(--gold); width: 320px; border-radius: 20px; color: white; }
+        .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+        #chat-input { flex: 1; padding: 15px; border-radius: 15px; border: 2px solid var(--gold); background: #111; color: white; outline: none; min-height: 45px; font-size: 1.2em; }
+        .tool-btn { background: rgba(212,175,55,0.1); border: 1px solid var(--gold); color: white; padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .tool-btn:hover { background: var(--gold); color: black; transform: scale(1.1); }
+        .emoji-btn { font-size: 1.4em; }
+
+        .sidebar { width: 180px; background: rgba(0,0,0,0.9); border-left: 2px solid var(--gold); padding-top: 20px; text-align: center; }
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); }
+        .modal-content { background: #111; margin: 10% auto; padding: 30px; border: 2px solid var(--gold); width: 320px; border-radius: 25px; color: white; box-shadow: 0 0 30px var(--gold); }
     </style>
 </head>
 <body>
+    <canvas class="snow" id="snowCanvas"></canvas>
+    
+    <div class="hanging-ornament" style="left: 5%;">🔔</div>
+    <div class="hanging-ornament" style="left: 15%; animation-delay: 0.5s;">🎄</div>
+    <div class="hanging-ornament" style="right: 15%; animation-delay: 1s;">🎁</div>
+    <div class="hanging-ornament" style="right: 5%; animation-delay: 1.5s;">⭐</div>
+
     <div class="header">
         <div style="display:flex; flex-direction:column; gap:8px;">
-            <button onclick="document.getElementById('setModal').style.display='block'" class="tool-btn"><i class="fas fa-cog"></i> ΡΥΘΜΙΣΕΙΣ</button>
-            <a href="{{ url_for('logout') }}" class="tool-btn" style="color:#ff4d4d; border-color:#ff4d4d; text-decoration:none;"><i class="fas fa-power-off"></i> ΕΞΟΔΟΣ</a>
+            <button onclick="document.getElementById('setModal').style.display='block'" class="tool-btn"><i class="fas fa-user-circle"></i> ΠΡΟΦΙΛ</button>
+            <a href="{{ url_for('logout') }}" class="tool-btn" style="color:var(--red); border-color:var(--red); text-decoration:none;"><i class="fas fa-power-off"></i> ΕΞΟΔΟΣ</a>
         </div>
-        <div style="color:white; font-family:'Dancing Script'; font-size:2em;">Radio Parea</div>
-        <div style="color:var(--gold); font-weight:bold;">LISTENERS: <span id="sonic_listeners">0</span></div>
+
+        <div class="player-frame">
+            <div class="flame-wrapper">
+                <div class="flame"></div><div class="flame"></div><div class="flame"></div><div class="flame"></div>
+            </div>
+            <button id="play-pause-btn" style="background:var(--gold); border:none; width:55px; height:55px; border-radius:50%; cursor:pointer; box-shadow: 0 0 15px var(--gold);">
+                <i class="fas fa-play" id="play-icon" style="font-size: 1.5em;"></i>
+            </button>
+            <div style="text-align: center;">
+                <div style="color:white; font-family:'Dancing Script'; font-size:1.8em; text-shadow: 0 0 15px var(--fire);">Radio Parea 🎅</div>
+                <input type="range" id="volume-control" min="0" max="1" step="0.1" value="0.5" style="accent-color:var(--gold); width:90px; cursor: pointer;">
+            </div>
+            <div style="text-align: left; min-width: 120px;">
+                <div id="sonic_title" style="color:var(--gold); font-size: 0.8em; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Radio Parea Live</div>
+                <div id="sonic_dj">DJ ON AIR</div>
+            </div>
+        </div>
+
+        <div style="text-align:center;">
+            <div id="dj_profile"></div>
+            <div style="color:var(--gold); font-size:0.8em; margin-top:8px; font-weight:bold; font-family: 'Orbitron';">AKPOATEΣ: <span id="sonic_listeners">0</span></div>
+        </div>
     </div>
 
     <div class="main">
         <div id="chat-window">
             <div id="chat-box">
                 {% for msg in history %}
-                <div class="message">
-                    <b style="color:{{msg.author.color}}">{{msg.author.display_name}}</b><br>
-                    <span>{{msg.content|safe}}</span>
-                </div>
+                <div class="message"><b style="color:{{msg.author.color}}">{{msg.author.display_name}}</b><br><span>{{msg.content|safe}}</span></div>
                 {% endfor %}
             </div>
             <div class="input-area">
-                <div style="display:flex; gap:10px;">
-                    <div id="chat-input" contenteditable="true"></div>
-                    <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 25px; border-radius:15px; font-weight:bold; cursor:pointer;">ΣΤΕΙΛΕ</button>
+                <div class="toolbar">
+                    <button class="tool-btn" onclick="document.execCommand('bold')"><b>B</b></button>
+                    <button class="tool-btn" onclick="document.execCommand('italic')"><i>I</i></button>
+                    <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:30px; height:30px; border-radius: 5px; cursor:pointer; background: none; border: 1px solid var(--gold);">
+                    <button onclick="addEmoji('🎅')" class="tool-btn emoji-btn">🎅</button>
+                    <button onclick="addEmoji('🎄')" class="tool-btn emoji-btn">🎄</button>
+                    <button onclick="addEmoji('🎁')" class="tool-btn emoji-btn">🎁</button>
+                    <button onclick="addEmoji('🔔')" class="tool-btn emoji-btn">🔔</button>
+                    <button onclick="addEmoji('❄️')" class="tool-btn emoji-btn">❄️</button>
+                    <button onclick="addEmoji('🔥')" class="tool-btn emoji-btn">🔥</button>
+                    <button onclick="addEmoji('🎶')" class="tool-btn emoji-btn">🎶</button>
+                    <button onclick="addEmoji('⭐')" class="tool-btn emoji-btn">⭐</button>
                 </div>
-                {% if current_user.role == 'owner' %}
-                <button class="tool-btn" onclick="socket.emit('clear_chat_request')" style="color:#ff4d4d; margin-top:10px;"><i class="fas fa-broom"></i> ΣΚΟΥΠΑ</button>
-                {% endif %}
+                <div style="display:flex; gap:10px;">
+                    <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι γιορτινό..."></div>
+                    <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer; font-size: 1.1em; box-shadow: 0 0 10px var(--gold);">ΣΤΕΙΛΕ</button>
+                </div>
             </div>
         </div>
-        <div class="sidebar">
-            <div style="color:var(--gold); font-weight:bold; margin-bottom:12px;">ONLINE</div>
-            <div id="user-list-content"></div>
-        </div>
+        <div class="sidebar"><div style="color:var(--gold); font-weight:bold; margin-bottom:15px; font-family: 'Orbitron';">ONLINE</div><div id="user-list-content"></div></div>
     </div>
 
     <div id="setModal" class="modal">
         <div class="modal-content">
-            <h3 style="color:var(--gold); text-align:center;">ΡΥΘΜΙΣΕΙΣ</h3>
+            <h3 style="color:var(--gold); text-align:center; font-family: 'Orbitron';">ΡΥΘΜΙΣΕΙΣ</h3>
+            <label style="font-size:0.8em; color:var(--gold)">ONOMA:</label>
+            <input type="text" id="new-nickname" value="{{ current_user.display_name }}" style="width:100%; padding:12px; margin-bottom:15px; background:#222; border:1px solid var(--gold); color:white; border-radius: 10px;">
+            <label style="font-size:0.8em; color:var(--gold)">URL ΕΙΚΟΝΑΣ ΠΡΟΦΙΛ:</label>
+            <input type="text" id="new-avatar" value="{{ current_user.avatar_url or '' }}" style="width:100%; padding:12px; margin-bottom:20px; background:#222; border:1px solid var(--gold); color:white; border-radius: 10px;">
+            <button onclick="saveProfile()" style="width:100%; padding:12px; background:var(--gold); border:none; font-weight:bold; cursor:pointer; border-radius: 10px; font-size: 1em;">ΑΠΟΘΗΚΕΥΣΗ</button>
             {% if current_user.role == 'owner' %}
-            <div style="border-top:1px solid #444; padding-top:10px;">
-                <p style="color:var(--gold); font-weight:bold;">ADMIN: ΦΟΝΤΟ</p>
+            <div style="margin-top:20px; border-top:1px dashed #555; padding-top:15px;">
                 <input type="file" id="bg-upload" style="display:none;" onchange="handleFileUpload(this)">
-                <button onclick="document.getElementById('bg-upload').click()" style="width:100%; padding:10px; background:var(--gold); border:none; border-radius:5px; cursor:pointer;">ΑΛΛΑΓΗ ΦΟΝΤΟΥ</button>
+                <button onclick="document.getElementById('bg-upload').click()" style="width:100%; padding:10px; background:var(--fire); color:white; border:none; cursor:pointer; border-radius: 10px; font-weight: bold;">ΑΛΛΑΓΗ ΦΟΝΤΟΥ (ALL)</button>
             </div>
             {% endif %}
-            <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; margin-top:20px; background:none; color:gray; border:none; cursor:pointer;">Κλείσιμο</button>
+            <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; margin-top:15px; background:none; color:gray; border:none; cursor:pointer;">Ακύρωση</button>
         </div>
     </div>
 
+    <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
     <script>
         const socket = io();
         const chatInput = document.getElementById('chat-input');
         const chatBox = document.getElementById('chat-box');
 
+        function addEmoji(e) { chatInput.innerHTML += e; chatInput.focus(); }
+
+        const radio = new Audio('https://or.mysonicserver.com:8050/;');
+        radio.volume = 0.5;
+        document.getElementById('play-pause-btn').onclick = () => {
+            if (radio.paused) { radio.play(); document.getElementById('play-icon').className = 'fas fa-pause'; }
+            else { radio.pause(); document.getElementById('play-icon').className = 'fas fa-play'; }
+        };
+        document.getElementById('volume-control').oninput = function() { radio.volume = this.value; };
+
+        // SNOW EFFECT
+        const canvas = document.getElementById('snowCanvas'); const ctx = canvas.getContext('2d'); let particles = [];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.onresize = resize; resize();
+        function draw() {
+            ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "white"; ctx.beginPath();
+            if(particles.length < 100) particles.push({x:Math.random()*canvas.width, y:-10, r:Math.random()*3+1, d:Math.random()*1.2});
+            for(let p of particles) { ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); p.y += 1 + p.d; if(p.y > canvas.height) p.y = -10; }
+            ctx.fill(); requestAnimationFrame(draw);
+        }
+        draw();
+
+        function saveProfile() {
+            fetch('/update_profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ display_name: document.getElementById('new-nickname').value, avatar_url: document.getElementById('new-avatar').value })
+            }).then(r => { if(r.ok) window.location.reload(); else alert("Σφάλμα στην αποθήκευση!"); });
+        }
+
         function sendMessage() {
             const content = chatInput.innerHTML.trim();
-            if(content) { socket.emit('message', { content: content }); chatInput.innerHTML = ''; }
+            if(content && content !== '<br>') { socket.emit('message', { content: content }); chatInput.innerHTML = ''; }
         }
 
         socket.on('message', (msg) => {
-            const div = document.createElement('div');
-            div.className = 'message';
-            div.innerHTML = `<b style="color:${msg.color}">${msg.display_name}</b><br><span>${msg.content}</span>`;
+            const div = document.createElement('div'); div.className = 'message';
+            let c = msg.content;
+            const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
+            c = c.replace(imgRegex, (u) => `<br><img src="${u}" style="max-width:100%; border-radius:10px; margin-top:10px; border: 2px solid var(--gold);">`);
+            const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            c = c.replace(ytRegex, (u, id) => `<br><iframe width="100%" height="250" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:15px; border: 2px solid var(--fire);"></iframe>`);
+            div.innerHTML = `<b style="color:${msg.color}">${msg.display_name}</b><br><span>${c}</span>`;
             chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
         });
 
-        socket.on('clear_chat_client', () => { chatBox.innerHTML = ''; });
-
         socket.on('users_update', (users) => {
             document.getElementById('user-list-content').innerHTML = users.map(u => `
-                <div style="margin-bottom:10px;">
-                    <img src="${u.avatar_url}" style="width:40px; height:40px; border-radius:50%; border:2px solid ${u.color};">
-                    <div style="color:${u.color}; font-size:0.8em;">${u.display_name}</div>
+                <div style="margin-bottom:15px; display:flex; flex-direction:column; align-items:center;">
+                    <img src="${u.avatar_url}" style="width:50px; height:50px; border-radius:50%; border:2px solid ${u.color}; box-shadow: 0 0 10px ${u.color}; object-fit:cover;">
+                    <div style="color:${u.color}; font-size:0.85em; font-weight:bold; margin-top:5px;">${u.display_name}</div>
                 </div>`).join('');
         });
 
         function handleFileUpload(input) {
             const reader = new FileReader();
-            reader.onload = (e) => {
-                document.body.style.backgroundImage = `url('${e.target.result}')`;
-                socket.emit('admin_change_bg', { url: e.target.result });
-            };
+            reader.onload = (e) => { socket.emit('admin_change_bg', { url: e.target.result }); };
             reader.readAsDataURL(input.files[0]);
         }
-
         socket.on('update_bg', (data) => { document.body.style.backgroundImage = `url('${data.url}')`; });
+        chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
     </script>
 </body>
 </html>
