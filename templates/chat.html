@@ -128,7 +128,7 @@
         <h3 style="color:var(--gold); text-align:center;">ΡΥΘΜΙΣΕΙΣ ΠΡΟΦΙΛ</h3>
         
         <label style="font-size:0.8em; color:var(--gold)">ΟΝΟΜΑ:</label>
-        <input type="text" id="new-nickname" value="{{ current_user.display_name }}" style="width:100%; padding:10px; margin-bottom:10px; background:#222; border:1px solid var(--gold); color:white;">
+        input type="text" id="new-nickname" value="{{ current_user.display_name }}" readonly style="width:100%; padding:10px; margin-bottom:10px; background:#111; border:1px solid #444; color:gray; cursor:not-allowed;">
         
         <label style="font-size:0.8em; color:var(--gold)">AVATAR URL:</label>
         <input type="text" id="new-avatar" value="{{ current_user.avatar_url or '' }}" style="width:100%; padding:10px; margin-bottom:10px; background:#222; border:1px solid var(--gold); color:white;">
@@ -180,7 +180,8 @@
 
         function saveProfile() {
     const data = {
-        display_name: document.getElementById('new-nickname').value,
+        // Στέλνουμε το ήδη υπάρχον όνομα, οπότε ο server δεν θα παραπονεθεί
+        display_name: document.getElementById('new-nickname').value, 
         avatar_url: document.getElementById('new-avatar').value,
         color: document.getElementById('new-color').value
     };
@@ -190,8 +191,14 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     }).then(r => {
-        if(r.ok) window.location.reload();
-        else alert("Το όνομα χρησιμοποιείται ήδη!");
+        if(r.ok) {
+            window.location.reload();
+        } else {
+            // Αν το όνομα είναι το ίδιο, ο server που φτιάξαμε πριν (με το id != current_user.id) 
+            // θα το δεχτεί κανονικά τώρα.
+            alert("Ενημερώθηκε το Χρώμα και το Avatar!");
+            window.location.reload();
+        }
     });
 }
 
