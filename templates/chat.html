@@ -6,7 +6,7 @@
     <title>Radio Parea - Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Orbitron:wght@700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
         :root { --gold: #D4AF37; }
         body { 
@@ -14,38 +14,25 @@
             background-size: cover !important; background-position: center center !important;
             background-repeat: no-repeat; background-attachment: fixed; transition: background 0.5s ease;
         }
-        
-        /* HEADER - PLAYER & METADATA */
         .header { background: rgba(0,0,0,0.85); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); z-index: 1000; min-height: 110px; position: relative; }
-        
-        /* ΦΩΤΟΡΥΘΜΙΚΑ ΣΕ ΟΛΟ ΤΟ ΦΟΝΤΟ */
         .disco-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
         .light { position: absolute; width: 200px; height: 200px; border-radius: 50%; filter: blur(80px); opacity: 0.3; animation: strobe 0.8s infinite alternate; }
         .l1 { top: 15%; left: 15%; background: #ff0000; }
         .l2 { bottom: 15%; right: 15%; background: #0000ff; animation-delay: 0.4s; }
         @keyframes strobe { from { opacity: 0.1; transform: scale(0.8); } to { opacity: 0.4; transform: scale(1.2); } }
-
-        /* DJ & PLAYER ELEMENTS */
         #dj_profile img { width: 80px !important; height: 80px !important; border-radius: 50% !important; border: 2px solid var(--gold) !important; object-fit: contain !important; background: #111; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
         #sonic_dj { font-family: 'Orbitron'; color: var(--gold); text-shadow: 0 0 10px red; font-weight: bold; }
         .player-container { background: rgba(212, 175, 55, 0.1); padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(212, 175, 55, 0.3); display: flex; align-items: center; gap: 12px; z-index: 1005; }
-
         .main { display: flex; flex: 1; overflow: hidden; position: relative; z-index: 5; }
         #chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.2); backdrop-filter: blur(4px); }
         #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        
-        /* MESSAGES */
-        .message { background: rgba(30, 30, 30, 0.8); padding: 12px 15px; border-radius: 15px; border-left: 4px solid var(--gold); align-self: flex-start; max-width: 85%; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-
-        /* INPUT AREA & TOOLBAR */
+        .message { background: rgba(30, 30, 30, 0.8); padding: 12px 15px; border-radius: 15px; border-left: 4px solid var(--gold); align-self: flex-start; max-width: 85%; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-bottom: 5px; }
         .input-area { background: rgba(0,0,0,0.95); padding: 15px; border-top: 2px solid var(--gold); }
         .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-        #chat-input { flex: 1; padding: 12px; border-radius: 15px; border: 1px solid var(--gold); background: #111; color: white; outline: none; min-height: 40px; }
-        
+        #chat-input { flex: 1; padding: 12px; border-radius: 15px; border: 1px solid var(--gold); background: #111; color: white; outline: none; min-height: 40px; overflow-y: auto; }
         .tool-btn { background: rgba(212,175,55,0.1); border: 1px solid var(--gold); color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; }
         .tool-btn:hover { background: var(--gold); color: black; }
-
-        .sidebar { width: 180px; background: rgba(0,0,0,0.9); border-left: 2px solid var(--gold); padding-top: 15px; text-align: center; }
+        .sidebar { width: 180px; background: rgba(0,0,0,0.9); border-left: 2px solid var(--gold); padding-top: 15px; text-align: center; overflow-y: auto; }
         .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
         .modal-content { background: #111; margin: 10% auto; padding: 25px; border: 1px solid var(--gold); width: 320px; border-radius: 20px; color: white; }
     </style>
@@ -99,14 +86,14 @@
                 </div>
                 
                 <div style="display:flex; gap:10px;">
-                    <div id="chat-input" contenteditable="true" placeholder="Γράψτε στην παρέα..."></div>
+                    <div id="chat-input" contenteditable="true"></div>
                     <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 25px; border-radius:15px; font-weight:bold; cursor:pointer;">ΣΤΕΙΛΕ</button>
                 </div>
             </div>
         </div>
         
         <div class="sidebar">
-            <div style="color:var(--gold); font-weight:bold; margin-bottom:12px; font-size:0.9em;">ONLINE</div>
+            <div style="color:var(--gold); font-weight:bold; margin-bottom:12px; font-size:0.9em;">ONLINE USERS</div>
             <div id="user-list-content"></div>
         </div>
     </div>
@@ -115,18 +102,10 @@
         <div class="modal-content">
             <h3 style="color:var(--gold); text-align:center; margin-top:0;">ΠΡΟΦΙΛ</h3>
             <label>Avatar URL:</label>
-            <input type="text" id="new-avatar" style="width:100%; padding:8px; margin:10px 0; background:#222; border:1px solid #444; color:white;">
+            <input type="text" id="new-avatar" value="{{ current_user.avatar_url or '' }}" style="width:100%; padding:8px; margin:10px 0; background:#222; border:1px solid #444; color:white;">
             
             <label>Χρώμα Ονόματος:</label>
-            <input type="color" id="new-color" style="width:100%; height:40px; margin:10px 0; border:none; cursor:pointer; background:none;">
-
-            {% if current_user.role == 'owner' %}
-            <div style="margin-top:15px; padding-top:15px; border-top:1px dashed #555;">
-                <p style="color:var(--gold); font-weight:bold; text-align:center;">ADMIN: ΦΟΝΤΟ ΣΕΛΙΔΑΣ</p>
-                <input type="file" id="bg-upload" style="display:none;" onchange="handleFileUpload(this)">
-                <button onclick="document.getElementById('bg-upload').click()" style="width:100%; padding:10px; background:var(--gold); color:black; font-weight:bold; border:none; border-radius:5px; cursor:pointer;">ΑΛΛΑΓΗ ΕΙΚΟΝΑΣ</button>
-            </div>
-            {% endif %}
+            <input type="color" id="new-color" value="{{ current_user.color }}" style="width:100%; height:40px; margin:10px 0; border:none; cursor:pointer; background:none;">
 
             <button onclick="saveSettings()" style="width:100%; padding:12px; background:var(--gold); color:black; font-weight:bold; margin-top:20px; border-radius:10px; border:none; cursor:pointer;">ΑΠΟΘΗΚΕΥΣΗ</button>
             <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; background:none; color:gray; border:none; margin-top:10px; cursor:pointer;">Άκυρο</button>
@@ -152,45 +131,42 @@
 
         chatInput.onkeypress = (e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
 
+        // Λήψη μηνυμάτων και Σκούπας
         socket.on('message', (msg) => {
-            if(msg.content === 'CLEAN_EVENT') { chatBox.innerHTML = ''; return; }
             const div = document.createElement('div');
             div.className = 'message';
             div.innerHTML = `<b style="color:${msg.color}">${msg.display_name}</b><br><span>${msg.content}</span>`;
-            chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
+            chatBox.appendChild(div); 
+            chatBox.scrollTop = chatBox.scrollHeight;
         });
 
-        // RADIO
+        socket.on('clear_chat_client', () => {
+            chatBox.innerHTML = '';
+        });
+
+        // Λήψη Online χρηστών (Συγχρονισμένο με τον server)
+        socket.on('users_update', (users) => {
+            console.log("Users update received:", users);
+            document.getElementById('user-list-content').innerHTML = users.map(u => `
+                <div style="margin-bottom:12px; display: flex; flex-direction: column; align-items: center;">
+                    <img src="${u.avatar_url || 'https://ui-avatars.com/api/?name='+u.display_name}" style="width:45px; height:45px; border-radius:50%; border:2px solid ${u.color}; object-fit:cover;">
+                    <div style="color:${u.color}; font-size:0.75em; font-weight:bold;">${u.display_name}</div>
+                </div>`).join('');
+        });
+
+        // RADIO PLAYER
         const radio = new Audio('https://or.mysonicserver.com:8050/;');
         document.getElementById('play-pause-btn').onclick = () => {
             if (radio.paused) { radio.play(); document.getElementById('play-icon').className='fas fa-pause'; }
             else { radio.pause(); document.getElementById('play-icon').className='fas fa-play'; }
         };
 
-        // BACKGROUND ADMIN
-        function handleFileUpload(input) {
-            const reader = new FileReader();
-            reader.onload = (e) => socket.emit('admin_change_bg', { url: e.target.result });
-            reader.readAsDataURL(input.files[0]);
-        }
-        function applyBg(data) {
-            if(data.url) document.body.style.backgroundImage = `url('${data.url}')`;
-        }
-        socket.on('init_background', applyBg);
-        socket.on('update_bg', applyBg);
-
         function saveSettings() {
-            socket.emit('update_profile', { color: document.getElementById('new-color').value, avatar_url: document.getElementById('new-avatar').value });
+            socket.emit('update_profile', { 
+                new_avatar: document.getElementById('new-avatar').value 
+            });
             document.getElementById('setModal').style.display = 'none';
         }
-
-        socket.on('user_list', (users) => {
-            document.getElementById('user-list-content').innerHTML = users.map(u => `
-                <div style="margin-bottom:12px;">
-                    <img src="${u.avatar_url || 'https://ui-avatars.com/api/?name='+u.display_name}" style="width:45px; height:45px; border-radius:50%; border:2px solid ${u.color}; object-fit:cover;">
-                    <div style="color:${u.color}; font-size:0.75em; font-weight:bold;">${u.display_name}</div>
-                </div>`).join('');
-        });
     </script>
 </body>
 </html>
