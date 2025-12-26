@@ -52,33 +52,26 @@
 
         /* CHAT BOX */
         .main { display: flex; flex: 1; overflow: hidden; position: relative; z-index: 5; }
-/* 1. ΚΑΝΟΥΜΕ ΤΟ ΠΑΡΑΘΥΡΟ ΤΟΥ CHAT ΔΙΑΦΑΝΟ */
+/* Κάνουμε το κεντρικό παράθυρο πιο διάφανο για να φαίνεται η εικόνα */
 #chat-window { 
-    background: transparent !important; /* Εντελώς διάφανο */
-    border: none !important;            /* Αφαιρούμε τα περιγράμματα */
-    backdrop-filter: none !important;   /* Αφαιρούμε το θόλωμα */
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    background: rgba(0, 0, 0, 0.2); /* Πολύ διάφανο για να φαίνεται το δέντρο */
+    backdrop-filter: blur(3px);    /* Ελαφρύ θόλωμα για να διαβάζονται τα γράμματα */
+    border: 1px solid rgba(212, 175, 55, 0.3); 
+    margin: 5px; 
+    border-radius: 20px; 
 }
 
-/* 2. ΚΑΝΟΥΜΕ ΤΑ ΜΗΝΥΜΑΤΑ ΔΙΑΦΑΝΑ */
+/* Τα μηνύματα να είναι ελαφρώς πιο διάφανα */
 .message { 
-    background: transparent !important; /* Κανένα χρώμα στο φόντο των μηνυμάτων */
-    border: none !important;            /* Αφαιρούμε κάθε γραμμή/πλαίσιο */
-    padding: 5px 10px;                  /* Λίγος χώρος για να μην κολλάνε */
-    margin-bottom: 5px;
-    color: white !important;
-    text-shadow: 1px 1px 3px rgba(0,0,0,1); /* Σκιά στα γράμματα για να διαβάζονται πάνω στην εικόνα */
+    background: rgba(20, 20, 20, 0.7); /* Από 0.95 στο 0.7 */
+    padding: 12px 18px; 
+    border-radius: 15px; 
+    margin-bottom: 8px;
 }
-
-/* 3. ΒΕΒΑΙΩΝΟΜΑΣΤΕ ΟΤΙ ΤΟ ΦΟΝΤΟ ΤΗΣ ΣΕΛΙΔΑΣ ΕΙΝΑΙ ΣΩΣΤΟ */
-body {
-    background-size: cover !important;
-    background-position: center !important;
-    background-attachment: fixed !important;
-    background-repeat: no-repeat !important;
-
-
-
-}        /* INPUT AREA & TOOLBAR */
+        /* INPUT AREA & TOOLBAR */
         .input-area { background: rgba(0, 0, 0, 0.7); padding: 15px; border-top: 2px solid var(--gold); }
         .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
         #chat-input { flex: 1; padding: 15px; border-radius: 15px; border: 2px solid var(--gold); background: #111; color: white; outline: none; min-height: 45px; font-size: 1.2em; }
