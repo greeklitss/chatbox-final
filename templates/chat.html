@@ -152,6 +152,11 @@
         .modal-content { background: #111; margin: 10% auto; padding: 30px; border: 2px solid var(--gold); width: 320px; border-radius: 25px; color: white; box-shadow: 0 0 30px var(--gold); }
         
         input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--gold); background: #222; color: white; }
+       
+        #setModal[style*="display:block"] ~ .main {
+            filter: blur(8px);
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -224,19 +229,28 @@
         </div>
     </div>
 
-    <div id="setModal" class="modal">
-        <div class="modal-content">
-            <h3 style="text-align:center; color:var(--gold);">ΡΥΘΜΙΣΕΙΣ</h3>
-            <label>Όνομα:</label>
-            <input type="text" id="new-nickname" value="{{ current_user.display_name }}">
-            <label>Avatar URL:</label>
-            <input type="text" id="new-avatar" value="{{ current_user.avatar_url or '' }}">
-            <label>Χρώμα Ονόματος:</label>
-            <input type="color" id="new-color" value="{{ current_user.color }}">
-            <button onclick="saveProfile()" style="width:100%; background:var(--gold); border:none; padding:10px; margin-top:10px; cursor:pointer; font-weight:bold;">ΑΠΟΘΗΚΕΥΣΗ</button>
-            <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; background:none; color:gray; border:none; margin-top:10px; cursor:pointer;">Ακύρωση</button>
-        </div>
+    <div id="setModal" class="modal" style="{% if not current_user.has_setup_profile %} display:block; backdrop-filter: blur(15px); {% endif %}">
+    <div class="modal-content" style="border: 2px solid var(--fire); box-shadow: 0 0 30px var(--fire);">
+        <h3 style="text-align:center; color:var(--gold); font-family:'Orbitron';">
+            {% if not current_user.has_setup_profile %} ΚΑΛΩΣΗΡΘΕΣ! ΦΤΙΑΞΕ ΤΟ ΠΡΟΦΙΛ ΣΟΥ {% else %} ΡΥΘΜΙΣΕΙΣ {% endif %}
+        </h3>
+        
+        <label>Όνομα (Nickname):</label>
+        <input type="text" id="new-nickname" value="{{ current_user.display_name }}" placeholder="Γράψε το όνομά σου...">
+        
+        <label>Avatar URL (Link εικόνας):</label>
+        <input type="text" id="new-avatar" value="{{ current_user.avatar_url or '' }}" placeholder="https://link.to-your-image.png">
+        
+        <label>Χρώμα Ονόματος στο Chat:</label>
+        <input type="color" id="new-color" value="{{ current_user.color or '#D4AF37' }}">
+        
+        <button onclick="saveProfile()" style="width:100%; background:var(--gold); border:none; padding:15px; margin-top:10px; cursor:pointer; font-weight:bold; border-radius:10px; font-size:1.1em;">ΑΠΟΘΗΚΕΥΣΗ & ΕΙΣΟΔΟΣ</button>
+        
+        {% if current_user.has_setup_profile %}
+        <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; background:none; color:gray; border:none; margin-top:10px; cursor:pointer;">Ακύρωση</button>
+        {% endif %}
     </div>
+</div>
 
     <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
     <script>
@@ -324,18 +338,36 @@
             }
         });
 
-        function saveProfile() {
-            const data = {
-                display_name: document.getElementById('new-nickname').value,
-                avatar_url: document.getElementById('new-avatar').value,
-                color: document.getElementById('new-color').value
-            };
-            fetch('/update_profile', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            }).then(r => r.ok ? window.location.reload() : alert("Σφάλμα!"));
+function saveProfile() {
+        const nick = document.getElementById('new-nickname').value;
+        const av = document.getElementById('new-avatar').value;
+        const col = document.getElementById('new-color').value;
+
+        if (!nick || nick.trim() === "") {
+            alert("Πρέπει να βάλεις ένα όνομα!");
+            return;
         }
+
+        const data = {
+            display_name: nick,
+            avatar_url: av || "https://i.imgur.com/6VBx3io.png",
+            color: col
+        };
+
+        fetch('/update_profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(async r => {
+    const responseData = await r.json();
+    if (r.ok) {
+        window.location.reload();
+    } else {
+        // Εδώ εμφανίζουμε το μήνυμα σφάλματος από τον σέρβερ (π.χ. "Το όνομα χρησιμοποιείται ήδη")
+        alert(responseData.message || "Σφάλμα στην αποθήκευση!");
+    }
+});
+
 
         chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 
@@ -360,6 +392,7 @@ function updateDJImage() {
 
 // Εκτέλεση κάθε 5 δευτερόλεπτα για να αλλάζει η φωτό όταν αλλάζει ο DJ
 setInterval(updateDJImage, 5000);
+
 
 </script>
 </body>

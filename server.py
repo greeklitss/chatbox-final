@@ -3,6 +3,7 @@ eventlet.monkey_patch()
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
@@ -39,7 +40,8 @@ def get_online_users_list():
         })
     return users_data
 
-class User(UserMixin, db.Model):
+class User(UserMixin, db.Model):  
+    has_setup_profile = db.Column(db.Boolean, default=False)
     id = db.Column(db.Integer, primary_key=True)
     display_name = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True) 
@@ -111,17 +113,66 @@ def create_app():
         user_info = oauth.google.parse_id_token(token, nonce=session.pop('nonce', None))
         user = User.query.filter_by(email=user_info.get('email')).first()
         if not user:
-            user = User(email=user_info.get('email'), display_name=user_info.get('name'), color=random.choice(CHAT_COLORS), avatar_url=user_info.get('picture'))
+            user = User(
+                email=user_info.get('email'), 
+                display_name=user_info.get('name', 'User' + str(random.randint(1000, 9999))), 
+                color=random.choice(CHAT_COLORS), 
+                avatar_url=user_info.get('picture'),
+                has_setup_profile=False # Αυτό θα πετάξει το Modal στο HTML
+            )
             db.session.add(user)
             db.session.commit()
-        login_user(user, remember=True)
-        return redirect(url_for('chat_page'))
+        
+    login_user(user, remember=True)
+    return redirect(url_for('chat_page'))
 
     @app.route('/chat')
     @login_required
     def chat_page():
         history = Message.query.order_by(Message.timestamp.asc()).limit(50).all()
         return render_template('chat.html', history=history)
+
+
+    @app.route('/update_profile', methods=['POST'])
+    @login_required
+    def update_profile():
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "No data"}), 400
+        # --- ΕΔΩ ΠΡΟΣΘΕΤΟΥΜΕ ΤΟΝ ΕΛΕΓΧΟ ---
+        new_name = data.get('display_name')
+        if new_name:
+            # Ψάχνουμε αν το όνομα υπάρχει σε ΑΛΛΟΝ χρήστη (όχι στον εαυτό μας)
+            existing_user = User.query.filter(User.display_name == new_name, User.id != current_user.id).first()
+            if existing_user:
+                return jsonify({"status": "error", "message": "Το όνομα χρησιμοποιείται ήδη!"}), 400
+
+        # Ενημέρωση στοιχείων στη βάση
+        current_user.display_name = data.get('display_name',  
+        current_user.display_name)
+        current_user.avatar_url = data.get('avatar_url', 
+        current_user.avatar_url)
+        current_user.color = data.get('color', current_user.color)
+        current_user.has_setup_profile = True
+        
+        try:
+            db.session.commit()
+            
+            # Ενημέρωση της μνήμης (ONLINE_USERS) για να φαίνονται οι αλλαγές αμέσως
+            for sid, info in ONLINE_USERS.items():
+                if info['id'] == current_user.id:
+                    info['display_name'] = current_user.display_name
+                    info['avatar_url'] = current_user.avatar_url
+                    info['color'] = current_user.color
+
+            # ΣΤΕΛΝΟΥΜΕ ΤΗΝ ΕΝΗΜΕΡΩΜΕΝΗ ΛΙΣΤΑ ΣΕ ΟΛΟΥΣ
+            socketio.emit('users_update', get_online_users_list(), broadcast=True)
+            
+            return jsonify({"status": "success"}), 200
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"status": "error", "message": str(e)}), 500
+
 
 
     @app.route('/logout')
@@ -148,7 +199,15 @@ def create_app():
             new_msg = Message(content=data['content'], author=current_user)
             db.session.add(new_msg)
             db.session.commit()
-            emit('message', {'display_name': current_user.display_name, 'content': data['content'], 'color': current_user.color, 'avatar_url': current_user.avatar_url}, broadcast=True)
+            
+            # Δημιουργία αυτόματου avatar αν το πεδίο είναι κενό
+            avatar = current_user.avatar_url or f"https://ui-avatars.com/api/?name={current_user.display_name}&background=random"
+
+            emit('message', {
+                'display_name': current_user.display_name, 
+                'content': data['content'],
+                'color': current_user.color,
+                'avatar_url': avatar }, broadcast=True)
 
     @socketio.on('clear_chat_request')
     def clear_chat():
