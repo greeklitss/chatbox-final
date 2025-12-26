@@ -345,6 +345,22 @@
                 span.innerHTML = processMessageContent(span.innerHTML);
             });
             chatBox.scrollTop = chatBox.scrollHeight; 
-        });    </script>
+        });
+// Λειτουργία για την αυτόματη ενημέρωση της εικόνας του DJ
+function updateDJImage() {
+    const djProfileDiv = document.getElementById('dj_profile');
+    // Το widget της SonicPanel αποθηκεύει την εικόνα σε μια παγκόσμια μεταβλητή ή στοιχείο
+    // Δοκιμάζουμε να πάρουμε την εικόνα από το sonic_js widget
+    const internalDJImg = document.querySelector('.sonic_dj_picture img'); 
+    
+    if (internalDJImg && djProfileDiv) {
+        djProfileDiv.innerHTML = `<img src="${internalDJImg.src}" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--gold); box-shadow: 0 0 20px var(--gold); object-fit: cover;">`;
+    }
+}
+
+// Εκτέλεση κάθε 5 δευτερόλεπτα για να αλλάζει η φωτό όταν αλλάζει ο DJ
+setInterval(updateDJImage, 5000);
+
+</script>
 </body>
 </html>
