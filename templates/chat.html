@@ -8,22 +8,32 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
-body { 
-    background: url('/static/radioparea.png') no-repeat center center fixed !important; 
-    background-size: cover; 
-    margin: 0; 
-    height: 100vh; 
-    display: flex; 
-    flex-direction: column;
+:root {
+    --gold: #D4AF37;
+    --fire: #ff4400;
+    --red: #ff4444;
 }
 
-  /* ΧΙΟΝΙ & ΣΤΟΛΙΔΙΑ */
-        .snow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
-        .hanging-ornament { position: absolute; top: 0; font-size: 25px; z-index: 1001; animation: swing 3s infinite ease-in-out; transform-origin: top; }
-        @keyframes swing { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
+
+/* Φτιάχνουμε το χιόνι να είναι ΠΑΝΩ από όλα */
+         .snow { 
+             position: fixed; 
+             top: 0; 
+             left: 0; 
+             width: 100%; 
+             height: 100%; 
+             pointer-events: none; 
+             z-index: 9999; /* Το βάζουμε τέρμα μπροστά */
+}        
+
+
+
+
+         @keyframes swing { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
 
         /* HEADER & FLAMING DJ NAME */
-        .header { background: rgba(0,0,0,0.9); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); z-index: 1000; min-height: 125px; }
+        .header {
+            background: rgba(0, 0, 0, 0.6); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); z-index: 1000; min-height: 125px; }
         
         #sonic_dj { 
             font-family: 'Orbitron'; font-size: 1.5em !important; font-weight: bold; 
@@ -42,26 +52,50 @@ body {
 
         /* CHAT BOX */
         .main { display: flex; flex: 1; overflow: hidden; position: relative; z-index: 5; }
-        #chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); border: 2px solid rgba(212,175,55,0.2); margin: 5px; border-radius: 20px; }
-       #chat-box {
-    height: 500px;          /* Ή όποιο ύψος θέλεις εσύ */
-    overflow-y: auto;       /* Εμφανίζει scrollbar όταν χρειάζεται */
-    display: flex;
-    flex-direction: column; /* Τα μηνύματα το ένα κάτω από το άλλο */
+/* Κάνουμε το κεντρικό παράθυρο πιο διάφανο για να φαίνεται η εικόνα */
+#chat-window { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    background: rgba(0, 0, 0, 0.2); /* Πολύ διάφανο για να φαίνεται το δέντρο */
+    backdrop-filter: blur(3px);    /* Ελαφρύ θόλωμα για να διαβάζονται τα γράμματα */
+    border: 1px solid rgba(212, 175, 55, 0.3); 
+    margin: 5px; 
+    border-radius: 20px; 
 }
-        .message { background: rgba(25, 25, 25, 0.95); padding: 15px 20px; border-radius: 20px; border-left: 5px solid var(--gold); align-self: flex-start; max-width: 85%; color: white; font-size: 1.1em; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
+/* Τα μηνύματα να είναι ελαφρώς πιο διάφανα */
+.message { 
+    background: rgba(20, 20, 20, 0.7); /* Από 0.95 στο 0.7 */
+    padding: 12px 18px; 
+    border-radius: 15px; 
+    margin-bottom: 8px;
+}
         /* INPUT AREA & TOOLBAR */
-        .input-area { background: rgba(0,0,0,0.95); padding: 15px; border-top: 2px solid var(--gold); }
+        .input-area { background: rgba(0, 0, 0, 0.7); padding: 15px; border-top: 2px solid var(--gold); }
         .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
         #chat-input { flex: 1; padding: 15px; border-radius: 15px; border: 2px solid var(--gold); background: #111; color: white; outline: none; min-height: 45px; font-size: 1.2em; }
         .tool-btn { background: rgba(212,175,55,0.1); border: 1px solid var(--gold); color: white; padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; }
         .tool-btn:hover { background: var(--gold); color: black; transform: scale(1.1); }
         .emoji-btn { font-size: 1.4em; }
 
-        .sidebar { width: 180px; background: rgba(0,0,0,0.9); border-left: 2px solid var(--gold); padding-top: 20px; text-align: center; }
+        .sidebar { width: 180px; background: rgba(0, 0, 0, 0.5); border-left: 2px solid var(--gold); padding-top: 20px; text-align: center; }
         .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); }
         .modal-content { background: #111; margin: 10% auto; padding: 30px; border: 2px solid var(--gold); width: 320px; border-radius: 25px; color: white; box-shadow: 0 0 30px var(--gold); }
+
+/* Πρόσθεσε αυτό στο τέλος του style σου */
+#chat-box::-webkit-scrollbar {
+    width: 6px; /* Το πάχος της μπάρας */
+}
+
+#chat-box::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1); /* Το φόντο της μπάρας */
+}
+
+#chat-box::-webkit-scrollbar-thumb {
+    background: var(--gold); /* Το χρυσό χρώμα που ορίσαμε στο root */
+    border-radius: 10px;      /* Να είναι στρογγυλεμένη η άκρη */
+}
     </style>
 </head>
 <body>
