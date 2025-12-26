@@ -123,8 +123,8 @@ def create_app():
             db.session.add(user)
             db.session.commit()
         
-    login_user(user, remember=True)
-    return redirect(url_for('chat_page'))
+        login_user(user, remember=True)
+        return redirect(url_for('chat_page'))
 
     @app.route('/chat')
     @login_required
