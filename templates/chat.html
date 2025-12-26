@@ -8,111 +8,156 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
-:root {
-    --gold: #D4AF37;
-    --fire: #ff4400;
-    --red: #ff4444;
-}
+        :root {
+            --gold: #D4AF37;
+            --fire: #ff4400;
+            --red: #ff4444;
+        }
 
+        body {
+            background-color: #050a14;
+            background-size: cover !important;
+            background-position: center !important;
+            background-attachment: fixed !important;
+            background-repeat: no-repeat !important;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: 'Roboto', sans-serif;
+        }
 
-/* Φτιάχνουμε το χιόνι να είναι ΠΑΝΩ από όλα */
-         .snow { 
-             position: fixed; 
-             top: 0; 
-             left: 0; 
-             width: 100%; 
-             height: 100%; 
-             pointer-events: none; 
-             z-index: 9999; /* Το βάζουμε τέρμα μπροστά */
-}        
+        /* SNOW LAYER */
+        .snow { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            pointer-events: none; 
+            z-index: 9999; 
+        }
 
-
-
-
-         @keyframes swing { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
-
-        /* HEADER & FLAMING DJ NAME */
+        /* HEADER */
         .header {
-            background: rgba(0, 0, 0, 0.6); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--gold); z-index: 1000; min-height: 125px; }
-        
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--gold);
+            z-index: 1000;
+            min-height: 125px;
+        }
+
         #sonic_dj { 
-            font-family: 'Orbitron'; font-size: 1.5em !important; font-weight: bold; 
-            color: var(--gold) !important; text-transform: uppercase;
+            font-family: 'Orbitron';
+            font-size: 1.5em !important;
+            font-weight: bold; 
+            color: var(--gold) !important;
+            text-transform: uppercase;
             text-shadow: 0 0 10px var(--fire), 0 0 20px var(--fire);
             animation: text-flicker 0.1s infinite alternate;
         }
-        @keyframes text-flicker { from { opacity: 0.8; text-shadow: 0 0 10px var(--fire); } to { opacity: 1; text-shadow: 0 0 20px var(--fire), 2px 2px 5px #000; } }
 
-        .player-frame { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.8); padding: 10px 25px; border-radius: 60px; border: 2px solid var(--gold); position: relative; box-shadow: 0 0 25px var(--fire); }
+        @keyframes text-flicker { from { opacity: 0.8; } to { opacity: 1; text-shadow: 0 0 20px var(--fire), 2px 2px 5px #000; } }
+
+        .player-frame { 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            background: rgba(0,0,0,0.8); 
+            padding: 10px 25px; 
+            border-radius: 60px; 
+            border: 2px solid var(--gold); 
+            position: relative; 
+            box-shadow: 0 0 25px var(--fire); 
+        }
+
         .flame-wrapper { position: absolute; bottom: -8px; width: 100%; height: 15px; display: flex; justify-content: center; }
         .flame { width: 18px; height: 18px; background: var(--fire); border-radius: 50% 0 50% 50%; transform: rotate(-45deg); animation: burn 0.4s infinite alternate; filter: blur(1px); opacity: 0.8; margin: 0 2px; }
         @keyframes burn { from { transform: rotate(-45deg) scale(1); } to { transform: rotate(-45deg) scale(1.4) translateY(-8px); } }
 
         #dj_profile img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--gold); box-shadow: 0 0 20px var(--gold); object-fit: cover; }
 
-        /* CHAT BOX */
+        /* CHAT WINDOW & MESSAGES (TRANSPARENT) */
         .main { display: flex; flex: 1; overflow: hidden; position: relative; z-index: 5; }
-/* Κάνουμε το κεντρικό παράθυρο πιο διάφανο για να φαίνεται η εικόνα */
-#chat-window { 
-    flex: 1; 
-    display: flex; 
-    flex-direction: column; 
-    background: rgba(0, 0, 0, 0.2); /* Πολύ διάφανο για να φαίνεται το δέντρο */
-    backdrop-filter: blur(3px);    /* Ελαφρύ θόλωμα για να διαβάζονται τα γράμματα */
-    border: 1px solid rgba(212, 175, 55, 0.3); 
-    margin: 5px; 
-    border-radius: 20px; 
-}
 
-.message { 
-    background: transparent !important; /* Διώχνει το γκρι/άσπρο */
-    border: none !important;            /* Διώχνει το πλαίσιο */
-    box-shadow: none !important;        /* Διώχνει τις σκιές του πλαισίου */
-    padding: 10px 0px; 
-    margin-bottom: 2px;        /* INPUT AREA & TOOLBAR */
+        #chat-window { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            background: transparent !important; /* Εντελώς διάφανο */
+            margin: 5px; 
+            border-radius: 20px; 
+        }
+
+        #chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: transparent !important;
+        }
+
+        .message { 
+            background: transparent !important; /* Εξαφάνιση γκρι μπάρας */
+            border: none !important; 
+            padding: 8px 0px; 
+            margin-bottom: 5px;
+            color: white !important;
+            /* Περίγραμμα στα γράμματα για να φαίνονται παντού */
+            text-shadow: 2px 2px 4px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
+            font-size: 1.1em;
+        }
+
+        /* INPUT AREA */
         .input-area { background: rgba(0, 0, 0, 0.7); padding: 15px; border-top: 2px solid var(--gold); }
         .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
-        #chat-input { flex: 1; padding: 15px; border-radius: 15px; border: 2px solid var(--gold); background: #111; color: white; outline: none; min-height: 45px; font-size: 1.2em; }
+        
+        #chat-input { 
+            flex: 1; 
+            padding: 15px; 
+            border-radius: 15px; 
+            border: 2px solid var(--gold); 
+            background: #111; 
+            color: white; 
+            outline: none; 
+            min-height: 45px; 
+            font-size: 1.2em; 
+        }
+
         .tool-btn { background: rgba(212,175,55,0.1); border: 1px solid var(--gold); color: white; padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; }
         .tool-btn:hover { background: var(--gold); color: black; transform: scale(1.1); }
         .emoji-btn { font-size: 1.4em; }
 
+        /* SIDEBAR */
         .sidebar { width: 180px; background: rgba(0, 0, 0, 0.5); border-left: 2px solid var(--gold); padding-top: 20px; text-align: center; }
+
+        /* SCROLLBAR */
+        #chat-box::-webkit-scrollbar { width: 6px; }
+        #chat-box::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+        #chat-box::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+
+        /* MODAL */
         .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); }
         .modal-content { background: #111; margin: 10% auto; padding: 30px; border: 2px solid var(--gold); width: 320px; border-radius: 25px; color: white; box-shadow: 0 0 30px var(--gold); }
-
-/* Πρόσθεσε αυτό στο τέλος του style σου */
-#chat-box::-webkit-scrollbar {
-    width: 6px; /* Το πάχος της μπάρας */
-}
-
-#chat-box::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1); /* Το φόντο της μπάρας */
-}
-
-#chat-box::-webkit-scrollbar-thumb {
-    background: var(--gold); /* Το χρυσό χρώμα που ορίσαμε στο root */
-    border-radius: 10px;      /* Να είναι στρογγυλεμένη η άκρη */
-}
+        
+        input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--gold); background: #222; color: white; }
     </style>
 </head>
 <body>
     <canvas class="snow" id="snowCanvas"></canvas>
     
-    <div class="hanging-ornament" style="left: 5%;">🔔</div>
-    <div class="hanging-ornament" style="left: 15%; animation-delay: 0.5s;">🎄</div>
-    <div class="hanging-ornament" style="right: 15%; animation-delay: 1s;">🎁</div>
-    <div class="hanging-ornament" style="right: 5%; animation-delay: 1.5s;">⭐</div>
-
     <div class="header">
         <div style="display:flex; flex-direction:column; gap:8px;">
             {% if current_user.role == 'owner' %}
-<button onclick="clearChat()" style="background:#ff4444; color:white; border:none; padding:10px; cursor:pointer; border-radius:5px; margin-left:10px;">
-    <i class="fas fa-trash"></i> ΣΚΟΥΠΑ
-</button>
-{% endif %}
+            <button onclick="clearChat()" style="background:#ff4444; color:white; border:none; padding:10px; cursor:pointer; border-radius:5px;">
+                <i class="fas fa-trash"></i> ΣΚΟΥΠΑ
+            </button>
+            {% endif %}
             <button onclick="document.getElementById('setModal').style.display='block'" class="tool-btn"><i class="fas fa-user-circle"></i> ΠΡΟΦΙΛ</button>
-            <a href="{{ url_for('logout') }}" class="tool-btn" style="color:var(--red); border-color:var(--red); text-decoration:none;"><i class="fas fa-power-off"></i> ΕΞΟΔΟΣ</a>
+            <a href="{{ url_for('logout') }}" class="tool-btn" style="color:var(--red); border-color:var(--red); text-decoration:none; text-align:center;"><i class="fas fa-power-off"></i> ΕΞΟΔΟΣ</a>
         </div>
 
         <div class="player-frame">
@@ -149,64 +194,53 @@
                 <div class="toolbar">
                     <button class="tool-btn" onclick="document.execCommand('bold')"><b>B</b></button>
                     <button class="tool-btn" onclick="document.execCommand('italic')"><i>I</i></button>
-                    <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:30px; height:30px; border-radius: 5px; cursor:pointer; background: none; border: 1px solid var(--gold);">
-                    <button onclick="addEmoji('🎅')" class="tool-btn emoji-btn">🎅</button>
-                    <button onclick="addEmoji('🎄')" class="tool-btn emoji-btn">🎄</button>
-                    <button onclick="addEmoji('🎁')" class="tool-btn emoji-btn">🎁</button>
-                    <button onclick="addEmoji('🔔')" class="tool-btn emoji-btn">🔔</button>
-                    <button onclick="addEmoji('❄️')" class="tool-btn emoji-btn">❄️</button>
-                    <button onclick="addEmoji('🔥')" class="tool-btn emoji-btn">🔥</button>
-                    <button onclick="addEmoji('🎶')" class="tool-btn emoji-btn">🎶</button>
-                    <button onclick="addEmoji('⭐')" class="tool-btn emoji-btn">⭐</button>
+                    <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:30px; height:30px; cursor:pointer;">
+                    <button onclick="addEmoji('🎅')" class="tool-btn">🎅</button>
+                    <button onclick="addEmoji('🎄')" class="tool-btn">🎄</button>
+                    <button onclick="addEmoji('🎁')" class="tool-btn">🎁</button>
+                    <button onclick="addEmoji('🔔')" class="tool-btn">🔔</button>
+                    <button onclick="addEmoji('❄️')" class="tool-btn">❄️</button>
+                    <button onclick="addEmoji('🔥')" class="tool-btn">🔥</button>
+                    <button onclick="addEmoji('🎶')" class="tool-btn">🎶</button>
+                    <button onclick="addEmoji('⭐')" class="tool-btn">⭐</button>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι γιορτινό..."></div>
-                    <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer; font-size: 1.1em; box-shadow: 0 0 10px var(--gold);">ΣΤΕΙΛΕ</button>
+                    <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι..."></div>
+                    <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer;">ΣΤΕΙΛΕ</button>
                 </div>
             </div>
         </div>
-        <div class="sidebar"><div style="color:var(--gold); font-weight:bold; margin-bottom:15px; font-family: 'Orbitron';">ONLINE</div><div id="user-list-content"></div></div>
+        <div class="sidebar">
+            <div style="color:var(--gold); font-weight:bold; margin-bottom:15px; font-family: 'Orbitron';">ONLINE</div>
+            <div id="user-list-content"></div>
+        </div>
     </div>
 
-<div id="setModal" class="modal">
-    <div class="modal-content">
-        <h3 style="text-align:center; color:#D4AF37;">ΡΥΘΜΙΣΕΙΣ</h3>
-        
-        <label>Όνομα:</label>
-        <input type="text" id="new-nickname" value="{{ current_user.display_name }}" 
-               {% if current_user.display_name != current_user.username %} readonly style="background:#222; color:gray;" {% endif %}>
-        
-        <label>Avatar URL:</label>
-        <input type="text" id="new-avatar" value="{{ current_user.avatar_url or '' }}">
-        
-        <label>Χρώμα Ονόματος:</label>
-        <input type="color" id="new-color" value="{{ current_user.color }}">
-        
-        <button onclick="saveProfile()" style="width:100%; background:#D4AF37; border:none; padding:10px; margin-top:10px; cursor:pointer; font-weight:bold;">ΑΠΟΘΗΚΕΥΣΗ</button>
-        <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; background:none; color:gray; border:none; margin-top:10px; cursor:pointer;">Ακύρωση</button>
+    <div id="setModal" class="modal">
+        <div class="modal-content">
+            <h3 style="text-align:center; color:var(--gold);">ΡΥΘΜΙΣΕΙΣ</h3>
+            <label>Όνομα:</label>
+            <input type="text" id="new-nickname" value="{{ current_user.display_name }}">
+            <label>Avatar URL:</label>
+            <input type="text" id="new-avatar" value="{{ current_user.avatar_url or '' }}">
+            <label>Χρώμα Ονόματος:</label>
+            <input type="color" id="new-color" value="{{ current_user.color }}">
+            <button onclick="saveProfile()" style="width:100%; background:var(--gold); border:none; padding:10px; margin-top:10px; cursor:pointer; font-weight:bold;">ΑΠΟΘΗΚΕΥΣΗ</button>
+            <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; background:none; color:gray; border:none; margin-top:10px; cursor:pointer;">Ακύρωση</button>
+        </div>
     </div>
-</div>
 
-     <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+    <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
     <script>
         const socket = io();
-    // 1. Μόλις συνδεθεί ο χρήστης, παίρνει το αποθηκευμένο φόντο
-socket.on('update_bg', (data) => {
-    if (data.url) {
-        document.body.style.backgroundImage = `url('${data.url}')`;
-        document.body.style.backgroundSize = "cover";
-        document.body.style.backgroundAttachment = "fixed";
-    }
-});
-
-// 2. Επίσης, αν ο server στείλει 'init_settings' (προαιρετικό ανάλογα τον server.py)
-socket.on('init_settings', (data) => {
-    if (data.background_url) {
-        document.body.style.backgroundImage = `url('${data.background_url}')`;
-    }
-});
         const chatInput = document.getElementById('chat-input');
         const chatBox = document.getElementById('chat-box');
+
+        socket.on('update_bg', (data) => {
+            if (data.url) {
+                document.body.style.backgroundImage = `url('${data.url}')`;
+            }
+        });
 
         function addEmoji(e) { chatInput.innerHTML += e; chatInput.focus(); }
 
@@ -224,50 +258,16 @@ socket.on('init_settings', (data) => {
         window.onresize = resize; resize();
         function draw() {
             ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "white"; ctx.beginPath();
-            if(particles.length < 100) particles.push({x:Math.random()*canvas.width, y:-10, r:Math.random()*3+1, d:Math.random()*1.2});
+            if(particles.length < 150) particles.push({x:Math.random()*canvas.width, y:-10, r:Math.random()*3+1, d:Math.random()*1.2});
             for(let p of particles) { ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); p.y += 1 + p.d; if(p.y > canvas.height) p.y = -10; }
             ctx.fill(); requestAnimationFrame(draw);
         }
         draw();
-function clearChat() {
-    if(confirm("Θέλεις σίγουρα να διαγράψεις όλα τα μηνύματα;")) {
-        socket.emit('clear_chat_request');
-    }
-}
 
-// Αυτό θα καθαρίσει την οθόνη όλων των χρηστών μόλις πατήσεις τη σκούπα
-socket.on('clear_chat_client', () => {
-    document.getElementById('chat-box').innerHTML = '';
-});
+        function clearChat() { if(confirm("Διαγραφή όλων;")) socket.emit('clear_chat_request'); }
+        socket.on('clear_chat_client', () => { chatBox.innerHTML = ''; });
 
-function saveProfile() {
-    // Παίρνουμε τα στοιχεία
-    const nickEl = document.getElementById('new-nickname');
-    const avatEl = document.getElementById('new-avatar');
-    const coloEl = document.getElementById('new-color');
-
-    // Έλεγχος αν υπάρχουν τα στοιχεία στην οθόνη πριν διαβάσουμε το .value
-    if (!nickEl || !avatEl || !coloEl) {
-        console.error("Σφάλμα: Λείπουν IDs από το HTML");
-        return;
-    }
-
-    const data = {
-        display_name: nickEl.value,
-        avatar_url: avatEl.value,
-        color: coloEl.value
-    };
-
-    fetch('/update_profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    }).then(r => {
-        if(r.ok) window.location.reload();
-        else alert("Σφάλμα στην αποθήκευση!");
-    }).catch(err => console.log("Fetch error:", err));
-} 
-       function sendMessage() {
+        function sendMessage() {
             const content = chatInput.innerHTML.trim();
             if(content && content !== '<br>') { socket.emit('message', { content: content }); chatInput.innerHTML = ''; }
         }
@@ -276,53 +276,42 @@ function saveProfile() {
             const div = document.createElement('div'); 
             div.className = 'message';
             let c = msg.content;
-            
             const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
             c = c.replace(imgRegex, (u) => `<br><img src="${u}" style="max-width:100%; border-radius:10px; margin-top:10px; border: 2px solid var(--gold);">`);
-            
             const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
             c = c.replace(ytRegex, (u, id) => `<br><iframe width="100%" height="250" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:15px; border: 2px solid var(--fire);"></iframe>`);
             
             div.innerHTML = `<b style="color:${msg.color}">${msg.display_name}</b><br><span>${c}</span>`;
-            
             chatBox.appendChild(div);
-
-            if (chatBox.children.length > 50) {
-                chatBox.removeChild(chatBox.firstChild);
-            }
-
-            setTimeout(() => {
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 100);
-        }); // <-- Εδώ έκλεινε λάθος πριν
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
 
         socket.on('users_update', (users) => {
             const userList = document.getElementById('user-list-content');
             if (userList) {
                 userList.innerHTML = users.map(u => `
                     <div style="margin-bottom:15px; display:flex; flex-direction:column; align-items:center;">
-                        <img src="${u.avatar_url || 'https://i.imgur.com/6VBx3io.png'}" style="width:50px; height:50px; border-radius:50%; border:2px solid ${u.color}; box-shadow: 0 0 10px ${u.color}; object-fit:cover;">
-                        <div style="color:${u.color}; font-size:0.85em; font-weight:bold; margin-top:5px;">${u.display_name}</div>
+                        <img src="${u.avatar_url || 'https://i.imgur.com/6VBx3io.png'}" style="width:50px; height:50px; border-radius:50%; border:2px solid ${u.color}; object-fit:cover;">
+                        <div style="color:${u.color}; font-size:0.85em; font-weight:bold; margin-top:5px; text-shadow: 1px 1px 2px #000;">${u.display_name}</div>
                     </div>`).join('');
             }
         });
 
+        function saveProfile() {
+            const data = {
+                display_name: document.getElementById('new-nickname').value,
+                avatar_url: document.getElementById('new-avatar').value,
+                color: document.getElementById('new-color').value
+            };
+            fetch('/update_profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(r => r.ok ? window.location.reload() : alert("Σφάλμα!"));
+        }
 
-
-function handleFileUpload(input) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const imageUrl = e.target.result;
-        // Στέλνουμε την εικόνα στον server για να την αποθηκεύσει μόνιμα
-        socket.emit('admin_change_bg', { url: imageUrl });
-    };
-    reader.readAsDataURL(input.files[0]);
-
-}
-        socket.on('update_bg', (data) => { document.body.style.backgroundImage = `url('${data.url}')`; });
         chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
-
-window.addEventListener('load', () => { chatBox.scrollTop = chatBox.scrollHeight; });
+        window.addEventListener('load', () => { chatBox.scrollTop = chatBox.scrollHeight; });
     </script>
 </body>
 </html>
