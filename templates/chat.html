@@ -10,10 +10,14 @@
     <style>
         :root { --gold: #D4AF37; --fire: #ff4500; --red: #ff0000; }
         body { 
-            background: #000; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; 
-            background-size: cover !important; background-position: center !important; transition: background 0.5s ease;
-        }
-
+body { 
+    background: url('ΕΔΩ_ΒΑΖΕΙΣ_ΤΟ_LINK_ΤΗΣ_ΕΙΚΟΝΑΣ_ΣΟΥ') no-repeat center center fixed; 
+    background-size: cover; 
+    margin: 0; 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column;
+}
         /* ΧΙΟΝΙ & ΣΤΟΛΙΔΙΑ */
         .snow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
         .hanging-ornament { position: absolute; top: 0; font-size: 25px; z-index: 1001; animation: swing 3s infinite ease-in-out; transform-origin: top; }
@@ -127,7 +131,7 @@
     <div class="modal-content">
         <h3 style="text-align:center; color:#D4AF37;">ΡΥΘΜΙΣΕΙΣ</h3>
         
-        <label>Όνομα (Αλλάζει μόνο 1 φορά):</label>
+        <label>Όνομα:</label>
         <input type="text" id="new-nickname" value="{{ current_user.display_name }}" 
                {% if current_user.display_name != current_user.username %} readonly style="background:#222; color:gray;" {% endif %}>
         
@@ -140,7 +144,9 @@
         <button onclick="saveProfile()" style="width:100%; background:#D4AF37; border:none; padding:10px; margin-top:10px; cursor:pointer; font-weight:bold;">ΑΠΟΘΗΚΕΥΣΗ</button>
         <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; background:none; color:gray; border:none; margin-top:10px; cursor:pointer;">Ακύρωση</button>
     </div>
-</div>    <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+</div>
+
+     <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
     <script>
         const socket = io();
     // 1. Μόλις συνδεθεί ο χρήστης, παίρνει το αποθηκευμένο φόντο
@@ -184,23 +190,33 @@ socket.on('init_settings', (data) => {
         draw();
 
 function saveProfile() {
-    const nick = document.getElementById('new-nickname').value;
-    const avat = document.getElementById('new-avatar').value;
-    const col = document.getElementById('new-color').value;
+    // Παίρνουμε τα στοιχεία
+    const nickEl = document.getElementById('new-nickname');
+    const avatEl = document.getElementById('new-avatar');
+    const coloEl = document.getElementById('new-color');
+
+    // Έλεγχος αν υπάρχουν τα στοιχεία στην οθόνη πριν διαβάσουμε το .value
+    if (!nickEl || !avatEl || !coloEl) {
+        console.error("Σφάλμα: Λείπουν IDs από το HTML");
+        return;
+    }
+
+    const data = {
+        display_name: nickEl.value,
+        avatar_url: avatEl.value,
+        color: coloEl.value
+    };
 
     fetch('/update_profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            display_name: nick,
-            avatar_url: avat,
-            color: col
-        })
+        body: JSON.stringify(data)
     }).then(r => {
         if(r.ok) window.location.reload();
-        else alert("Σφάλμα! Ίσως το όνομα υπάρχει ήδη.");
-    });
-}        function sendMessage() {
+        else alert("Σφάλμα στην αποθήκευση!");
+    }).catch(err => console.log("Fetch error:", err));
+} 
+       function sendMessage() {
             const content = chatInput.innerHTML.trim();
             if(content && content !== '<br>') { socket.emit('message', { content: content }); chatInput.innerHTML = ''; }
         }
@@ -213,7 +229,15 @@ function saveProfile() {
             const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
             c = c.replace(ytRegex, (u, id) => `<br><iframe width="100%" height="250" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:15px; border: 2px solid var(--fire);"></iframe>`);
             div.innerHTML = `<b style="color:${msg.color}">${msg.display_name}</b><br><span>${c}</span>`;
-            chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
+            
+            chatBox.appendChild(div);
+
+            // Πρόσθεσε αυτό το κομμάτι εδώ:
+            if (chatBox.children.length > 50) {
+                chatBox.removeChild(chatBox.firstChild);
+            }
+
+            chatBox.scrollTop = chatBox.scrollHeight;
         });
 
         socket.on('users_update', (users) => {
@@ -236,6 +260,8 @@ function handleFileUpload(input) {
 }
         socket.on('update_bg', (data) => { document.body.style.backgroundImage = `url('${data.url}')`; });
         chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+
+window.addEventListener('load', () => { chatBox.scrollTop = chatBox.scrollHeight; });
     </script>
 </body>
 </html>
