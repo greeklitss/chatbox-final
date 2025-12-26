@@ -64,14 +64,12 @@
     border-radius: 20px; 
 }
 
-/* Τα μηνύματα να είναι ελαφρώς πιο διάφανα */
 .message { 
-    background: rgba(20, 20, 20, 0.7); /* Από 0.95 στο 0.7 */
-    padding: 12px 18px; 
-    border-radius: 15px; 
-    margin-bottom: 8px;
-}
-        /* INPUT AREA & TOOLBAR */
+    background: transparent !important; /* Διώχνει το γκρι/άσπρο */
+    border: none !important;            /* Διώχνει το πλαίσιο */
+    box-shadow: none !important;        /* Διώχνει τις σκιές του πλαισίου */
+    padding: 10px 0px; 
+    margin-bottom: 2px;        /* INPUT AREA & TOOLBAR */
         .input-area { background: rgba(0, 0, 0, 0.7); padding: 15px; border-top: 2px solid var(--gold); }
         .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
         #chat-input { flex: 1; padding: 15px; border-radius: 15px; border: 2px solid var(--gold); background: #111; color: white; outline: none; min-height: 45px; font-size: 1.2em; }
