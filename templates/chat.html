@@ -11,7 +11,7 @@
         :root { --gold: #D4AF37; --fire: #ff4500; --red: #ff0000; }
         body { 
 body { 
-    background: url('ΕΔΩ_ΒΑΖΕΙΣ_ΤΟ_LINK_ΤΗΣ_ΕΙΚΟΝΑΣ_ΣΟΥ') no-repeat center center fixed; 
+    background: url('/static/radioparea.png') no-repeat center center fixed;
     background-size: cover; 
     margin: 0; 
     height: 100vh; 
@@ -44,7 +44,12 @@ body {
         /* CHAT BOX */
         .main { display: flex; flex: 1; overflow: hidden; position: relative; z-index: 5; }
         #chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); border: 2px solid rgba(212,175,55,0.2); margin: 5px; border-radius: 20px; }
-        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+       #chat-box {
+    height: 500px;          /* Ή όποιο ύψος θέλεις εσύ */
+    overflow-y: auto;       /* Εμφανίζει scrollbar όταν χρειάζεται */
+    display: flex;
+    flex-direction: column; /* Τα μηνύματα το ένα κάτω από το άλλο */
+}
         .message { background: rgba(25, 25, 25, 0.95); padding: 15px 20px; border-radius: 20px; border-left: 5px solid var(--gold); align-self: flex-start; max-width: 85%; color: white; font-size: 1.1em; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
         /* INPUT AREA & TOOLBAR */
@@ -70,6 +75,11 @@ body {
 
     <div class="header">
         <div style="display:flex; flex-direction:column; gap:8px;">
+            {% if current_user.role == 'owner' %}
+<button onclick="clearChat()" style="background:#ff4444; color:white; border:none; padding:10px; cursor:pointer; border-radius:5px; margin-left:10px;">
+    <i class="fas fa-trash"></i> ΣΚΟΥΠΑ
+</button>
+{% endif %}
             <button onclick="document.getElementById('setModal').style.display='block'" class="tool-btn"><i class="fas fa-user-circle"></i> ΠΡΟΦΙΛ</button>
             <a href="{{ url_for('logout') }}" class="tool-btn" style="color:var(--red); border-color:var(--red); text-decoration:none;"><i class="fas fa-power-off"></i> ΕΞΟΔΟΣ</a>
         </div>
@@ -188,6 +198,16 @@ socket.on('init_settings', (data) => {
             ctx.fill(); requestAnimationFrame(draw);
         }
         draw();
+function clearChat() {
+    if(confirm("Θέλεις σίγουρα να διαγράψεις όλα τα μηνύματα;")) {
+        socket.emit('clear_chat_request');
+    }
+}
+
+// Αυτό θα καθαρίσει την οθόνη όλων των χρηστών μόλις πατήσεις τη σκούπα
+socket.on('clear_chat_client', () => {
+    document.getElementById('chat-box').innerHTML = '';
+});
 
 function saveProfile() {
     // Παίρνουμε τα στοιχεία
@@ -222,31 +242,41 @@ function saveProfile() {
         }
 
         socket.on('message', (msg) => {
-            const div = document.createElement('div'); div.className = 'message';
+            const div = document.createElement('div'); 
+            div.className = 'message';
             let c = msg.content;
+            
             const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
             c = c.replace(imgRegex, (u) => `<br><img src="${u}" style="max-width:100%; border-radius:10px; margin-top:10px; border: 2px solid var(--gold);">`);
+            
             const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
             c = c.replace(ytRegex, (u, id) => `<br><iframe width="100%" height="250" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:15px; border: 2px solid var(--fire);"></iframe>`);
+            
             div.innerHTML = `<b style="color:${msg.color}">${msg.display_name}</b><br><span>${c}</span>`;
             
             chatBox.appendChild(div);
 
-            // Πρόσθεσε αυτό το κομμάτι εδώ:
             if (chatBox.children.length > 50) {
                 chatBox.removeChild(chatBox.firstChild);
             }
 
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
+            setTimeout(() => {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 100);
+        }); // <-- Εδώ έκλεινε λάθος πριν
 
         socket.on('users_update', (users) => {
-            document.getElementById('user-list-content').innerHTML = users.map(u => `
-                <div style="margin-bottom:15px; display:flex; flex-direction:column; align-items:center;">
-                    <img src="${u.avatar_url}" style="width:50px; height:50px; border-radius:50%; border:2px solid ${u.color}; box-shadow: 0 0 10px ${u.color}; object-fit:cover;">
-                    <div style="color:${u.color}; font-size:0.85em; font-weight:bold; margin-top:5px;">${u.display_name}</div>
-                </div>`).join('');
+            const userList = document.getElementById('user-list-content');
+            if (userList) {
+                userList.innerHTML = users.map(u => `
+                    <div style="margin-bottom:15px; display:flex; flex-direction:column; align-items:center;">
+                        <img src="${u.avatar_url || 'https://i.imgur.com/6VBx3io.png'}" style="width:50px; height:50px; border-radius:50%; border:2px solid ${u.color}; box-shadow: 0 0 10px ${u.color}; object-fit:cover;">
+                        <div style="color:${u.color}; font-size:0.85em; font-weight:bold; margin-top:5px;">${u.display_name}</div>
+                    </div>`).join('');
+            }
         });
+
+
 
 function handleFileUpload(input) {
     const reader = new FileReader();
