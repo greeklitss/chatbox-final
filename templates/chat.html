@@ -264,6 +264,7 @@
         const canvas = document.getElementById('snowCanvas'); const ctx = canvas.getContext('2d'); let particles = [];
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.onresize = resize; resize();
+
         function draw() {
             ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "white"; ctx.beginPath();
             if(particles.length < 150) particles.push({x:Math.random()*canvas.width, y:-10, r:Math.random()*3+1, d:Math.random()*1.2});
@@ -272,26 +273,44 @@
         }
         draw();
 
+
+
         function clearChat() { if(confirm("Διαγραφή όλων;")) socket.emit('clear_chat_request'); }
         socket.on('clear_chat_client', () => { chatBox.innerHTML = ''; });
 
-        function sendMessage() {
-            const content = chatInput.innerHTML.trim();
-            if(content && content !== '<br>') { socket.emit('message', { content: content }); chatInput.innerHTML = ''; }
+        // Κεντρική συνάρτηση μετατροπής Links σε Εικόνες/Video
+        function processMessageContent(content) {
+            let html = content;
+            const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
+            const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+
+            html = html.replace(imgRegex, (u) => `<br><img src="${u}" style="max-width:100%; border-radius:10px; margin-top:10px; border: 2px solid var(--gold);">`);
+            html = html.replace(ytRegex, (u, id) => `<br><iframe width="100%" height="250" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:15px; border: 2px solid var(--fire);"></iframe>`);
+            
+            return html;
         }
 
+        // Αποστολή μηνύματος
+        function sendMessage() {
+            const content = chatInput.innerHTML.trim();
+            if(content && content !== '<br>') { 
+                socket.emit('message', { content: content }); 
+                chatInput.innerHTML = ''; 
+            }
+        }
+
+        // Λήψη νέου μηνύματος (Εμφάνιση εικόνας ΑΜΕΣΩΣ)
         socket.on('message', (msg) => {
             const div = document.createElement('div'); 
             div.className = 'message';
-            let c = msg.content;
-            const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
-            c = c.replace(imgRegex, (u) => `<br><img src="${u}" style="max-width:100%; border-radius:10px; margin-top:10px; border: 2px solid var(--gold);">`);
-            const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-            c = c.replace(ytRegex, (u, id) => `<br><iframe width="100%" height="250" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:15px; border: 2px solid var(--fire);"></iframe>`);
+            const finalContent = processMessageContent(msg.content); // Εδώ γίνεται η μαγεία
             
-            div.innerHTML = `<b style="color:${msg.color}">${msg.display_name}</b><br><span>${c}</span>`;
+            div.innerHTML = `<b style="color:${msg.color}">${msg.display_name}</b><br><span>${finalContent}</span>`;
             chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
+
+            if (chatBox.children.length > 50) chatBox.removeChild(chatBox.firstChild);
+
+            setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 50);
         });
 
         socket.on('users_update', (users) => {
@@ -319,7 +338,13 @@
         }
 
         chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
-        window.addEventListener('load', () => { chatBox.scrollTop = chatBox.scrollHeight; });
-    </script>
+
+        // Διόρθωση Ιστορικού κατά το φόρτωμα (Refresh)
+        window.addEventListener('load', () => { 
+            document.querySelectorAll('.message span').forEach(span => {
+                span.innerHTML = processMessageContent(span.innerHTML);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight; 
+        });    </script>
 </body>
 </html>
