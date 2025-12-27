@@ -339,37 +339,36 @@
         });
 
 function saveProfile() {
-        const nick = document.getElementById('new-nickname').value;
-        const av = document.getElementById('new-avatar').value;
-        const col = document.getElementById('new-color').value;
+    const nick = document.getElementById('new-nickname').value;
+    const av = document.getElementById('new-avatar').value;
+    const col = document.getElementById('new-color').value;
 
-        if (!nick || nick.trim() === "") {
-            alert("Πρέπει να βάλεις ένα όνομα!");
-            return;
-        }
-
-        const data = {
-            display_name: nick,
-            avatar_url: av || "https://i.imgur.com/6VBx3io.png",
-            color: col
-        };
-
-fetch('/update_profile', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-})
-.then(r => r.json()) // Πρώτα διάβασε το JSON
-.then(res => {
-    if (res.status === "success") {
-        // Κλείσε το modal ΠΡΙΝ το reload για να ξεπαγώσει το UI
-        document.getElementById('setModal').style.display = 'none';
-        window.location.reload(); 
-    } else {
-        alert(res.message);
-        // Ξαναενεργοποίησε το κουμπί αν απέτυχε
+    if (!nick || nick.trim() === "") {
+        alert("Πρέπει να βάλεις ένα όνομα!");
+        return;
     }
-});
+
+    const data = {
+        display_name: nick,
+        avatar_url: av || "https://i.imgur.com/6VBx3io.png",
+        color: col
+    };
+
+    fetch('/update_profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.status === "success") {
+            document.getElementById('setModal').style.display = 'none';
+            window.location.reload(); 
+        } else {
+            alert(res.message);
+        }
+    });
+}
 
 
         chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
