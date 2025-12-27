@@ -354,17 +354,20 @@ function saveProfile() {
             color: col
         };
 
-        fetch('/update_profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        }).then(async r => {
-    const responseData = await r.json();
-    if (r.ok) {
-        window.location.reload();
+fetch('/update_profile', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+})
+.then(r => r.json()) // Πρώτα διάβασε το JSON
+.then(res => {
+    if (res.status === "success") {
+        // Κλείσε το modal ΠΡΙΝ το reload για να ξεπαγώσει το UI
+        document.getElementById('setModal').style.display = 'none';
+        window.location.reload(); 
     } else {
-        // Εδώ εμφανίζουμε το μήνυμα σφάλματος από τον σέρβερ (π.χ. "Το όνομα χρησιμοποιείται ήδη")
-        alert(responseData.message || "Σφάλμα στην αποθήκευση!");
+        alert(res.message);
+        // Ξαναενεργοποίησε το κουμπί αν απέτυχε
     }
 });
 
