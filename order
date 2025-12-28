@@ -1,0 +1,8 @@
+__pycache__
+.env
+migrations
+instance
+node_modules
+saves
+static
+templates

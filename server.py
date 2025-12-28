@@ -206,25 +206,24 @@ def create_app():
         current_user.color = data.get("color", current_user.color)
         current_user.has_setup_profile = True
 
-        try:
+try:
             db.session.commit()
 
-            # ΕΝΗΜΕΡΩΣΗ ONLINE_USERS: Βρίσκουμε το sid του τρέχοντος χρήστη
-
+            # Ενημέρωση του ONLINE_USERS dictionary
             for sid, info in list(ONLINE_USERS.items()):
                 if info["id"] == current_user.id:
-                    ONLINE_USERS[sid]["display_name"] = current_user.display_name
-                    ONLINE_USERS[sid]["avatar_url"] = current_user.avatar_url
-                    ONLINE_USERS[sid]["color"] = current_user.color
-            # ΣΤΕΛΝΟΥΜΕ ΤΗΝ ΕΝΗΜΕΡΩΜΕΝΗ ΛΙΣΤΑ ΣΕ ΟΛΟΥΣ ΤΟΥΣ CLIENTS
+                    ONLINE_USERS[sid].update({
+                        "display_name": current_user.display_name,
+                        "avatar_url": current_user.avatar_url,
+                        "color": current_user.color,
+                    })
 
-            socketio.emit("users_update", get_online_users_list(), broadcast=True)
-
-            # Επιστρέφουμε επιτυχία
-
+            # Στέλνουμε τη λίστα (Το socketio.emit δεν θέλει broadcast=True εδώ)
+            socketio.emit("users_update", users_list)
             return jsonify({"status": "success"}), 200
         except Exception as e:
             db.session.rollback()
+            print(f"Update error: {e}")
             return jsonify({"status": "error", "message": str(e)}), 500
 
     @app.route("/logout")
@@ -233,7 +232,6 @@ def create_app():
         logout_user()
         flash("Αποσυνδεθήκατε με επιτυχία.", "info")
         return redirect(url_for("login_page"))
-
     @socketio.on("connect")
     def handle_connect():
         if current_user.is_authenticated:
@@ -288,8 +286,8 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-    return app  # Η return app πρέπει να είναι στην ίδια ευθεία με τα @socketio
-
+    
+    return app  # <--- Πρέπει να έχει 4 κενά (μία εσοχή) από την αρχή της γραμμής
 
 app = create_app()
 
