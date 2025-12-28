@@ -207,13 +207,7 @@
         
         input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--gold); background: #222; color: white; }
        
-     /* MODAL
-    #setModal[style*="display:block"] ~ .main {
-            filter: blur(8px);
-            pointer-events: none;
-        }
- */
-    </style>
+        </style>
 </head>
 <body>
     <canvas class="snow" id="snowCanvas"></canvas>
@@ -252,26 +246,27 @@
         </div>
     </div>
 
-    <div class="main">
-       <div id="chat-box">
-    {% for msg in history %}
-    <div class="message" id="msg-{{ msg.id }}" style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
-        <img src="{{ msg.author.avatar_url or 'https://ui-avatars.com/api/?name=' + msg.author.display_name }}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold);">
-        <div style="display: flex; flex-direction: column;">
-            <div style="display: flex; align-items: baseline; gap: 8px;">
-                <strong style="color: {{ msg.author.color }}; font-size: 0.9em;">{{ msg.author.display_name }}:</strong>
-                <span class="msg-time">{{ msg.timestamp.strftime("%H:%M   %d.%m.%Y") }}</span>
-                
-                <i class="fas fa-edit" onclick="editMsg({{ msg.id }})" style="cursor:pointer; font-size:0.7em; color:gray; margin-left:5px;"></i>
-                {% if current_user.role in ['admin', 'owner'] %}
-                <i class="fas fa-trash" onclick="deleteMsg({{ msg.id }})" style="cursor:pointer; font-size:0.7em; color:red; margin-left:5px;"></i>
-                {% endif %}
+<div class="main">
+        <div id="chat-window"> 
+            
+            <div id="chat-box">
+                {% for msg in history %}
+                <div class="message" id="msg-{{ msg.id }}" style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                    <img src="{{ msg.author.avatar_url or 'https://ui-avatars.com/api/?name=' + msg.author.display_name }}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold);">
+                    <div style="display: flex; flex-direction: column;">
+                        <div style="display: flex; align-items: baseline; gap: 8px;">
+                            <strong style="color: {{ msg.author.color }}; font-size: 0.9em;">{{ msg.author.display_name }}:</strong>
+                            <span class="msg-time">{{ msg.timestamp.strftime("%H:%M   %d.%m.%Y") }}</span>
+                            <i class="fas fa-edit" onclick="editMsg({{ msg.id }})" style="cursor:pointer; font-size:0.7em; color:gray; margin-left:5px;"></i>
+                            {% if current_user.role in ['admin', 'owner'] %}
+                            <i class="fas fa-trash" onclick="deleteMsg({{ msg.id }})" style="cursor:pointer; font-size:0.7em; color:red; margin-left:5px;"></i>
+                            {% endif %}
+                        </div>
+                        <span class="message-content" style="color: white; text-shadow: 1px 1px 2px black;">{{ msg.content | safe }}</span>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
-            <span class="message-content" style="color: white; text-shadow: 1px 1px 2px black;">{{ msg.content | safe }}</span>
-        </div>
-    </div>
-    {% endfor %}
-</div>
 
             <div class="input-area">
                 <div class="toolbar">
@@ -292,13 +287,11 @@
                     <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer;">ΣΤΕΙΛΕ</button>
                 </div>
             </div>
-        </div>
-        <div class="sidebar">
+        </div> <div class="sidebar">
             <div style="color:var(--gold); font-weight:bold; margin-bottom:15px; font-family: 'Orbitron';">ONLINE</div>
             <div id="user-list-content"></div>
         </div>
     </div>
-
     <div id="setModal" class="modal" style="{% if not current_user.has_setup_profile %} display:block; backdrop-filter: blur(15px); {% endif %}">
     <div class="modal-content" style="border: 2px solid var(--fire); box-shadow: 0 0 30px var(--fire);">
         <h3 style="text-align:center; color:var(--gold); font-family:'Orbitron';">
