@@ -140,7 +140,19 @@ def create_app():
             ).first()
             if user and user.check_password(request.form.get("password")):
                 login_user(user, remember=True)
-                return redirect(url_for("chat_page"))
+                return """
+        <script>
+            if (window.opener) {
+                // Στέλνει την κύρια σελίδα στο chat
+                window.opener.location.href = "/chat";
+                // Κλείνει το popup
+                window.close();
+            } else {
+                // Αν για κάποιο λόγο δεν υπάρχει opener, κάνει κανονικό redirect
+                window.location.href = "/chat";
+            }
+        </script>
+        """
         return render_template("login.html")
 
     @app.route("/google_login")
