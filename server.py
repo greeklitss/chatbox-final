@@ -296,7 +296,7 @@ def create_app():
                 "content": data["content"],
                 "color": current_user.color,
                 "avatar_url": current_user.avatar_url or f"https://ui-avatars.com/api/?name={current_user.display_name}",
-                "timestamp": formatted_time
+                "timestamp": formatted_time,
                 "user_id": current_user.id # Χρήσιμο για να ξέρει η JS αν είναι "δικό μου" το μήνυμα
             }, broadcast=True)
     
@@ -304,7 +304,7 @@ def create_app():
     def handle_edit(data):
         if current_user.is_authenticated:
             msg = Message.query.get(data["id"])
-            if msg and (msg.author_id == current_user.id or current_user.role in ['admin', 'owner'])::
+            if msg and (msg.author_id == current_user.id or current_user.role in ['admin', 'owner']):
                 msg.content = data["new_content"]
                 db.session.commit()
                 emit("message_edited", {"id": data["id"], "content": data["new_content"]}, broadcast=True)
@@ -326,8 +326,8 @@ def create_app():
             Message.query.delete()
             db.session.commit()
             # Το "Χαρούμενο Μήνυμα" αποθηκεύεται ως νέο μήνυμα για να μην χάνεται
-            sys_content = "✨ Η σκούπα πέρασε! Το chat μας λάμπει και πάλι! 🎄"            db.session.commit()
-            notice = Message(content=sys_content, user_id=current_user.id)
+            sys_content = "✨ Η σκούπα πέρασε! Το chat μας λάμπει και πάλι! 🎄"         
+            notice = Message(content=sys_content, author=current_user)
             db.session.add(notice)
             db.session.commit()
 
@@ -342,6 +342,7 @@ def create_app():
                 "color": "#FFD700",
                 "avatar_url": "https://i.imgur.com/6VBx3io.png",
                 "timestamp": formatted_time,
+                "user_id": 0
             }, broadcast=True)
 
     @socketio.on("admin_change_bg")
