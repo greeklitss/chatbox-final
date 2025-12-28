@@ -299,7 +299,12 @@
         </h3>
         
         <label>Όνομα (Nickname):</label>
-        <input type="text" id="new-nickname" value="{{ current_user.display_name }}" placeholder="Γράψε το όνομά σου...">
+<input type="text" id="new-nickname" value="{{ current_user.display_name }}" 
+       {% if current_user.has_setup_profile %} readonly style="background: #222; color: #777; cursor: not-allowed;" {% endif %} 
+       placeholder="Γράψε το όνομά σου...">
+{% if current_user.has_setup_profile %}
+<p style="color: gray; font-size: 0.8em; margin-top: -5px;">Το όνομα είναι κλειδωμένο. Μπορείς να αλλάξεις μόνο χρώμα και εικόνα.</p>
+{% endif %}
         
         <label>Avatar URL (Link εικόνας):</label>
         <input type="text" id="new-avatar" value="{{ current_user.avatar_url or '' }}" placeholder="https://link.to-your-image.png">
