@@ -223,12 +223,10 @@
 <button onclick="openLoginModal()" class="login-btn">Είσοδος στο Chat</button>
     </div>
 
-    <div id="snow-container"></div>
+<div id="snow-container"></div>
 
     <script>
-        // ----------------------------------------------------
-        // JAVASCRIPT ΓΙΑ ΑΝΤΙΣΤΡΟΦΗ ΜΕΤΡΗΣΗ
-        // ----------------------------------------------------
+        // 1. ΑΝΤΙΣΤΡΟΦΗ ΜΕΤΡΗΣΗ
         const targetDate = new Date("Dec 23, 2025 00:00:00").getTime();
         const countdownElement = document.getElementById("countdown-timer");
 
@@ -247,74 +245,67 @@
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
             countdownElement.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-        }
+        };
 
         updateCountdown(); 
         setInterval(updateCountdown, 1000); 
 
-        // ----------------------------------------------------
-        // JAVASCRIPT ΓΙΑ ΕΦΕ ΧΙΟΝΙΟΥ (ΔΙΟΡΘΩΜΕΝΟ)
-        // ----------------------------------------------------
+        // 2. ΕΦΕ ΧΙΟΝΙΟΥ
         const snowContainer = document.getElementById("snow-container");
         const numSnowflakes = 100; 
 
         const createSnowflake = () => {
             const snowflake = document.createElement("div");
             snowflake.className = "snowflake";
-            
             const size = Math.random() * 5 + 5; 
             snowflake.style.width = `${size}px`;
             snowflake.style.height = `${size}px`;
-            
             snowflake.style.left = `${Math.random() * 100}vw`;
             snowflake.style.top = `${-Math.random() * 100}vh`; 
-            
             const duration = Math.random() * 15 + 15; 
             snowflake.style.animationDuration = `${duration}s`;
-            
             snowflake.style.animationDelay = `${Math.random() * 10}s`;
-            
             const xOffset = Math.random() * 50 - 25; 
             snowflake.style.setProperty('--fall-x-offset', `${xOffset}vw`);
 
             snowContainer.appendChild(snowflake);
 
             setTimeout(() => {
-                if (snowflake.parentNode) {
-                    snowflake.remove();
-                }
+                if (snowflake.parentNode) { snowflake.remove(); }
                 createSnowflake(); 
             }, duration * 1000);
+        };
+
+        for (let i = 0; i < numSnowflakes; i++) { createSnowflake(); }
+
+        // 3. ΛΕΙΤΟΥΡΓΙΕΣ MODAL & LOGIN (ΕΔΩ ΗΤΑΝ ΤΟ ΣΦΑΛΜΑ)
+        function openLoginModal() {
+            document.getElementById("loginModal").style.display = "block";
         }
 
-        for (let i = 0; i < numSnowflakes; i++) {
-            createSnowflake();
+        function closeLoginModal() {
+            document.getElementById("loginModal").style.display = "none";
         }
-function openLoginModal() {
-    document.getElementById("loginModal").style.display = "block";
-}
 
-function closeLoginModal() {
-    document.getElementById("loginModal").style.display = "none";
-}
+        function loginWithGoogle() {
+            const width = 500, height = 600;
+            const left = (window.innerWidth - width) / 2;
+            const top = (window.innerHeight - height) / 2;
+            
+            const authWindow = window.open('/google_login', 'GoogleLogin', 
+                `width=${width},height=${height},top=${top},left=${left}`);
 
-function loginWithGoogle() {
-    const width = 500, height = 600;
-    const left = (window.innerWidth - width) / 2;
-    const top = (window.innerHeight - height) / 2;
-    
-    const authWindow = window.open('/google_login', 'GoogleLogin', 
-        `width=${width},height=${height},top=${top},left=${left}`);
-
-    const timer = setInterval(() => {
-        if (authWindow.closed) {
-            clearInterval(timer);
-            // ΑΝΤΙ ΓΙΑ window.location.href, κάνε ανανέωση ή άνοιξε το chat στο main window
-            window.location.reload(); 
+            const timer = setInterval(() => {
+                if (authWindow.closed) {
+                    clearInterval(timer);
+                    // Ανανέωση της κύριας σελίδας για να δει το νέο session
+                    window.location.reload(); 
+                }
+            }, 1000);
         }
-    }, 1000);
     </script>
-<div id="loginModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter: blur(5px);">
+
+    <div id="loginModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter: blur(5px);">
         <div style="background:#1a1a2e; margin:5% auto; padding:25px; border:2px solid #F1C40F; width:320px; border-radius:15px; text-align:center; position:relative; box-shadow: 0 0 20px #F1C40F;">
             <span onclick="closeLoginModal()" style="position:absolute; right:15px; top:10px; cursor:pointer; color:#fff; font-size:28px;">&times;</span>
             <h2 style="font-family:'Orbitron'; color:#F1C40F; margin-bottom:20px;">ΕΙΣΟΔΟΣ</h2>
