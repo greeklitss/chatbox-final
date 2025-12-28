@@ -304,7 +304,7 @@ def create_app():
     def handle_edit(data):
         if current_user.is_authenticated:
             msg = Message.query.get(data["id"])
-            if msg and msg.user_id == current_user.id or current_user.role in ['admin', 'owner']):
+            if msg and (msg.author_id == current_user.id or current_user.role in ['admin', 'owner'])::
                 msg.content = data["new_content"]
                 db.session.commit()
                 emit("message_edited", {"id": data["id"], "content": data["new_content"]}, broadcast=True)
