@@ -369,16 +369,29 @@ function deleteMsg(id) {
 
 function editMsg(id) {
     const el = document.querySelector(`#msg-${id} .message-content`);
-    const oldContent = el.innerText; // Παίρνουμε μόνο το κείμενο, όχι το HTML
+    if (!el) return;
+    const oldContent = el.innerText; 
     const newText = prompt("Επεξεργασία μηνύματος:", oldContent);
     if(newText !== null && newText.trim() !== "") {
         socket.emit("edit_message", {id: id, new_content: newText});
+    }
 }
 
-socket.on("message_deleted", data => document.getElementById(`msg-${data.id}`)?.remove());
+
+
+socket.on("message_deleted", data => {
+    const msgToRem = document.getElementById(`msg-${data.id}`);
+    if(msgToRem) msgToRem.remove();
+});
+
 socket.on("message_edited", data => {
     const el = document.querySelector(`#msg-${data.id} .message-content`);
     if(el) el.innerHTML = processMessageContent(data.content);
+});
+
+socket.on('clear_chat_client', () => {
+    const chatBox = document.getElementById('chat-box');
+    if (chatBox) chatBox.innerHTML = '';
 });
 
         socket.on('update_bg', (data) => {
