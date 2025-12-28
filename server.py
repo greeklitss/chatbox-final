@@ -341,7 +341,7 @@ def create_app():
                 "content": sys_content,
                 "color": "#FFD700",
                 "avatar_url": "https://i.imgur.com/6VBx3io.png",
-                "timestamp": formatted_time
+                "timestamp": formatted_time,
             }, broadcast=True)
 
     @socketio.on("admin_change_bg")
