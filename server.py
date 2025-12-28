@@ -200,7 +200,7 @@ def create_app():
         # Φέρνουμε τα 50 τελευταία (desc) και μετά τα αντιστρέφουμε για τη σωστή σειρά εμφάνισης
         history = Message.query.order_by(Message.id.desc()).limit(50).all()
         history.reverse() 
-        return render_template("chat.html", history=history))
+        return render_template("chat.html", history=history)
 
     @app.route("/update_profile", methods=["POST"])
     @login_required
