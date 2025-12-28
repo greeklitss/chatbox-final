@@ -206,7 +206,7 @@ def create_app():
         current_user.color = data.get("color", current_user.color)
         current_user.has_setup_profile = True
 
-try:
+        try:
             db.session.commit()
 
             # Ενημέρωση του ONLINE_USERS dictionary
