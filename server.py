@@ -197,13 +197,20 @@ def create_app():
     @app.route("/chat")
     @login_required
     def chat_page():
-        history = Message.query.order_by(Message.timestamp.asc()).limit(50).all()
-        return render_template("chat.html", history=history)
+        # Φέρνουμε τα 50 τελευταία (desc) και μετά τα αντιστρέφουμε για τη σωστή σειρά εμφάνισης
+        history = Message.query.order_by(Message.id.desc()).limit(50).all()
+        history.reverse() 
+        return render_template("chat.html", history=history))
 
     @app.route("/update_profile", methods=["POST"])
     @login_required
     def update_profile():
+        # ΕΛΕΓΧΟΣ: Αν έχει ήδη φτιάξει προφίλ, δεν τον αφήνουμε να ξαναλλάξει όνομα
+        if current_user.has_setup_profile:
+            return jsonify({"status": "error", "message": "Έχετε ήδη ορίσει το όνομά σας μία φορά!"}), 403
+
         data = request.get_json()
+        new_name = data.get("display_name")
         if not data:
             return jsonify({"status": "error", "message": "No data"}), 400
         # --- ΕΔΩ ΠΡΟΣΘΕΤΟΥΜΕ ΤΟΝ ΕΛΕΓΧΟ ---
