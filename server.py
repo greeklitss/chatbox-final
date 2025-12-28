@@ -218,8 +218,9 @@ def create_app():
                         "color": current_user.color,
                     })
 
-            # Στέλνουμε τη λίστα (Το socketio.emit δεν θέλει broadcast=True εδώ)
-            socketio.emit("users_update", users_list)
+            # Στέλνουμε τη λίστα χρησιμοποιώντας τη συνάρτηση που ήδη έχεις
+            socketio.emit("users_update", get_online_users_list())
+            
             return jsonify({"status": "success"}), 200
         except Exception as e:
             db.session.rollback()
