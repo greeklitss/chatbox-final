@@ -108,27 +108,28 @@
 
 
 
-        .main { display: flex; flex: 1; overflow: hidden; position: relative; z-index: 5; }
+       .main { 
+            display: flex; 
+            flex: 1; 
+            height: calc(100vh - 125px); /* Αφαιρεί το ύψος του header */
+            overflow: hidden; 
+        }
 
         #chat-window { 
             flex: 1; 
             display: flex; 
             flex-direction: column; 
-            background: transparent !important; /* Εντελώς διάφανο */
-            margin: 5px; 
-            border-radius: 20px; 
+            height: 100%;
         }
 
         #chat-box {
             flex: 1;
             overflow-y: auto;
             padding: 20px;
-    
-            /* ΕΔΩ ΜΠΑΙΝΕΙ Η ΕΙΚΟΝΑ ΜΟΝΟ ΓΙΑ ΤΟ CHAT */
             background-image: url('/static/radioparea.png') !important;
             background-size: cover !important;
-            background-position: center  !important;
-            background-attachment: scroll !important; /* Η εικόνα θα κουνιέται μαζί με τα μηνύματα */
+            background-position: center !important;
+            background-attachment: local !important; /* Η εικόνα μένει στο φόντο του scroll */
     
             border-radius: 15px; /* Προαιρετικά, για στρογγυλεμένες γωνίες στην εικόνα */
             border: 1px solid rgba(212, 175, 55, 0.3); /* Ένα λεπτό χρυσό περίγραμμα */
@@ -146,7 +147,14 @@
         }
 
         /* INPUT AREA */
-        .input-area { background: rgba(0, 0, 0, 0.7); padding: 15px; border-top: 2px solid var(--gold); }
+        .input-area { 
+            background: rgba(0, 0, 0, 0.85); 
+            padding: 15px; 
+            border-top: 2px solid var(--gold);
+            z-index: 10;
+        }
+        
+
         .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
         
         #chat-input { 
@@ -166,7 +174,20 @@
         .emoji-btn { font-size: 1.4em; }
 
         /* SIDEBAR */
-        .sidebar { width: 180px; background: rgba(0, 0, 0, 0.5); border-left: 2px solid var(--gold); padding-top: 20px; text-align: center; }
+        .sidebar { 
+            width: 200px; 
+            background: rgba(0, 0, 0, 0.7); 
+            border-left: 2px solid var(--gold); 
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        #user-list-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
 
         /* SCROLLBAR */
         #chat-box::-webkit-scrollbar { width: 6px; }
@@ -223,18 +244,26 @@
     </div>
 
     <div class="main">
-        <div id="chat-box">
+       <div id="chat-box">
     {% for msg in history %}
-    <div class="message" style="margin-bottom: 10px; display: flex; align-items: center;">
-        <img src="{{ msg.author.avatar_url or 'https://ui-avatars.com/api/?name=' + msg.author.display_name }}" class="message-avatar">
-        <div>
-            <strong style="color: {{ msg.author.color }}">{{ msg.author.display_name }}:</strong>
-            <span class="message-content">{{ msg.content }}</span>
-            <span class="msg-time">{{ msg.timestamp.strftime("%H:%M   %d.%m.%Y") }}</span>
+    <div class="message" id="msg-{{ msg.id }}" style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+        <img src="{{ msg.author.avatar_url or 'https://ui-avatars.com/api/?name=' + msg.author.display_name }}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold);">
+        <div style="display: flex; flex-direction: column;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+                <strong style="color: {{ msg.author.color }}; font-size: 0.9em;">{{ msg.author.display_name }}:</strong>
+                <span class="msg-time">{{ msg.timestamp.strftime("%H:%M   %d.%m.%Y") }}</span>
+                
+                <i class="fas fa-edit" onclick="editMsg({{ msg.id }})" style="cursor:pointer; font-size:0.7em; color:gray; margin-left:5px;"></i>
+                {% if current_user.role in ['admin', 'owner'] %}
+                <i class="fas fa-trash" onclick="deleteMsg({{ msg.id }})" style="cursor:pointer; font-size:0.7em; color:red; margin-left:5px;"></i>
+                {% endif %}
+            </div>
+            <span class="message-content" style="color: white; text-shadow: 1px 1px 2px black;">{{ msg.content | safe }}</span>
         </div>
     </div>
     {% endfor %}
 </div>
+
             <div class="input-area">
                 <div class="toolbar">
                     <button class="tool-btn" onclick="document.execCommand('bold')"><b>B</b></button>
@@ -287,29 +316,69 @@
     <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
     <script>
         const socket = io();
-const chatInput = document.getElementById('chat-input');
-const chatBox = document.getElementById('chat-box');
+        const chatInput = document.getElementById('chat-input');
+        const chatBox = document.getElementById('chat-box');
+
+
 
 socket.on("message", function(data) {
+    const currentUserId = parseInt('{{ current_user.id }}');
+    const currentUserRole = '{{ current_user.role }}';
+
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message';
-    // Χρησιμοποιούμε Flexbox για να είναι όλα στην ίδια ευθεία
-    msgDiv.style = "margin-bottom: 12px; display: flex; align-items: center; gap: 10px;";
-     const finalContent = processMessageContent(data.content);
+    msgDiv.id = `msg-${data.id}`;
+    msgDiv.style = "margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;";
     
-    // Η μορφή που ζήτησες: Avatar -> Όνομα -> Περιεχόμενο -> Ώρα/Ημερομηνία
+    const finalContent = processMessageContent(data.content);
+
+    // 2. Διορθωμένος έλεγχος για τα κουμπιά Edit/Delete
+    let actions = `<span class="msg-time">${data.timestamp}</span>`;
+    
+    // Έλεγχος αν είναι δικό μου το μήνυμα Ή αν είμαι admin/owner
+    if (data.user_id === currentUserId || currentUserRole !== "user") {
+        actions += ` <i class="fas fa-edit" onclick="editMsg(${data.id})" style="cursor:pointer; font-size:0.7em; color:gray; margin-left:5px;"></i>`;
+    }
+    
+    // Έλεγχος αν είμαι admin/owner για διαγραφή
+    if (currentUserRole !== "user") {
+        actions += ` <i class="fas fa-trash" onclick="deleteMsg(${data.id})" style="cursor:pointer; font-size:0.7em; color:red; margin-left:5px;"></i>`;
+    }
+
     msgDiv.innerHTML = `
-        <img src="${data.avatar_url}" class="message-avatar" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid var(--gold);">
+        <img src="${data.avatar_url}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold);">
         <div style="display: flex; flex-direction: column;">
             <div style="display: flex; align-items: baseline; gap: 8px;">
                 <strong style="color: ${data.color}; font-size: 0.9em;">${data.display_name}:</strong>
-                <span class="msg-time" style="font-size: 0.7em; color: #888;">${data.timestamp}</span>
+                ${actions}
             </div>
-            <span class="message-content" style="word-break: break-word; color: white;">${finalContent}</span>
+            <span class="message-content" style="color: white; text-shadow: 1px 1px 2px black;">${finalContent}</span>
         </div>
     `;
     chatBox.appendChild(msgDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
+});
+
+
+
+
+// Πρόσθεσε αυτές τις συναρτήσεις στο τέλος του script
+function deleteMsg(id) {
+    if(confirm("Διαγραφή μηνύματος;")) socket.emit("delete_message", {id: id});
+}
+
+function editMsg(id) {
+    const el = document.querySelector(`#msg-${id} .message-content`);
+    const oldContent = el.innerText; // Παίρνουμε μόνο το κείμενο, όχι το HTML
+    const newText = prompt("Επεξεργασία μηνύματος:", oldContent);
+    if(newText !== null && newText.trim() !== "") {
+        socket.emit("edit_message", {id: id, new_content: newText});
+}
+
+socket.on("message_deleted", data => document.getElementById(`msg-${data.id}`)?.remove());
+socket.on("message_edited", data => {
+    const el = document.querySelector(`#msg-${data.id} .message-content`);
+    if(el) el.innerHTML = processMessageContent(data.content);
 });
 
         socket.on('update_bg', (data) => {
@@ -343,8 +412,13 @@ socket.on("message", function(data) {
 
 
 
-        function clearChat() { if(confirm("Διαγραφή όλων;")) socket.emit('clear_chat_request'); }
-        socket.on('clear_chat_client', () => { chatBox.innerHTML = ''; });
+        function clearChat() { 
+            if(confirm("Θέλετε να καθαρίσετε το chat; Η σκούπα θα περάσει! ✨")) {
+                socket.emit('clear_chat_request');
+            }
+        }
+
+
 
         // Κεντρική συνάρτηση μετατροπής Links σε Εικόνες/Video
         function processMessageContent(content) {
