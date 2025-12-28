@@ -197,8 +197,8 @@ def create_app():
     @app.route("/chat")
     @login_required
     def chat_page():
-        # Φέρνουμε τα 50 τελευταία (desc) και μετά τα αντιστρέφουμε για τη σωστή σειρά εμφάνισης
-        history = Message.query.order_by(Message.id.desc()).limit(50).all()
+        # Παίρνουμε τα 50 τελευταία μηνύματα
+        history = Message.query.order_by(Message.timestamp.desc()).limit(50).all()
         history.reverse() 
         return render_template("chat.html", history=history)
 
@@ -286,22 +286,17 @@ def create_app():
             new_msg = Message(content=data["content"], author=current_user)
             db.session.add(new_msg)
             db.session.commit()
+            
+            # Πρόσθεσε αυτή τη γραμμή πριν το emit
+            formatted_time = datetime.utcnow().strftime("%H:%M   %d.%m.%Y")
 
-            avatar = (
-                current_user.avatar_url
-                or f"https://ui-avatars.com/api/?name={current_user.display_name}&background=random"
-            )
-
-            emit(
-                "message",
-                {
-                    "display_name": current_user.display_name,
-                    "content": data["content"],
-                    "color": current_user.color,
-                    "avatar_url": avatar,
-                },
-                broadcast=True,
-            )
+            emit("message", {
+                "display_name": current_user.display_name,
+                "content": data["content"],
+                "color": current_user.color,
+                "avatar_url": current_user.avatar_url or f"https://ui-avatars.com/api/?name={current_user.display_name}",
+                "timestamp": formatted_time
+            }, broadcast=True)
 
     @socketio.on("clear_chat_request")
     def clear_chat():

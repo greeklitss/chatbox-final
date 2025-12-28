@@ -82,6 +82,32 @@
         #dj_profile img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--gold); box-shadow: 0 0 20px var(--gold); object-fit: cover; }
 
         /* CHAT WINDOW & MESSAGES (TRANSPARENT) */
+        /* Μικρά και ομοιόμορφα avatar στο κείμενο */
+.message-avatar {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 8px;
+    vertical-align: middle;
+    border: 1px solid var(--gold);
+}
+
+/* Στυλ για την ώρα και ημερομηνία */
+.msg-time {
+    font-size: 0.7em;
+    color: #888;
+    margin-left: 10px;
+    white-space: pre; /* Για να κρατάει τα κενά που ζήτησες */
+}
+
+/* Για να μην σπάει το chat από μεγάλες λέξεις */
+.message-content {
+    word-break: break-word;
+}
+
+
+
         .main { display: flex; flex: 1; overflow: hidden; position: relative; z-index: 5; }
 
         #chat-window { 
@@ -197,12 +223,18 @@
     </div>
 
     <div class="main">
-        <div id="chat-window">
-            <div id="chat-box">
-                {% for msg in history %}
-                <div class="message"><b style="color:{{msg.author.color}}">{{msg.author.display_name}}</b><br><span>{{msg.content|safe}}</span></div>
-                {% endfor %}
-            </div>
+        <div id="chat-box">
+    {% for msg in history %}
+    <div class="message" style="margin-bottom: 10px; display: flex; align-items: center;">
+        <img src="{{ msg.author.avatar_url or 'https://ui-avatars.com/api/?name=' + msg.author.display_name }}" class="message-avatar">
+        <div>
+            <strong style="color: {{ msg.author.color }}">{{ msg.author.display_name }}:</strong>
+            <span class="message-content">{{ msg.content }}</span>
+            <span class="msg-time">{{ msg.timestamp.strftime("%H:%M   %d.%m.%Y") }}</span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
             <div class="input-area">
                 <div class="toolbar">
                     <button class="tool-btn" onclick="document.execCommand('bold')"><b>B</b></button>
@@ -255,8 +287,30 @@
     <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
     <script>
         const socket = io();
-        const chatInput = document.getElementById('chat-input');
-        const chatBox = document.getElementById('chat-box');
+const chatInput = document.getElementById('chat-input');
+const chatBox = document.getElementById('chat-box');
+
+socket.on("message", function(data) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message';
+    // Χρησιμοποιούμε Flexbox για να είναι όλα στην ίδια ευθεία
+    msgDiv.style = "margin-bottom: 12px; display: flex; align-items: center; gap: 10px;";
+     const finalContent = processMessageContent(data.content);
+    
+    // Η μορφή που ζήτησες: Avatar -> Όνομα -> Περιεχόμενο -> Ώρα/Ημερομηνία
+    msgDiv.innerHTML = `
+        <img src="${data.avatar_url}" class="message-avatar" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid var(--gold);">
+        <div style="display: flex; flex-direction: column;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+                <strong style="color: ${data.color}; font-size: 0.9em;">${data.display_name}:</strong>
+                <span class="msg-time" style="font-size: 0.7em; color: #888;">${data.timestamp}</span>
+            </div>
+            <span class="message-content" style="word-break: break-word; color: white;">${finalContent}</span>
+        </div>
+    `;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+});
 
         socket.on('update_bg', (data) => {
             if (data.url) {
@@ -313,19 +367,6 @@
             }
         }
 
-        // Λήψη νέου μηνύματος (Εμφάνιση εικόνας ΑΜΕΣΩΣ)
-        socket.on('message', (msg) => {
-            const div = document.createElement('div'); 
-            div.className = 'message';
-            const finalContent = processMessageContent(msg.content); // Εδώ γίνεται η μαγεία
-            
-            div.innerHTML = `<b style="color:${msg.color}">${msg.display_name}</b><br><span>${finalContent}</span>`;
-            chatBox.appendChild(div);
-
-            if (chatBox.children.length > 50) chatBox.removeChild(chatBox.firstChild);
-
-            setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 50);
-        });
 
         socket.on('users_update', (users) => {
             const userList = document.getElementById('user-list-content');
@@ -375,7 +416,7 @@ function saveProfile() {
 
         // Διόρθωση Ιστορικού κατά το φόρτωμα (Refresh)
         window.addEventListener('load', () => { 
-            document.querySelectorAll('.message span').forEach(span => {
+            document.querySelectorAll('.message-content').forEach(span => {
                 span.innerHTML = processMessageContent(span.innerHTML);
             });
             chatBox.scrollTop = chatBox.scrollHeight; 
