@@ -1,6 +1,5 @@
 import eventlet
-
-eventlet.monkey_patch()
+eventlet.monkey_patch(all=True)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
@@ -176,11 +175,24 @@ def create_app():
                 ),
                 color=random.choice(CHAT_COLORS),
                 avatar_url=user_info.get("picture"),
-                has_setup_profile=False,  # Αυτό θα πετάξει το Modal στο HTML
+                has_setup_profile=False,
             )
             db.session.add(user)
             db.session.commit()
+        
         login_user(user, remember=True)
+
+        # ΑΥΤΟ ΕΙΝΑΙ ΠΟΥ ΠΡΕΠΕΙ ΝΑ ΠΡΟΣΘΕΣΕΙΣ (Ιδιο με το login_page):
+        return """
+        <script>
+            if (window.opener) {
+                window.opener.location.href = "/chat";
+                window.close();
+            } else {
+                window.location.href = "/chat";
+            }
+        </script>
+        """
 
     @app.route("/chat")
     @login_required
@@ -304,4 +316,6 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=8000)
+ 
+    port = int(os.environ.get("PORT", 8000))
+    socketio.run(app, host="0.0.0.0", port=port)
