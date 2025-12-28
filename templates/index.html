@@ -299,23 +299,20 @@ function closeLoginModal() {
 }
 
 function loginWithGoogle() {
-    // Ανοίγει το Google Login σε POPUP παράθυρο
     const width = 500, height = 600;
     const left = (window.innerWidth - width) / 2;
     const top = (window.innerHeight - height) / 2;
     
-    // Αυτό το παράθυρο θα κάνει τη δουλειά και η κύρια σελίδα (Player) ΔΕΝ ΘΑ ΚΛΕΙΣΕΙ
     const authWindow = window.open('/google_login', 'GoogleLogin', 
         `width=${width},height=${height},top=${top},left=${left}`);
 
-    // Έλεγχος κάθε 1 δευτερόλεπτο αν το παράθυρο έκλεισε (σημαίνει ότι έγινε login)
     const timer = setInterval(() => {
         if (authWindow.closed) {
             clearInterval(timer);
-            window.location.href = "/chat"; // Μόνο τότε σε στέλνει στο chat
+            // ΑΝΤΙ ΓΙΑ window.location.href, κάνε ανανέωση ή άνοιξε το chat στο main window
+            window.location.reload(); 
         }
     }, 1000);
-}
     </script>
 <div id="loginModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter: blur(5px);">
         <div style="background:#1a1a2e; margin:5% auto; padding:25px; border:2px solid #F1C40F; width:320px; border-radius:15px; text-align:center; position:relative; box-shadow: 0 0 20px #F1C40F;">
