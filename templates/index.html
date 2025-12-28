@@ -163,7 +163,7 @@
             padding: 10px;
         }
 
-        /* 1. ΒΑΣΙΚΟ ΣΤΥΛ (για το 'ΕΛΑ ΝΑ ΠΕΤΑΜΕ ΜΕ') - ΧΡΥΣΟ */
+        /* 1. ΒΑΣΙΚΟ ΣΤΥΛ (για το 'RADIOPAREA ') - ΧΡΥΣΟ */
         .calligraphy-text-base {
             font-family: 'Dancing Script', cursive; /* Χρησιμοποιούμε Dancing Script */
             font-size: 1.8em; 
@@ -194,7 +194,7 @@
     
     <div class="container">
         <h1>🎅 📻 RADIOPAREA IS ON AIR 🎁</h1>
-        <p>Λειτουργίες Chatbox σε δοκιμή. Επιστρέφουμε σύντομα!</p>
+      
 
         <div class="player">
             <iframe src="https://or.mysonicserver.com/cp/widgets/player/single/?p=8050" height="110" width="100%" scrolling="no" style="border:none;"></iframe>
@@ -204,7 +204,7 @@
             <div class="metadata-box">
                 <div class="calligraphy-block">
                     <span class="calligraphy-text-base">
-                        ΕΛΑ ΝΑ ΠΕΤΑΜΕ ΜΕ <span id='sonic_dj' class='dj-name-style'></span>
+                        RADIOPAREA ΜΕ <span id='sonic_dj' class='dj-name-style'></span>
                     </span>
                     <div id="jplayer_volume_control"> </div>
                 </div>
@@ -219,9 +219,8 @@
             Φόρτωση...
         </div>
 
-        <a href="{{ url_for('login_page') }}" class="login-btn">
-            Είσοδος στο Chat
-        </a>
+       
+<button onclick="openLoginModal()" class="login-btn">Είσοδος στο Chat</button>
     </div>
 
     <div id="snow-container"></div>
@@ -291,6 +290,50 @@
         for (let i = 0; i < numSnowflakes; i++) {
             createSnowflake();
         }
+function openLoginModal() {
+    document.getElementById("loginModal").style.display = "block";
+}
+
+function closeLoginModal() {
+    document.getElementById("loginModal").style.display = "none";
+}
+
+function loginWithGoogle() {
+    // Ανοίγει το Google Login σε POPUP παράθυρο
+    const width = 500, height = 600;
+    const left = (window.innerWidth - width) / 2;
+    const top = (window.innerHeight - height) / 2;
+    
+    // Αυτό το παράθυρο θα κάνει τη δουλειά και η κύρια σελίδα (Player) ΔΕΝ ΘΑ ΚΛΕΙΣΕΙ
+    const authWindow = window.open('/google_login', 'GoogleLogin', 
+        `width=${width},height=${height},top=${top},left=${left}`);
+
+    // Έλεγχος κάθε 1 δευτερόλεπτο αν το παράθυρο έκλεισε (σημαίνει ότι έγινε login)
+    const timer = setInterval(() => {
+        if (authWindow.closed) {
+            clearInterval(timer);
+            window.location.href = "/chat"; // Μόνο τότε σε στέλνει στο chat
+        }
+    }, 1000);
+}
     </script>
+<div id="loginModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter: blur(5px);">
+        <div style="background:#1a1a2e; margin:5% auto; padding:25px; border:2px solid #F1C40F; width:320px; border-radius:15px; text-align:center; position:relative; box-shadow: 0 0 20px #F1C40F;">
+            <span onclick="closeLoginModal()" style="position:absolute; right:15px; top:10px; cursor:pointer; color:#fff; font-size:28px;">&times;</span>
+            <h2 style="font-family:'Orbitron'; color:#F1C40F; margin-bottom:20px;">ΕΙΣΟΔΟΣ</h2>
+            
+            <button onclick="loginWithGoogle()" style="background:#db4437; color:white; border:none; padding:12px; width:100%; border-radius:5px; cursor:pointer; font-weight:bold; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:10px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Logo.svg" width="18"> Σύνδεση με Google
+            </button>
+
+            <p style="color:#666; margin: 10px 0;">ή</p>
+
+            <form action="{{ url_for('login_page') }}" method="POST">
+                <input type="text" name="username" placeholder="Username" required style="width:100%; padding:10px; margin-bottom:10px; border-radius:5px; border:1px solid #333; background:#0f0f1e; color:white; box-sizing: border-box;">
+                <input type="password" name="password" placeholder="Password" required style="width:100%; padding:10px; margin-bottom:15px; border-radius:5px; border:1px solid #333; background:#0f0f1e; color:white; box-sizing: border-box;">
+                <button type="submit" class="login-btn" style="width:100%; border:none; cursor:pointer;">ΕΙΣΟΔΟΣ</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>
