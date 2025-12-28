@@ -197,15 +197,12 @@
     </div>
 
     <div class="main">
-        <div id="chat-box">
-    {% for msg in history %}
-    <div class="message">
-        <img src="{{ msg.author.avatar_url or 'default_url' }}" class="avatar">
-        <strong style="color: {{ msg.author.color }}">{{ msg.author.display_name }}:</strong>
-        <span>{{ msg.content }}</span>
-    </div>
-    {% endfor %}
-</div>
+        <div id="chat-window">
+            <div id="chat-box">
+                {% for msg in history %}
+                <div class="message"><b style="color:{{msg.author.color}}">{{msg.author.display_name}}</b><br><span>{{msg.content|safe}}</span></div>
+                {% endfor %}
+            </div>
             <div class="input-area">
                 <div class="toolbar">
                     <button class="tool-btn" onclick="document.execCommand('bold')"><b>B</b></button>
