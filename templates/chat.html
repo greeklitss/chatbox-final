@@ -370,15 +370,20 @@ function deleteMsg(id) {
 }
 
 function editMsg(id) {
+    // Βρίσκουμε το μήνυμα στη βάση των δεδομένων (το αρχικό κείμενο που έστειλε ο χρήστης)
     const el = document.querySelector(`#msg-${id} .message-content`);
     if (!el) return;
-    const oldContent = el.innerText; 
-    const newText = prompt("Επεξεργασία μηνύματος:", oldContent);
+
+    // Σημαντικό: Χρησιμοποιούμε το textContent για να μην πάρουμε τα <img> tags
+    // αλλά το Link που κρύβεται από πίσω αν είναι εικόνα.
+    const oldContent = el.getAttribute('data-raw-content') || el.innerText; 
+    
+    const newText = prompt("Διόρθωση μηνύματος ή Link εικόνας:", oldContent);
+    
     if(newText !== null && newText.trim() !== "") {
         socket.emit("edit_message", {id: id, new_content: newText});
     }
 }
-
 
 
 socket.on("message_deleted", data => {
