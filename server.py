@@ -16,7 +16,7 @@ from flask_login import (
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
-from datetime import datetime
+from datetime import datetime, timedelta
 from authlib.integrations.flask_client import OAuth
 from flask_socketio import SocketIO, emit
 import secrets
@@ -272,22 +272,31 @@ def create_app():
     @socketio.on("message")
     def handle_message(data):
         if current_user.is_authenticated:
-            new_msg = Message(content=data["content"], author=current_user)
-            db.session.add(new_msg)
-            db.session.commit()
-            
-            # Πρόσθεσε αυτή τη γραμμή πριν το emit
-            formatted_time = new_msg.timestamp.strftime("%H:%M   %d.%m.%Y")
+            # 1. Υπολογισμός ώρας Ελλάδος (UTC + 2 ώρες)
+            athens_time = datetime.utcnow() + timedelta(hours=2)
+        
+        # 2. Δημιουργία μηνύματος με τη σωστή ώρα
+        new_msg = Message(
+            content=data["content"], 
+            author=current_user,
+            timestamp=athens_time  # Επιβάλλουμε την ώρα Ελλάδος στη βάση
+        )
+        
+        db.session.add(new_msg)
+        db.session.commit()
+        
+        # 3. Μορφοποίηση για το Chat
+        formatted_time = athens_time.strftime("%H:%M   %d.%m.%Y")
 
-            emit("message", {
-                "id": new_msg.id,
-                "display_name": current_user.display_name,
-                "content": data["content"],
-                "color": current_user.color,
-                "avatar_url": current_user.avatar_url or f"https://ui-avatars.com/api/?name={current_user.display_name}",
-                "timestamp": formatted_time,
-                "user_id": current_user.id # Χρήσιμο για να ξέρει η JS αν είναι "δικό μου" το μήνυμα
-            }, broadcast=True)
+        emit("message", {
+            "id": new_msg.id,
+            "display_name": current_user.display_name,
+            "content": data["content"],
+            "color": current_user.color,
+            "avatar_url": current_user.avatar_url or f"https://ui-avatars.com/api/?name={current_user.display_name}",
+            "timestamp": formatted_time,
+            "user_id": current_user.id
+        }, broadcast=True)
     
     @socketio.on("edit_message")
     def handle_edit(data):

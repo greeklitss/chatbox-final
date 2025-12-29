@@ -189,25 +189,29 @@
     flex-direction: column;
 }
 
-        #gif-picker { 
-    display:none; 
-    position:absolute; 
-    bottom:150px; 
-    left:20px; 
-    background:#000; 
-    border:2px solid var(--gold); 
-    border-radius:15px; 
-    width:300px; 
-    height:400px; 
-    z-index:2000; 
-    padding:10px; 
-    flex-direction:column; 
-    box-shadow: 0 0 20px black;
+#gif-picker {
+    z-index: 9999 !important;
+    display: none; /* Αρχικά κρυφό */
+    flex-direction: column;
 }
-#gif-results { overflow-y:auto; display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:10px; }
-#gif-search { background:#222; color:white; border:1px solid var(--gold); padding:8px; border-radius:5px; width:90%; }
 
+.emoji-picker {
+    z-index: 10000 !important;
+}
 
+#gif-results img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: transform 0.2s;
+}
+
+#gif-results img:hover {
+    transform: scale(1.05);
+    border: 1px solid var(--gold);
+}
 
         #user-list-content {
             flex: 1;
@@ -584,17 +588,69 @@ setInterval(updateDJImage, 5000);
 <script src="https://cdn.jsdelivr.net/npm/@joypixels/emoji-button@4.6.3/dist/index.min.js"></script>
 
 <script>
-// Λειτουργία Emoji
+// --- ΛΕΙΤΟΥΡΓΙΑ GIF (Tenor API) ---
+
+// 1. Η συνάρτηση που στέλνει το GIF
+function sendGif(url) {
+    if (url) {
+        socket.emit('message', { content: url });
+        document.getElementById('gif-picker').style.display = 'none';
+        document.getElementById('gif-search').value = ''; // Καθαρισμός αναζήτησης
+    }
+}
+
+// 2. Αναζήτηση και Trends
+async function searchGifs(term = "") {
+    const apiKey = "LIVDSRZULEUB";
+    // Αν το κουτί είναι άδειο, πάει στα trending, αλλιώς σε search
+    const endpoint = term.trim() === "" ? "trending" : "search";
+    const url = `https://g.tenor.com/v1/${endpoint}?q=${encodeURIComponent(term)}&key=${apiKey}&limit=12`;
+    
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const resultsDiv = document.getElementById('gif-results');
+        
+        if (data.results && data.results.length > 0) {
+            resultsDiv.innerHTML = data.results.map(g => 
+                `<img src="${g.media[0].nanogif.url}" onclick="sendGif('${g.media[0].gif.url}')">`
+            ).join('');
+        } else {
+            resultsDiv.innerHTML = "<p style='color:gray; text-align:center; grid-column: 1/3;'>Δεν βρέθηκαν GIF</p>";
+        }
+    } catch (e) {
+        console.error("Tenor API Error:", e);
+    }
+}
+
+// 3. Άνοιγμα/Κλείσιμο Picker
+function toggleGifPicker(event) {
+    event.preventDefault();
+    const gp = document.getElementById('gif-picker');
+    const isVisible = gp.style.display === 'flex';
+    
+    gp.style.display = isVisible ? 'none' : 'flex';
+    
+    // Αν το ανοίγουμε, φέρε τα Trends
+    if (!isVisible) {
+        searchGifs(""); 
+    }
+}
+
+// --- ΛΕΙΤΟΥΡΓΙΑ EMOJIS ---
+
 const picker = new EmojiButton({ 
     theme: 'dark', 
     position: 'top-start',
-    autoHide: false // Για να μην κλείνει αν πατήσεις κατά λάθος δίπλα
+    autoHide: false 
 });
 
 const emojiBtn = document.getElementById('emoji-trigger');
 
-picker.on('emoji', selection => { 
-    document.getElementById('chat-input').innerHTML += selection.emoji; 
+picker.on('emoji', selection => {
+    const input = document.getElementById('chat-input');
+    input.innerHTML += selection.emoji;
+    input.focus(); // Επιστροφή κέρσορα στο input
 });
 
 emojiBtn.addEventListener('click', (e) => {
@@ -602,32 +658,15 @@ emojiBtn.addEventListener('click', (e) => {
     picker.togglePicker(emojiBtn);
 });
 
-// Λειτουργία GIF (Tenor API)
-async function searchGifs(term = "") {
-    const apiKey = "LIVDSRZULEUB";
-    // Αν το term είναι κενό, φέρε Trending, αλλιώς κάνε search
-    const url = term 
-        ? `https://g.tenor.com/v1/search?q=${encodeURIComponent(term)}&key=${apiKey}&limit=12` 
-        : `https://g.tenor.com/v1/trending?key=${apiKey}&limit=12`;
-    
-    const res = await fetch(url);
-    const data = await res.json();
-    const resultsDiv = document.getElementById('gif-results');
-    
-    if (data.results) {
-        resultsDiv.innerHTML = data.results.map(g => 
-            `<img src="${g.media[0].nanogif.url}" onclick="sendGif('${g.media[0].gif.url}')" style="width:100%; cursor:pointer;">`
-        ).join('');
-    }
-}
-
-function toggleGifPicker(event) {
-    event.preventDefault();
+// Κλείσιμο των pickers αν κάνεις κλικ έξω από αυτά
+document.addEventListener('click', (e) => {
     const gp = document.getElementById('gif-picker');
-    const isVisible = gp.style.display === 'flex';
-    gp.style.display = isVisible ? 'none' : 'flex';
-    if (!isVisible) searchGifs(""); // Φορτώνει τα trending αμέσως
-}
+    const gifBtn = document.querySelector('.ignore-emoji'); // Το κουμπί GIF
+    
+    if (!gp.contains(e.target) && e.target !== gifBtn) {
+        gp.style.display = 'none';
+    }
+});}
 
 </script>
 </body>
