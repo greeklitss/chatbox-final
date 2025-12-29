@@ -205,41 +205,34 @@ def create_app():
     @app.route("/update_profile", methods=["POST"])
     @login_required
     def update_profile():
-        # ΕΛΕΓΧΟΣ: Αν έχει ήδη φτιάξει προφίλ, δεν τον αφήνουμε να ξαναλλάξει όνομα
-        if current_user.has_setup_profile:
-            return jsonify({"status": "error", "message": "Έχετε ήδη ορίσει το όνομά σας μία φορά!"}), 403
-
         data = request.get_json()
-        new_name = data.get("display_name")
         if not data:
             return jsonify({"status": "error", "message": "No data"}), 400
-        # --- ΕΔΩ ΠΡΟΣΘΕΤΟΥΜΕ ΤΟΝ ΕΛΕΓΧΟ ---
 
-        new_name = data.get("display_name")
-        if new_name:
-            # Ψάχνουμε αν το όνομα υπάρχει σε ΑΛΛΟΝ χρήστη (όχι στον εαυτό μας)
+        new_name = data.get("display_name", "").strip()
 
-            existing_user = User.query.filter(
-                User.display_name == new_name, User.id != current_user.id
-            ).first()
+        # ΕΛΕΓΧΟΣ: Επιτρέπουμε την αλλαγή ΜΟΝΟ αν το όνομα είναι ίδιο με το τωρινό 
+        # ή αν είναι η πρώτη φορά που φτιάχνει προφίλ.
+        if current_user.has_setup_profile and new_name != current_user.display_name:
+            return jsonify({"status": "error", "message": "Το όνομα δεν μπορεί να αλλάξει πλέον!"}), 403
+
+        # Αν είναι η πρώτη φορά, ελέγχουμε αν το όνομα υπάρχει ήδη σε άλλον
+        if not current_user.has_setup_profile:
+            existing_user = User.query.filter(User.display_name == new_name, User.id != current_user.id).first()
             if existing_user:
-                return (
-                    jsonify(
-                        {"status": "error", "message": "Το όνομα χρησιμοποιείται ήδη!"}
-                    ),
-                    400,
-                )
-        # Ενημέρωση στοιχείων στη βάση
+                return jsonify({"status": "error", "message": "Το όνομα χρησιμοποιείται ήδη!"}), 400
+            current_user.display_name = new_name
 
-        current_user.display_name = data.get("display_name", current_user.display_name)
-        current_user.avatar_url = data.get("avatar_url", current_user.avatar_url)
-        current_user.color = data.get("color", current_user.color)
+        # Ενημέρωση Avatar και Χρώματος (Αυτά αλλάζουν πάντα)
+        current_user.avatar_url = data.get('avatar_url', current_user.avatar_url)
+        current_user.color = data.get('color', current_user.color)
         current_user.has_setup_profile = True
 
         try:
+            global ONLINE_USERS
             db.session.commit()
-
-            # Ενημέρωση του ONLINE_USERS dictionary
+            
+            # Ενημέρωση της λίστας online χρηστών για να αλλάξει το χρώμα τους αμέσως
             for sid, info in list(ONLINE_USERS.items()):
                 if info["id"] == current_user.id:
                     ONLINE_USERS[sid].update({
@@ -247,16 +240,12 @@ def create_app():
                         "avatar_url": current_user.avatar_url,
                         "color": current_user.color,
                     })
-
-            # Στέλνουμε τη λίστα χρησιμοποιώντας τη συνάρτηση που ήδη έχεις
             socketio.emit("users_update", get_online_users_list())
             
-            return jsonify({"status": "success"}), 200
+            return jsonify({"status": "success"})
         except Exception as e:
             db.session.rollback()
-            print(f"Update error: {e}")
             return jsonify({"status": "error", "message": str(e)}), 500
-
     @app.route("/logout")
     @login_required
     def logout():
@@ -304,7 +293,7 @@ def create_app():
     def handle_edit(data):
         if current_user.is_authenticated:
             msg = Message.query.get(data["id"])
-            if msg and (msg.author.id == current_user.id or current_user.role in ['admin', 'owner']):
+            if msg and (msg.user_id == current_user.id or current_user.role in ['admin', 'owner']):
                 msg.content = data["new_content"]
                 db.session.commit()
                 emit("message_edited", {"id": data["id"], "content": data["new_content"]}, broadcast=True)

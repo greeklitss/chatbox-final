@@ -190,6 +190,27 @@
             height: 100%;
         }
 
+
+        #gif-picker { 
+    display:none; 
+    position:absolute; 
+    bottom:150px; 
+    left:20px; 
+    background:#000; 
+    border:2px solid var(--gold); 
+    border-radius:15px; 
+    width:300px; 
+    height:400px; 
+    z-index:2000; 
+    padding:10px; 
+    flex-direction:column; 
+    box-shadow: 0 0 20px black;
+}
+#gif-results { overflow-y:auto; display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:10px; }
+#gif-search { background:#222; color:white; border:1px solid var(--gold); padding:8px; border-radius:5px; width:90%; }
+
+
+
         #user-list-content {
             flex: 1;
             overflow-y: auto;
@@ -269,10 +290,15 @@
             </div>
 
             <div class="input-area">
+                 <div id="gif-picker" style="display:none; position:absolute; bottom:150px; left:20px; background:#000; border:2px solid var(--gold); border-radius:15px; width:300px; height:400px; z-index:2000; padding:10px; flex-direction:column; box-shadow: 0 0 20px black;">
+                     <input type="text" id="gif-search" placeholder="Αναζήτηση GIF..." onkeyup="searchGifs(this.value)" style="width:90%; padding:8px; background:#222; color:white; border:1px solid var(--gold); border-radius:5px;">
+                     <div id="gif-results" style="overflow-y:auto; display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:10px;"></div>
+            </div>
                 <div class="toolbar">
                     <button class="tool-btn" onclick="document.execCommand('bold')"><b>B</b></button>
                     <button class="tool-btn" onclick="document.execCommand('italic')"><i>I</i></button>
                     <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:30px; height:30px; cursor:pointer;">
+                    
                     <button onclick="addEmoji('🎅')" class="tool-btn">🎅</button>
                     <button onclick="addEmoji('🎄')" class="tool-btn">🎄</button>
                     <button onclick="addEmoji('🎁')" class="tool-btn">🎁</button>
@@ -281,13 +307,16 @@
                     <button onclick="addEmoji('🔥')" class="tool-btn">🔥</button>
                     <button onclick="addEmoji('🎶')" class="tool-btn">🎶</button>
                     <button onclick="addEmoji('⭐')" class="tool-btn">⭐</button>
+                    <button id="emoji-trigger" class="tool-btn">😊</button>
+                    <button onclick="toggleGifPicker()" class="tool-btn">GIF</button>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι..."></div>
+                <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι..."></div>
                     <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer;">ΣΤΕΙΛΕ</button>
                 </div>
             </div>
-        </div> <div class="sidebar">
+
+            <div class="sidebar">
             <div style="color:var(--gold); font-weight:bold; margin-bottom:15px; font-family: 'Orbitron';">ONLINE</div>
             <div id="user-list-content"></div>
         </div>
@@ -338,6 +367,16 @@ socket.on("message", function(data) {
     msgDiv.style = "margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;";
     
     const finalContent = processMessageContent(data.content);
+    msgDiv.innerHTML = `
+        <img src="${data.avatar_url}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold);">
+        <div style="display: flex; flex-direction: column;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+                <strong style="color: ${data.color}; font-size: 0.9em;">${data.display_name}:</strong>
+            ${actions}
+        </div>
+        <span class="message-content" data-raw-content="${data.content}" style="color: white; text-shadow: 1px 1px 2px black;">${finalContent}</span>
+    </div>
+`;
 
     // 2. Διορθωμένος έλεγχος για τα κουμπιά Edit/Delete
     let actions = `<span class="msg-time">${data.timestamp}</span>`;
@@ -534,8 +573,52 @@ function updateDJImage() {
 
 // Εκτέλεση κάθε 5 δευτερόλεπτα για να αλλάζει η φωτό όταν αλλάζει ο DJ
 setInterval(updateDJImage, 5000);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@joypixels/emoji-button@4.6.3/dist/index.min.js"></script>
 
+<script>
+// Λειτουργία Emoji
+const picker = new EmojiButton({ 
+    theme: 'dark', 
+    position: 'top-start',
+    autoHide: false // Για να μην κλείνει αν πατήσεις κατά λάθος δίπλα
+});
 
+const emojiBtn = document.getElementById('emoji-trigger');
+
+picker.on('emoji', selection => { 
+    document.getElementById('chat-input').innerHTML += selection.emoji; 
+});
+
+emojiBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    picker.togglePicker(emojiBtn);
+});
+
+// Λειτουργία GIF (Tenor API)
+async function searchGifs(term = "") {
+    const apiKey = "LIVDSRZULEUB";
+    const url = term 
+        ? `https://g.tenor.com/v1/search?q=${term}&key=${apiKey}&limit=12` 
+        : `https://g.tenor.com/v1/trending?key=${apiKey}&limit=12`;
+    
+    const res = await fetch(url);
+    const data = await res.json();
+    document.getElementById('gif-results').innerHTML = data.results.map(g => 
+        `<img src="${g.media[0].nanogif.url}" onclick="sendGif('${g.media[0].gif.url}')" style="width:100%; border-radius:5px; cursor:pointer;">`
+    ).join('');
+}
+
+function toggleGifPicker() {
+    const gp = document.getElementById('gif-picker');
+    gp.style.display = gp.style.display === 'flex' ? 'none' : 'flex';
+    if(gp.style.display === 'flex') searchGifs(""); 
+}
+
+function sendGif(url) {
+    socket.emit('message', { content: url });
+    document.getElementById('gif-picker').style.display = 'none';
+}
 </script>
 </body>
 </html>
