@@ -15,20 +15,24 @@
         }
 
         body {
-            background-color: #050a14;
-            background-size: cover !important;
-            background-position: center !important;
-            background-attachment: fixed !important;
-            background-repeat: no-repeat !important;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            font-family: 'Roboto', sans-serif;
-        }
+    background-color: #050a14;
+    margin: 0;
+    /* ΑΛΛΑΓΗ: Βγάζουμε το height: 100vh και το overflow: hidden */
+    min-height: 100vh; 
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Επιτρέπει το σκρολάρισμα προς τα κάτω */
+    overflow-x: hidden;
+    font-family: 'Roboto', sans-serif;
+}
 
         /* SNOW LAYER */
+        #snowCanvas { 
+    pointer-events: none !important; 
+    z-index: 1; 
+}
+
+
         .snow { 
             position: fixed; 
             top: 0; 
@@ -108,19 +112,21 @@
 
 
 
-       .main { 
-            display: flex; 
-            flex: 1; 
-            height: calc(100vh - 125px); /* Αφαιρεί το ύψος του header */
-            overflow: hidden; 
-        }
+       /* Κλειδώνει τις κολώνες δίπλα-δίπλα */
+.main { 
+    display: flex !important; 
+    flex-direction: row !important; 
+    height: 800px; 
+    width: 100%; 
+    overflow: visible; 
+}
 
-        #chat-window { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100%;
-        }
+#chat-window { 
+    flex: 1; /* Παίρνει όλο τον ελεύθερο χώρο */
+    display: flex; 
+    flex-direction: column; 
+    height: 100%;
+}
 
         #chat-box {
     display: block !important;
@@ -181,14 +187,13 @@
         .emoji-btn { font-size: 1.4em; }
 
         /* SIDEBAR */
-        .sidebar { 
-            width: 200px; 
-            background: rgba(0, 0, 0, 0.7); 
-            border-left: 2px solid var(--gold); 
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
+       .sidebar { 
+    width: 250px !important; 
+    min-width: 250px;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8); 
+    border-left: 2px solid var(--gold); 
+}
 
 
         #gif-picker { 
@@ -289,7 +294,7 @@
                 {% endfor %}
             </div>
 
-            <<div class="input-area">
+            <div class="input-area">
     <div id="gif-picker" style="display:none; position:absolute; bottom:160px; left:20px; background:#000; border:2px solid var(--gold); border-radius:15px; width:300px; height:400px; z-index:9999; padding:10px; flex-direction:column;">
         <input type="text" id="gif-search" placeholder="Αναζήτηση GIF..." onkeyup="searchGifs(this.value)" style="width:92%; padding:8px; background:#222; color:white; border:1px solid var(--gold); margin-bottom:10px;">
         <div id="gif-results" style="overflow-y:auto; display:grid; grid-template-columns: 1fr 1fr; gap:5px;"></div>
@@ -363,6 +368,7 @@
 socket.on("message", function(data) {
     const currentUserId = parseInt('{{ current_user.id }}');
     const currentUserRole = '{{ current_user.role }}';
+    const chatBox = document.getElementById('chat-box');
 
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message';
@@ -370,30 +376,21 @@ socket.on("message", function(data) {
     msgDiv.style = "margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;";
     
     const finalContent = processMessageContent(data.content);
-    msgDiv.innerHTML = `
-        <img src="${data.avatar_url}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold);">
-        <div style="display: flex; flex-direction: column;">
-            <div style="display: flex; align-items: baseline; gap: 8px;">
-                <strong style="color: ${data.color}; font-size: 0.9em;">${data.display_name}:</strong>
-            ${actions}
-        </div>
-        <span class="message-content" data-raw-content="${data.content}" style="color: white; text-shadow: 1px 1px 2px black;">${finalContent}</span>
-    </div>
-`;
 
-    // 2. Διορθωμένος έλεγχος για τα κουμπιά Edit/Delete
+    // 1. ΠΡΩΤΑ ορίζουμε τα actions (κουμπιά)
     let actions = `<span class="msg-time">${data.timestamp}</span>`;
     
-    // Έλεγχος αν είναι δικό μου το μήνυμα Ή αν είμαι admin/owner
+    // Αν είναι δικό μου το μήνυμα ή είμαι admin/owner -> Edit
     if (data.user_id === currentUserId || currentUserRole !== "user") {
         actions += ` <i class="fas fa-edit" onclick="editMsg(${data.id})" style="cursor:pointer; font-size:0.7em; color:gray; margin-left:5px;"></i>`;
     }
     
-    // Έλεγχος αν είμαι admin/owner για διαγραφή
+    // Αν είμαι admin/owner -> Delete
     if (currentUserRole !== "user") {
         actions += ` <i class="fas fa-trash" onclick="deleteMsg(${data.id})" style="cursor:pointer; font-size:0.7em; color:red; margin-left:5px;"></i>`;
     }
 
+    // 2. ΜΕΤΑ φτιάχνουμε το HTML μία φορά σωστά
     msgDiv.innerHTML = `
         <img src="${data.avatar_url}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold);">
         <div style="display: flex; flex-direction: column;">
@@ -401,13 +398,13 @@ socket.on("message", function(data) {
                 <strong style="color: ${data.color}; font-size: 0.9em;">${data.display_name}:</strong>
                 ${actions}
             </div>
-            <span class="message-content" style="color: white; text-shadow: 1px 1px 2px black;">${finalContent}</span>
+            <span class="message-content" data-raw-content='${data.content}' style="color: white; text-shadow: 1px 1px 2px black;">${finalContent}</span>
         </div>
     `;
+
     chatBox.appendChild(msgDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 });
-
 
 
 
@@ -601,32 +598,30 @@ emojiBtn.addEventListener('click', (e) => {
 // Λειτουργία GIF (Tenor API)
 async function searchGifs(term = "") {
     const apiKey = "LIVDSRZULEUB";
+    // Αν το term είναι κενό, φέρε Trending, αλλιώς κάνε search
     const url = term 
-        ? `https://g.tenor.com/v1/search?q=${term}&key=${apiKey}&limit=12` 
+        ? `https://g.tenor.com/v1/search?q=${encodeURIComponent(term)}&key=${apiKey}&limit=12` 
         : `https://g.tenor.com/v1/trending?key=${apiKey}&limit=12`;
     
     const res = await fetch(url);
     const data = await res.json();
-    document.getElementById('gif-results').innerHTML = data.results.map(g => 
-        `<img src="${g.media[0].nanogif.url}" onclick="sendGif('${g.media[0].gif.url}')" style="width:100%; border-radius:5px; cursor:pointer;">`
-    ).join('');
+    const resultsDiv = document.getElementById('gif-results');
+    
+    if (data.results) {
+        resultsDiv.innerHTML = data.results.map(g => 
+            `<img src="${g.media[0].nanogif.url}" onclick="sendGif('${g.media[0].gif.url}')" style="width:100%; cursor:pointer;">`
+        ).join('');
+    }
 }
 
 function toggleGifPicker(event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation(); // Σταματάει το Emoji Picker από το να "ακούσει" το κλικ
-    }
-    
+    event.preventDefault();
     const gp = document.getElementById('gif-picker');
     const isVisible = gp.style.display === 'flex';
-    
     gp.style.display = isVisible ? 'none' : 'flex';
-    
-    if (!isVisible) {
-        searchGifs(""); // Φορτώνει τα trending gifs
-    }
+    if (!isVisible) searchGifs(""); // Φορτώνει τα trending αμέσως
 }
+
 </script>
 </body>
 </html>
