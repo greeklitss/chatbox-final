@@ -289,32 +289,35 @@
                 {% endfor %}
             </div>
 
-            <div class="input-area">
-                 <div id="gif-picker" style="display:none; position:absolute; bottom:150px; left:20px; background:#000; border:2px solid var(--gold); border-radius:15px; width:300px; height:400px; z-index:2000; padding:10px; flex-direction:column; box-shadow: 0 0 20px black;">
-                     <input type="text" id="gif-search" placeholder="Αναζήτηση GIF..." onkeyup="searchGifs(this.value)" style="width:90%; padding:8px; background:#222; color:white; border:1px solid var(--gold); border-radius:5px;">
-                     <div id="gif-results" style="overflow-y:auto; display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:10px;"></div>
-            </div>
-                <div class="toolbar">
-                    <button class="tool-btn" onclick="document.execCommand('bold')"><b>B</b></button>
-                    <button class="tool-btn" onclick="document.execCommand('italic')"><i>I</i></button>
-                    <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:30px; height:30px; cursor:pointer;">
-                    
-                    <button onclick="addEmoji('🎅')" class="tool-btn">🎅</button>
-                    <button onclick="addEmoji('🎄')" class="tool-btn">🎄</button>
-                    <button onclick="addEmoji('🎁')" class="tool-btn">🎁</button>
-                    <button onclick="addEmoji('🔔')" class="tool-btn">🔔</button>
-                    <button onclick="addEmoji('❄️')" class="tool-btn">❄️</button>
-                    <button onclick="addEmoji('🔥')" class="tool-btn">🔥</button>
-                    <button onclick="addEmoji('🎶')" class="tool-btn">🎶</button>
-                    <button onclick="addEmoji('⭐')" class="tool-btn">⭐</button>
-                    <button id="emoji-trigger" class="tool-btn">😊</button>
-                    <button onclick="toggleGifPicker()" class="tool-btn">GIF</button>
-                </div>
-                <div style="display:flex; gap:10px;">
-                <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι..."></div>
-                    <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer;">ΣΤΕΙΛΕ</button>
-                </div>
-            </div>
+            <<div class="input-area">
+    <div id="gif-picker" style="display:none; position:absolute; bottom:160px; left:20px; background:#000; border:2px solid var(--gold); border-radius:15px; width:300px; height:400px; z-index:9999; padding:10px; flex-direction:column;">
+        <input type="text" id="gif-search" placeholder="Αναζήτηση GIF..." onkeyup="searchGifs(this.value)" style="width:92%; padding:8px; background:#222; color:white; border:1px solid var(--gold); margin-bottom:10px;">
+        <div id="gif-results" style="overflow-y:auto; display:grid; grid-template-columns: 1fr 1fr; gap:5px;"></div>
+    </div>
+
+    <div class="toolbar">
+        <button type="button" class="tool-btn" onclick="document.execCommand('bold')"><b>B</b></button>
+        <button type="button" class="tool-btn" onclick="document.execCommand('italic')"><i>I</i></button>
+        <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:30px; height:30px; cursor:pointer; vertical-align:middle;">
+        
+        <button type="button" onclick="addEmoji('🎅')" class="tool-btn">🎅</button>
+        <button type="button" onclick="addEmoji('🎄')" class="tool-btn">🎄</button>
+        <button type="button" onclick="addEmoji('🎁')" class="tool-btn">🎁</button>
+        <button type="button" onclick="addEmoji('🔔')" class="tool-btn">🔔</button>
+        <button type="button" onclick="addEmoji('❄️')" class="tool-btn">❄️</button>
+        <button type="button" onclick="addEmoji('🔥')" class="tool-btn">🔥</button>
+        <button type="button" onclick="addEmoji('🎶')" class="tool-btn">🎶</button>
+        <button type="button" onclick="addEmoji('⭐')" class="tool-btn">⭐</button>
+        
+        <button type="button" id="emoji-trigger" class="tool-btn">😊</button>
+        <button type="button" onclick="toggleGifPicker(event)" class="tool-btn ignore-emoji">GIF</button>
+    </div>
+
+    <div style="display:flex; gap:10px; align-items: center;">
+        <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι..."></div>
+        <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer; height:50px; flex-shrink:0;">ΣΤΕΙΛΕ</button>
+    </div>
+</div>
 
             <div class="sidebar">
             <div style="color:var(--gold); font-weight:bold; margin-bottom:15px; font-family: 'Orbitron';">ONLINE</div>
@@ -609,15 +612,20 @@ async function searchGifs(term = "") {
     ).join('');
 }
 
-function toggleGifPicker() {
+function toggleGifPicker(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation(); // Σταματάει το Emoji Picker από το να "ακούσει" το κλικ
+    }
+    
     const gp = document.getElementById('gif-picker');
-    gp.style.display = gp.style.display === 'flex' ? 'none' : 'flex';
-    if(gp.style.display === 'flex') searchGifs(""); 
-}
-
-function sendGif(url) {
-    socket.emit('message', { content: url });
-    document.getElementById('gif-picker').style.display = 'none';
+    const isVisible = gp.style.display === 'flex';
+    
+    gp.style.display = isVisible ? 'none' : 'flex';
+    
+    if (!isVisible) {
+        searchGifs(""); // Φορτώνει τα trending gifs
+    }
 }
 </script>
 </body>
