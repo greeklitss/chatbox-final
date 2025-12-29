@@ -112,42 +112,34 @@
 
 
 
-       /* Κλειδώνει τις κολώνες δίπλα-δίπλα */
 .main { 
     display: flex !important; 
-    flex-direction: row !important; 
-    height: 800px; 
+    flex-direction: row !important; /* Αναγκάζει Sidebar και Chat να είναι στην ίδια ευθεία */
     width: 100%; 
-    overflow: visible; 
+    max-width: 100vw;
+    height: 800px; /* Ή όσο ύψος θέλεις */
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 #chat-window { 
-    flex: 1; /* Παίρνει όλο τον ελεύθερο χώρο */
+    flex: 1; /* Παίρνει όλο τον ελεύθερο χώρο αριστερά */
     display: flex; 
     flex-direction: column; 
     height: 100%;
 }
-
-        #chat-box {
-    display: block !important;
-    visibility: visible !important;
+#chat-box {
     flex: 1;
-    min-height: 500px; /* Τώρα θα πάρει ύψος */
     overflow-y: auto;
     padding: 20px;
-    
-    background-color: rgba(255, 255, 255, 0.1) !important; 
     background-image: url('/static/radioparea.png') !important;
-    background-size: cover !important;
+    background-size: contain !important; /* Αλλάζουμε το cover σε contain για να μην "μπουκώνει" */
     background-position: center !important;
     background-repeat: no-repeat !important;
-
-    border: 2px solid var(--gold);
-    border-radius: 15px;
-    position: relative;
-    z-index: 5;
+    background-color: #050a14 !important;
+    border: 1px solid rgba(212, 175, 55, 0.3);
 }
-
         .message { 
             background: transparent !important; /* Εξαφάνιση γκρι μπάρας */
             border: none !important; 
@@ -187,14 +179,15 @@
         .emoji-btn { font-size: 1.4em; }
 
         /* SIDEBAR */
-       .sidebar { 
-    width: 250px !important; 
-    min-width: 250px;
+.sidebar { 
+    width: 200px !important; 
+    min-width: 200px;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8); 
+    background: rgba(0, 0, 0, 0.85); 
     border-left: 2px solid var(--gold); 
+    display: flex;
+    flex-direction: column;
 }
-
 
         #gif-picker { 
     display:none; 
@@ -321,14 +314,28 @@
     <div style="display:flex; gap:10px; align-items: center;">
         <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι..."></div>
         <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer; height:50px; flex-shrink:0;">ΣΤΕΙΛΕ</button>
+    </div> </div> </div> <div class="sidebar">
+    <div style="color:var(--gold); font-weight:bold; margin-bottom:15px; font-family: 'Orbitron'; text-align:center;">ONLINE</div>
+    <div id="user-list-content"></div>
+</div> </div>
+        <div class="presentation-container" style="width: 100%; padding: 20px; box-sizing: border-box; background: rgba(0,0,0,0.3); margin-top: 20px;">
+    <h3 style="color: var(--gold); font-family: 'Orbitron'; text-align: center; margin-bottom: 15px; font-size: 1.2em;">
+        <i class="fas fa-desktop"></i> LIVE ΠΑΡΟΥΣΙΑΣΗ
+    </h3>
+    <div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; border: 3px solid var(--gold); border-radius: 15px; overflow: hidden; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);">
+        <iframe 
+            src="ΕΔΩ_ΒΑΖΕΙΣ_ΤΟ_LINK_ΣΟΥ" 
+            frameborder="0" 
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+            allowfullscreen="true" 
+            mozallowfullscreen="true" 
+            webkitallowfullscreen="true">
+        </iframe>
     </div>
 </div>
 
-            <div class="sidebar">
-            <div style="color:var(--gold); font-weight:bold; margin-bottom:15px; font-family: 'Orbitron';">ONLINE</div>
-            <div id="user-list-content"></div>
-        </div>
-    </div>
+
+
     <div id="setModal" class="modal" style="{% if not current_user.has_setup_profile %} display:block; backdrop-filter: blur(15px); {% endif %}">
     <div class="modal-content" style="border: 2px solid var(--fire); box-shadow: 0 0 30px var(--fire);">
         <h3 style="text-align:center; color:var(--gold); font-family:'Orbitron';">
