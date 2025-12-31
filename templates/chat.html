@@ -319,26 +319,34 @@
         <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι..."></div>
         <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer; height:50px; flex-shrink:0;">ΣΤΕΙΛΕ</button>
     </div> </div> </div> <div class="sidebar">
-    <div style="color:var(--gold); font-weight:bold; margin: 15px 0 10px 0; font-family: 'Orbitron'; text-align:center; font-size: 0.8em;">
-        <i class="fas fa-calendar-alt"></i> ΠΡΟΓΡΑΜΜΑ
+    <div style="color:var(--gold); font-weight:bold; margin: 15px 0 10px 0; font-family: 'Orbitron'; text-align:center;">
+        ONLINE
     </div>
-    
-    <div onclick="document.getElementById('progModal').style.display='flex'" 
-         style="cursor: pointer; position: relative; width: 90%; margin: 0 auto 15px auto; border: 1px solid var(--gold); border-radius: 8px; overflow: hidden; transition: 0.3s; box-shadow: 0 0 10px rgba(212,175,55,0.2);"
-         onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        
-        <div style="position: absolute; top:0; left:0; width:100%; height:100%; z-index: 2; background: rgba(0,0,0,0);"></div>
-        
-        <div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
-            <iframe 
-                src="https://docs.google.com/presentation/d/e/2PACX-1vSWKUdDqxVATw0zJ3dhv9itmtduJhmEBG1xCRthIoO7881_ex7OXANm7aEeEuCd9A/embed?start=true&loop=true&delayms=3000&rm=minimal" 
-                frameborder="0" 
-                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;" 
-                allowfullscreen="true">
-            </iframe>
+    <div id="user-list-content" style="margin-bottom: 20px;"></div>
+
+    <div style="border-top: 1px solid rgba(212,175,55,0.2); padding-top: 15px;">
+        <div style="color:var(--gold); font-weight:bold; margin-bottom: 10px; font-family: 'Orbitron'; text-align:center; font-size: 0.8em;">
+            <i class="fas fa-calendar-alt"></i> ΠΡΟΓΡΑΜΜΑ
         </div>
-        <div style="background: var(--gold); color: black; text-align: center; font-size: 10px; font-weight: bold; padding: 2px 0;">ΚΛΙΚ ΓΙΑ ΜΕΓΕΘΥΝΣΗ</div>
+        
+        <div onclick="document.getElementById('progModal').style.display='flex'" 
+             style="cursor: pointer; position: relative; width: 90%; margin: 0 auto; border: 1px solid var(--gold); border-radius: 8px; overflow: hidden; transition: 0.3s; box-shadow: 0 0 10px rgba(212,175,55,0.2);"
+             onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            
+            <div style="position: absolute; top:0; left:0; width:100%; height:100%; z-index: 2; background: rgba(0,0,0,0);"></div>
+            
+            <div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+                <iframe 
+                    src="https://docs.google.com/presentation/d/e/2PACX-1vSWKUdDqxVATw0zJ3dhv9itmtduJhmEBG1xCRthIoO7881_ex7OXANm7aEeEuCd9A/embed?start=true&loop=true&delayms=3000&rm=minimal" 
+                    frameborder="0" 
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;" 
+                    allowfullscreen="true">
+                </iframe>
+            </div>
+            <div style="background: var(--gold); color: black; text-align: center; font-size: 10px; font-weight: bold; padding: 2px 0;">ΚΛΙΚ ΓΙΑ ΜΕΓΕΘΥΝΣΗ</div>
+        </div>
     </div>
+</div>
 
     <div style="color:var(--gold); font-weight:bold; margin-bottom:15px; font-family: 'Orbitron'; text-align:center; border-top: 1px solid rgba(212,175,55,0.2); padding-top: 15px;">ONLINE</div>
     <div id="user-list-content"></div>
