@@ -319,21 +319,29 @@
         <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι..."></div>
         <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer; height:50px; flex-shrink:0;">ΣΤΕΙΛΕ</button>
     </div> </div> </div> <div class="sidebar">
-    <div style="color:var(--gold); font-weight:bold; margin-bottom:15px; font-family: 'Orbitron'; text-align:center;">ONLINE</div>
-    <div id="user-list-content"></div>
-</div> </div>
-        <div class="presentation-container" style="width: 100%; display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.3); padding: 10px; margin-top: 10px;">
-    <h3 style="color: var(--gold); font-family: 'Orbitron'; text-align: center; margin-bottom: 10px; font-size: 1em;">
-        <i class="fas fa-desktop"></i> LIVE ΠΑΡΟΥΣΙΑΣΗ
-    </h3>
-    <div style="position: relative; width: 60%; height: 0; padding-bottom: 33.75%; border: 2px solid var(--gold); border-radius: 10px; overflow: hidden; box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);">
-        <iframe 
-    src="https://docs.google.com/presentation/d/e/2PACX-1vSWKUdDqxVATw0zJ3dhv9itmtduJhmEBG1xCRthIoO7881_ex7OXANm7aEeEuCd9A/embed?start=true&loop=true&delayms=3000&rm=minimal" 
-    frameborder="0" 
-    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
-    allowfullscreen="true">
-</iframe>
+    <div style="color:var(--gold); font-weight:bold; margin: 15px 0 10px 0; font-family: 'Orbitron'; text-align:center; font-size: 0.8em;">
+        <i class="fas fa-calendar-alt"></i> ΠΡΟΓΡΑΜΜΑ
     </div>
+    
+    <div onclick="document.getElementById('progModal').style.display='flex'" 
+         style="cursor: pointer; position: relative; width: 90%; margin: 0 auto 15px auto; border: 1px solid var(--gold); border-radius: 8px; overflow: hidden; transition: 0.3s; box-shadow: 0 0 10px rgba(212,175,55,0.2);"
+         onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        
+        <div style="position: absolute; top:0; left:0; width:100%; height:100%; z-index: 2; background: rgba(0,0,0,0);"></div>
+        
+        <div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+            <iframe 
+                src="https://docs.google.com/presentation/d/e/2PACX-1vSWKUdDqxVATw0zJ3dhv9itmtduJhmEBG1xCRthIoO7881_ex7OXANm7aEeEuCd9A/embed?start=true&loop=true&delayms=3000&rm=minimal" 
+                frameborder="0" 
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;" 
+                allowfullscreen="true">
+            </iframe>
+        </div>
+        <div style="background: var(--gold); color: black; text-align: center; font-size: 10px; font-weight: bold; padding: 2px 0;">ΚΛΙΚ ΓΙΑ ΜΕΓΕΘΥΝΣΗ</div>
+    </div>
+
+    <div style="color:var(--gold); font-weight:bold; margin-bottom:15px; font-family: 'Orbitron'; text-align:center; border-top: 1px solid rgba(212,175,55,0.2); padding-top: 15px;">ONLINE</div>
+    <div id="user-list-content"></div>
 </div>
 
 
@@ -669,6 +677,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// Κλείσιμο του modal όταν ο χρήστης κάνει κλικ οπουδήποτε έξω από αυτό
+window.onclick = function(event) {
+    var modal = document.getElementById('progModal');
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
 </script>
+<div id="progModal" style="display:none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center;">
+    <div style="background: #111; border: 2px solid var(--gold); width: 90%; max-width: 900px; padding: 20px; border-radius: 15px; position: relative; margin: 5% auto;">
+        
+        <span onclick="document.getElementById('progModal').style.display='none'" 
+              style="position: absolute; right: 20px; top: 10px; color: var(--gold); font-size: 35px; font-weight: bold; cursor: pointer;">&times;</span>
+        
+        <h2 style="color: var(--gold); font-family: 'Orbitron'; text-align: center; margin-bottom: 20px;">
+            <i class="fas fa-calendar-alt"></i> ΠΡΟΓΡΑΜΜΑ ΡΑΔΙΟΠΑΡΕΑ
+        </h2>
+
+        <div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; border-radius: 10px; overflow: hidden;">
+            <iframe 
+                src="https://docs.google.com/presentation/d/e/2PACX-1vSWKUdDqxVATw0zJ3dhv9itmtduJhmEBG1xCRthIoO7881_ex7OXANm7aEeEuCd9A/embed?start=true&loop=true&delayms=3000&rm=minimal" 
+                frameborder="0" 
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                allowfullscreen="true">
+            </iframe>
+        </div>
+    </div>
+</div>
 </body>
 </html>
