@@ -707,18 +707,31 @@ function initEmojiPicker() {
         .then(response => response.text())
         .then(html => {
             emojiList.innerHTML = html;
+            
+            // Εδώ πιάνουμε όλα τα spans που φορτώθηκαν
             emojiList.querySelectorAll('.emoji-item').forEach(el => {
                 el.onclick = function() {
-                    inputField.innerHTML += this.innerText;
-                    inputField.focus();
-                    const range = document.createRange();
-                    const sel = window.getSelection();
-                    range.selectNodeContents(inputField);
-                    range.collapse(false);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
+                    const gifUrl = this.getAttribute('data-gif');
+                    
+                    if (gifUrl) {
+                        // ΑΝ ΕΙΝΑΙ GIF: Το στέλνει κατευθείαν στο chat
+                        socket.emit('message', { content: gifUrl });
+                        picker.style.display = 'none'; // Κλείνει το παράθυρο
+                    } else {
+                        // ΑΝ ΕΙΝΑΙ EMOJI: Το βάζει στο κουτί που γράφεις
+                        inputField.innerHTML += this.innerText;
+                        inputField.focus();
+                        
+                        // Κώδικας για να πάει ο κέρσορας στο τέλος
+                        const range = document.createRange();
+                        const sel = window.getSelection();
+                        range.selectNodeContents(inputField);
+                        range.collapse(false);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    }
                 };
-            });
+            }); // Εδώ έκλεινε το σφάλμα
         })
         .catch(err => console.error("Error loading emojis:", err));
 
@@ -729,7 +742,6 @@ function initEmojiPicker() {
         picker.style.display = isHidden ? 'block' : 'none';
     };
 }
-
 // ==========================================
 // 3. ΕΚΚΙΝΗΣΗ & UPDATE
 // ==========================================
