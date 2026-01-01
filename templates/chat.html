@@ -231,6 +231,7 @@
         input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--gold); background: #222; color: white; }
        
         </style>
+<script src="https://cdn.jsdelivr.net/npm/@joypixels/emoji-button@4.6.3/dist/index.min.js"></script>
 </head>
 <body>
     <canvas class="snow" id="snowCanvas"></canvas>
@@ -594,8 +595,6 @@ function updateDJImage() {
 setInterval(updateDJImage, 5000);
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/@joypixels/emoji-button@4.6.3/dist/index.min.js"></script>
-
 <script>
 // --- ΛΕΙΤΟΥΡΓΙΑ GIF (Tenor API) ---
 // Χρησιμοποίησε ένα δικό σου API Key από το Tenor Developer Portal αν αυτό βγάζει 401
@@ -611,7 +610,8 @@ async function searchGifs(term = "") {
     // ΣΗΜΑΝΤΙΚΟ: Αν συνεχίζει το 401 σφάλμα, το κλειδί LIVDSRZULEUB θέλει αντικατάσταση
     const apiKey = "L849D98S6N50"; 
     const endpoint = term.trim() === "" ? "trending" : "search";
-    const url = `https://g.tenor.com/v1/${endpoint}?q=${encodeURIComponent(term)}&key=${apiKey}&limit=12`;
+    const url = `https://tenor.googleapis.com/v2/${endpoint}?q=${encodeURIComponent(term)}&key=${apiKey}&limit=12`;
+
     
     try {
         const res = await fetch(url);
@@ -621,8 +621,8 @@ async function searchGifs(term = "") {
         
         if (data.results && data.results.length > 0) {
             resultsDiv.innerHTML = data.results.map(g => 
-                `<img src="${g.media[0].nanogif.url}" onclick="sendGif('${g.media[0].gif.url}')" style="width:100%; height:80px; object-fit:cover; cursor:pointer; border-radius:5px;">`
-            ).join('');
+    `<img src="${g.media_formats.tinygif.url}" onclick="sendGif('${g.media_formats.gif.url}')" style="width:100%; height:80px; object-fit:cover; cursor:pointer; border-radius:5px;">`
+).join('');
         } else {
             resultsDiv.innerHTML = "<p style='color:gray; text-align:center; grid-column: 1/3;'>Δεν βρέθηκαν GIF</p>";
         }
