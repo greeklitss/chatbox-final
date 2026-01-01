@@ -405,6 +405,9 @@ socket.on("message", function(data) {
     msgDiv.style = "margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;";
     
     const finalContent = processMessageContent(data.content);
+    
+    // Εδώ καθαρίζουμε το κείμενο από HTML tags για να αποθηκευτεί "καθαρό" το link στο data-raw-content
+    const rawText = data.content.replace(/<\/?[^>]+(>|$)/g, "");
 
     // 1. ΠΡΩΤΑ ορίζουμε τα actions (κουμπιά)
     let actions = `<span class="msg-time">${data.timestamp}</span>`;
@@ -427,7 +430,7 @@ socket.on("message", function(data) {
                 <strong style="color: ${data.color}; font-size: 0.9em;">${data.display_name}:</strong>
                 ${actions}
             </div>
-            <span class="message-content" data-raw-content='${data.content}' style="color: white; text-shadow: 1px 1px 2px black;">${finalContent}</span>
+            <span class="message-content" data-raw-content="${rawText}" style="color: white; text-shadow: 1px 1px 2px black;">${finalContent}</span>
         </div>
     `;
 
@@ -513,18 +516,27 @@ socket.on('clear_chat_client', () => {
 
 
 
-        // Κεντρική συνάρτηση μετατροπής Links σε Εικόνες/Video
-        function processMessageContent(content) {
-            let html = content;
-            const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
-            const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+function processMessageContent(content) {
+    if (!content) return "";
+    
+    let html = content;
+    // Regex που αναγνωρίζει μόνο καθαρά links εικόνων
+    const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/gi;
+    const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
 
-            html = html.replace(imgRegex, (u) => `<br><img src="${u}" style="max-width:100%; border-radius:10px; margin-top:10px; border: 2px solid var(--gold);">`);
-            html = html.replace(ytRegex, (u, id) => `<br><iframe width="100%" height="250" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:15px; border: 2px solid var(--fire);"></iframe>`);
-            
-            return html;
-        }
+    // Μετατροπή εικόνων: Ελέγχουμε αν το link είναι ήδη μέσα σε src για να μην το ξαναφτιάξουμε
+    html = html.replace(imgRegex, (match) => {
+        if (html.includes('src="' + match + '"')) return match; 
+        return `<br><img src="${match}" style="max-width:100%; border-radius:10px; margin-top:10px; border: 2px solid var(--gold);">`;
+    });
 
+    // Μετατροπή YouTube
+    html = html.replace(ytRegex, (u, id) => {
+        return `<br><iframe width="100%" height="250" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:15px; border: 2px solid var(--fire);"></iframe>`;
+    });
+    
+    return html;
+}
         // Αποστολή μηνύματος
         function sendMessage() {
             const content = chatInput.innerHTML.trim();
