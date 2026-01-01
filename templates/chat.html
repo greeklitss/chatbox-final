@@ -298,8 +298,8 @@
     </div>
 
     <div class="toolbar">
-        <button type="button" class="tool-btn" onclick="document.execCommand('bold')"><b>B</b></button>
-        <button type="button" class="tool-btn" onclick="document.execCommand('italic')"><i>I</i></button>
+        <button type="button" class="tool-btn" onclick="document.getElementById('chat-input').focus(); document.execCommand('bold')"><b>B</b></button>
+<button type="button" class="tool-btn" onclick="document.getElementById('chat-input').focus(); document.execCommand('italic')"><i>I</i></button>
         <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:30px; height:30px; cursor:pointer; vertical-align:middle;">
         
         <button type="button" onclick="addEmoji('🎅')" class="tool-btn">🎅</button>
@@ -591,6 +591,8 @@ function updateDJImage() {
         djProfileDiv.innerHTML = `<img src="${internalDJImg.src}" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--gold); box-shadow: 0 0 20px var(--gold); object-fit: cover;">`;
     }
 }
+setInterval(updateDJImage, 5000);
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@joypixels/emoji-button@4.6.3/dist/index.min.js"></script>
 
