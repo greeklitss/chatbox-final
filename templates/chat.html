@@ -319,33 +319,22 @@
         <button type="button" onclick="addEmoji('⭐')" class="tool-btn">⭐</button>
         
         <button type="button" id="emoji-trigger" class="tool-btn">😊</button>
-        <div id="custom-emoji-picker" style="display:none; position: absolute; bottom: 85px; left: 10px; background: rgba(15, 15, 15, 0.98); border: 2px solid var(--gold); border-radius: 20px; padding: 15px; width: 280px; z-index: 10001; box-shadow: 0 0 30px rgba(212, 175, 55, 0.4); backdrop-filter: blur(15px);">
+       <div id="custom-emoji-picker" style="display:none; position: absolute; bottom: 85px; left: 10px; background: rgba(15, 15, 15, 0.98); border: 2px solid var(--gold); border-radius: 20px; padding: 15px; width: 280px; z-index: 10001; box-shadow: 0 0 30px rgba(212, 175, 55, 0.4); backdrop-filter: blur(15px);">
     
-    <div style="color: var(--gold); font-family: 'Orbitron'; font-size: 11px; margin-bottom: 12px; text-align: center; letter-spacing: 2px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 8px;">
+    <div style="color: var(--gold); font-family: 'Orbitron'; font-size: 11px; margin-bottom: 12px; text-align: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 8px;">
         <i class="fas fa-headphones"></i> RADIO PAREA VIP
     </div>
 
-    <div id="emoji-list" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; text-align: center; margin-bottom: 15px;">
-        <span class="emoji-item" title="Music">🎶</span><span class="emoji-item">🎵</span><span class="emoji-item">🎧</span><span class="emoji-item">🎤</span><span class="emoji-item">🎸</span><span class="emoji-item">🎹</span>
-        <span class="emoji-item">🕺</span><span class="emoji-item">💃</span><span class="emoji-item">🥳</span><span class="emoji-item">👯‍♂️</span><span class="emoji-item">🥂</span><span class="emoji-item">🍺</span>
-        <span class="emoji-item">😊</span><span class="emoji-item">😂</span><span class="emoji-item">🤣</span><span class="emoji-item">😎</span><span class="emoji-item">🤩</span><span class="emoji-item">😍</span>
-        <span class="emoji-item">😉</span><span class="emoji-item">😜</span><span class="emoji-item">🤫</span><span class="emoji-item">💎</span><span class="emoji-item">✨</span><span class="emoji-item">⭐</span>
-        <span class="emoji-item">❤️</span><span class="emoji-item">🔥</span> <span class="emoji-item">👏</span><span class="emoji-item">🙌</span><span class="emoji-item">👑</span><span class="emoji-item">🎄</span>
-    </div>
-
-    {% if current_user.role in ['admin', 'owner'] %}
-    <div style="border-top: 1px solid #333; padding-top: 12px; margin-top: 5px;">
-        <div style="display: flex; gap: 5px; align-items: center;">
-            <input type="text" id="admin-url-input" placeholder="Paste Image/GIF Link..." style="flex: 1; background: #000; border: 1px solid var(--gold); color: white; border-radius: 8px; padding: 7px; font-size: 12px; outline: none;">
-            <button type="button" onclick="sendUrlAsMessage()" style="background: var(--gold); color: black; border: none; border-radius: 8px; padding: 7px 12px; cursor: pointer; font-weight: bold; font-size: 11px; transition: 0.3s;">
-                <i class="fas fa-paper-plane"></i>
-            </button>
+    <div id="emoji-list" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; text-align: center; max-height: 220px; overflow-y: auto; padding-right: 5px;">
         </div>
-    </div>
-    {% endif %}
 </div>
 
 <style>
+    /* Styling για το Scrollbar του Emoji Picker */
+    #emoji-list::-webkit-scrollbar { width: 4px; }
+    #emoji-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+    #emoji-list::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+</style>
     /* Styling για τα Emojis */
     .emoji-item { 
         cursor: pointer; 
@@ -708,16 +697,45 @@ function toggleGifPicker(event) {
 function initEmojiPicker() {
     const emojiBtn = document.getElementById('emoji-trigger');
     const picker = document.getElementById('custom-emoji-picker');
+    const emojiList = document.getElementById('emoji-list');
     const inputField = document.getElementById('chat-input');
 
     if (!emojiBtn || !picker) return;
 
+    // 1. Φόρτωμα των emojis από εξωτερική σελίδα
+    fetch('/static/emoticons.html') // <--- Βεβαιώσου ότι η διαδρομή είναι σωστή
+        .then(response => response.text())
+        .then(html => {
+            emojiList.innerHTML = html;
+            
+            // 2. Ενεργοποίηση των κλικ ΑΦΟΥ φορτωθούν τα emojis
+            emojiList.querySelectorAll('.emoji-item').forEach(el => {
+                el.onclick = function() {
+                    if (inputField) {
+                        inputField.innerHTML += this.innerText;
+                        
+                        // Cursor στο τέλος
+                        const range = document.createRange();
+                        const sel = window.getSelection();
+                        range.selectNodeContents(inputField);
+                        range.collapse(false);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                        inputField.focus();
+                    }
+                };
+            });
+        })
+        .catch(err => console.error("Σφάλμα φόρτωσης emojis:", err));
+
+    // Άνοιγμα/Κλείσιμο παραθύρου
     emojiBtn.onclick = function(e) {
         e.preventDefault();
         e.stopPropagation();
         const isNone = (picker.style.display === 'none' || picker.style.display === '');
         picker.style.display = isNone ? 'block' : 'none';
     };
+};
 
     document.querySelectorAll('.emoji-item').forEach(el => {
         el.onclick = function() {
@@ -735,15 +753,7 @@ function initEmojiPicker() {
     });
 }
 
-function sendUrlAsMessage() {
-    const urlInput = document.getElementById('admin-url-input');
-    const url = urlInput.value.trim();
-    if (url !== '' && typeof socket !== 'undefined') {
-        socket.emit('message', { content: url }); 
-        urlInput.value = '';
-        document.getElementById('custom-emoji-picker').style.display = 'none';
-    }
-}
+
 
 // ==========================================
 // 3. ΕΝΗΜΕΡΩΣΗ DJ & EVENT LISTENERS
