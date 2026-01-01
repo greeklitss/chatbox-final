@@ -663,8 +663,9 @@ function initEmojiPicker() {
     const emojiBtn = document.getElementById('emoji-trigger');
     const inputField = document.getElementById('chat-input');
 
-    if (window.EmojiButton && emojiBtn) {
-        const picker = new window.EmojiButton({ 
+    // Ελέγχουμε αν η βιβλιοθήκη φορτώθηκε στο "window"
+    if (typeof EmojiButton !== 'undefined' && emojiBtn) {
+        const picker = new EmojiButton({ 
             theme: 'dark',
             position: 'top-start',
             zIndex: 10000 
@@ -677,18 +678,18 @@ function initEmojiPicker() {
         };
 
         picker.on('emoji', selection => {
-            inputField.innerHTML += selection.emoji;
+            // Αυτό βάζει το emoji εκεί που γράφεις
             inputField.focus();
+            document.execCommand('insertText', false, selection.emoji);
         });
         
-        console.log("😊 Το Emoji Picker ενεργοποιήθηκε!");
-    } else if (emojiBtn) {
-        // Αν το κουμπί υπάρχει αλλά η βιβλιοθήκη όχι, ξαναδοκίμασε
-        console.log("😊 Αναμονή για βιβλιοθήκη Emoji...");
-        setTimeout(initEmojiPicker, 1000);
+        console.log("😊 Το Emoji Picker είναι έτοιμο!");
+    } else {
+        // Αν δεν είναι έτοιμο, περίμενε λίγο και ξαναδοκίμασε
+        // Αλλά χωρίς να γεμίζεις την κονσόλα με μηνύματα
+        setTimeout(initEmojiPicker, 2000); 
     }
 }
-
 // --- ΓΕΝΙΚΟΙ LISTENERS (ΚΛΕΙΣΙΜΟ PICKERS) ---
 document.addEventListener('DOMContentLoaded', () => {
     // Ξεκινάμε τα Emojis
