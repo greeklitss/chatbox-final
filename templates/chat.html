@@ -657,9 +657,8 @@ setInterval(updateDJImage, 5000);
 // ==========================================
 function sendGif(url) {
     if (url) {
-        // Καθαρίζουμε το link από το &ct=g και οτιδήποτε άλλο μετά το ερωτηματικό
-        const cleanUrl = url.split('&')[0].split('?')[0];
-        socket.emit('message', { content: url });
+        const cleanUrl = url.split('&')[0].split('?')[0]; // Καθαρίζει το &ct=g
+        socket.emit('message', { content: cleanUrl });
         document.getElementById('gif-picker').style.display = 'none';
         document.getElementById('gif-search').value = ''; 
     }
@@ -683,16 +682,18 @@ async function searchGifs(term = "") {
 }
 
 function toggleGifPicker(event) {
-    event.preventDefault();
-    event.stopPropagation();
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
     const gp = document.getElementById('gif-picker');
-    const isVisible = gp.style.display === 'flex';
+    const isVisible = (gp.style.display === 'flex');
     gp.style.display = isVisible ? 'none' : 'flex';
     if (!isVisible) searchGifs(""); 
 }
 
 // ==========================================
-// 2. ΛΕΙΤΟΥΡΓΙΑ EMOJIS (😊) & ADMIN TOOLS
+// 2. ΛΕΙΤΟΥΡΓΙΑ EMOJIS (😊)
 // ==========================================
 function initEmojiPicker() {
     const emojiBtn = document.getElementById('emoji-trigger');
@@ -702,70 +703,36 @@ function initEmojiPicker() {
 
     if (!emojiBtn || !picker) return;
 
-    // 1. Φόρτωμα των emojis από εξωτερική σελίδα
-    fetch('/static/emoticons.html') // <--- Βεβαιώσου ότι η διαδρομή είναι σωστή
+    fetch('/static/emoticons.html')
         .then(response => response.text())
         .then(html => {
             emojiList.innerHTML = html;
-            
-            // 2. Ενεργοποίηση των κλικ ΑΦΟΥ φορτωθούν τα emojis
             emojiList.querySelectorAll('.emoji-item').forEach(el => {
                 el.onclick = function() {
-                    if (inputField) {
-                        inputField.innerHTML += this.innerText;
-                        
-                        // Cursor στο τέλος
-                        const range = document.createRange();
-                        const sel = window.getSelection();
-                        range.selectNodeContents(inputField);
-                        range.collapse(false);
-                        sel.removeAllRanges();
-                        sel.addRange(range);
-                        inputField.focus();
-                    }
+                    inputField.innerHTML += this.innerText;
+                    inputField.focus();
+                    const range = document.createRange();
+                    const sel = window.getSelection();
+                    range.selectNodeContents(inputField);
+                    range.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
                 };
             });
         })
-        .catch(err => console.error("Σφάλμα φόρτωσης emojis:", err));
+        .catch(err => console.error("Error loading emojis:", err));
 
-    // Άνοιγμα/Κλείσιμο παραθύρου
     emojiBtn.onclick = function(e) {
         e.preventDefault();
         e.stopPropagation();
-        const isNone = (picker.style.display === 'none' || picker.style.display === '');
-        picker.style.display = isNone ? 'block' : 'none';
+        const isHidden = (picker.style.display === 'none' || picker.style.display === '');
+        picker.style.display = isHidden ? 'block' : 'none';
     };
-};
-
-    document.querySelectorAll('.emoji-item').forEach(el => {
-        el.onclick = function() {
-            if (inputField) {
-                inputField.innerHTML += this.innerText;
-                const range = document.createRange();
-                const sel = window.getSelection();
-                range.selectNodeContents(inputField);
-                range.collapse(false);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                inputField.focus();
-            }
-        };
-    });
 }
 
-
-
 // ==========================================
-// 3. ΕΝΗΜΕΡΩΣΗ DJ & EVENT LISTENERS
+// 3. ΕΚΚΙΝΗΣΗ & UPDATE
 // ==========================================
-function updateDJImage() {
-    const djProfileDiv = document.getElementById('dj_profile');
-    const internalDJImg = document.querySelector('.sonic_dj_picture img'); 
-    if (internalDJImg && djProfileDiv) {
-        djProfileDiv.innerHTML = `<img src="${internalDJImg.src}" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--gold); box-shadow: 0 0 20px var(--gold); object-fit: cover;">`;
-    }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     initEmojiPicker();
 
@@ -785,7 +752,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    setInterval(updateDJImage, 5000);
+    // Ξεκινάει η ανανέωση της εικόνας DJ
+    if (typeof updateDJImage === 'function') {
+        setInterval(updateDJImage, 5000);
+    }
 });
 </script>
 
