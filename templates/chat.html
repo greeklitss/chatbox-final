@@ -609,7 +609,7 @@ function sendGif(url) {
 
 async function searchGifs(term = "") {
     // ΣΗΜΑΝΤΙΚΟ: Αν συνεχίζει το 401 σφάλμα, το κλειδί LIVDSRZULEUB θέλει αντικατάσταση
-    const apiKey = "LIVDSRZULEUB"; 
+    const apiKey = "L849D98S6N50"; 
     const endpoint = term.trim() === "" ? "trending" : "search";
     const url = `https://g.tenor.com/v1/${endpoint}?q=${encodeURIComponent(term)}&key=${apiKey}&limit=12`;
     
