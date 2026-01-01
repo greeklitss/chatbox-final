@@ -668,6 +668,8 @@ setInterval(updateDJImage, 5000);
 // ==========================================
 function sendGif(url) {
     if (url) {
+        // Καθαρίζουμε το link από το &ct=g και οτιδήποτε άλλο μετά το ερωτηματικό
+        const cleanUrl = url.split('&')[0].split('?')[0];
         socket.emit('message', { content: url });
         document.getElementById('gif-picker').style.display = 'none';
         document.getElementById('gif-search').value = ''; 
