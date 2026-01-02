@@ -338,7 +338,7 @@
 </style>
 <button type="button" class="tool-btn ignore-emoji" onclick="toggleGifPicker(event)">GIF</button>
     </div>
-<div class="style-bar" style="display: flex; gap: 10px; margin: 8px 0; padding: 5px; background: rgba(212,175,55,0.05); border-radius: 8px; flex-wrap: wrap;">
+<div class="style-bar" style="display: flex; gap: 8px; margin: 10px 0; padding: 8px; background: rgba(212,175,55,0.1); border-radius: 10px; flex-wrap: wrap; border: 1px solid rgba(212,175,55,0.2);">
     
     <select id="text-font" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
         <option value="inherit">Font</option>
@@ -354,23 +354,39 @@
 
     <select id="text-glow" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
         <option value="none">No Glow</option>
-        <option value="0 0 8px #d4af37">Gold Glow</option>
-        <option value="0 0 12px #ffffff">Neon White</option>
+        <option value="0 0 10px #d4af37">Gold Glow</option>
+        <option value="0 0 15px #ff0000">Red Flare</option>
     </select>
 
     <select id="text-gradient" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
-        <option value="none">Απλό Χρώμα</option>
+        <option value="none">Plain Color</option>
         <option value="linear-gradient(to right, #d4af37, #ffffff)">Gold-White</option>
-        <option value="linear-gradient(to right, #ff0000, #ffff00)">Fire</option>
-        <option value="linear-gradient(to right, #00c6ff, #0072ff)">Ocean</option>
+        <option value="linear-gradient(45deg, #ff0080, #ff8c00)">Sunset</option>
+    </select>
+
+    <select id="text-animation" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
+        <option value="none">No Motion</option>
+        <option value="blink-animation">Blink (Neon)</option>
+        <option value="pulse-animation">Pulse (Breath)</option>
+        <option value="shake-animation">Shake</option>
     </select>
 
     <select id="text-effect" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
-        <option value="none">Normal</option>
+        <option value="none">Static</option>
         <option value="marquee">Marquee</option>
     </select>
 </div>
-    <div style="display:flex; gap:10px; align-items: center;">
+
+<style>
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.blink-animation { animation: blink 1s infinite; }
+
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+.pulse-animation { animation: pulse 2s infinite; display: inline-block; }
+
+@keyframes shake { 0% { transform: translate(0); } 25% { transform: translate(2px, -2px); } 50% { transform: translate(-2px, 2px); } 75% { transform: translate(2px, 2px); } 100% { transform: translate(0); } }
+.shake-animation { animation: shake 0.3s infinite; display: inline-block; }
+</style>    <div style="display:flex; gap:10px; align-items: center;">
         <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι..."></div>
         <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer; height:50px; flex-shrink:0;">ΣΤΕΙΛΕ</button>
     </div> </div> </div> <div class="sidebar" style="display: flex; flex-direction: column; background: rgba(0,0,0,0.5); border-left: 1px solid var(--gold); width: 250px; height: 100%;">
@@ -623,28 +639,32 @@ function sendMessage() {
         const size = document.getElementById('text-size').value;
         const glow = document.getElementById('text-glow').value;
         const gradient = document.getElementById('text-gradient').value;
+        const animation = document.getElementById('text-animation').value;
         const effect = document.getElementById('text-effect').value;
 
-        let finalMsg;
+        // Βασικό Style
         let style = `font-family:${font}; font-size:${size}; text-shadow:${glow}; display:inline-block;`;
 
-        // Αν υπάρχει gradient, προσθέτουμε τις ειδικές εντολές
+        // Εφαρμογή Gradient
         if (gradient !== 'none') {
             style += `background:${gradient}; -webkit-background-clip:text; -webkit-text-fill-color:transparent;`;
         }
 
+        // Εφαρμογή Animation Class
+        const animationClass = (animation !== 'none') ? animation : '';
+
+        let finalMsg;
         if (effect === 'marquee') {
-            finalMsg = `<marquee style="${style} scrollamount: 5; width:100%;">${content}</marquee>`;
+            finalMsg = `<marquee style="${style} scrollamount: 5; width:100%;" class="${animationClass}">${content}</marquee>`;
         } else {
-            finalMsg = `<span style="${style}">${content}</span>`;
+            finalMsg = `<span style="${style}" class="${animationClass}">${content}</span>`;
         }
 
         socket.emit('message', { content: finalMsg }); 
         chatInput.innerHTML = ''; 
         chatInput.focus();
     }
-}
-        socket.on('users_update', (users) => {
+}        socket.on('users_update', (users) => {
             const userList = document.getElementById('user-list-content');
             if (userList) {
                 userList.innerHTML = users.map(u => `
