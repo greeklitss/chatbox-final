@@ -355,19 +355,22 @@
     <select id="text-glow" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
         <option value="none">No Glow</option>
         <option value="0 0 10px #d4af37">Gold Glow</option>
+        <option value="0 0 15px #ffffff">Neon White</option>
         <option value="0 0 15px #ff0000">Red Flare</option>
     </select>
 
     <select id="text-gradient" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
         <option value="none">Plain Color</option>
         <option value="linear-gradient(to right, #d4af37, #ffffff)">Gold-White</option>
-        <option value="linear-gradient(45deg, #ff0080, #ff8c00)">Sunset</option>
-    </select>
+        <option value="linear-gradient(to right, #ff0000, #ffff00)">Fire</option>
+        <option value="linear-gradient(to right, #cfd8dc, #ffffff, #cfd8dc)">Silver</option>
+        <option value="rainbow-flow">Rainbow Animated</option> </select>
 
     <select id="text-animation" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
         <option value="none">No Motion</option>
-        <option value="blink-animation">Blink (Neon)</option>
-        <option value="pulse-animation">Pulse (Breath)</option>
+        <option value="blink-animation">Blink</option>
+        <option value="pulse-animation">Pulse</option>
+        <option value="floating-animation">Floating</option>
         <option value="shake-animation">Shake</option>
     </select>
 
@@ -376,8 +379,8 @@
         <option value="marquee">Marquee</option>
     </select>
 </div>
-
 <style>
+/* ΤΑ ΔΙΚΑ ΣΟΥ - ΔΕΝ ΑΛΛΑΖΟΥΝ */
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 .blink-animation { animation: blink 1s infinite; }
 
@@ -386,6 +389,27 @@
 
 @keyframes shake { 0% { transform: translate(0); } 25% { transform: translate(2px, -2px); } 50% { transform: translate(-2px, 2px); } 75% { transform: translate(2px, 2px); } 100% { transform: translate(0); } }
 .shake-animation { animation: shake 0.3s infinite; display: inline-block; }
+
+/* ΤΑ ΝΕΑ ΠΟΥ ΠΡΟΣΘΕΤΟΥΜΕ ΣΤΟ ΤΕΛΟΣ */
+@keyframes rainbow-move {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.rainbow-text-effect {
+    background: linear-gradient(270deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbow-move 4s ease infinite !important;
+}
+
+@keyframes floating {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0px); }
+}
+.floating-animation { animation: floating 2s ease-in-out infinite; display: inline-block; }
 </style>    <div style="display:flex; gap:10px; align-items: center;">
         <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι..."></div>
         <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer; height:50px; flex-shrink:0;">ΣΤΕΙΛΕ</button>
@@ -642,29 +666,35 @@ function sendMessage() {
         const animation = document.getElementById('text-animation').value;
         const effect = document.getElementById('text-effect').value;
 
-        // Βασικό Style
+        // 1. Διατηρούμε το βασικό σου Style
         let style = `font-family:${font}; font-size:${size}; text-shadow:${glow}; display:inline-block;`;
 
-        // Εφαρμογή Gradient
-        if (gradient !== 'none') {
+        // 2. Ετοιμάζουμε τις κλάσεις (Animations + Rainbow)
+        let animationClass = (animation !== 'none') ? animation : '';
+
+        // 3. Εφαρμογή Gradient ή Rainbow Animated
+        if (gradient === 'rainbow-flow') {
+            // Αν επιλεγεί το Rainbow, προσθέτουμε την ειδική κλάση
+            animationClass += ' rainbow-text-effect';
+        } else if (gradient !== 'none') {
+            // Διαφορετικά εφαρμόζουμε το απλό gradient όπως πριν
             style += `background:${gradient}; -webkit-background-clip:text; -webkit-text-fill-color:transparent;`;
         }
 
-        // Εφαρμογή Animation Class
-        const animationClass = (animation !== 'none') ? animation : '';
-
         let finalMsg;
+        // 4. Δημιουργία τελικού μηνύματος (Marquee ή Span)
         if (effect === 'marquee') {
             finalMsg = `<marquee style="${style} scrollamount: 5; width:100%;" class="${animationClass}">${content}</marquee>`;
         } else {
             finalMsg = `<span style="${style}" class="${animationClass}">${content}</span>`;
         }
 
+        // Αποστολή
         socket.emit('message', { content: finalMsg }); 
         chatInput.innerHTML = ''; 
         chatInput.focus();
     }
-}        socket.on('users_update', (users) => {
+}      socket.on('users_update', (users) => {
             const userList = document.getElementById('user-list-content');
             if (userList) {
                 userList.innerHTML = users.map(u => `
