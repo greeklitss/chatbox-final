@@ -412,34 +412,43 @@
 socket.on("message", function(data) {
     const currentUserId = parseInt('{{ current_user.id }}');
     const currentUserRole = '{{ current_user.role }}';
+    const currentUsername = '{{ current_user.display_name }}'; 
     const chatBox = document.getElementById('chat-box');
 
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message';
     msgDiv.id = `msg-${data.id}`;
-    msgDiv.style = "margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;";
-    
+    msgDiv.style = "margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px; transition: background 0.3s; padding: 5px; border-radius: 8px;";
+
+    // --- ΧΕΙΡΟΥΡΓΙΚΗ ΠΡΟΣΘΗΚΗ: MENTIONS ---
+    // Αν το περιεχόμενο περιέχει το @ΌνομάΣου, άλλαξε το φόντο
+    if (data.content.includes('@' + currentUsername)) {
+        msgDiv.style.backgroundColor = "rgba(212, 175, 55, 0.2)"; // Χρυσαφί διαφανές
+        msgDiv.style.borderLeft = "4px solid var(--gold)";
+        msgDiv.style.paddingLeft = "8px";
+    }
+
     const finalContent = processMessageContent(data.content);
-    
-    // Εδώ καθαρίζουμε το κείμενο από HTML tags για να αποθηκευτεί "καθαρό" το link στο data-raw-content
     const rawText = data.content.replace(/<\/?[^>]+(>|$)/g, "");
 
-    // 1. ΠΡΩΤΑ ορίζουμε τα actions (κουμπιά)
+    // --- ΟΛΑ ΤΑ ACTIONS ΜΑΖΙ ---
     let actions = `<span class="msg-time">${data.timestamp}</span>`;
     
-    // Αν είναι δικό μου το μήνυμα ή είμαι admin/owner -> Edit
+    // 1. Reply (Το βελάκι για όλους)
+    actions += ` <i class="fas fa-reply" onclick="replyTo('${data.display_name}')" style="cursor:pointer; font-size:0.7em; color:var(--gold); margin-left:8px;" title="Απάντηση"></i>`;
+
+    // 2. Edit (Μόνο δικά σου ή Admin)
     if (data.user_id === currentUserId || currentUserRole !== "user") {
         actions += ` <i class="fas fa-edit" onclick="editMsg(${data.id})" style="cursor:pointer; font-size:0.7em; color:gray; margin-left:5px;"></i>`;
     }
     
-    // Αν είμαι admin/owner -> Delete
+    // 3. Delete (Μόνο Admin/Owner)
     if (currentUserRole !== "user") {
         actions += ` <i class="fas fa-trash" onclick="deleteMsg(${data.id})" style="cursor:pointer; font-size:0.7em; color:red; margin-left:5px;"></i>`;
     }
 
-    // 2. ΜΕΤΑ φτιάχνουμε το HTML μία φορά σωστά
     msgDiv.innerHTML = `
-        <img src="${data.avatar_url}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold);">
+        <img src="${data.avatar_url}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
         <div style="display: flex; flex-direction: column;">
             <div style="display: flex; align-items: baseline; gap: 8px;">
                 <strong style="color: ${data.color}; font-size: 0.9em;">${data.display_name}:</strong>
@@ -450,14 +459,34 @@ socket.on("message", function(data) {
     `;
 
     chatBox.appendChild(msgDiv);
+    
+    // Αυτόματο Scroll στο τέλος
     chatBox.scrollTop = chatBox.scrollHeight;
 });
-
 
 
 // Πρόσθεσε αυτές τις συναρτήσεις στο τέλος του script
 function deleteMsg(id) {
     if(confirm("Διαγραφή μηνύματος;")) socket.emit("delete_message", {id: id});
+}
+
+function replyTo(username) {
+    const chatInput = document.getElementById('chat-input');
+    
+    // Δημιουργούμε το HTML για το mention
+    const mention = `<strong style="color:var(--gold);">@${username}</strong>&nbsp;`;
+    
+    // Το βάζουμε στο input και δίνουμε focus
+    chatInput.innerHTML = mention + chatInput.innerHTML;
+    chatInput.focus();
+
+    // Χειρουργική κίνηση: Πηγαίνουμε τον κέρσορα στο τέλος
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(chatInput);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
 }
 
 function editMsg(id) {
