@@ -335,29 +335,7 @@
     #emoji-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
     #emoji-list::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
 </style>
-    /* Styling για τα Emojis */
-    .emoji-item { 
-        cursor: pointer; 
-        font-size: 24px; 
-        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        padding: 2px;
-    }
-    
-    .emoji-item:hover { 
-        transform: scale(1.4) translateY(-3px); 
-        background: rgba(212, 175, 55, 0.1);
-        filter: drop-shadow(0 0 8px var(--gold));
-    }
-
-    /* Scrollbar για το πάνελ αν χρειαστεί */
-    #emoji-list::-webkit-scrollbar { width: 5px; }
-    #emoji-list::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-</style>
-        <button type="button" class="tool-btn ignore-emoji" onclick="toggleGifPicker(event)">GIF</button>
+<button type="button" class="tool-btn ignore-emoji" onclick="toggleGifPicker(event)">GIF</button>
     </div>
 
     <div style="display:flex; gap:10px; align-items: center;">
