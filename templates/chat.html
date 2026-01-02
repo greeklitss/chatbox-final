@@ -338,25 +338,38 @@
 </style>
 <button type="button" class="tool-btn ignore-emoji" onclick="toggleGifPicker(event)">GIF</button>
     </div>
-<div class="style-options-bar" style="display: flex; gap: 10px; margin: 10px 0; padding: 5px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-    <select id="text-font" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:12px; border-radius:4px; cursor:pointer;">
+<div class="style-bar" style="display: flex; gap: 10px; margin: 8px 0; padding: 5px; background: rgba(212,175,55,0.05); border-radius: 8px; flex-wrap: wrap;">
+    
+    <select id="text-font" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
         <option value="inherit">Font</option>
         <option value="'Orbitron', sans-serif">Modern</option>
         <option value="'Dancing Script', cursive">Calligraphy</option>
     </select>
 
-    <select id="text-size" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:12px; border-radius:4px; cursor:pointer;">
-        <option value="15px">S</option>
+    <select id="text-size" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
+        <option value="16px">S</option>
         <option value="20px" selected>M</option>
         <option value="28px">L</option>
     </select>
 
-    <select id="text-effect" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:12px; border-radius:4px; cursor:pointer;">
+    <select id="text-glow" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
+        <option value="none">No Glow</option>
+        <option value="0 0 8px #d4af37">Gold Glow</option>
+        <option value="0 0 12px #ffffff">Neon White</option>
+    </select>
+
+    <select id="text-gradient" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
+        <option value="none">Απλό Χρώμα</option>
+        <option value="linear-gradient(to right, #d4af37, #ffffff)">Gold-White</option>
+        <option value="linear-gradient(to right, #ff0000, #ffff00)">Fire</option>
+        <option value="linear-gradient(to right, #00c6ff, #0072ff)">Ocean</option>
+    </select>
+
+    <select id="text-effect" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
         <option value="none">Normal</option>
         <option value="marquee">Marquee</option>
     </select>
 </div>
-
     <div style="display:flex; gap:10px; align-items: center;">
         <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι..."></div>
         <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer; height:50px; flex-shrink:0;">ΣΤΕΙΛΕ</button>
@@ -601,35 +614,36 @@ function processMessageContent(content) {
     return html;
 }
 // Αποστολή μηνύματος (Ενημερωμένη για Font, Size, Marquee)
-        function sendMessage() {
-            const chatInput = document.getElementById('chat-input'); // Σιγουρέψου ότι το ID είναι σωστό
-            const content = chatInput.innerHTML.trim();
-            
-            if(content && content !== '<br>') { 
-                // 1. Διαβάζουμε τις τιμές από τη δεύτερη toolbar
-                const font = document.getElementById('text-font').value;
-                const size = document.getElementById('text-size').value;
-                const effect = document.getElementById('text-effect').value;
+function sendMessage() {
+    const chatInput = document.getElementById('chat-input');
+    const content = chatInput.innerHTML.trim();
+    
+    if(content && content !== '<br>') { 
+        const font = document.getElementById('text-font').value;
+        const size = document.getElementById('text-size').value;
+        const glow = document.getElementById('text-glow').value;
+        const gradient = document.getElementById('text-gradient').value;
+        const effect = document.getElementById('text-effect').value;
 
-                let finalMsg;
+        let finalMsg;
+        let style = `font-family:${font}; font-size:${size}; text-shadow:${glow}; display:inline-block;`;
 
-                // 2. Εφαρμόζουμε το στυλ
-                if (effect === 'marquee') {
-                    // Αν είναι marquee, τυλίγουμε το κείμενο
-                    finalMsg = `<marquee style="font-family:${font}; font-size:${size}; scrollamount: 5; display:block; width:100%;">${content}</marquee>`;
-                } else {
-                    // Αν είναι σταθερό, το βάζουμε σε ένα span
-                    finalMsg = `<span style="font-family:${font}; font-size:${size}; display:inline-block;">${content}</span>`;
-                }
-
-                // 3. Στέλνουμε το τελικό "ντυμένο" μήνυμα
-                socket.emit('message', { content: finalMsg }); 
-                
-                chatInput.innerHTML = ''; 
-                chatInput.focus();
-            }
+        // Αν υπάρχει gradient, προσθέτουμε τις ειδικές εντολές
+        if (gradient !== 'none') {
+            style += `background:${gradient}; -webkit-background-clip:text; -webkit-text-fill-color:transparent;`;
         }
 
+        if (effect === 'marquee') {
+            finalMsg = `<marquee style="${style} scrollamount: 5; width:100%;">${content}</marquee>`;
+        } else {
+            finalMsg = `<span style="${style}">${content}</span>`;
+        }
+
+        socket.emit('message', { content: finalMsg }); 
+        chatInput.innerHTML = ''; 
+        chatInput.focus();
+    }
+}
         socket.on('users_update', (users) => {
             const userList = document.getElementById('user-list-content');
             if (userList) {
