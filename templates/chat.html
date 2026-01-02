@@ -600,15 +600,35 @@ function processMessageContent(content) {
     
     return html;
 }
-        // Αποστολή μηνύματος
+// Αποστολή μηνύματος (Ενημερωμένη για Font, Size, Marquee)
         function sendMessage() {
+            const chatInput = document.getElementById('chat-input'); // Σιγουρέψου ότι το ID είναι σωστό
             const content = chatInput.innerHTML.trim();
+            
             if(content && content !== '<br>') { 
-                socket.emit('message', { content: content }); 
+                // 1. Διαβάζουμε τις τιμές από τη δεύτερη toolbar
+                const font = document.getElementById('text-font').value;
+                const size = document.getElementById('text-size').value;
+                const effect = document.getElementById('text-effect').value;
+
+                let finalMsg;
+
+                // 2. Εφαρμόζουμε το στυλ
+                if (effect === 'marquee') {
+                    // Αν είναι marquee, τυλίγουμε το κείμενο
+                    finalMsg = `<marquee style="font-family:${font}; font-size:${size}; scrollamount: 5; display:block; width:100%;">${content}</marquee>`;
+                } else {
+                    // Αν είναι σταθερό, το βάζουμε σε ένα span
+                    finalMsg = `<span style="font-family:${font}; font-size:${size}; display:inline-block;">${content}</span>`;
+                }
+
+                // 3. Στέλνουμε το τελικό "ντυμένο" μήνυμα
+                socket.emit('message', { content: finalMsg }); 
+                
                 chatInput.innerHTML = ''; 
+                chatInput.focus();
             }
         }
-
 
         socket.on('users_update', (users) => {
             const userList = document.getElementById('user-list-content');
