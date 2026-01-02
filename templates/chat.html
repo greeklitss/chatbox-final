@@ -329,32 +329,50 @@
     <div id="emoji-list" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; text-align: center; max-height: 220px; overflow-y: auto; padding-right: 5px;">
         </div>
 </div>
+   <div class="user-format-toolbar" style="display: flex; gap: 8px; padding: 8px; background: rgba(0,0,0,0.5); border-radius: 10px 10px 0 0; border: 1px solid rgba(212,175,55,0.3); align-items: center; flex-wrap: wrap;">
     
-    <div class="toolbar marquee-controls" style="margin-top: 5px; background: rgba(0,0,0,0.4); border-top: 1px solid rgba(212,175,55,0.3);">
-    
-    <button onclick="changeMarqueeText()" title="Αλλαγή Κειμένου">
-        <i class="fas fa-edit"></i>
-    </button>
+    <div style="display: flex; align-items: center; gap: 4px;">
+        <i class="fas fa-palette" style="color: var(--gold); font-size: 12px;"></i>
+        <input type="color" id="text-color" value="#ffffff" style="width:25px; height:25px; border:none; cursor:pointer; background:none;">
+    </div>
 
-    <button onclick="cycleFont()" title="Αλλαγή Γραμματοσειράς">
-        <i class="fas fa-font"></i>
-    </button>
+    <select id="text-font" style="background:#111; color:white; border:1px solid var(--gold); border-radius:4px; font-size:12px; padding: 2px;">
+        <option value="'Roboto', sans-serif">Standard</option>
+        <option value="'Orbitron', sans-serif">Modern</option>
+        <option value="'Dancing Script', cursive">Calligraphy</option>
+    </select>
 
-    <button onclick="cycleSize()" title="Μέγεθος">
-        <i class="fas fa-text-height"></i>
-    </button>
+    <select id="text-size" style="background:#111; color:white; border:1px solid var(--gold); border-radius:4px; font-size:12px; padding: 2px;">
+        <option value="14px">Μικρά</option>
+        <option value="18px" selected>Μεσαία</option>
+        <option value="22px">Μεγάλα</option>
+    </select>
 
-    <button onclick="toggleWeight()" title="Πάχος Γραμμάτων">
-        <i class="fas fa-bold"></i>
-    </button>
-
-    <div style="flex-grow: 1;"></div> </div>
-
-<div class="marquee-container" id="m-container">
-    <div class="marquee-text" id="m-text">Καλώς ήρθατε στο Radio Parea! 🔥</div>
+    <select id="text-animation" style="background:#111; color:white; border:1px solid var(--gold); border-radius:4px; font-size:12px; padding: 2px;">
+        <option value="none">Χωρίς Εφέ</option>
+        <option value="glow">Λάμψη (Glow)</option>
+        <option value="bounce">Κίνηση (Bounce)</option>
+    </select>
 </div>
+   
+ 
+   <style>
     
-<style>
+    /* Animation για Λάμψη */
+@keyframes custom-glow {
+    from { text-shadow: 0 0 5px #fff, 0 0 10px var(--gold); }
+    to { text-shadow: 0 0 10px #fff, 0 0 20px var(--gold); }
+}
+
+/* Animation για Κίνηση πάνω-κάτω */
+@keyframes custom-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.msg-glow { animation: custom-glow 1s ease-in-out infinite alternate; display: inline-block; }
+.msg-bounce { animation: custom-bounce 0.6s ease-in-out infinite; display: inline-block; }
+
     /* Styling για το Scrollbar του Emoji Picker */
     #emoji-list::-webkit-scrollbar { width: 4px; }
     #emoji-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
@@ -607,27 +625,7 @@ function processMessageContent(content) {
     return html;
 }
         // Αποστολή μηνύματος
-        function sendMessage() {
-            const content = chatInput.innerHTML.trim();
-            if(content && content !== '<br>') { 
-                socket.emit('message', { content: content }); 
-                chatInput.innerHTML = ''; 
-            }
-        }
-
-
-        socket.on('users_update', (users) => {
-            const userList = document.getElementById('user-list-content');
-            if (userList) {
-                userList.innerHTML = users.map(u => `
-                    <div style="margin-bottom:15px; display:flex; flex-direction:column; align-items:center;">
-                        <img src="${u.avatar_url || 'https://i.imgur.com/6VBx3io.png'}" style="width:50px; height:50px; border-radius:50%; border:2px solid ${u.color}; object-fit:cover;">
-                        <div style="color:${u.color}; font-size:0.85em; font-weight:bold; margin-top:5px; text-shadow: 1px 1px 2px #000;">${u.display_name}</div>
-                    </div>`).join('');
-            }
-        });
-
-function saveProfile() {
+function sendMessage() {function saveProfile() {
     const nick = document.getElementById('new-nickname').value;
     const av = document.getElementById('new-avatar').value;
     const col = document.getElementById('new-color').value;
@@ -801,32 +799,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(updateDJImage, 5000);
     }
 });
-
-let fonts = ["'Orbitron', sans-serif", "'Dancing Script', cursive", "'Roboto', sans-serif"];
-let sizes = ["0.8em", "1.1em", "1.4em"];
-let fIndex = 0;
-let sIndex = 1;
-let isBold = true;
-
-function changeMarqueeText() {
-    let newTxt = prompt("Γράψε το νέο κείμενο του Marquee:");
-    if(newTxt) document.getElementById('m-text').innerText = newTxt;
-}
-
-function cycleFont() {
-    fIndex = (fIndex + 1) % fonts.length;
-    document.getElementById('m-text').style.fontFamily = fonts[fIndex];
-}
-
-function cycleSize() {
-    sIndex = (sIndex + 1) % sizes.length;
-    document.getElementById('m-text').style.fontSize = sizes[sIndex];
-}
-
-function toggleWeight() {
-    isBold = !isBold;
-    document.getElementById('m-text').style.fontWeight = isBold ? "900" : "400";
-}
 </script>
 
 <div id="progModal" style="display:none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center;">
