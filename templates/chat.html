@@ -338,6 +338,24 @@
 </style>
 <button type="button" class="tool-btn ignore-emoji" onclick="toggleGifPicker(event)">GIF</button>
     </div>
+<div class="style-options-bar" style="display: flex; gap: 10px; margin: 10px 0; padding: 5px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+    <select id="text-font" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:12px; border-radius:4px; cursor:pointer;">
+        <option value="inherit">Font</option>
+        <option value="'Orbitron', sans-serif">Modern</option>
+        <option value="'Dancing Script', cursive">Calligraphy</option>
+    </select>
+
+    <select id="text-size" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:12px; border-radius:4px; cursor:pointer;">
+        <option value="15px">S</option>
+        <option value="20px" selected>M</option>
+        <option value="28px">L</option>
+    </select>
+
+    <select id="text-effect" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:12px; border-radius:4px; cursor:pointer;">
+        <option value="none">Normal</option>
+        <option value="marquee">Marquee</option>
+    </select>
+</div>
 
     <div style="display:flex; gap:10px; align-items: center;">
         <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι..."></div>
