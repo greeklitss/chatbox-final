@@ -237,35 +237,26 @@
         
         input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--gold); background: #222; color: white; }
 
-/* 1. Γενικό στυλ για όλες τις εικόνες στα μηνύματα */
 .message-content img {
+    width: 48px !important; /* Μεγαλώνουμε τις φατσούλες αρκετά */
+    height: 48px !important;
     vertical-align: middle;
     object-fit: contain;
-    /* Αυτό θα πιάσει όλες τις φατσούλες που ΔΕΝ είναι μεγάλες φωτογραφίες */
-    width: 45px !important; 
-    height: 45px !important;
+    border: none !important; /* Βγάζουμε το πλαίσιο */
+    box-shadow: none !important; /* Βγάζουμε σκιές αν υπάρχουν */
     margin: 2px;
-    display: inline-block;
 }
 
-/* 2. ΓΙΑ ΜΕΓΑΛΕΣ ΦΩΤΟΓΡΑΦΙΕΣ & GIFs (Links) */
-/* Στοχεύουμε την κλάση 'chat-image' που προσθέσαμε στη JavaScript */
+/* Ειδική ρύθμιση για τα GIF και τις μεγάλες φωτό από link */
 .message-content img.chat-image, 
-.message-content img:not([src*="emoticons"]):not([src*="emoji"])[style*="max-width"] {
-    width: auto !important;
+.message-content img[style*="max-width"] {
+    width: auto !important; /* Επαναφέρει το πλάτος στο κανονικό */
     height: auto !important;
-    max-width: 280px !important;
-    max-height: 250px !important;
-    border-radius: 12px;
-    display: block; /* Οι μεγάλες εικόνες αλλάζουν γραμμή */
+    max-width: 280px !important; /* Μέγιστο πλάτος για GIF/Photos */
+    max-height: 350px !important;
+    display: block; /* Να αλλάζουν γραμμή οι μεγάλες φωτό */
     margin: 10px 0;
-    border: 1px solid rgba(212, 175, 55, 0.3);
-}
-
-/* 3. ΑΝ ΤΟ ΜΗΝΥΜΑ ΕΙΝΑΙ ΜΟΝΟ ΜΙΑ ΦΑΤΣΟΥΛΑ */
-.message-content.only-emoji img {
-    width: 60px !important;
-    height: 60px !important;
+    border: none !important; /* Επίσης χωρίς πλαίσιο εδώ */
 }
       </style>
 </head>
@@ -676,11 +667,11 @@ function processMessageContent(content) {
         if (html.includes('src="' + match + '"')) return match; 
         
         // Αν είναι εξωτερικό link (π.χ. από το internet), φτιάξε τη μεγάλη εικόνα
-        return `<br><img src="${match}" class="chat-image" style="max-width:100%; border-radius:10px; margin-top:10px; border: 2px solid var(--gold);">`;
+        return `<br><img src="${match}" class="chat-image" style="max-width:100%; border-radius:10px; margin-top:10px;">`;
     });
 
     // Μετατροπή YouTube
-    html = html.replace(ytRegex, '<br><iframe width="100%" height="200" src="https://www.youtube.com/embed/$1" frameborder="0" allowfullscreen style="border-radius:10px; margin-top:10px; border: 2px solid var(--gold);"></iframe>');
+    html = html.replace(ytRegex, '<br><iframe width="100%" height="200" src="https://www.youtube.com/embed/$1" frameborder="0" allowfullscreen style="border-radius:10px; margin-top:10px;</iframe>');
 
     return html;
 }
