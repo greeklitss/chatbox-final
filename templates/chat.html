@@ -239,28 +239,29 @@
 
 /* 1. ΟΛΕΣ οι εικόνες μέσα στο μήνυμα (κυρίως οι φατσούλες) */
 .message-content img {
-    width: 42px !important;  /* Εδώ ρυθμίζεις το μέγεθος για τις φατσούλες */
-    height: 42px !important;
     vertical-align: middle;
     object-fit: contain;
-    border: none !important; /* Καταργούμε το πλαίσιο */
-    box-shadow: none !important;
+    border: none !important;
     margin: 2px;
+}
+
+/* ΟΙ ΦΑΤΣΟΥΛΕΣ (Emojis από το μενού) */
+.message-content img.emoji {
+    width: 48px !important;  /* Το μέγεθος που θέλεις για τις φατσούλες */
+    height: 48px !important;
     display: inline-block;
 }
 
-/* 2. ΕΞΑΙΡΕΣΗ για τις μεγάλες εικόνες και τα GIF */
-/* Αν η εικόνα έχει κλάση chat-image ή στυλ max-width (που βάζει η JS) */
-.message-content img.chat-image, 
-.message-content img[style*="max-width"] {
+/* ΤΑ GIF & ΟΙ ΕΠΙΚΟΛΛΗΜΕΝΕΣ ΕΙΚΟΝΕΣ (Links) */
+.message-content img.chat-image {
     width: auto !important;
     height: auto !important;
-    max-width: 260px !important; /* Μέγεθος για GIFs */
-    max-height: 260px !important;
-    display: block; /* Τα GIFs αλλάζουν γραμμή */
+    max-width: 280px !important; /* Το μεγάλο μέγεθος για τη γάτα/GIF */
+    max-height: 350px !important;
+    display: block; /* Πηγαίνει σε νέα γραμμή */
     margin: 10px 0;
-    border: none !important;
-} 
+    border-radius: 10px;
+}
      </style>
 </head>
 <body>
