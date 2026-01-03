@@ -237,40 +237,37 @@
         
         input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--gold); background: #222; color: white; }
 
-/* ΔΙΟΡΘΩΜΕΝΟ CSS ΓΙΑ ΦΑΤΣΟΥΛΕΣ & ΕΙΚΟΝΕΣ */
 /* 1. Γενικό στυλ για όλες τις εικόνες στα μηνύματα */
 .message-content img {
     vertical-align: middle;
     object-fit: contain;
+    /* Αυτό θα πιάσει όλες τις φατσούλες που ΔΕΝ είναι μεγάλες φωτογραφίες */
+    width: 45px !important; 
+    height: 45px !important;
+    margin: 2px;
+    display: inline-block;
 }
 
-/* 2. ΜΟΝΟ ΓΙΑ ΦΑΤΣΟΥΛΕΣ (Emoticons) */
-/* Αν η εικόνα περιέχει τη λέξη "emoticons" ή "emoji" στο link της */
-.message-content img[src*="emoticons"], 
-.message-content img[src*="emoji"] {
-    width: 32px !important;
-    height: 32px !important;
-    margin: 0 2px;
-}
-
-/* 3. ΓΙΑ ΚΑΝΟΝΙΚΕΣ ΦΩΤΟΓΡΑΦΙΕΣ (Links/Uploads) */
-/* Οποιαδήποτε εικόνα ΔΕΝ είναι emoticon, θα είναι μεγάλη */
-.message-content img:not([src*="emoticons"]):not([src*="emoji"]) {
+/* 2. ΓΙΑ ΜΕΓΑΛΕΣ ΦΩΤΟΓΡΑΦΙΕΣ & GIFs (Links) */
+/* Στοχεύουμε την κλάση 'chat-image' που προσθέσαμε στη JavaScript */
+.message-content img.chat-image, 
+.message-content img:not([src*="emoticons"]):not([src*="emoji"])[style*="max-width"] {
     width: auto !important;
     height: auto !important;
-    max-width: 280px !important; /* Μπορείς να το βάλεις και 300px αν θες */
+    max-width: 280px !important;
     max-height: 250px !important;
     border-radius: 12px;
-    display: block;
+    display: block; /* Οι μεγάλες εικόνες αλλάζουν γραμμή */
     margin: 10px 0;
     border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
-/* 4. ΑΝ ΤΟ ΜΗΝΥΜΑ ΕΙΝΑΙ ΜΟΝΟ ΜΙΑ ΦΑΤΣΟΥΛΑ (Big Emoji) */
+/* 3. ΑΝ ΤΟ ΜΗΝΥΜΑ ΕΙΝΑΙ ΜΟΝΟ ΜΙΑ ΦΑΤΣΟΥΛΑ */
 .message-content.only-emoji img {
-    width: 50px !important;
-    height: 50px !important;
-}      </style>
+    width: 60px !important;
+    height: 60px !important;
+}
+      </style>
 </head>
 <body>
     <canvas class="snow" id="snowCanvas"></canvas>
@@ -670,23 +667,24 @@ function processMessageContent(content) {
     if (!content) return "";
     
     let html = content;
-    // Regex που αναγνωρίζει μόνο καθαρά links εικόνων
     const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/gi;
     const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
 
-    // Μετατροπή εικόνων: Ελέγχουμε αν το link είναι ήδη μέσα σε src για να μην το ξαναφτιάξουμε
+    // Μετατροπή εικόνων
     html = html.replace(imgRegex, (match) => {
+        // Αν το link είναι ήδη μέσα σε src (π.χ. από το emoji picker), μην το πειράζεις εδώ
         if (html.includes('src="' + match + '"')) return match; 
-        return `<br><img src="${match}" style="max-width:100%; border-radius:10px; margin-top:10px; border: 2px solid var(--gold);">`;
+        
+        // Αν είναι εξωτερικό link (π.χ. από το internet), φτιάξε τη μεγάλη εικόνα
+        return `<br><img src="${match}" class="chat-image" style="max-width:100%; border-radius:10px; margin-top:10px; border: 2px solid var(--gold);">`;
     });
 
     // Μετατροπή YouTube
-    html = html.replace(ytRegex, (u, id) => {
-        return `<br><iframe width="100%" height="250" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:15px; border: 2px solid var(--fire);"></iframe>`;
-    });
-    
+    html = html.replace(ytRegex, '<br><iframe width="100%" height="200" src="https://www.youtube.com/embed/$1" frameborder="0" allowfullscreen style="border-radius:10px; margin-top:10px; border: 2px solid var(--gold);"></iframe>');
+
     return html;
 }
+
 // Αποστολή μηνύματος (Ενημερωμένη για Font, Size, Marquee)
 function sendMessage() {
     const chatInput = document.getElementById('chat-input');
