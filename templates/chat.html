@@ -900,13 +900,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Ξεκινάει η ανανέωση της εικόνας DJ
+// Ξεκινάει η ανανέωση της εικόνας DJ
     if (typeof updateDJImage === 'function') {
         setInterval(updateDJImage, 5000);
-    
-});
-</script>
+    } 
+}); 
 
+</script>
 <div id="progModal" style="display:none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center;">
     <div style="background: #111; border: 2px solid var(--gold); width: 90%; max-width: 900px; padding: 20px; border-radius: 15px; position: relative;">
         <span onclick="document.getElementById('progModal').style.display='none'" style="position: absolute; right: 20px; top: 10px; color: var(--gold); font-size: 35px; font-weight: bold; cursor: pointer;">&times;</span>
