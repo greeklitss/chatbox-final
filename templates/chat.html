@@ -237,35 +237,31 @@
         
         input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--gold); background: #222; color: white; }
 
-/* Για τις φατσούλες (εσωτερικά emojis) */
-.chat-message img.emoji {
+/* Για τις φατσούλες -
+   .chat-message img.emoji {
     width: 32px;      
-    height: 24px;
+    height: 32px;     /* Διορθώθηκε από 24 σε 32 */
     vertical-align: middle;
     object-fit: contain;
     margin: 0 2px;
 }
 
-/* Για τις εξωτερικές μεγάλες εικόνες (Links/Uploads) */
-.chat-message img.external-image {
-    max-width: 300px; /* 
-    max-height: 250px;
-    border-radius: 8px;
-    display: block;
-    margin: 10px 0;
-    object-fit: cover;
-    cursor: pointer; /* Για να φαίνεται ότι πατιέται */
-    transition: transform 0.2s;
-}
-
-.chat-message img.external-image:hover {
-    transform: scale(1.02); }
-
+/* Αν το μήνυμα είναι ΜΟΝΟ emoji, τότε γίνεται ακόμα πιο μεγάλο */
 .chat-message.only-emoji img.emoji {
-    width: 48px;
-    height: 48px;
+    width: 50px;     
+    height: 50px;
 }
-       
+
+/* Για τις μεγάλες εικόνες */
+.chat-message img.external-image {
+    max-width: 100%;  
+    max-height: 300px; 
+    border-radius: 12px;
+    display: block;
+    margin: 10px auto; /* Centering */
+    object-fit: contain; /* Για να μην κόβεται η εικόνα */
+    border: 1px solid rgba(255,255,255,0.1);
+}       
         </style>
 </head>
 <body>
