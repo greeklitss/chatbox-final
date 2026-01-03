@@ -250,55 +250,69 @@
     transform: scale(1.2); /* Μεγαλώνει λίγο όταν πας το ποντίκι πάνω του */
 }
 
-/* Ειδικά για τα GIFs που είναι μέσα σε <span> στο picker, να μην επηρεάζονται από το font-size */
-.emoji-item img {
-    width: 40px !important; 
-    height: 40px !important;
-    vertical-align: middle;
-}
+/* --- ΡΥΘΜΙΣΕΙΣ ΓΙΑ ΕΙΚΟΝΕΣ ΚΑΙ EMOJIS --- */
 
-/* 1. ΟΛΕΣ οι εικόνες μέσα στο μήνυμα */
+/* 1. Γενική ρύθμιση για όλες τις εικόνες στα μηνύματα */
 .message-content img {
     vertical-align: middle;
     object-fit: contain;
     border: none !important;
+    box-shadow: none !important;
     margin: 2px;
 }
 
-/* 2. ΟΙ ΦΑΤΣΟΥΛΕΣ (Emojis από το μενού) */
-/* Μένουν μεγάλες (48px) και στην ίδια γραμμή με το κείμενο */
+/* 2. Φατσούλες-Εικόνες και μικρά GIFs από το μενού (48px) */
+/* Η JavaScript προσθέτει την κλάση .emoji σε αυτά */
 .message-content img.emoji {
     width: 48px !important;
     height: 48px !important;
-    display: inline-block;
+    display: inline-block !important;
     vertical-align: middle;
-    border: none !important;
 }
 
-/* 3. ΟΛΕΣ ΟΙ ΑΛΛΕΣ ΕΙΚΟΝΕΣ (GIF, Links, Paste) */
-/* Στοχεύουμε κάθε img που ΔΕΝ έχει την κλάση emoji */
-.message-content img:not(.emoji) {
-    width: auto !important;
-    height: auto !important;
-    max-width: 280px !important; /* Περιορισμός για να μην ξεχειλώνουν */
-    max-height: 280px !important;
-    display: block; /* Πηγαίνουν σε νέα γραμμή */
-    margin: 10px 0;
-    border-radius: 10px;
-    border: none !important;
-}
-
-/* 4. ΓΙΑ ΤΑ EMOJIS-ΚΕΙΜΕΝΟ (Μόνο όσα έχουν την κλάση emoji-text) */
+/* 3. Φατσούλες-Κείμενο (π.χ. 😀, 🔥) */
+/* Η JavaScript προσθέτει την κλάση .emoji-text σε αυτά */
 .message-content span.emoji-text {
     font-size: 42px !important;
     line-height: normal;
     display: inline-block;
     vertical-align: middle;
+    margin: 0 2px;
 }
 
-/* Εξασφαλίζουμε ότι το κανονικό κείμενο δεν θα επηρεάζεται */
+/* 4. Μεγάλες Εικόνες (Αντιγραφή, Επικόλληση, Links) */
+/* Στοχεύουμε εικόνες που ΔΕΝ είναι emojis */
+.message-content img:not(.emoji) {
+    width: auto !important;
+    height: auto !important;
+    max-width: 280px !important; /* Το όριο για να μην ξεχειλώνουν */
+    max-height: 280px !important;
+    display: block; /* Πηγαίνουν σε δική τους γραμμή */
+    margin: 10px 0;
+    border-radius: 10px;
+    border: none !important;
+}
+
+/* 5. Το κανονικό κείμενο των μηνυμάτων */
 .message-content {
-    font-size: 16px !important; /* Ή το μέγεθος που θέλεις για τα γράμματα */
+    font-size: 16px !important; /* Επαναφορά γραμμάτων στο κανονικό */
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+/* 6. Ρύθμιση για το Picker (emoticons.html) */
+.emoji-item {
+    font-size: 32px; /* Για να τα βλέπεις μεγάλα στο μενού επιλογής */
+    cursor: pointer;
+    padding: 5px;
+    display: inline-block;
+}
+
+.emoji-item img {
+    width: 40px !important;
+    height: 40px !important;
+    vertical-align: middle;
+    border: none !important;
 }
      </style>
 </head>
@@ -699,23 +713,27 @@ socket.on('clear_chat_client', () => {
 function processMessageContent(content) {
     if (!content) return "";
     let html = content;
+
+    // ΠΡΩΤΑ: Βρίσκουμε τα emojis-κείμενο και τους βάζουμε την κλάση emoji-text 
+    // για να μην μεγαλώσουν τα κανονικά γράμματα
+    const emojiRegex = /([\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}])/gu;
+    html = html.replace(emojiRegex, '<span class="emoji-text">$1</span>');
+
+    // ΜΕΤΑ: Διαχείριση εικόνων
     const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/gi;
 
-    // ΠΡΟΣΘΗΚΗ: Αν το περιεχόμενο έχει ήδη <img> (από το picker), 
-    // του βάζουμε την κλάση emoji για να ξέρει το CSS να το κάνει 48px.
+    // Αν το html έχει ήδη <img> (από το picker), του βάζουμε την κλάση emoji
     if (html.includes('<img')) {
         html = html.replace(/<img /g, '<img class="emoji" ');
     }
 
+    // Για τα επικολλημένα links ή εικόνες από αντιγραφή
     html = html.replace(imgRegex, (match) => {
-        // Αν η εικόνα είναι ήδη μέσα σε src, την αφήνουμε όπως είναι
         if (content.includes('src="' + match + '"')) return match;
-        
-        // Για επικολλημένα links ή αντιγραφές: 
-        // ΔΕΝ βάζουμε την κλάση emoji για να πιάσει ο κανόνας των 280px (μεγάλη εικόνα)
-        return `<br><img src="${match}" style="max-width:280px; border-radius:10px; margin-top:10px;">`;
+        // Τις βάζουμε χωρίς την κλάση emoji για να πάρουν το μέγεθος 280px
+        return `<br><img src="${match}">`;
     });
-    
+
     return html;
 }
 
