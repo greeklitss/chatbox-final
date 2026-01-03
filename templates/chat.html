@@ -236,6 +236,35 @@
         .modal-content { background: #111; margin: 10% auto; padding: 30px; border: 2px solid var(--gold); width: 320px; border-radius: 25px; color: white; box-shadow: 0 0 30px var(--gold); }
         
         input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--gold); background: #222; color: white; }
+
+/* Για τις φατσούλες (εσωτερικά emojis) */
+.chat-message img.emoji {
+    width: 32px;      
+    height: 24px;
+    vertical-align: middle;
+    object-fit: contain;
+    margin: 0 2px;
+}
+
+/* Για τις εξωτερικές μεγάλες εικόνες (Links/Uploads) */
+.chat-message img.external-image {
+    max-width: 300px; /* 
+    max-height: 250px;
+    border-radius: 8px;
+    display: block;
+    margin: 10px 0;
+    object-fit: cover;
+    cursor: pointer; /* Για να φαίνεται ότι πατιέται */
+    transition: transform 0.2s;
+}
+
+.chat-message img.external-image:hover {
+    transform: scale(1.02); }
+
+.chat-message.only-emoji img.emoji {
+    width: 48px;
+    height: 48px;
+}
        
         </style>
 </head>
@@ -328,6 +357,7 @@
 
     <div id="emoji-list" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; text-align: center; max-height: 220px; overflow-y: auto; padding-right: 5px;">
         </div>
+   
 </div>
 
 <style>
@@ -877,7 +907,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ξεκινάει η ανανέωση της εικόνας DJ
     if (typeof updateDJImage === 'function') {
         setInterval(updateDJImage, 5000);
-    }
+    
 });
 </script>
 
