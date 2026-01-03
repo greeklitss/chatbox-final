@@ -237,28 +237,31 @@
         
         input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--gold); background: #222; color: white; }
 
+/* 1. ΟΛΕΣ οι εικόνες μέσα στο μήνυμα (κυρίως οι φατσούλες) */
 .message-content img {
-    width: 48px !important; /* Μεγαλώνουμε τις φατσούλες αρκετά */
-    height: 48px !important;
+    width: 42px !important;  /* Εδώ ρυθμίζεις το μέγεθος για τις φατσούλες */
+    height: 42px !important;
     vertical-align: middle;
     object-fit: contain;
-    border: none !important; /* Βγάζουμε το πλαίσιο */
-    box-shadow: none !important; /* Βγάζουμε σκιές αν υπάρχουν */
+    border: none !important; /* Καταργούμε το πλαίσιο */
+    box-shadow: none !important;
     margin: 2px;
+    display: inline-block;
 }
 
-/* Ειδική ρύθμιση για τα GIF και τις μεγάλες φωτό από link */
+/* 2. ΕΞΑΙΡΕΣΗ για τις μεγάλες εικόνες και τα GIF */
+/* Αν η εικόνα έχει κλάση chat-image ή στυλ max-width (που βάζει η JS) */
 .message-content img.chat-image, 
 .message-content img[style*="max-width"] {
-    width: auto !important; /* Επαναφέρει το πλάτος στο κανονικό */
+    width: auto !important;
     height: auto !important;
-    max-width: 280px !important; /* Μέγιστο πλάτος για GIF/Photos */
-    max-height: 350px !important;
-    display: block; /* Να αλλάζουν γραμμή οι μεγάλες φωτό */
+    max-width: 260px !important; /* Μέγεθος για GIFs */
+    max-height: 260px !important;
+    display: block; /* Τα GIFs αλλάζουν γραμμή */
     margin: 10px 0;
-    border: none !important; /* Επίσης χωρίς πλαίσιο εδώ */
-}
-      </style>
+    border: none !important;
+} 
+     </style>
 </head>
 <body>
     <canvas class="snow" id="snowCanvas"></canvas>
