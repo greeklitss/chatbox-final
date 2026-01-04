@@ -26,9 +26,9 @@
     width: 200%;
     height: 200%;
     /* Αυξήσαμε το 0.08 σε 0.2 για να φαίνεται περισσότερο */
-    background: radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, transparent 70%);
-    filter: blur(60px); /* Μειώσαμε λίγο το blur για να "γράψει" καλύτερα */
-    animation: mistFloat 30s ease-in-out infinite;
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.4) 0%, transparent 65%);
+    filter: blur(40px);
+    animation: mistFloat 15s ease-in-out infinite;
 }
 
 /* Προσθήκη δεύτερου στρώματος για βάθος */
@@ -39,14 +39,14 @@
     left: -50%;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 60%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
     animation: mistFloat 45s ease-in-out infinite reverse;
 }
 
 @keyframes mistFloat {
-    0% { transform: translate(-10%, -10%) scale(1); }
-    50% { transform: translate(5%, 5%) scale(1.1); }
-    100% { transform: translate(-10%, -10%) scale(1); }
+    0% { transform: translate(-20%, -20%) rotate(0deg); }
+    50% { transform: translate(10%, 10%) rotate(5deg) scale(1.2); }
+    100% { transform: translate(-20%, -20%) rotate(0deg); }
 }
         :root {
             --gold: #D4AF37;
@@ -161,8 +161,10 @@
     background-size: cover !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
-    background-color: rgba(5, 10, 20, 0.6) !important;
+    background-color: rgba(5, 10, 20, 0.5) !important;
     border: 1px solid rgba(212, 175, 55, 0.3);
+    position: relative;
+    z-index: 2;
 }
         .message { 
             background: transparent !important; /* Εξαφάνιση γκρι μπάρας */
