@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
-/* VIP ΧΡΥΣΟΣ ΚΑΠΝΟΣ */
+/* VIP ΧΡΥΣΟΣ ΚΑΠΝΟΣ - ΒΕΛΤΙΩΜΕΝΟΣ */
 .mist-container {
     position: fixed;
     top: 0;
@@ -18,23 +18,36 @@
     z-index: -1;
     pointer-events: none;
     overflow: hidden;
+    background: transparent;
 }
 
 .mist-layer {
     position: absolute;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
-    filter: blur(80px);
-    animation: mistFloat 35s ease-in-out infinite;
+    /* Αυξήσαμε το 0.08 σε 0.2 για να φαίνεται περισσότερο */
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, transparent 70%);
+    filter: blur(60px); /* Μειώσαμε λίγο το blur για να "γράψει" καλύτερα */
+    animation: mistFloat 30s ease-in-out infinite;
+}
+
+/* Προσθήκη δεύτερου στρώματος για βάθος */
+.mist-layer::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 60%);
+    animation: mistFloat 45s ease-in-out infinite reverse;
 }
 
 @keyframes mistFloat {
-    0% { transform: translate(-15%, -15%) scale(1); }
-    50% { transform: translate(5%, 5%) scale(1.2); }
-    100% { transform: translate(-15%, -15%) scale(1); }
+    0% { transform: translate(-10%, -10%) scale(1); }
+    50% { transform: translate(5%, 5%) scale(1.1); }
+    100% { transform: translate(-10%, -10%) scale(1); }
 }
-
         :root {
             --gold: #D4AF37;
             --fire: #ff4400;
