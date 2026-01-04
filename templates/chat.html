@@ -381,23 +381,40 @@
         <div id="gif-results" style="overflow-y:auto; display:grid; grid-template-columns: 1fr 1fr; gap:5px;"></div>
     </div>
 
-    <div class="toolbar">
-        <button type="button" class="tool-btn" onclick="document.getElementById('chat-input').focus(); document.execCommand('bold')"><b>B</b></button>
-<button type="button" class="tool-btn" onclick="document.getElementById('chat-input').focus(); document.execCommand('italic')"><i>I</i></button>
-        <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:30px; height:30px; cursor:pointer; vertical-align:middle;">
-        
-        <button type="button" onclick="addEmoji('🎅')" class="tool-btn">🎅</button>
-        <button type="button" onclick="addEmoji('🎄')" class="tool-btn">🎄</button>
-        <button type="button" onclick="addEmoji('🎁')" class="tool-btn">🎁</button>
-        <button type="button" onclick="addEmoji('🔔')" class="tool-btn">🔔</button>
-        <button type="button" onclick="addEmoji('❄️')" class="tool-btn">❄️</button>
-        <button type="button" onclick="addEmoji('🔥')" class="tool-btn">🔥</button>
-        <button type="button" onclick="addEmoji('🎶')" class="tool-btn">🎶</button>
-        <button type="button" onclick="addEmoji('⭐')" class="tool-btn">⭐</button>
-        
-        <button type="button" id="emoji-trigger" class="tool-btn">😊</button>
-       
-       <div id="custom-emoji-picker" style="display:none; position: absolute; bottom: 85px; left: 10px; background: rgba(15, 15, 15, 0.98); border: 2px solid var(--gold); border-radius: 20px; padding: 15px; width: 280px; z-index: 10001; box-shadow: 0 0 30px rgba(212, 175, 55, 0.4); backdrop-filter: blur(15px);">
+<div class="toolbar">
+    <button type="button" class="tool-btn" onclick="document.getElementById('chat-input').focus(); document.execCommand('bold')"><b>B</b></button>
+    <button type="button" class="tool-btn" onclick="document.getElementById('chat-input').focus(); document.execCommand('italic')"><i>I</i></button>
+    <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:30px; height:30px; cursor:pointer; vertical-align:middle;">
+
+    <script>
+        // Εδώ προσθέτεις τα links σου. Αν αφήσεις κενό '', το κουμπί δεν θα φαίνεται.
+        const myGifs = [
+            'https://i.postimg.cc/zvv7vY5f/fotovol.gif', // 1ο GIF
+            '', // 2ο GIF (Βάλε το link εδώ)
+            '', // 3ο GIF
+            '', // 4ο GIF
+            '', // 5ο GIF
+            '', // 6ο GIF
+            '', // 7ο GIF
+            '', // 8ο GIF
+            '', // 9ο GIF
+            '', // 10ο GIF
+            ''  // 11ο GIF
+        ];
+
+        myGifs.forEach(url => {
+            if(url !== '' && !url.includes('URL_')) {
+                document.write(`
+                    <button type="button" onclick="sendCustomGif('${url}')" class="tool-btn">
+                        <img src="${url}" style="width:28px; height:28px; vertical-align:middle;">
+                    </button>
+                `);
+            }
+        });
+    </script>
+
+    <button type="button" id="emoji-trigger" class="tool-btn">😊</button>
+           <div id="custom-emoji-picker" style="display:none; position: absolute; bottom: 85px; left: 10px; background: rgba(15, 15, 15, 0.98); border: 2px solid var(--gold); border-radius: 20px; padding: 15px; width: 280px; z-index: 10001; box-shadow: 0 0 30px rgba(212, 175, 55, 0.4); backdrop-filter: blur(15px);">
     
     <div style="color: var(--gold); font-family: 'Orbitron'; font-size: 11px; margin-bottom: 12px; text-align: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 8px;">
         <i class="fas fa-headphones"></i> RADIO PAREA VIP
@@ -964,7 +981,11 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(updateDJImage, 5000);
     } 
 }); 
-
+function sendCustomGif(url) {
+    if (!url || url.includes('LINK_')) return; 
+    socket.emit('message', { content: url });
+    document.getElementById('chat-input').focus();
+}
 </script>
 <div id="progModal" style="display:none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center;">
     <div style="background: #111; border: 2px solid var(--gold); width: 90%; max-width: 900px; padding: 20px; border-radius: 15px; position: relative;">
