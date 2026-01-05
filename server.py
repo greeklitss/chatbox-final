@@ -202,6 +202,15 @@ def create_app():
         history.reverse() 
         return render_template("chat.html", history=history)
 
+    @app.route("/test") # Η νέα διαδρομή
+    @login_required     # Μόνο εσύ (που είσαι logged in) μπορείς να μπεις
+    def test_page():
+        # Παίρνουμε πάλι το ιστορικό για να βλέπεις αληθινά μηνύματα
+        history = Message.query.order_by(Message.timestamp.desc()).limit(50).all()
+        history.reverse() 
+        # ΕΔΩ ΕΙΝΑΙ ΤΟ ΚΛΕΙΔΙ: Θα φορτώνει το νέο αρχείο test_chat.html
+        return render_template("test_chat.html", history=history)
+
     @app.route("/update_profile", methods=["POST"])
     @login_required
     def update_profile():
