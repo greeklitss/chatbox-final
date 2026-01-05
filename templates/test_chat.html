@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Parea - Merry Christmas 🔥🎄</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Orbitron:wght@700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <style>
+/* VIP ΧΡΥΣΟΣ ΚΑΠΝΟΣ - ΒΕΛΤΙΩΜΕΝΟΣ */
+.mist-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+    background: transparent;
+}
+
+.mist-layer {
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    /* Αυξήσαμε το 0.08 σε 0.2 για να φαίνεται περισσότερο */
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.4) 0%, transparent 65%);
+    filter: blur(40px);
+    animation: mistFloat 15s ease-in-out infinite;
+}
+
+/* Προσθήκη δεύτερου στρώματος για βάθος */
+.mist-layer::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+    animation: mistFloat 45s ease-in-out infinite reverse;
+}
+
+@keyframes mistFloat {
+    0% { transform: translate(-20%, -20%) rotate(0deg); }
+    50% { transform: translate(10%, 10%) rotate(5deg) scale(1.2); }
+    100% { transform: translate(-20%, -20%) rotate(0deg); }
+}
+        :root {
+            --gold: #D4AF37;
+            --fire: #ff4400;
+            --red: #ff4444;
+        }
+
+        body {
+    background-color: #050a14;
+    margin: 0;
+    /* ΑΛΛΑΓΗ: Βγάζουμε το height: 100vh και το overflow: hidden */
+    min-height: 100vh; 
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Επιτρέπει το σκρολάρισμα προς τα κάτω */
+    overflow-x: hidden;
+    font-family: 'Roboto', sans-serif;
+}
+
+
+        /* HEADER */
+        .header {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--gold);
+            z-index: 1000;
+            min-height: 125px;
+        }
+
+        #sonic_dj { 
+            font-family: 'Orbitron';
+            font-size: 1.5em !important;
+            font-weight: bold; 
+            color: var(--gold) !important;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--fire), 0 0 20px var(--fire);
+            animation: text-flicker 0.1s infinite alternate;
+        }
+
+        @keyframes text-flicker { from { opacity: 0.8; } to { opacity: 1; text-shadow: 0 0 20px var(--fire), 2px 2px 5px #000; } }
+
+        .player-frame { 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            background: rgba(0,0,0,0.8); 
+            padding: 10px 25px; 
+            border-radius: 60px; 
+            border: 2px solid var(--gold); 
+            position: relative; 
+            box-shadow: 0 0 25px var(--fire); 
+        }
+
+        .flame-wrapper { position: absolute; bottom: -8px; width: 100%; height: 15px; display: flex; justify-content: center; }
+        .flame { width: 18px; height: 18px; background: var(--fire); border-radius: 50% 0 50% 50%; transform: rotate(-45deg); animation: burn 0.4s infinite alternate; filter: blur(1px); opacity: 0.8; margin: 0 2px; }
+        @keyframes burn { from { transform: rotate(-45deg) scale(1); } to { transform: rotate(-45deg) scale(1.4) translateY(-8px); } }
+
+        #dj_profile img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--gold); box-shadow: 0 0 20px var(--gold); object-fit: cover; }
+
+        /* CHAT WINDOW & MESSAGES (TRANSPARENT) */
+        /* Μικρά και ομοιόμορφα avatar στο κείμενο */
+.message-avatar {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 8px;
+    vertical-align: middle;
+    border: 1px solid var(--gold);
+}
+
+/* Στυλ για την ώρα και ημερομηνία */
+.msg-time {
+    font-size: 0.7em;
+    color: #888;
+    margin-left: 10px;
+    white-space: pre; /* Για να κρατάει τα κενά που ζήτησες */
+}
+
+/* Για να μην σπάει το chat από μεγάλες λέξεις */
+.message-content {
+    word-break: break-word;
+}
+
+
+
+.main { 
+    display: flex !important; 
+    flex-direction: row !important; /* Αναγκάζει Sidebar και Chat να είναι στην ίδια ευθεία */
+    width: 100%; 
+    max-width: 100vw;
+    height: 800px; /* Ή όσο ύψος θέλεις */
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#chat-window { 
+    flex: 1; /* Παίρνει όλο τον ελεύθερο χώρο αριστερά */
+    display: flex; 
+    flex-direction: column; 
+    height: 100%;
+}
+#chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background-image: url('/static/radioparea.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-color: rgba(5, 10, 20, 0.5) !important;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    position: relative;
+    z-index: 2;
+}
+        .message { 
+            background: transparent !important; /* Εξαφάνιση γκρι μπάρας */
+            border: none !important; 
+            padding: 8px 0px; 
+            margin-bottom: 5px;
+            color: white !important;
+            /* Περίγραμμα στα γράμματα για να φαίνονται παντού */
+            text-shadow: 2px 2px 4px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
+            font-size: 1.1em;
+        }
+
+        /* INPUT AREA */
+        .input-area { 
+            background: rgba(0, 0, 0, 0.85); 
+            padding: 15px; 
+            border-top: 2px solid var(--gold);
+            z-index: 10;
+        }
+        
+
+        .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+        
+        #chat-input { 
+            flex: 1; 
+            padding: 15px; 
+            border-radius: 15px; 
+            border: 2px solid var(--gold); 
+            background: #111; 
+            color: white; 
+            outline: none; 
+            min-height: 45px; 
+            font-size: 1.2em; 
+        }
+
+        .tool-btn { background: rgba(212,175,55,0.1); border: 1px solid var(--gold); color: white; padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .tool-btn:hover { background: var(--gold); color: black; transform: scale(1.1); }
+        .emoji-btn { font-size: 1.4em; }
+
+        /* SIDEBAR */
+.sidebar { 
+    width: 200px !important; 
+    min-width: 200px;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85); 
+    border-left: 2px solid var(--gold); 
+    display: flex;
+    flex-direction: column;
+}
+
+#gif-picker {
+    z-index: 9999 !important;
+    display: none; /* Αρχικά κρυφό */
+    flex-direction: column;
+}
+
+#gif-results {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 στήλες */
+    gap: 10px;
+    padding: 10px;
+}
+
+.emoji-picker {
+    z-index: 99999 !important;
+}
+
+#gif-results img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: transform 0.2s;
+}
+
+#gif-results img:hover {
+    transform: scale(1.05);
+    border: 1px solid var(--gold);
+}
+
+        #user-list-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        /* SCROLLBAR */
+        #chat-box::-webkit-scrollbar { width: 6px; }
+        #chat-box::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+        #chat-box::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+
+        /* MODAL */
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); }
+        .modal-content { background: #111; margin: 10% auto; padding: 30px; border: 2px solid var(--gold); width: 320px; border-radius: 25px; color: white; box-shadow: 0 0 30px var(--gold); }
+        
+        input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--gold); background: #222; color: white; }
+
+/* Ρυθμίσεις για τα emojis μέσα στο παράθυρο επιλογής (Picker) */
+.emoji-item {
+    font-size: 32px !important; /* Μεγαλώνει τα προσωπάκια για να τα βλέπεις καλά */
+    cursor: pointer;
+    padding: 5px;
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+.emoji-item:hover {
+    transform: scale(1.2); /* Μεγαλώνει λίγο όταν πας το ποντίκι πάνω του */
+}
+
+/* --- ΡΥΘΜΙΣΕΙΣ ΓΙΑ ΕΙΚΟΝΕΣ ΚΑΙ EMOJIS --- */
+
+/* 1. Γενική ρύθμιση για όλες τις εικόνες στα μηνύματα */
+.message-content img {
+    vertical-align: middle;
+    object-fit: contain;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 2px;
+}
+
+/* 2. Φατσούλες-Εικόνες και μικρά GIFs από το μενού (48px) */
+/* Η JavaScript προσθέτει την κλάση .emoji σε αυτά */
+.message-content img.emoji {
+    width: 48px !important;
+    height: 48px !important;
+    display: inline-block !important;
+    vertical-align: middle;
+}
+
+/* 3. Φατσούλες-Κείμενο (π.χ. 😀, 🔥) */
+/* Η JavaScript προσθέτει την κλάση .emoji-text σε αυτά */
+.message-content span.emoji-text {
+    font-size: 42px !important;
+    line-height: normal;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 2px;
+}
+
+/* 4. Μεγάλες Εικόνες (Αντιγραφή, Επικόλληση, Links) */
+/* Στοχεύουμε εικόνες που ΔΕΝ είναι emojis */
+.message-content img:not(.emoji) {
+    width: auto !important;
+    height: auto !important;
+    max-width: 280px !important; /* Το όριο για να μην ξεχειλώνουν */
+    max-height: 280px !important;
+    display: block; /* Πηγαίνουν σε δική τους γραμμή */
+    margin: 10px 0;
+    border-radius: 10px;
+    border: none !important;
+}
+
+/* 5. Το κανονικό κείμενο των μηνυμάτων */
+.message-content {
+    font-size: 16px !important; /* Επαναφορά γραμμάτων στο κανονικό */
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+/* 6. Ρύθμιση για το Picker (emoticons.html) */
+.emoji-item {
+    font-size: 32px; /* Για να τα βλέπεις μεγάλα στο μενού επιλογής */
+    cursor: pointer;
+    padding: 5px;
+    display: inline-block;
+}
+
+.emoji-item img {
+    width: 40px !important;
+    height: 40px !important;
+    vertical-align: middle;
+    border: none !important;
+}
+     </style>
+</head>
+<body>
+
+    <div class="mist-container"><div class="mist-layer"></div></div>
+    
+    <div class="header">
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            {% if current_user.role == 'owner' %}
+            <button onclick="clearChat()" style="background:#ff4444; color:white; border:none; padding:10px; cursor:pointer; border-radius:5px;">
+                <i class="fas fa-trash"></i> ΣΚΟΥΠΑ
+            </button>
+            {% endif %}
+            <button onclick="document.getElementById('setModal').style.display='block'" class="tool-btn"><i class="fas fa-user-circle"></i> ΠΡΟΦΙΛ</button>
+            <a href="{{ url_for('logout') }}" class="tool-btn" style="color:var(--red); border-color:var(--red); text-decoration:none; text-align:center;"><i class="fas fa-power-off"></i> ΕΞΟΔΟΣ</a>
+        </div>
+
+        <div class="player-frame">
+            <div class="flame-wrapper">
+                <div class="flame"></div><div class="flame"></div><div class="flame"></div><div class="flame"></div>
+            </div>
+            <button id="play-pause-btn" style="background:var(--gold); border:none; width:55px; height:55px; border-radius:50%; cursor:pointer; box-shadow: 0 0 15px var(--gold);">
+                <i class="fas fa-play" id="play-icon" style="font-size: 1.5em;"></i>
+            </button>
+            <div style="text-align: center;">
+                <div style="color:white; font-family:'Dancing Script'; font-size:1.8em; text-shadow: 0 0 15px var(--fire);">Radio Parea 🎅</div>
+                <input type="range" id="volume-control" min="0" max="1" step="0.1" value="0.5" style="accent-color:var(--gold); width:90px; cursor: pointer;">
+            </div>
+            <div style="text-align: left; min-width: 120px;">
+                <div id="sonic_title" style="color:var(--gold); font-size: 0.8em; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Radio Parea Live</div>
+                <div id="sonic_dj">DJ ON AIR</div>
+            </div>
+        </div>
+
+        <div style="text-align:center;">
+            <div id="dj_profile"></div>
+            <div style="color:var(--gold); font-size:0.8em; margin-top:8px; font-weight:bold; font-family: 'Orbitron';">AKPOATEΣ: <span id="sonic_listeners">0</span></div>
+        </div>
+    </div>
+
+<div class="main">
+        <div id="chat-window"> 
+            
+            <div id="chat-box">
+                {% for msg in history %}
+                <div class="message" id="msg-{{ msg.id }}" style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                    <img src="{{ msg.author.avatar_url or 'https://ui-avatars.com/api/?name=' + msg.author.display_name }}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold);">
+                    <div style="display: flex; flex-direction: column;">
+                        <div style="display: flex; align-items: baseline; gap: 8px;">
+                            <strong style="color: {{ msg.author.color }}; font-size: 0.9em;">{{ msg.author.display_name }}:</strong>
+                            <span class="msg-time">{{ msg.timestamp.strftime("%H:%M   %d.%m.%Y") }}</span>
+                            <i class="fas fa-edit" onclick="editMsg({{ msg.id }})" style="cursor:pointer; font-size:0.7em; color:gray; margin-left:5px;"></i>
+                            {% if current_user.role in ['admin', 'owner'] %}
+                            <i class="fas fa-trash" onclick="deleteMsg({{ msg.id }})" style="cursor:pointer; font-size:0.7em; color:red; margin-left:5px;"></i>
+                            {% endif %}
+                        </div>
+                        <span class="message-content" style="color: white; text-shadow: 1px 1px 2px black;">{{ msg.content | safe }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="input-area">
+    <div id="gif-picker" style="display:none; position:absolute; bottom:160px; left:20px; background:#000; border:2px solid var(--gold); border-radius:15px; width:300px; height:400px; z-index:9999; padding:10px; flex-direction:column;">
+        <input type="text" id="gif-search" placeholder="Αναζήτηση GIF..." onkeyup="searchGifs(this.value)" style="width:92%; padding:8px; background:#222; color:white; border:1px solid var(--gold); margin-bottom:10px;">
+        <div id="gif-results" style="overflow-y:auto; display:grid; grid-template-columns: 1fr 1fr; gap:5px;"></div>
+    </div>
+
+<div class="toolbar">
+    <button type="button" class="tool-btn" onclick="document.getElementById('chat-input').focus(); document.execCommand('bold')"><b>B</b></button>
+    <button type="button" class="tool-btn" onclick="document.getElementById('chat-input').focus(); document.execCommand('italic')"><i>I</i></button>
+    <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:30px; height:30px; cursor:pointer; vertical-align:middle;">
+
+    <script>
+        // Εδώ προσθέτεις τα links σου. Αν αφήσεις κενό '', το κουμπί δεν θα φαίνεται.
+        const myGifs = [
+            'https://i.postimg.cc/zvv7vY5f/fotovol.gif', // 1ο GIF
+            'https://media.tenor.com/5fMeMMchIzoAAAAj/smiley-emoji.gif', // 2ο GIF 
+            '', // 3ο GIF
+            '', // 4ο GIF
+            '', // 5ο GIF
+            '', // 6ο GIF
+            '', // 7ο GIF
+            '', // 8ο GIF
+            '', // 9ο GIF
+            '', // 10ο GIF
+            ''  // 11ο GIF
+        ];
+
+        myGifs.forEach(url => {
+            if(url !== '' && !url.includes('URL_')) {
+                document.write(`
+                    <button type="button" onclick="sendCustomGif('${url}')" class="tool-btn">
+                        <img src="${url}" style="width:28px; height:28px; vertical-align:middle;">
+                    </button>
+                `);
+            }
+        });
+    </script>
+
+    <button type="button" id="emoji-trigger" class="tool-btn">😊</button>
+           <div id="custom-emoji-picker" style="display:none; position: absolute; bottom: 85px; left: 10px; background: rgba(15, 15, 15, 0.98); border: 2px solid var(--gold); border-radius: 20px; padding: 15px; width: 280px; z-index: 10001; box-shadow: 0 0 30px rgba(212, 175, 55, 0.4); backdrop-filter: blur(15px);">
+    
+    <div style="color: var(--gold); font-family: 'Orbitron'; font-size: 11px; margin-bottom: 12px; text-align: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 8px;">
+        <i class="fas fa-headphones"></i> RADIO PAREA VIP
+    </div>
+
+    <div id="emoji-list" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; text-align: center; max-height: 220px; overflow-y: auto; padding-right: 5px;">
+        </div>
+   
+</div>
+
+<style>
+    /* Styling για το Scrollbar του Emoji Picker */
+    #emoji-list::-webkit-scrollbar { width: 4px; }
+    #emoji-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+    #emoji-list::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+</style>
+<button type="button" class="tool-btn ignore-emoji" onclick="toggleGifPicker(event)">GIF</button>
+    </div>
+<div class="style-bar" style="display: flex; gap: 8px; margin: 10px 0; padding: 8px; background: rgba(212,175,55,0.1); border-radius: 10px; flex-wrap: wrap; border: 1px solid rgba(212,175,55,0.2);">
+    
+    <select id="text-font" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
+        <option value="inherit">Font</option>
+        <option value="'Orbitron', sans-serif">Modern</option>
+        <option value="'Dancing Script', cursive">Calligraphy</option>
+    </select>
+
+    <select id="text-size" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
+        <option value="16px">S</option>
+        <option value="20px" selected>M</option>
+        <option value="28px">L</option>
+    </select>
+
+    <select id="text-glow" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
+        <option value="none">No Glow</option>
+        <option value="0 0 10px #d4af37">Gold Glow</option>
+        <option value="0 0 15px #ffffff">Neon White</option>
+        <option value="0 0 15px #ff0000">Red Flare</option>
+    </select>
+
+    <select id="text-gradient" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
+        <option value="none">Plain Color</option>
+        <option value="linear-gradient(to right, #d4af37, #ffffff)">Gold-White</option>
+        <option value="linear-gradient(to right, #ff0000, #ffff00)">Fire</option>
+        <option value="linear-gradient(to right, #cfd8dc, #ffffff, #cfd8dc)">Silver</option>
+        <option value="rainbow-flow">Rainbow Animated</option> </select>
+
+    <select id="text-animation" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
+        <option value="none">No Motion</option>
+        <option value="blink-animation">Blink</option>
+        <option value="pulse-animation">Pulse</option>
+        <option value="floating-animation">Floating</option>
+        <option value="shake-animation">Shake</option>
+    </select>
+
+    <select id="text-effect" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
+        <option value="none">Static</option>
+        <option value="marquee">Marquee</option>
+    </select>
+</div>
+<style>
+/* ΤΑ ΔΙΚΑ ΣΟΥ - ΔΕΝ ΑΛΛΑΖΟΥΝ */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.blink-animation { animation: blink 1s infinite; }
+
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+.pulse-animation { animation: pulse 2s infinite; display: inline-block; }
+
+@keyframes shake { 0% { transform: translate(0); } 25% { transform: translate(2px, -2px); } 50% { transform: translate(-2px, 2px); } 75% { transform: translate(2px, 2px); } 100% { transform: translate(0); } }
+.shake-animation { animation: shake 0.3s infinite; display: inline-block; }
+
+/* ΤΑ ΝΕΑ ΠΟΥ ΠΡΟΣΘΕΤΟΥΜΕ ΣΤΟ ΤΕΛΟΣ */
+@keyframes rainbow-move {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.rainbow-text-effect {
+    background: linear-gradient(270deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbow-move 4s ease infinite !important;
+}
+
+@keyframes floating {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0px); }
+}
+.floating-animation { animation: floating 2s ease-in-out infinite; display: inline-block; }
+</style>    <div style="display:flex; gap:10px; align-items: center;">
+        <div id="chat-input" contenteditable="true" placeholder="Γράψτε κάτι..."></div>
+        <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:10px 30px; border-radius:15px; font-weight:bold; cursor:pointer; height:50px; flex-shrink:0;">ΣΤΕΙΛΕ</button>
+    </div> </div> </div> <div class="sidebar" style="display: flex; flex-direction: column; background: rgba(0,0,0,0.5); border-left: 1px solid var(--gold); width: 250px; height: 100%;">
+    <div style="color:var(--gold); font-weight:bold; padding: 15px 0; font-family: 'Orbitron'; text-align:center; border-bottom: 1px solid rgba(212,175,55,0.2);">
+        <i class="fas fa-users"></i> ONLINE
+    </div>
+
+    <div id="user-list-content" style="flex: 1; overflow-y: auto; padding: 10px;"></div>
+
+    <div style="padding: 15px 10px; border-top: 1px solid rgba(212,175,55,0.3); background: rgba(0,0,0,0.3);">
+        <div style="color:var(--gold); font-weight:bold; margin-bottom: 8px; font-family: 'Orbitron'; text-align:center; font-size: 0.7em;">
+            <i class="fas fa-info-circle"></i> INFO CENTER
+        </div>
+        
+        <div onclick="document.getElementById('progModal').style.display='flex'" 
+             style="cursor: pointer; position: relative; width: 100%; border: 1px solid var(--gold); border-radius: 8px; overflow: hidden; aspect-ratio: 16/9; box-shadow: 0 0 10px rgba(212,175,55,0.2);">
+            
+            <div style="position: absolute; top:0; left:0; width:100%; height:100%; z-index: 10;"></div>
+            
+            <iframe 
+                src="https://docs.google.com/presentation/d/e/2PACX-1vSWKUdDqxVATw0zJ3dhv9itmtduJhmEBG1xCRthIoO7881_ex7OXANm7aEeEuCd9A/embed?start=true&loop=true&delayms=5000&rm=minimal" 
+                frameborder="0" 
+                style="width: 100%; height: 100%; pointer-events: none;" 
+                allowfullscreen="true">
+            </iframe>
+            
+            <div style="position: absolute; bottom: 0; width: 100%; background: rgba(212,175,55,0.9); color: black; text-align: center; font-size: 9px; font-weight: bold; z-index: 11; padding: 2px 0;">
+                ΚΛΙΚ ΓΙΑ ΜΕΓΕΘΥΝΣΗ
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div id="setModal" class="modal" style="{% if not current_user.has_setup_profile %} display:block; backdrop-filter: blur(15px); {% endif %}">
+    <div class="modal-content" style="border: 2px solid var(--fire); box-shadow: 0 0 30px var(--fire);">
+        <h3 style="text-align:center; color:var(--gold); font-family:'Orbitron';">
+            {% if not current_user.has_setup_profile %} ΚΑΛΩΣΗΡΘΕΣ! ΦΤΙΑΞΕ ΤΟ ΠΡΟΦΙΛ ΣΟΥ {% else %} ΡΥΘΜΙΣΕΙΣ {% endif %}
+        </h3>
+        
+        <label>Όνομα (Nickname):</label>
+<input type="text" id="new-nickname" value="{{ current_user.display_name }}" 
+       {% if current_user.has_setup_profile %} readonly style="background: #222; color: #777; cursor: not-allowed;" {% endif %} 
+       placeholder="Γράψε το όνομά σου...">
+{% if current_user.has_setup_profile %}
+<p style="color: gray; font-size: 0.8em; margin-top: -5px;">Το όνομα είναι κλειδωμένο. Μπορείς να αλλάξεις μόνο χρώμα και εικόνα.</p>
+{% endif %}
+        
+        <label>Avatar URL (Link εικόνας):</label>
+        <input type="text" id="new-avatar" value="{{ current_user.avatar_url or '' }}" placeholder="https://link.to-your-image.png">
+        
+        <label>Χρώμα Ονόματος στο Chat:</label>
+        <input type="color" id="new-color" value="{{ current_user.color or '#D4AF37' }}">
+        
+        <button onclick="saveProfile()" style="width:100%; background:var(--gold); border:none; padding:15px; margin-top:10px; cursor:pointer; font-weight:bold; border-radius:10px; font-size:1.1em;">ΑΠΟΘΗΚΕΥΣΗ & ΕΙΣΟΔΟΣ</button>
+        
+        {% if current_user.has_setup_profile %}
+        <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; background:none; color:gray; border:none; margin-top:10px; cursor:pointer;">Ακύρωση</button>
+        {% endif %}
+    </div>
+</div>
+
+    <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+    <script>
+        const socket = io();
+        const chatInput = document.getElementById('chat-input');
+        const chatBox = document.getElementById('chat-box');
+
+
+
+socket.on("message", function(data) {
+    const currentUserId = parseInt('{{ current_user.id }}');
+    const currentUserRole = '{{ current_user.role }}';
+    const currentUsername = '{{ current_user.display_name }}'; 
+    const chatBox = document.getElementById('chat-box');
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message';
+    msgDiv.id = `msg-${data.id}`;
+    msgDiv.style = "margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px; transition: background 0.3s; padding: 5px; border-radius: 8px;";
+
+    // --- ΧΕΙΡΟΥΡΓΙΚΗ ΠΡΟΣΘΗΚΗ: MENTIONS ---
+    // Αν το περιεχόμενο περιέχει το @ΌνομάΣου, άλλαξε το φόντο
+    if (data.content.includes('@' + currentUsername)) {
+        msgDiv.style.backgroundColor = "rgba(212, 175, 55, 0.2)"; // Χρυσαφί διαφανές
+        msgDiv.style.borderLeft = "4px solid var(--gold)";
+        msgDiv.style.paddingLeft = "8px";
+    }
+
+    const finalContent = processMessageContent(data.content);
+    const rawText = data.content.replace(/<\/?[^>]+(>|$)/g, "");
+
+    // --- ΟΛΑ ΤΑ ACTIONS ΜΑΖΙ ---
+    let actions = `<span class="msg-time">${data.timestamp}</span>`;
+    
+    // 1. Reply (Το βελάκι για όλους)
+    actions += ` <i class="fas fa-reply" onclick="replyTo('${data.display_name}')" style="cursor:pointer; font-size:0.7em; color:var(--gold); margin-left:8px;" title="Απάντηση"></i>`;
+
+    // 2. Edit (Μόνο δικά σου ή Admin)
+    if (data.user_id === currentUserId || currentUserRole !== "user") {
+        actions += ` <i class="fas fa-edit" onclick="editMsg(${data.id})" style="cursor:pointer; font-size:0.7em; color:gray; margin-left:5px;"></i>`;
+    }
+    
+    // 3. Delete (Μόνο Admin/Owner)
+    if (currentUserRole !== "user") {
+        actions += ` <i class="fas fa-trash" onclick="deleteMsg(${data.id})" style="cursor:pointer; font-size:0.7em; color:red; margin-left:5px;"></i>`;
+    }
+
+    msgDiv.innerHTML = `
+        <img src="${data.avatar_url}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
+        <div style="display: flex; flex-direction: column;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+                <strong style="color: ${data.color}; font-size: 0.9em;">${data.display_name}:</strong>
+                ${actions}
+            </div>
+            <span class="message-content" data-raw-content="${rawText}" style="color: white; text-shadow: 1px 1px 2px black;">${finalContent}</span>
+        </div>
+    `;
+
+    chatBox.appendChild(msgDiv);
+    
+    // Αυτόματο Scroll στο τέλος
+    chatBox.scrollTop = chatBox.scrollHeight;
+});
+
+
+// Πρόσθεσε αυτές τις συναρτήσεις στο τέλος του script
+function deleteMsg(id) {
+    if(confirm("Διαγραφή μηνύματος;")) socket.emit("delete_message", {id: id});
+}
+
+function replyTo(username) {
+    const chatInput = document.getElementById('chat-input');
+    
+    // Δημιουργούμε το HTML για το mention
+    const mention = `<strong style="color:var(--gold);">@${username}</strong>&nbsp;`;
+    
+    // Το βάζουμε στο input και δίνουμε focus
+    chatInput.innerHTML = mention + chatInput.innerHTML;
+    chatInput.focus();
+
+    // Χειρουργική κίνηση: Πηγαίνουμε τον κέρσορα στο τέλος
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(chatInput);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+}
+
+function editMsg(id) {
+    // Βρίσκουμε το μήνυμα στη βάση των δεδομένων (το αρχικό κείμενο που έστειλε ο χρήστης)
+    const el = document.querySelector(`#msg-${id} .message-content`);
+    if (!el) return;
+
+    // Σημαντικό: Χρησιμοποιούμε το textContent για να μην πάρουμε τα <img> tags
+    // αλλά το Link που κρύβεται από πίσω αν είναι εικόνα.
+    const oldContent = el.getAttribute('data-raw-content') || el.innerText; 
+    
+    const newText = prompt("Διόρθωση μηνύματος ή Link εικόνας:", oldContent);
+    
+    if(newText !== null && newText.trim() !== "") {
+        socket.emit("edit_message", {id: id, new_content: newText});
+    }
+}
+
+
+socket.on("message_deleted", data => {
+    const msgToRem = document.getElementById(`msg-${data.id}`);
+    if(msgToRem) msgToRem.remove();
+});
+
+socket.on("message_edited", data => {
+    const el = document.querySelector(`#msg-${data.id} .message-content`);
+    if(el) el.innerHTML = processMessageContent(data.content);
+});
+
+socket.on('clear_chat_client', () => {
+    const chatBox = document.getElementById('chat-box');
+    if (chatBox) chatBox.innerHTML = '';
+});
+
+        socket.on('update_bg', (data) => {
+            if (data.url) {
+                document.body.style.backgroundImage = `url('${data.url}')`;
+            }
+        });
+
+        function addEmoji(e) { chatInput.innerHTML += e; chatInput.focus(); }
+
+        const radio = new Audio('https://or.mysonicserver.com:8050/;');
+        radio.volume = 0.5;
+        document.getElementById('play-pause-btn').onclick = () => {
+            if (radio.paused) { radio.play(); document.getElementById('play-icon').className = 'fas fa-pause'; }
+            else { radio.pause(); document.getElementById('play-icon').className = 'fas fa-play'; }
+        };
+        document.getElementById('volume-control').oninput = function() { radio.volume = this.value; };
+
+
+
+
+
+        function clearChat() { 
+            if(confirm("Θέλετε να καθαρίσετε το chat; Η σκούπα θα περάσει! ✨")) {
+                socket.emit('clear_chat_request');
+            }
+        }
+
+
+
+function processMessageContent(content) {
+    if (!content) return "";
+    let html = content;
+
+    // ΠΡΩΤΑ: Βρίσκουμε τα emojis-κείμενο και τους βάζουμε την κλάση emoji-text 
+    // για να μην μεγαλώσουν τα κανονικά γράμματα
+    const emojiRegex = /([\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}])/gu;
+    html = html.replace(emojiRegex, '<span class="emoji-text">$1</span>');
+
+    // ΜΕΤΑ: Διαχείριση εικόνων
+    const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/gi;
+
+    // Αν το html έχει ήδη <img> (από το picker), του βάζουμε την κλάση emoji
+    if (html.includes('<img')) {
+        html = html.replace(/<img /g, '<img class="emoji" ');
+    }
+
+    // Για τα επικολλημένα links ή εικόνες από αντιγραφή
+    html = html.replace(imgRegex, (match) => {
+        if (content.includes('src="' + match + '"')) return match;
+        // Τις βάζουμε χωρίς την κλάση emoji για να πάρουν το μέγεθος 280px
+        return `<br><img src="${match}">`;
+    });
+
+    return html;
+}
+
+
+// Αποστολή μηνύματος (Ενημερωμένη για Font, Size, Marquee)
+function sendMessage() {
+    const chatInput = document.getElementById('chat-input');
+    const content = chatInput.innerHTML.trim();
+    
+    if(content && content !== '<br>') { 
+        const font = document.getElementById('text-font').value;
+        const size = document.getElementById('text-size').value;
+        const glow = document.getElementById('text-glow').value;
+        const gradient = document.getElementById('text-gradient').value;
+        const animation = document.getElementById('text-animation').value;
+        const effect = document.getElementById('text-effect').value;
+
+        // 1. Διατηρούμε το βασικό σου Style
+        let style = `font-family:${font}; font-size:${size}; text-shadow:${glow}; display:inline-block;`;
+
+        // 2. Ετοιμάζουμε τις κλάσεις (Animations + Rainbow)
+        let animationClass = (animation !== 'none') ? animation : '';
+
+        // 3. Εφαρμογή Gradient ή Rainbow Animated
+        if (gradient === 'rainbow-flow') {
+            // Αν επιλεγεί το Rainbow, προσθέτουμε την ειδική κλάση
+            animationClass += ' rainbow-text-effect';
+        } else if (gradient !== 'none') {
+            // Διαφορετικά εφαρμόζουμε το απλό gradient όπως πριν
+            style += `background:${gradient}; -webkit-background-clip:text; -webkit-text-fill-color:transparent;`;
+        }
+
+        let finalMsg;
+        // 4. Δημιουργία τελικού μηνύματος (Marquee ή Span)
+        if (effect === 'marquee') {
+            finalMsg = `<marquee style="${style} scrollamount: 5; width:100%;" class="${animationClass}">${content}</marquee>`;
+        } else {
+            finalMsg = `<span style="${style}" class="${animationClass}">${content}</span>`;
+        }
+
+        // Αποστολή
+        socket.emit('message', { content: finalMsg }); 
+        chatInput.innerHTML = ''; 
+        chatInput.focus();
+    }
+}      socket.on('users_update', (users) => {
+            const userList = document.getElementById('user-list-content');
+            if (userList) {
+                userList.innerHTML = users.map(u => `
+                    <div style="margin-bottom:15px; display:flex; flex-direction:column; align-items:center;">
+                        <img src="${u.avatar_url || 'https://i.imgur.com/6VBx3io.png'}" style="width:50px; height:50px; border-radius:50%; border:2px solid ${u.color}; object-fit:cover;">
+                        <div style="color:${u.color}; font-size:0.85em; font-weight:bold; margin-top:5px; text-shadow: 1px 1px 2px #000;">${u.display_name}</div>
+                    </div>`).join('');
+            }
+        });
+
+function saveProfile() {
+    const nick = document.getElementById('new-nickname').value;
+    const av = document.getElementById('new-avatar').value;
+    const col = document.getElementById('new-color').value;
+
+    if (!nick || nick.trim() === "") {
+        alert("Πρέπει να βάλεις ένα όνομα!");
+        return;
+    }
+
+    const data = {
+        display_name: nick,
+        avatar_url: av || "https://i.imgur.com/6VBx3io.png",
+        color: col
+    };
+
+    fetch('/update_profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.status === "success") {
+            document.getElementById('setModal').style.display = 'none';
+            window.location.reload(); 
+        } else {
+            alert(res.message);
+        }
+    });
+}
+
+
+        chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+
+        // Διόρθωση Ιστορικού κατά το φόρτωμα (Refresh)
+        window.addEventListener('load', () => { 
+            document.querySelectorAll('.message-content').forEach(span => {
+                span.innerHTML = processMessageContent(span.innerHTML);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight; 
+        });
+// Λειτουργία για την αυτόματη ενημέρωση της εικόνας του DJ
+function updateDJImage() {
+    const djProfileDiv = document.getElementById('dj_profile');
+    // Το widget της SonicPanel αποθηκεύει την εικόνα σε μια παγκόσμια μεταβλητή ή στοιχείο
+    // Δοκιμάζουμε να πάρουμε την εικόνα από το sonic_js widget
+    const internalDJImg = document.querySelector('.sonic_dj_picture img'); 
+    
+    if (internalDJImg && djProfileDiv) {
+        djProfileDiv.innerHTML = `<img src="${internalDJImg.src}" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--gold); box-shadow: 0 0 20px var(--gold); object-fit: cover;">`;
+    }
+}
+setInterval(updateDJImage, 5000);
+</script>
+
+<script>
+// ==========================================
+// 1. ΛΕΙΤΟΥΡΓΙΑ GIF (GIPHY API)
+// ==========================================
+function sendGif(url) {
+    if (url) {
+        const cleanUrl = url.split('&')[0].split('?')[0]; // Καθαρίζει το &ct=g
+        socket.emit('message', { content: cleanUrl });
+        document.getElementById('gif-picker').style.display = 'none';
+        document.getElementById('gif-search').value = ''; 
+    }
+}
+
+async function searchGifs(term = "") {
+    const apiKey = "UQxRacYoTn67CWCJ5zbdOvUnzmU0QnUs"; 
+    const endpoint = term.trim() === "" ? "trending" : "search";
+    const url = `https://api.giphy.com/v1/gifs/${endpoint}?api_key=${apiKey}&q=${encodeURIComponent(term)}&limit=12&rating=g`;
+    
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const resultsDiv = document.getElementById('gif-results');
+        if (data && data.data) {
+            resultsDiv.innerHTML = data.data.map(g => 
+               `<img src="${g.images.fixed_height_small.url}" onclick="sendGif('${g.images.original.url}')" style="width:100%; height:90px; object-fit:cover; cursor:pointer; border-radius:8px;">`
+            ).join('');
+        }
+    } catch (e) { console.error("Giphy Error:", e); }
+}
+
+function toggleGifPicker(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const gp = document.getElementById('gif-picker');
+    const isVisible = (gp.style.display === 'flex');
+    gp.style.display = isVisible ? 'none' : 'flex';
+    if (!isVisible) searchGifs(""); 
+}
+
+// ==========================================
+// 2. ΛΕΙΤΟΥΡΓΙΑ EMOJIS (😊)
+// ==========================================
+function initEmojiPicker() {
+    const emojiBtn = document.getElementById('emoji-trigger');
+    const picker = document.getElementById('custom-emoji-picker');
+    const emojiList = document.getElementById('emoji-list');
+    const inputField = document.getElementById('chat-input');
+
+    if (!emojiBtn || !picker) return;
+
+    fetch('/static/emoticons.html')
+        .then(response => response.text())
+        .then(html => {
+            emojiList.innerHTML = html;
+            
+            // Εδώ πιάνουμε όλα τα spans που φορτώθηκαν
+            emojiList.querySelectorAll('.emoji-item').forEach(el => {
+                el.onclick = function() {
+                    const gifUrl = this.getAttribute('data-gif');
+                    
+                    if (gifUrl) {
+                        // ΑΝ ΕΙΝΑΙ GIF: Το στέλνει κατευθείαν στο chat
+                        socket.emit('message', { content: gifUrl });
+                        picker.style.display = 'none'; // Κλείνει το παράθυρο
+                    } else {
+                        // ΑΝ ΕΙΝΑΙ EMOJI: Το βάζει στο κουτί που γράφεις
+                        inputField.innerHTML += this.innerText;
+                        inputField.focus();
+                        
+                        // Κώδικας για να πάει ο κέρσορας στο τέλος
+                        const range = document.createRange();
+                        const sel = window.getSelection();
+                        range.selectNodeContents(inputField);
+                        range.collapse(false);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    }
+                };
+            }); // Εδώ έκλεινε το σφάλμα
+        })
+        .catch(err => console.error("Error loading emojis:", err));
+
+    emojiBtn.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const isHidden = (picker.style.display === 'none' || picker.style.display === '');
+        picker.style.display = isHidden ? 'block' : 'none';
+    };
+}
+// ==========================================
+// 3. ΕΚΚΙΝΗΣΗ & UPDATE
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    initEmojiPicker();
+
+    document.addEventListener('click', (e) => {
+        const gp = document.getElementById('gif-picker');
+        const ep = document.getElementById('custom-emoji-picker');
+        const progModal = document.getElementById('progModal');
+
+        if (gp && gp.style.display === 'flex' && !gp.contains(e.target) && !e.target.classList.contains('ignore-emoji')) {
+            gp.style.display = 'none';
+        }
+        if (ep && ep.style.display === 'block' && !ep.contains(e.target) && e.target.id !== 'emoji-trigger') {
+            ep.style.display = 'none';
+        }
+        if (e.target === progModal) {
+            progModal.style.display = "none";
+        }
+    });
+
+// Ξεκινάει η ανανέωση της εικόνας DJ
+    if (typeof updateDJImage === 'function') {
+        setInterval(updateDJImage, 5000);
+    } 
+}); 
+function sendCustomGif(url) {
+    if (!url || url.includes('LINK_')) return; 
+    socket.emit('message', { content: url });
+    document.getElementById('chat-input').focus();
+}
+</script>
+<div id="progModal" style="display:none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center;">
+    <div style="background: #111; border: 2px solid var(--gold); width: 90%; max-width: 900px; padding: 20px; border-radius: 15px; position: relative;">
+        <span onclick="document.getElementById('progModal').style.display='none'" style="position: absolute; right: 20px; top: 10px; color: var(--gold); font-size: 35px; font-weight: bold; cursor: pointer;">&times;</span>
+        <h2 style="color: var(--gold); font-family: 'Orbitron'; text-align: center; margin-bottom: 20px;">
+            <i class="fas fa-calendar-alt"></i> ΠΡΟΓΡΑΜΜΑ ΡΑΔΙΟΠΑΡΕΑ
+        </h2>
+        <div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; border-radius: 10px; overflow: hidden; background: #000;">
+           <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vSWKUdDqxVATw0zJ3dhv9itmtduJhmEBG1xCRthIoO7881_ex7OXANm7aEeEuCd9A/pubembed?start=false&loop=true&delayms=3000" 
+                   frameborder="0" 
+                   style="position: absolute; top:0; left:0; width:100%; height:100%;" 
+                   allowfullscreen="true"></iframe>
+        </div>
+    </div>
+</div>
+</body>
+</html>
