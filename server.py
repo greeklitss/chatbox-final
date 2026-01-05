@@ -213,49 +213,49 @@ def create_app():
         return render_template("test_chat.html", history=history)
 
     @app.route("/update_profile", methods=["POST"])
-    @login_required
-    def update_profile():
-        data = request.get_json()
-        if not data:
-            return jsonify({"status": "error", "message": "No data"}), 400
+@login_required
+def update_profile():
+    data = request.get_json()
+    if not data:
+        return jsonify({"status": "error", "message": "No data"}), 400
 
-        new_name = data.get("display_name", "").strip()
+    new_name = data.get("display_name", "").strip()
+
+    # ΝΕΑ ΛΟΓΙΚΗ: 
+    # Επιτρέπουμε την αλλαγή αν το name_is_set είναι False
+    # Ή αν ο χρήστης είναι ο owner (εσύ)
+    if new_name and new_name != current_user.display_name:
+        if current_user.name_is_set and current_user.role != "owner":
+            return jsonify({"status": "error", "message": "Το όνομα έχει κλειδωθεί!"}), 403
         
-        # 1. Έλεγχος για το όνομα
-        if new_name and new_name != current_user.display_name:
-            # Αν το έχει ήδη αλλάξει μία φορά, απαγορεύεται (εκτός αν είσαι ο owner)
-            if current_user.name_is_set and current_user.role != "owner":
-                return jsonify({"status": "error", "message": "Το όνομα έχει ήδη οριστεί μία φορά!"}), 403
-            
-            # Έλεγχος αν το όνομα υπάρχει ήδη
-            existing_user = User.query.filter(User.display_name == new_name, User.id != current_user.id).first()
-            if existing_user:
-                return jsonify({"status": "error", "message": "Το όνομα χρησιμοποιείται ήδη!"}), 400
-            
-            # Ενημέρωση ονόματος και κλείδωμα
-            current_user.display_name = new_name
-            current_user.name_is_set = True 
+        # Έλεγχος αν το όνομα υπάρχει ήδη
+        existing_user = User.query.filter(User.display_name == new_name, User.id != current_user.id).first()
+        if existing_user:
+            return jsonify({"status": "error", "message": "Το όνομα χρησιμοποιείται ήδη!"}), 400
+        
+        current_user.display_name = new_name
+        current_user.name_is_set = True # Εδώ κλειδώνει για την επόμενη φορά
 
-        # 2. Ενημέρωση Avatar και Χρώματος (Αυτά αλλάζουν πάντα ελεύθερα)
-        current_user.avatar_url = data.get('avatar_url', current_user.avatar_url)
-        current_user.color = data.get('color', current_user.color)
-        current_user.has_setup_profile = True
+    # Το avatar και το χρώμα αλλάζουν ΠΑΝΤΑ ελεύθερα
+    current_user.avatar_url = data.get('avatar_url', current_user.avatar_url)
+    current_user.color = data.get('color', current_user.color)
+    current_user.has_setup_profile = True
 
-        try:
-            db.session.commit()
-            # Ενημέρωση λίστας online χρηστών
-            for sid, info in list(ONLINE_USERS.items()):
-                if info["id"] == current_user.id:
-                    ONLINE_USERS[sid].update({
-                        "display_name": current_user.display_name,
-                        "avatar_url": current_user.avatar_url,
-                        "color": current_user.color,
-                    })
-            socketio.emit("users_update", get_online_users_list())
-            return jsonify({"status": "success"})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({"status": "error", "message": str(e)}), 500
+    try:
+        db.session.commit()
+        # Ενημέρωση λίστας online χρηστών
+        for sid, info in list(ONLINE_USERS.items()):
+            if info["id"] == current_user.id:
+                ONLINE_USERS[sid].update({
+                    "display_name": current_user.display_name,
+                    "avatar_url": current_user.avatar_url,
+                    "color": current_user.color,
+                })
+        socketio.emit("users_update", get_online_users_list())
+        return jsonify({"status": "success"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 
