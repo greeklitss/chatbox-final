@@ -168,20 +168,23 @@ def create_app():
         token = oauth.google.authorize_access_token()
         user_info = oauth.google.parse_id_token(token, nonce=session.pop("nonce", None))
         user = User.query.filter_by(email=user_info.get("email")).first()
+        
         if not user:
-    user = User(
-        google_id=user_info["sub"],
-        email=user_info["email"],
-        display_name=user_info.get("name", "User"),
-        avatar_url=user_info.get("picture", ""),
-        role="user",
-        has_setup_profile=False, # Νέος χρήστης, δεν έχει φτιάξει προφίλ
-        name_is_set=False        # Νέος χρήστης, το όνομα είναι ξεκλείδωτο!
-    )
-    db.session.add(user)
-    db.session.commit()
+            # ΑΥΤΕΣ ΟΙ ΓΡΑΜΜΕΣ ΠΡΕΠΕΙ ΝΑ ΕΧΟΥΝ ΚΕΝΑ ΑΡΙΣΤΕΡΑ
+            user = User(
+                google_id=user_info["sub"],
+                email=user_info["email"],
+                display_name=user_info.get("name", "User"),
+                avatar_url=user_info.get("picture", ""),
+                role="user",
+                has_setup_profile=False,
+                name_is_set=False  # Εδώ ξεκλειδώνεις τον νέο χρήστη
+            )
+            db.session.add(user)
+            db.session.commit()
         
         login_user(user, remember=True)
+
 
         # ΑΥΤΟ ΕΙΝΑΙ ΠΟΥ ΠΡΕΠΕΙ ΝΑ ΠΡΟΣΘΕΣΕΙΣ (Ιδιο με το login_page):
         return """
