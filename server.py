@@ -215,33 +215,47 @@ def create_app():
     @app.route("/update_profile", methods=["POST"])
     @login_required
     def update_profile():
-        data = request.get_json()
-        new_name = data.get("display_name", "").strip()
+        try: # Το try πρέπει να ξεκινάει εδώ για να πιάνει τα πάντα
+            data = request.get_json()
+            if not data:
+                return jsonify({"status": "error", "message": "No data"}), 400
+                
+            new_name = data.get("display_name", "").strip()
 
-        # ΕΛΕΓΧΟΣ ΜΟΝΟ ΜΕ ΤΟ name_is_set
-        if new_name and new_name != current_user.display_name:
-            # Αν είναι True, σημαίνει το άλλαξε ήδη ΜΙΑ φορά.
-            if current_user.name_is_set and current_user.role != "owner":
-                return jsonify({"status": "error", "message": "Το όνομα έχει ήδη κλειδωθεί!"}), 403
-        
-        # Έλεγχος μοναδικότητας
-        existing_user = User.query.filter(User.display_name == new_name, User.id != current_user.id).first()
-        if existing_user:
-            return jsonify({"status": "error", "message": "Το όνομα χρησιμοποιείται!"}), 400
-        
-        current_user.display_name = new_name
-        current_user.name_is_set = True # Τώρα κλειδώνει για πάντα
+            # 1. Έλεγχος ονόματος
+            if new_name and new_name != current_user.display_name:
+                if current_user.name_is_set and current_user.role != "owner":
+                    return jsonify({"status": "error", "message": "Το όνομα έχει κλειδωθεί!"}), 403
+                
+                existing_user = User.query.filter(User.display_name == new_name, User.id != current_user.id).first()
+                if existing_user:
+                    return jsonify({"status": "error", "message": "Το όνομα χρησιμοποιείται!"}), 400
+                
+                current_user.display_name = new_name
+                current_user.name_is_set = True 
 
-    current_user.avatar_url = data.get('avatar_url', current_user.avatar_url)
-    current_user.color = data.get('color', current_user.color)
-    current_user.has_setup_profile = True # Τώρα το προφίλ θεωρείται έτοιμο
+            # 2. Ενημέρωση υπολοίπων (ΠΡΟΣΟΧΗ: Πρέπει να είναι μέσα στη συνάρτηση!)
+            current_user.avatar_url = data.get('avatar_url', current_user.avatar_url)
+            current_user.color = data.get('color', current_user.color)
+            current_user.has_setup_profile = True 
 
-    db.session.commit()
-    # ... (socketio emit) ...
-    return jsonify({"status": "success"})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"status": "error", "message": str(e)}), 500
+            db.session.commit()
+
+            # Ενημέρωση online λίστας
+            for sid, info in list(ONLINE_USERS.items()):
+                if info["id"] == current_user.id:
+                    ONLINE_USERS[sid].update({
+                        "display_name": current_user.display_name,
+                        "avatar_url": current_user.avatar_url,
+                        "color": current_user.color,
+                    })
+            socketio.emit("users_update", get_online_users_list())
+            
+            return jsonify({"status": "success"})
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"status": "error", "message": str(e)}), 500
 
 
 
