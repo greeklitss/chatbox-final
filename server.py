@@ -65,6 +65,7 @@ def get_online_users_list():
 
 class User(UserMixin, db.Model):
     has_setup_profile = db.Column(db.Boolean, default=False)
+    name_is_set = db.Column(db.Boolean, default=False)
     id = db.Column(db.Integer, primary_key=True)
     display_name = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True)
@@ -219,29 +220,30 @@ def create_app():
             return jsonify({"status": "error", "message": "No data"}), 400
 
         new_name = data.get("display_name", "").strip()
-
-        # ΕΛΕΓΧΟΣ: Επιτρέπουμε την αλλαγή ΜΟΝΟ αν το όνομα είναι ίδιο με το τωρινό 
-        # ή αν είναι η πρώτη φορά που φτιάχνει προφίλ.
-        if current_user.has_setup_profile and new_name != current_user.display_name:
-            return jsonify({"status": "error", "message": "Το όνομα δεν μπορεί να αλλάξει πλέον!"}), 403
-
-        # Αν είναι η πρώτη φορά, ελέγχουμε αν το όνομα υπάρχει ήδη σε άλλον
-        if not current_user.has_setup_profile:
+        
+        # 1. Έλεγχος για το όνομα
+        if new_name and new_name != current_user.display_name:
+            # Αν το έχει ήδη αλλάξει μία φορά, απαγορεύεται (εκτός αν είσαι ο owner)
+            if current_user.name_is_set and current_user.role != "owner":
+                return jsonify({"status": "error", "message": "Το όνομα έχει ήδη οριστεί μία φορά!"}), 403
+            
+            # Έλεγχος αν το όνομα υπάρχει ήδη
             existing_user = User.query.filter(User.display_name == new_name, User.id != current_user.id).first()
             if existing_user:
                 return jsonify({"status": "error", "message": "Το όνομα χρησιμοποιείται ήδη!"}), 400
+            
+            # Ενημέρωση ονόματος και κλείδωμα
             current_user.display_name = new_name
+            current_user.name_is_set = True 
 
-        # Ενημέρωση Avatar και Χρώματος (Αυτά αλλάζουν πάντα)
+        # 2. Ενημέρωση Avatar και Χρώματος (Αυτά αλλάζουν πάντα ελεύθερα)
         current_user.avatar_url = data.get('avatar_url', current_user.avatar_url)
         current_user.color = data.get('color', current_user.color)
         current_user.has_setup_profile = True
 
         try:
-            global ONLINE_USERS
             db.session.commit()
-            
-            # Ενημέρωση της λίστας online χρηστών για να αλλάξει το χρώμα τους αμέσως
+            # Ενημέρωση λίστας online χρηστών
             for sid, info in list(ONLINE_USERS.items()):
                 if info["id"] == current_user.id:
                     ONLINE_USERS[sid].update({
@@ -250,11 +252,14 @@ def create_app():
                         "color": current_user.color,
                     })
             socketio.emit("users_update", get_online_users_list())
-            
             return jsonify({"status": "success"})
         except Exception as e:
             db.session.rollback()
             return jsonify({"status": "error", "message": str(e)}), 500
+
+
+
+
     @app.route("/logout")
     @login_required
     def logout():
