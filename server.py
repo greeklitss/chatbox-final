@@ -213,16 +213,16 @@ def create_app():
         return render_template("test_chat.html", history=history)
 
     @app.route("/update_profile", methods=["POST"])
-@login_required
-def update_profile():
-    data = request.get_json()
-    new_name = data.get("display_name", "").strip()
+    @login_required
+    def update_profile():
+        data = request.get_json()
+        new_name = data.get("display_name", "").strip()
 
-    # ΕΛΕΓΧΟΣ ΜΟΝΟ ΜΕ ΤΟ name_is_set
-    if new_name and new_name != current_user.display_name:
-        # Αν είναι True, σημαίνει το άλλαξε ήδη ΜΙΑ φορά.
-        if current_user.name_is_set and current_user.role != "owner":
-            return jsonify({"status": "error", "message": "Το όνομα έχει ήδη κλειδωθεί!"}), 403
+        # ΕΛΕΓΧΟΣ ΜΟΝΟ ΜΕ ΤΟ name_is_set
+        if new_name and new_name != current_user.display_name:
+            # Αν είναι True, σημαίνει το άλλαξε ήδη ΜΙΑ φορά.
+            if current_user.name_is_set and current_user.role != "owner":
+                return jsonify({"status": "error", "message": "Το όνομα έχει ήδη κλειδωθεί!"}), 403
         
         # Έλεγχος μοναδικότητας
         existing_user = User.query.filter(User.display_name == new_name, User.id != current_user.id).first()
