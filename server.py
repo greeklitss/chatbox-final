@@ -182,7 +182,6 @@ def create_app():
         user = User.query.filter_by(email=user_info.get("email")).first()
         
         if not user:
-            # ΑΥΤΕΣ ΟΙ ΓΡΑΜΜΕΣ ΠΡΕΠΕΙ ΝΑ ΕΧΟΥΝ ΚΕΝΑ ΑΡΙΣΤΕΡΑ
             user = User(
                 google_id=user_info["sub"],
                 email=user_info["email"],
@@ -190,11 +189,14 @@ def create_app():
                 avatar_url=user_info.get("picture", ""),
                 role="user",
                 has_setup_profile=False,
-                name_is_set=False  # Εδώ ξεκλειδώνεις τον νέο χρήστη
+                name_is_set=False
             )
             db.session.add(user)
             db.session.commit()
-            login_user(user, remember=True)
+        
+        # ΑΥΤΗ Η ΓΡΑΜΜΗ ΠΡΕΠΕΙ ΝΑ ΕΙΝΑΙ ΕΔΩ (ΕΞΩ ΑΠΟ ΤΟ IF)
+        # Για να κάνει login και τους παλιούς και τους νέους χρήστες
+        login_user(user, remember=True)
         
         return """
         <script>
@@ -206,7 +208,6 @@ def create_app():
             }
         </script>
         """
-
     @app.route("/chat")
     @login_required
     def chat_page():
