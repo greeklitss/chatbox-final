@@ -132,7 +132,7 @@ def create_app():
             else render_template("index.html")
         )
 
-   @app.route("/login", methods=["GET", "POST"])
+    @app.route("/login", methods=["GET", "POST"])
     def login_page():
         # Αν είναι ήδη μέσα, μην τον αφήνεις να ξαναβλέπει το login
         if current_user.is_authenticated:
