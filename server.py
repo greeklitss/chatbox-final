@@ -132,27 +132,39 @@ def create_app():
             else render_template("index.html")
         )
 
-    @app.route("/login", methods=["GET", "POST"])
+   @app.route("/login", methods=["GET", "POST"])
     def login_page():
+        # Αν είναι ήδη μέσα, μην τον αφήνεις να ξαναβλέπει το login
+        if current_user.is_authenticated:
+            return redirect(url_for("chat_page"))
+
         if request.method == "POST":
-            user = User.query.filter_by(
-                display_name=request.form.get("username")
-            ).first()
-            if user and user.check_password(request.form.get("password")):
+            # 1. Παίρνουμε τα στοιχεία από τη φόρμα
+            username_input = request.form.get("username")
+            password_input = request.form.get("password")
+
+            # 2. Ψάχνουμε τον χρήστη στη βάση (με ilike για να μην κολλάει σε κεφαλαία/μικρά)
+            user = User.query.filter(User.display_name.ilike(username_input)).first()
+
+            # 3. Έλεγχος αν υπάρχει ο χρήστης και αν ο κωδικός είναι σωστός
+            if user and user.check_password(password_input):
                 login_user(user, remember=True)
+                
+                # ΕΔΩ ΕΙΝΑΙ ΤΟ ΔΙΚΟ ΣΟΥ SCRIPT (Δεν αλλάζει τίποτα στη λειτουργία)
                 return """
-        <script>
-            if (window.opener) {
-                // Στέλνει την κύρια σελίδα στο chat
-                window.opener.location.href = "/chat";
-                // Κλείνει το popup
-                window.close();
-            } else {
-                // Αν για κάποιο λόγο δεν υπάρχει opener, κάνει κανονικό redirect
-                window.location.href = "/chat";
-            }
-        </script>
-        """
+                <script>
+                    if (window.opener) {
+                        window.opener.location.href = "/chat";
+                        window.close();
+                    } else {
+                        window.location.href = "/chat";
+                    }
+                </script>
+                """
+            else:
+                # Αν αποτύχει, στέλνουμε ένα μήνυμα (προαιρετικά)
+                flash("Λάθος στοιχεία πρόσβασης.", "danger")
+
         return render_template("login.html")
 
     @app.route("/google_login")
@@ -182,11 +194,8 @@ def create_app():
             )
             db.session.add(user)
             db.session.commit()
+            login_user(user, remember=True)
         
-        login_user(user, remember=True)
-
-
-        # ΑΥΤΟ ΕΙΝΑΙ ΠΟΥ ΠΡΕΠΕΙ ΝΑ ΠΡΟΣΘΕΣΕΙΣ (Ιδιο με το login_page):
         return """
         <script>
             if (window.opener) {
