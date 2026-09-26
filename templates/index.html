@@ -9,24 +9,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     
     <style>
-    /* ================================================= */
-    /* 🎨 ΒΑΣΙΚΑ ΧΡΩΜΑΤΑ & NEON STYLING */
-    /* ================================================= */
+    /* Εισαγωγή Cartoon/Comic γραμματοσειράς */
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap');
+
     :root {
-        --primary-accent: #00ffcc;    /* Φωτεινό Cyan / Neon */
-        --secondary-accent: #27AE60;  /* Πράσινο */
-        --text-color: #F0F0F0;        /* Ανοιχτό γκρι/λευκό */
-        --box-bg: transparent; /* διαφανο */
-        --shadow-color: #F1C40F;      /* Χρυσαφί για λάμψη */
+        --comic-yellow: #FFDE00;
+        --comic-orange: #FF6B00;
+        --comic-blue: #00A8FF;
+        --text-color: #FFFFFF;
+        --box-bg: rgba(0, 0, 0, 0.25); /* Πολύ ελαφρύ διαφανές φόντο */
     }
 
-    /* Βασικό Styling */
     html {
         height: 100%;
     }
 
     body { 
-        font-family: 'Roboto', sans-serif; 
+        font-family: 'Fredoka', cursive, sans-serif; 
         margin: 0; 
         padding: 20px 10px; 
         color: var(--text-color); 
@@ -36,96 +35,120 @@
         align-items: center;
         min-height: 100vh;
         box-sizing: border-box;
-
-        /* Διόρθωση 1: Επιτρέπουμε το scroll για να μην κόβεται το box */
         overflow-y: auto; 
 
-        /* 🖼️ ΕΙΚΟΝΑ BACKGROUND - Διόρθωση 2: Προσαρμογή ώστε να φαίνεται ολόκληρη */
         background-image: url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}"); 
-        background-size: 100% 100%; /* Προσαρμόζει όλη την εικόνα ακριβώς στην οθόνη */
+        background-size: 100% 100%;
         background-attachment: fixed;
         background-position: center center;
         background-repeat: no-repeat;
-        background-color: #1a1a2e; /* Fallback */
+        background-color: #1a1a2e;
     }
 
     .container { 
         background: var(--box-bg); 
-        padding: 25px 30px; 
-        border-radius: 12px; 
-        box-shadow: 0 0 20px var(--shadow-color); 
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        padding: 20px 25px; 
+        border-radius: 20px; 
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); 
         max-width: 500px; 
         width: 90%;
         text-align: center;
         z-index: 10;
-        margin: auto; /* Διατηρεί το box κεντραρισμένο */
+        margin: auto;
     }
 
+    /* 3D Cartoon Τίτλος */
     h1 { 
-        color: var(--primary-accent); 
-        font-family: 'Orbitron', sans-serif;
+        font-family: 'Fredoka', cursive, sans-serif;
+        font-size: 2.2em;
+        font-weight: 700;
+        color: var(--comic-yellow); 
         margin-bottom: 15px;
-        font-size: 1.6em;
-        text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
-    }
-
-    p { 
-        color: var(--text-color);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        /* Τρισδιάστατο εφέ με μαύρο περίγραμμα και κόκκινη/πορτοκαλί σκιά */
+        -webkit-text-stroke: 1.5px #000;
+        text-shadow: 
+            3px 3px 0px #FF4500,
+            5px 5px 0px #000;
     }
 
     .player { 
-        margin-bottom: 20px; 
+        margin-bottom: 15px; 
     }
     
     .player iframe { 
         width: 100%; 
-        border-radius: 5px; 
+        border-radius: 12px; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
+    /* 3D Cartoon Κουμπί Εισόδου */
     .login-btn {
-        background: var(--secondary-accent); 
-        color: #1a1a2e; 
-        border: none; 
-        padding: 10px 20px; 
-        border-radius: 5px; 
+        background: linear-gradient(180deg, #2ECC71 0%, #27AE60 100%);
+        color: #FFF; 
+        border: 2px solid #000; 
+        padding: 12px 28px; 
+        border-radius: 50px; 
         cursor: pointer;
+        font-family: 'Fredoka', cursive, sans-serif;
+        font-size: 1.1em;
         font-weight: bold;
         text-transform: uppercase;
         text-decoration: none;
         display: inline-block;
-        transition: background 0.3s;
+        box-shadow: 0 5px 0px #1e8449, 0 8px 10px rgba(0,0,0,0.4);
+        transition: all 0.1s ease;
+        -webkit-text-stroke: 0.5px #000;
     }
     
     .login-btn:hover { 
-        background: #2ecc71; 
+        transform: translateY(-2px);
+        box-shadow: 0 7px 0px #1e8449, 0 10px 12px rgba(0,0,0,0.4);
+        background: linear-gradient(180deg, #2ecc71 0%, #25a25a 100%);
     } 
 
-    /* ================================================= */
-    /* ✒️ ΚΑΛΛΙΓΡΑΦΙΚΟ ΣΤΥΛ ΓΙΑ DJ / ΕΝΤΑΣΗ */
-    /* ================================================= */
+    .login-btn:active {
+        transform: translateY(3px);
+        box-shadow: 0 2px 0px #1e8449, 0 3px 5px rgba(0,0,0,0.4);
+    }
+
+    /* Καλλιγραφικό / Cartoon Κείμενο DJ */
     .calligraphy-block {
         text-align: center;
-        margin-top: 15px;
-        margin-bottom: 15px;
-        padding: 5px;
+        margin-top: 10px;
+        margin-bottom: 10px;
     }
 
     .calligraphy-text-base {
-        font-family: 'Dancing Script', cursive;
+        font-family: 'Fredoka', cursive, sans-serif;
         font-size: 1.6em; 
-        font-weight: bold;
-        color: var(--shadow-color);
+        font-weight: 700;
+        color: var(--comic-yellow);
         display: block; 
         margin-bottom: 5px;
-        text-shadow: 0 0 10px rgba(241, 196, 15, 0.8); 
+        -webkit-text-stroke: 1px #000;
+        text-shadow: 2px 2px 0px #FF6B00, 3px 3px 0px #000;
     }
 
     .dj-name-style {
-        font-family: 'Dancing Script', cursive;
-        font-size: 1.4em; 
-        color: var(--text-color);
-        text-shadow: 0 0 12px rgba(240, 240, 240, 1.0);
+        font-family: 'Fredoka', cursive, sans-serif;
+        font-size: 1.2em; 
+        color: #FFF;
+        -webkit-text-stroke: 1px #000;
+        text-shadow: 2px 2px 0px var(--comic-blue);
         display: inline-block;
+    }
+
+    /* Υπόλοιπα κείμενα metadata */
+    #sonic_title, #sonic_listeners {
+        font-family: 'Fredoka', cursive, sans-serif;
+        color: #FFFFFF;
+        font-weight: 600;
+        text-shadow: 1px 1px 3px #000, -1px -1px 3px #000;
     }
 </style>
 </head>
