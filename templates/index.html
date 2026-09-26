@@ -163,7 +163,7 @@
             box-shadow: 0 6px 0px #1e8449;
         }
 
-/* 🎧 FLOATING DJ CARD (ΙΔΙΟ ΣΤΥΛ ΜΕ ΤΟ CHAT) */
+/* 🎧 FLOATING DJ CARD (INDEX) - MEGA SIZE */
 .floating-dj-card {
     position: fixed;
     bottom: 20px;
@@ -172,48 +172,50 @@
     align-items: center;
     gap: 15px;
     background: rgba(0, 0, 0, 0.85);
-    padding: 10px 20px;
-    border-radius: 50px;
-    border: 2px solid var(--gold, #D4AF37);
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+    padding: 12px 22px;
+    border-radius: 60px;
+    border: 2px solid #D4AF37;
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.5);
     z-index: 999;
 }
 
+/* Μεγαλώσαμε τον κύκλο στα 85px */
 #sonic_dj_img { 
-    width: 70px !important; 
-    height: 70px !important; 
-    min-width: 70px;
-    min-height: 70px;
+    width: 85px !important; 
+    height: 85px !important; 
+    min-width: 85px;
+    min-height: 85px;
     border-radius: 50%; 
     border: 3px solid #D4AF37; 
     box-shadow: 0 0 20px #D4AF37; 
     object-fit: cover; 
-    background: #000;
+    background-color: #1a1a1a;
 }
 
 .dj-details {
     display: flex;
     flex-direction: column;
+    justify-content: center;
 }
 
 #sonic_dj { 
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.1em !important;
+    font-size: 1.2em !important;
     font-weight: bold; 
     color: #D4AF37 !important;
     text-transform: uppercase;
-    text-shadow: 0 0 10px #ff4400, 0 0 20px #ff4400;
+    text-shadow: 0 0 10px #ff4400;
 }
 
 #sonic_title {
     font-size: 0.85em;
-    color: #fff;
-    max-width: 180px;
+    color: #ffffff;
+    max-width: 200px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-top: 2px;
 }
-
 /* ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ BACKGROUND */
 .center-hero-space {
     flex: 1;
@@ -287,26 +289,25 @@
 
     </div>
 
-   <!-- 🎧 FLOATING DJ CARD (ΜΕ ΤΗ ΔΟΜΗ ΤΟΥ CHAT) -->
+  <!-- 🎧 FLOATING DJ CARD (INDEX) -->
 <div class="floating-dj-card">
-    <!-- Η εικόνα όπως ακριβώς δουλεύει στο Chat -->
+    <!-- Η εικόνα με αυτόματο fallback σε περίπτωση που η Sonic επιστρέψει μαύρο/κενό -->
     <img id="sonic_dj_img" 
          src="https://or.mysonicserver.com/cp/widgets/player/single/default_dj.png" 
-         onerror="this.onerror=null; this.src='https://or.mysonicserver.com/cp/widgets/player/single/default_dj.png';" 
+         onerror="this.src='https://or.mysonicserver.com/cp/widgets/player/single/default_dj.png';" 
          alt="DJ Photo">
          
     <div class="dj-details">
         <div id="sonic_dj">DJ ON AIR</div>
         <div id="sonic_title">Radio Parea Live</div>
-        <div style="color:#D4AF37; font-size:0.75em; margin-top:3px; font-weight:bold; font-family: 'Orbitron';">
+        <div style="color:#D4AF37; font-size:0.8em; margin-top:5px; font-weight:bold; font-family: 'Orbitron', sans-serif;">
             ΑΚΡΟΑΤΕΣ: <span id="sonic_listeners">0</span>
         </div>
     </div>
 </div>
 
-<!-- WIDGET SCRIPT ΓΙΑ ΤΑ METADATA ΤΗΣ SONIC -->
+<!-- WIDGET SCRIPT SONICPANEL -->
 <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
-
     <!-- 🖼️ ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ BACKGROUND -->
     <div class="center-hero-space"></div>
 
