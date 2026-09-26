@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radioparea - On Air</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
         :root {
             --comic-yellow: #FFDE00;
             --comic-orange: #FF6B00;
+            --comic-green: #2ECC71;
             --text-color: #FFFFFF;
         }
 
@@ -37,14 +39,14 @@
             background-color: #1a1a2e;
         }
 
-        /* 🚀 TOP HEADER BAR (ΤΕΡΜΑ ΠΑΝΩ) */
+        /* 🚀 TOP NAVBAR BAR */
         .top-navbar {
             width: 100%;
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-bottom: 2px solid rgba(255, 222, 0, 0.4);
-            padding: 8px 15px;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-bottom: 3px solid var(--comic-yellow);
+            padding: 8px 20px;
             box-sizing: border-box;
             display: flex;
             flex-direction: row;
@@ -52,12 +54,12 @@
             justify-content: space-between;
             gap: 15px;
             z-index: 100;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8);
         }
 
-        /* 1. ΛΟΓΟΤΥΠΟ / ΤΙΤΛΟΣ (ΑΡΙΣΤΕΡΑ) */
+        /* 1. ΛΟΓΟΤΥΠΟ */
         .brand-title {
-            font-size: 1.3em;
+            font-size: 1.4em;
             font-weight: 700;
             color: var(--comic-yellow); 
             text-transform: uppercase;
@@ -66,36 +68,73 @@
             text-shadow: 2px 2px 0px #FF4500;
         }
 
-        /* 2. PLAYER (ΚΕΝΤΡΟ) */
-        .player-compact {
-            flex: 1;
-            max-width: 380px;
-            height: 80px;
+        /* 🍄 2. CUSTOM MUSHROOM PLAYER */
+        .custom-player {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px 18px 6px 12px;
+            border-radius: 50px;
+            border: 2px solid var(--comic-yellow);
+            box-shadow: 0 0 12px rgba(255, 222, 0, 0.3);
         }
 
-        .player-compact iframe {
-            width: 100%;
-            height: 100%;
-            border-radius: 8px;
+        .mushroom-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 2.2em;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0px 3px 0px #000);
+            transition: transform 0.15s ease;
+            user-select: none;
+            line-height: 1;
         }
 
-        /* 3. METADATA & DJ INFO (ΜΕΣΗ - ΔΕΞΙΑ) */
+        .mushroom-btn:hover {
+            transform: scale(1.15) rotate(-5deg);
+        }
+
+        .mushroom-btn:active {
+            transform: scale(0.95);
+        }
+
+        .mushroom-btn.playing {
+            animation: mushroomPulse 1.2s infinite alternate ease-in-out;
+        }
+
+        @keyframes mushroomPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.15); }
+        }
+
+        .volume-slider {
+            width: 75px;
+            accent-color: var(--comic-yellow);
+            cursor: pointer;
+        }
+
+        /* 3. METADATA & DJ INFO */
         .info-compact {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: flex-start;
             color: #FFF;
-            text-shadow: 1px 1px 2px #000;
-            font-size: 0.85em;
-            max-width: 300px;
+            font-size: 0.9em;
+            max-width: 320px;
         }
 
         .dj-line {
-            font-size: 1em;
+            font-size: 1.05em;
             font-weight: bold;
             color: var(--comic-yellow);
             -webkit-text-stroke: 0.5px #000;
+            text-shadow: 1px 1px 2px #000;
         }
 
         .dj-name-highlight {
@@ -107,15 +146,17 @@
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 250px;
-            color: #E0E0E0;
+            color: #FFFFFF;
+            font-weight: 600;
+            text-shadow: 1px 1px 3px #000;
         }
 
-        /* 4. ΚΟΥΜΠΙ LOGIN (ΔΕΞΙΑ) */
+        /* 4. ΚΟΥΜΠΙ LOGIN */
         .login-btn-top {
             background: linear-gradient(180deg, #2ECC71 0%, #27AE60 100%);
             color: #FFF; 
             border: 2px solid #000; 
-            padding: 8px 18px; 
+            padding: 9px 20px; 
             border-radius: 30px; 
             cursor: pointer;
             font-family: 'Fredoka', cursive, sans-serif;
@@ -133,19 +174,18 @@
             box-shadow: 0 6px 0px #1e8449;
         }
 
-        /* 🌾 ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΣΤΟ ΚΕΝΤΡΟ */
+        /* ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ */
         .center-hero-space {
-            flex: 1; /* Παιρνει ολο το κενο υψος της οθονης */
+            flex: 1;
         }
 
-        /* Responsive για κινητά */
-        @media (max-width: 850px) {
+        @media (max-width: 820px) {
             .top-navbar {
                 flex-wrap: wrap;
                 justify-content: center;
             }
             .info-compact {
-                display: none; /* Κρύβει τα πολλά κείμενα σε πολύ μικρές οθόνες */
+                display: none;
             }
         }
     </style>
@@ -160,19 +200,35 @@
             📻 RADIOPAREA
         </div>
 
-        <!-- 2. PLAYER -->
-        <div class="player-compact">
-            <iframe src="https://or.mysonicserver.com/cp/widgets/player/single/?p=8050" scrolling="no" style="border:none;"></iframe>
-            <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+        <!-- 🍄 2. CUSTOM MUSHROOM PLAYER -->
+        <div class="custom-player">
+            <button id="playPauseBtn" class="mushroom-btn" onclick="togglePlay()" title="Play / Pause">
+                🍄
+            </button>
+            
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+                <span id="playerStateText" style="color: var(--comic-yellow); font-size: 0.75em; font-weight: bold; text-shadow: 1px 1px 2px #000;">
+                    CLICK TO PLAY
+                </span>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-size: 0.85em;">🔊</span>
+                    <input type="range" id="volumeControl" class="volume-slider" min="0" max="1" step="0.05" value="0.8" oninput="changeVolume(this.value)">
+                </div>
+            </div>
+
+            <!-- STREAM AUDIO -->
+            <audio id="radioStream" src="https://or.mysonicserver.com/8050/stream" preload="none"></audio>
         </div>
 
-        <!-- 3. DJ & ΤΡΑΓΟΥΔΙ -->
+        <!-- 3. DJ & METADATA -->
         <div class="info-compact">
             <div class="dj-line">
-                DJ: <span id='sonic_dj' class='dj-name-highlight'></span>
+                DJ: <span id='sonic_dj' class='dj-name-highlight'>-</span>
             </div>
-            <div id='sonic_title'></div>
-            <div id='sonic_listeners' style="color: var(--comic-yellow); font-size: 0.8em;">ΑΚΡΟΑΤΕΣ</div>
+            <div id='sonic_title'>Φόρτωση τίτλου...</div>
+            <div style="color: var(--comic-yellow); font-size: 0.8em;">
+                ΑΚΡΟΑΤΕΣ: <span id='sonic_listeners'>0</span>
+            </div>
         </div>
 
         <!-- 4. ΚΟΥΜΠΙ ΕΙΣΟΔΟΥ -->
@@ -180,9 +236,36 @@
 
     </div>
 
-    <!-- 🖼️ ΚΕΝΟΣ ΧΩΡΟΣ ΓΙΑ ΝΑ ΦΑΙΝΕΤΑΙ Η ΕΙΚΟΝΑ 100% -->
+    <!-- WIDGET SCRIPT ΓΙΑ ΤΑ METADATA -->
+    <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+
+    <!-- 🖼️ ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ BACKGROUND -->
     <div class="center-hero-space"></div>
+
+    <!-- JS ΛΕΙΤΟΥΡΓΙΑΣ PLAYER -->
     <script>
+        const audio = document.getElementById('radioStream');
+        const playBtn = document.getElementById('playPauseBtn');
+        const stateText = document.getElementById('playerStateText');
+
+        function togglePlay() {
+            if (audio.paused) {
+                audio.play();
+                playBtn.classList.add('playing');
+                stateText.innerText = "ON AIR 🎶";
+                stateText.style.color = "#2ECC71";
+            } else {
+                audio.pause();
+                playBtn.classList.remove('playing');
+                stateText.innerText = "PAUSED 🍄";
+                stateText.style.color = "#FFDE00";
+            }
+        }
+
+        function changeVolume(val) {
+            audio.volume = val;
+        }
+
         // 1. ΛΕΙΤΟΥΡΓΙΕΣ MODAL & LOGIN
         function openLoginModal() {
             document.getElementById("loginModal").style.display = "block";
@@ -209,6 +292,7 @@
         }
     </script>
 
+    <!-- MODAL LOGIN -->
     <div id="loginModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter: blur(5px);">
         <div style="background:#1a1a2e; margin:5% auto; padding:25px; border:2px solid #F1C40F; width:320px; border-radius:15px; text-align:center; position:relative; box-shadow: 0 0 20px #F1C40F;">
             <span onclick="closeLoginModal()" style="position:absolute; right:15px; top:10px; cursor:pointer; color:#fff; font-size:28px;">&times;</span>
@@ -223,7 +307,7 @@
             <form action="{{ url_for('login_page') }}" method="POST">
                 <input type="text" name="username" placeholder="Username" required style="width:100%; padding:10px; margin-bottom:10px; border-radius:5px; border:1px solid #333; background:#0f0f1e; color:white; box-sizing: border-box;">
                 <input type="password" name="password" placeholder="Password" required style="width:100%; padding:10px; margin-bottom:15px; border-radius:5px; border:1px solid #333; background:#0f0f1e; color:white; box-sizing: border-box;">
-                <button type="submit" class="login-btn" style="width:100%; border:none; cursor:pointer;">ΕΙΣΟΔΟΣ</button>
+                <button type="submit" class="login-btn-top" style="width:100%; border:none; cursor:pointer; padding:10px;">ΕΙΣΟΔΟΣ</button>
             </form>
         </div>
     </div>
