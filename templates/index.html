@@ -9,115 +9,125 @@
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     
     <style>
-        /* ================================================= */
-        /* 🎨 ΒΑΣΙΚΑ ΧΡΩΜΑΤΑ & NEON STYLING */
-        /* ================================================= */
-        :root {
-            --primary-accent: #00ffcc;    /* Φωτεινό Cyan / Neon */
-            --secondary-accent: #27AE60;  /* Πράσινο */
-            --text-color: #F0F0F0;        /* Ανοιχτό γκρι/λευκό */
-            --box-bg: rgba(0, 0, 0, 0.75); /* Σκούρο διαφανές φόντο container */
-            --shadow-color: #F1C40F;      /* Χρυσαφί για λάμψη */
-        }
+    /* ================================================= */
+    /* 🎨 ΒΑΣΙΚΑ ΧΡΩΜΑΤΑ & NEON STYLING */
+    /* ================================================= */
+    :root {
+        --primary-accent: #00ffcc;    /* Φωτεινό Cyan / Neon */
+        --secondary-accent: #27AE60;  /* Πράσινο */
+        --text-color: #F0F0F0;        /* Ανοιχτό γκρι/λευκό */
+        --box-bg: rgba(0, 0, 0, 0.82); /* Σκούρο διαφανές φόντο container */
+        --shadow-color: #F1C40F;      /* Χρυσαφί για λάμψη */
+    }
 
-        /* Βασικό Styling */
-        body { 
-            font-family: 'Roboto', sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            color: var(--text-color); 
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden; 
+    /* Βασικό Styling */
+    html {
+        height: 100%;
+    }
 
-            /* 🖼️ ΕΙΚΟΝΑ BACKGROUND */
-            background-image: url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}"); 
-            background-size: cover;
-            background-attachment: fixed;
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-color: #1a1a2e; /* Fallback */
-        }
+    body { 
+        font-family: 'Roboto', sans-serif; 
+        margin: 0; 
+        padding: 20px 10px; 
+        color: var(--text-color); 
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        box-sizing: border-box;
 
-        .container { 
-            background: var(--box-bg); 
-            padding: 30px 40px; 
-            border-radius: 12px; 
-            box-shadow: 0 0 20px var(--shadow-color); 
-            max-width: 550px; 
-            text-align: center;
-            z-index: 10;
-        }
+        /* Διόρθωση 1: Επιτρέπουμε το scroll για να μην κόβεται το box */
+        overflow-y: auto; 
 
-        h1 { 
-            color: var(--primary-accent); 
-            font-family: 'Orbitron', sans-serif;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
-        }
+        /* 🖼️ ΕΙΚΟΝΑ BACKGROUND - Διόρθωση 2: Προσαρμογή ώστε να φαίνεται ολόκληρη */
+        background-image: url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}"); 
+        background-size: 100% 100%; /* Προσαρμόζει όλη την εικόνα ακριβώς στην οθόνη */
+        background-attachment: fixed;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-color: #1a1a2e; /* Fallback */
+    }
 
-        p { 
-            color: var(--text-color);
-        }
+    .container { 
+        background: var(--box-bg); 
+        padding: 25px 30px; 
+        border-radius: 12px; 
+        box-shadow: 0 0 20px var(--shadow-color); 
+        max-width: 500px; 
+        width: 90%;
+        text-align: center;
+        z-index: 10;
+        margin: auto; /* Διατηρεί το box κεντραρισμένο */
+    }
 
-        .player { 
-            margin-bottom: 25px; 
-        }
-        
-        .player iframe { 
-            width: 100%; 
-            border-radius: 5px; 
-        }
+    h1 { 
+        color: var(--primary-accent); 
+        font-family: 'Orbitron', sans-serif;
+        margin-bottom: 15px;
+        font-size: 1.6em;
+        text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+    }
 
-        .login-btn {
-            background: var(--secondary-accent); 
-            color: #1a1a2e; 
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 5px; 
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-            text-decoration: none;
-            display: inline-block;
-            transition: background 0.3s;
-        }
-        
-        .login-btn:hover { 
-            background: #2ecc71; 
-        } 
+    p { 
+        color: var(--text-color);
+    }
 
-        /* ================================================= */
-        /* ✒️ ΚΑΛΛΙΓΡΑΦΙΚΟ ΣΤΥΛ ΓΙΑ DJ / ΕΝΤΑΣΗ */
-        /* ================================================= */
-        .calligraphy-block {
-            text-align: center;
-            margin-top: 20px;
-            margin-bottom: 20px;
-            padding: 10px;
-        }
+    .player { 
+        margin-bottom: 20px; 
+    }
+    
+    .player iframe { 
+        width: 100%; 
+        border-radius: 5px; 
+    }
 
-        .calligraphy-text-base {
-            font-family: 'Dancing Script', cursive;
-            font-size: 1.8em; 
-            font-weight: bold;
-            color: var(--shadow-color);
-            display: block; 
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(241, 196, 15, 0.8); 
-        }
+    .login-btn {
+        background: var(--secondary-accent); 
+        color: #1a1a2e; 
+        border: none; 
+        padding: 10px 20px; 
+        border-radius: 5px; 
+        cursor: pointer;
+        font-weight: bold;
+        text-transform: uppercase;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.3s;
+    }
+    
+    .login-btn:hover { 
+        background: #2ecc71; 
+    } 
 
-        .dj-name-style {
-            font-family: 'Dancing Script', cursive;
-            font-size: 1.5em; 
-            color: var(--text-color);
-            text-shadow: 0 0 12px rgba(240, 240, 240, 1.0);
-            display: inline-block;
-        }
-    </style>
+    /* ================================================= */
+    /* ✒️ ΚΑΛΛΙΓΡΑΦΙΚΟ ΣΤΥΛ ΓΙΑ DJ / ΕΝΤΑΣΗ */
+    /* ================================================= */
+    .calligraphy-block {
+        text-align: center;
+        margin-top: 15px;
+        margin-bottom: 15px;
+        padding: 5px;
+    }
+
+    .calligraphy-text-base {
+        font-family: 'Dancing Script', cursive;
+        font-size: 1.6em; 
+        font-weight: bold;
+        color: var(--shadow-color);
+        display: block; 
+        margin-bottom: 5px;
+        text-shadow: 0 0 10px rgba(241, 196, 15, 0.8); 
+    }
+
+    .dj-name-style {
+        font-family: 'Dancing Script', cursive;
+        font-size: 1.4em; 
+        color: var(--text-color);
+        text-shadow: 0 0 12px rgba(240, 240, 240, 1.0);
+        display: inline-block;
+    }
+</style>
 </head>
 <body>
     
