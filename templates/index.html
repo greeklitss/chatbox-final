@@ -39,14 +39,14 @@
             background-color: #1a1a2e;
         }
 
-        /* 🚀 TOP NAVBAR BAR */
+        /* 🚀 TOP NAVBAR BAR (Λεπτή & Διακριτική) */
         .top-navbar {
             width: 100%;
             background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             border-bottom: 3px solid var(--comic-yellow);
-            padding: 8px 20px;
+            padding: 6px 20px;
             box-sizing: border-box;
             display: flex;
             flex-direction: row;
@@ -59,7 +59,7 @@
 
         /* 1. ΛΟΓΟΤΥΠΟ */
         .brand-title {
-            font-size: 1.4em;
+            font-size: 1.3em;
             font-weight: 700;
             color: var(--comic-yellow); 
             text-transform: uppercase;
@@ -72,19 +72,19 @@
         .custom-player {
             display: flex;
             align-items: center;
-            gap: 12px;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 6px 18px 6px 12px;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 4px 14px 4px 10px;
             border-radius: 50px;
             border: 2px solid var(--comic-yellow);
-            box-shadow: 0 0 12px rgba(255, 222, 0, 0.3);
+            box-shadow: 0 0 10px rgba(255, 222, 0, 0.25);
         }
 
         .mushroom-btn {
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 2.2em;
+            font-size: 2em;
             padding: 0;
             margin: 0;
             display: flex;
@@ -100,10 +100,6 @@
             transform: scale(1.15) rotate(-5deg);
         }
 
-        .mushroom-btn:active {
-            transform: scale(0.95);
-        }
-
         .mushroom-btn.playing {
             animation: mushroomPulse 1.2s infinite alternate ease-in-out;
         }
@@ -114,41 +110,34 @@
         }
 
         .volume-slider {
-            width: 75px;
+            width: 65px;
             accent-color: var(--comic-yellow);
             cursor: pointer;
         }
 
-        /* 3. METADATA & DJ INFO */
-        .info-compact {
+        /* 📊 3. ΜΕΤΡΗΤΕΣ ΣΤΑΤΙΣΤΙΚΩΝ */
+        .stats-container {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 0.8em;
             color: #FFF;
-            font-size: 0.9em;
-            max-width: 320px;
         }
 
-        .dj-line {
-            font-size: 1.05em;
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .stat-value {
             font-weight: bold;
             color: var(--comic-yellow);
-            -webkit-text-stroke: 0.5px #000;
-            text-shadow: 1px 1px 2px #000;
-        }
-
-        .dj-name-highlight {
-            color: #00A8FF;
-        }
-
-        #sonic_title {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 250px;
-            color: #FFFFFF;
-            font-weight: 600;
-            text-shadow: 1px 1px 3px #000;
         }
 
         /* 4. ΚΟΥΜΠΙ LOGIN */
@@ -156,11 +145,11 @@
             background: linear-gradient(180deg, #2ECC71 0%, #27AE60 100%);
             color: #FFF; 
             border: 2px solid #000; 
-            padding: 9px 20px; 
+            padding: 7px 18px; 
             border-radius: 30px; 
             cursor: pointer;
             font-family: 'Fredoka', cursive, sans-serif;
-            font-size: 0.95em;
+            font-size: 0.9em;
             font-weight: bold;
             text-transform: uppercase;
             white-space: nowrap;
@@ -174,18 +163,80 @@
             box-shadow: 0 6px 0px #1e8449;
         }
 
-        /* ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ */
+        /* 🎧 FLOATING DJ & TRACK WIDGET (ΕΝΣΩΜΑΤΩΜΕΝΟ ΣΤΟ ΦΟΝΤΟ) */
+        .floating-dj-card {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(15, 15, 30, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 8px 16px 8px 8px;
+            border-radius: 50px;
+            border: 2px solid var(--comic-yellow);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.8);
+            z-index: 99;
+            transition: all 0.3s ease;
+        }
+
+        .floating-dj-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(255, 222, 0, 0.3);
+        }
+
+        #sonic_dj_image {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--comic-yellow);
+            object-fit: cover;
+            box-shadow: 0 0 10px rgba(255, 222, 0, 0.5);
+            background: #000;
+        }
+
+        .dj-details {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-width: 220px;
+        }
+
+        .dj-title-line {
+            font-size: 0.95em;
+            font-weight: bold;
+            color: #00A8FF;
+            text-shadow: 1px 1px 2px #000;
+            white-space: nowrap;
+        }
+
+        #sonic_title {
+            font-size: 0.8em;
+            color: #FFFFFF;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        /* ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ BACKGROUND */
         .center-hero-space {
             flex: 1;
         }
 
-        @media (max-width: 820px) {
-            .top-navbar {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            .info-compact {
+        @media (max-width: 768px) {
+            .stats-container {
                 display: none;
+            }
+            .floating-dj-card {
+                bottom: 15px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 90%;
+                max-width: 320px;
+                justify-content: center;
             }
         }
     </style>
@@ -207,11 +258,11 @@
             </button>
             
             <div style="display: flex; flex-direction: column; gap: 2px;">
-                <span id="playerStateText" style="color: var(--comic-yellow); font-size: 0.75em; font-weight: bold; text-shadow: 1px 1px 2px #000;">
+                <span id="playerStateText" style="color: var(--comic-yellow); font-size: 0.7em; font-weight: bold; text-shadow: 1px 1px 2px #000;">
                     CLICK TO PLAY
                 </span>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <span style="font-size: 0.85em;">🔊</span>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 0.8em;">🔊</span>
                     <input type="range" id="volumeControl" class="volume-slider" min="0" max="1" step="0.05" value="0.8" oninput="changeVolume(this.value)">
                 </div>
             </div>
@@ -220,14 +271,21 @@
             <audio id="radioStream" src="https://or.mysonicserver.com/8050/stream" preload="none"></audio>
         </div>
 
-        <!-- 3. DJ & METADATA -->
-        <div class="info-compact">
-            <div class="dj-line">
-                DJ: <span id='sonic_dj' class='dj-name-highlight'>-</span>
+        <!-- 📊 3. ΜΕΤΡΗΤΕΣ (Ακροατές / Συνδεδεμένοι / Επισκέπτες) -->
+        <div class="stats-container">
+            <div class="stat-item" title="Ακροατές Ραδιοφώνου">
+                <span>🎧</span>
+                <span id="sonic_listeners" class="stat-value">0</span>
             </div>
-            <div id='sonic_title'>Φόρτωση τίτλου...</div>
-            <div style="color: var(--comic-yellow); font-size: 0.8em;">
-                ΑΚΡΟΑΤΕΣ: <span id='sonic_listeners'>0</span>
+            <span>|</span>
+            <div class="stat-item" title="Συνδεδεμένοι Χρήστες">
+                <span style="color: #2ECC71;">🟢</span>
+                <span id="online_users_count" class="stat-value">0</span>
+            </div>
+            <span>|</span>
+            <div class="stat-item" title="Επισκέπτες Σελίδας">
+                <span>👁️</span>
+                <span id="page_visitors_count" class="stat-value">0</span>
             </div>
         </div>
 
@@ -236,13 +294,24 @@
 
     </div>
 
-    <!-- WIDGET SCRIPT ΓΙΑ ΤΑ METADATA -->
+    <!-- 🎧 FLOATING DJ CARD (Πλάι κάτω, ενσωματωμένο στο φόντο) -->
+    <div class="floating-dj-card">
+        <img id="sonic_dj_image" src="https://or.mysonicserver.com/cp/widgets/player/single/default_dj.png" alt="DJ Avatar">
+        <div class="dj-details">
+            <div class="dj-title-line">
+                DJ: <span id="sonic_dj" style="color: var(--comic-yellow);">-</span>
+            </div>
+            <div id="sonic_title">Φόρτωση τίτλου...</div>
+        </div>
+    </div>
+
+    <!-- WIDGET SCRIPT ΓΙΑ ΤΑ METADATA ΤΗΣ SONIC -->
     <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
 
     <!-- 🖼️ ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ BACKGROUND -->
     <div class="center-hero-space"></div>
 
-    <!-- JS ΛΕΙΤΟΥΡΓΙΑΣ PLAYER -->
+    <!-- JS ΛΕΙΤΟΥΡΓΙΑΣ PLAYER & MODAL -->
     <script>
         const audio = document.getElementById('radioStream');
         const playBtn = document.getElementById('playPauseBtn');
