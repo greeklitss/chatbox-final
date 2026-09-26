@@ -287,19 +287,25 @@
 
     </div>
 
-    <!-- 🎧 FLOATING DJ CARD (Διορθωμένο id="sonic_dj_img") -->
-    <div class="floating-dj-card">
-        <img id="sonic_dj_img" src="https://or.mysonicserver.com/cp/widgets/player/single/default_dj.png" alt="DJ Avatar">
-        <div class="dj-details">
-            <div class="dj-title-line">
-                DJ: <span id="sonic_dj" style="color: var(--comic-yellow);">-</span>
-            </div>
-            <div id="sonic_title">Φόρτωση τίτλου...</div>
+   <!-- 🎧 FLOATING DJ CARD (ΜΕ ΤΗ ΔΟΜΗ ΤΟΥ CHAT) -->
+<div class="floating-dj-card">
+    <!-- Η εικόνα όπως ακριβώς δουλεύει στο Chat -->
+    <img id="sonic_dj_img" 
+         src="https://or.mysonicserver.com/cp/widgets/player/single/default_dj.png" 
+         onerror="this.onerror=null; this.src='https://or.mysonicserver.com/cp/widgets/player/single/default_dj.png';" 
+         alt="DJ Photo">
+         
+    <div class="dj-details">
+        <div id="sonic_dj">DJ ON AIR</div>
+        <div id="sonic_title">Radio Parea Live</div>
+        <div style="color:#D4AF37; font-size:0.75em; margin-top:3px; font-weight:bold; font-family: 'Orbitron';">
+            ΑΚΡΟΑΤΕΣ: <span id="sonic_listeners">0</span>
         </div>
     </div>
+</div>
 
-    <!-- WIDGET SCRIPT ΓΙΑ ΤΑ METADATA ΤΗΣ SONIC -->
-    <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+<!-- WIDGET SCRIPT ΓΙΑ ΤΑ METADATA ΤΗΣ SONIC -->
+<script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
 
     <!-- 🖼️ ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ BACKGROUND -->
     <div class="center-hero-space"></div>
