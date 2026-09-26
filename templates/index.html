@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radioparea - On Air & Festive!</title>
+    <title>Radioparea - On Air</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     
     <style>
         /* ================================================= */
-        /* 🚨 ΧΡΙΣΤΟΥΓΕΝΝΙΑΤΙΚΑ ΧΡΩΜΑΤΑ (Override Neon) */
+        /* 🎨 ΒΑΣΙΚΑ ΧΡΩΜΑΤΑ & NEON STYLING */
         /* ================================================= */
         :root {
-            --primary-accent: #C0392B;    /* Έντονο Χριστουγεννιάτικο Κόκκινο */
-            --secondary-accent: #27AE60;  /* Σκούρο Χριστουγεννιάτικο Πράσινο */
-            --text-color: #F0F0F0;        /* Λευκό του Χιονιού */
-            --box-bg: rgba(0, 0, 0, 0.7); /* Σκούρο διαφανές φόντο για το container (0.7: 70% αδιαφάνεια) */
-            --shadow-color: #F1C40F;      /* Χρυσό/Κίτρινο για λάμψη */
+            --primary-accent: #00ffcc;    /* Φωτεινό Cyan / Neon */
+            --secondary-accent: #27AE60;  /* Πράσινο */
+            --text-color: #F0F0F0;        /* Ανοιχτό γκρι/λευκό */
+            --box-bg: rgba(0, 0, 0, 0.75); /* Σκούρο διαφανές φόντο container */
+            --shadow-color: #F1C40F;      /* Χρυσαφί για λάμψη */
         }
 
         /* Βασικό Styling */
@@ -33,14 +33,15 @@
             min-height: 100vh;
             overflow: hidden; 
 
-            /* 🚨 ΔΙΟΡΘΩΜΕΝΟ: ΕΙΚΟΝΑ BACKGROUND */
+            /* 🖼️ ΕΙΚΟΝΑ BACKGROUND */
             background-image: url("{{ url_for('static', filename='radioparea_background.jpg') }}"); 
             background-size: cover;
-            background-attachment: fixed; /* Κάνει το φόντο σταθερό */
+            background-attachment: fixed;
             background-position: center center;
             background-repeat: no-repeat;
             background-color: #1a1a2e; /* Fallback */
         }
+
         .container { 
             background: var(--box-bg); 
             padding: 30px 40px; 
@@ -50,23 +51,27 @@
             text-align: center;
             z-index: 10;
         }
+
         h1 { 
             color: var(--primary-accent); 
             font-family: 'Orbitron', sans-serif;
             margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
         }
+
         p { 
             color: var(--text-color);
         }
-        .countdown {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2.5em;
-            color: var(--shadow-color); 
-            margin-bottom: 30px;
-            text-shadow: 0 0 8px rgba(241, 196, 15, 0.9);
+
+        .player { 
+            margin-bottom: 25px; 
         }
-        .player { margin-bottom: 25px; }
-        .player iframe { width: 100%; border-radius: 5px; }
+        
+        .player iframe { 
+            width: 100%; 
+            border-radius: 5px; 
+        }
+
         .login-btn {
             background: var(--secondary-accent); 
             color: #1a1a2e; 
@@ -80,82 +85,14 @@
             display: inline-block;
             transition: background 0.3s;
         }
-        .login-btn:hover { background: #45b778; } 
-
-        /* ================================================= */
-        /* 💡 ΕΦΕ ΧΡΙΣΤΟΥΓΕΝΝΙΑΤΙΚΑ ΛΑΜΠΑΚΙΑ 💡 */
-        /* ================================================= */
-
-        .christmas-lights {
-            position: fixed;
-            top: -5px; 
-            left: 0;
-            width: 100%;
-            height: 30px;
-            display: flex;
-            justify-content: space-around;
-            z-index: 1001; 
-            pointer-events: none;
-        }
-
-        .light {
-            width: 10px;
-            height: 15px;
-            background: #555; 
-            border-radius: 50% 50% 5px 5px;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-            margin-top: 5px;
-            transform: rotate(5deg); 
-            animation: blink 1.5s ease-in-out infinite alternate;
-        }
-
-        .light.red { background-color: #E74C3C; box-shadow: 0 0 10px #E74C3C; }
-        .light.green { background-color: #2ECC71; box-shadow: 0 0 10px #2ECC71; }
-        .light.blue { background-color: #3498DB; box-shadow: 0 0 10px #3498DB; }
-        .light.gold { background-color: #F1C40F; box-shadow: 0 0 10px #F1C40F; }
-
-        .light:nth-child(4n+1) { animation-delay: 0.1s; } 
-        .light:nth-child(4n+2) { animation-delay: 0.5s; } 
-        .light:nth-child(4n+3) { animation-delay: 0.8s; } 
-
-        @keyframes blink {
-            0% {
-                opacity: 0.7;
-                transform: scale(1) rotate(5deg);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1.1) rotate(5deg); 
-            }
-        }
-
-        /* ================================================= */
-        /* ❄️ ΔΙΟΡΘΩΜΕΝΟ ΕΦΕ ΧΙΟΝΟΠΤΩΣΗΣ (CSS/JS Support) ❄️ */
-        /* ================================================= */
-        .snowflake {
-            position: absolute;
-            background: #fff;
-            border-radius: 50%;
-            opacity: 0.8;
-            animation: fall linear infinite; 
-            pointer-events: none;
-            z-index: 5;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-        }
         
-        @keyframes fall {
-            0% { 
-                transform: translateY(0vh) translateX(0); 
-            }
-            100% { 
-                transform: translateY(110vh) translateX(var(--fall-x-offset)); 
-            }
-        }
+        .login-btn:hover { 
+            background: #2ecc71; 
+        } 
 
         /* ================================================= */
-        /* ✒️ ΝΕΟ ΚΑΛΛΙΓΡΑΦΙΚΟ ΣΤΥΛ ΓΙΑ DJ / ΕΝΤΑΣΗ */
+        /* ✒️ ΚΑΛΛΙΓΡΑΦΙΚΟ ΣΤΥΛ ΓΙΑ DJ / ΕΝΤΑΣΗ */
         /* ================================================= */
-
         .calligraphy-block {
             text-align: center;
             margin-top: 20px;
@@ -163,38 +100,29 @@
             padding: 10px;
         }
 
-        /* 1. ΒΑΣΙΚΟ ΣΤΥΛ (για το 'RADIOPAREA ') - ΧΡΥΣΟ */
         .calligraphy-text-base {
-            font-family: 'Dancing Script', cursive; /* Χρησιμοποιούμε Dancing Script */
+            font-family: 'Dancing Script', cursive;
             font-size: 1.8em; 
             font-weight: bold;
-            color: var(--shadow-color); /* Χρυσό/Κίτρινο */
+            color: var(--shadow-color);
             display: block; 
             margin-bottom: 10px;
             text-shadow: 0 0 10px rgba(241, 196, 15, 0.8); 
         }
 
-        /* 2. ΕΙΔΙΚΟ ΣΤΥΛ ΓΙΑ ΤΟ ΟΝΟΜΑ ΤΟΥ DJ - ΛΕΥΚΟ & ΜΕΓΑΛΥΤΕΡΟ */
         .dj-name-style {
-            font-family: 'Dancing Script', cursive; /* Χρησιμοποιούμε Dancing Script */
+            font-family: 'Dancing Script', cursive;
             font-size: 1.5em; 
-            color: var(--text-color); /* Λευκό (F0F0F0) */
-            text-shadow: 0 0 12px rgba(240, 240, 240, 1.0); /* Έντονη λευκή λάμψη */
+            color: var(--text-color);
+            text-shadow: 0 0 12px rgba(240, 240, 240, 1.0);
             display: inline-block;
         }
     </style>
 </head>
 <body>
-    <div class="christmas-lights">
-        <div class="light red"></div><div class="light green"></div><div class="light blue"></div><div class="light gold"></div>
-        <div class="light red"></div><div class="light green"></div><div class="light blue"></div><div class="light gold"></div>
-        <div class="light red"></div><div class="light green"></div><div class="light blue"></div><div class="light gold"></div>
-        <div class="light red"></div><div class="light green"></div><div class="light blue"></div><div class="light gold"></div>
-    </div>
     
     <div class="container">
-        <h1> 📻 RADIOPAREA IS ON AIR </h1>
-      
+        <h1>📻 RADIOPAREA IS ON AIR</h1>
 
         <div class="player">
             <iframe src="https://or.mysonicserver.com/cp/widgets/player/single/?p=8050" height="110" width="100%" scrolling="no" style="border:none;"></iframe>
@@ -206,7 +134,7 @@
                     <span class="calligraphy-text-base">
                         RADIOPAREA ΜΕ <span id='sonic_dj' class='dj-name-style'></span>
                     </span>
-                    <div id="jplayer_volume_control"> </div>
+                    <div id="jplayer_volume_control"></div>
                 </div>
 
                 <div id='sonic_title'></div>
@@ -215,70 +143,11 @@
             </div>
         </div>
 
-        <div class="countdown" id="countdown-timer">
-            Φόρτωση...
-        </div>
-
-       
-<button onclick="openLoginModal()" class="login-btn">Είσοδος στο Chat</button>
+        <button onclick="openLoginModal()" class="login-btn">Είσοδος στο Chat</button>
     </div>
 
-<div id="snow-container"></div>
-
     <script>
-        // 1. ΑΝΤΙΣΤΡΟΦΗ ΜΕΤΡΗΣΗ
-        const targetDate = new Date("Dec 23, 2025 00:00:00").getTime();
-        const countdownElement = document.getElementById("countdown-timer");
-
-        const updateCountdown = () => {
-            const now = new Date().getTime();
-            const distance = targetDate - now;
-
-            if (distance < 0) {
-                countdownElement.innerHTML = "Είμαστε Live! 🎉";
-                return;
-            }
-
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            countdownElement.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-        };
-
-        updateCountdown(); 
-        setInterval(updateCountdown, 1000); 
-
-        // 2. ΕΦΕ ΧΙΟΝΙΟΥ
-        const snowContainer = document.getElementById("snow-container");
-        const numSnowflakes = 100; 
-
-        const createSnowflake = () => {
-            const snowflake = document.createElement("div");
-            snowflake.className = "snowflake";
-            const size = Math.random() * 5 + 5; 
-            snowflake.style.width = `${size}px`;
-            snowflake.style.height = `${size}px`;
-            snowflake.style.left = `${Math.random() * 100}vw`;
-            snowflake.style.top = `${-Math.random() * 100}vh`; 
-            const duration = Math.random() * 15 + 15; 
-            snowflake.style.animationDuration = `${duration}s`;
-            snowflake.style.animationDelay = `${Math.random() * 10}s`;
-            const xOffset = Math.random() * 50 - 25; 
-            snowflake.style.setProperty('--fall-x-offset', `${xOffset}vw`);
-
-            snowContainer.appendChild(snowflake);
-
-            setTimeout(() => {
-                if (snowflake.parentNode) { snowflake.remove(); }
-                createSnowflake(); 
-            }, duration * 1000);
-        };
-
-        for (let i = 0; i < numSnowflakes; i++) { createSnowflake(); }
-
-        // 3. ΛΕΙΤΟΥΡΓΙΕΣ MODAL & LOGIN (ΕΔΩ ΗΤΑΝ ΤΟ ΣΦΑΛΜΑ)
+        // 1. ΛΕΙΤΟΥΡΓΙΕΣ MODAL & LOGIN
         function openLoginModal() {
             document.getElementById("loginModal").style.display = "block";
         }
@@ -298,7 +167,6 @@
             const timer = setInterval(() => {
                 if (authWindow.closed) {
                     clearInterval(timer);
-                    // Ανανέωση της κύριας σελίδας για να δει το νέο session
                     window.location.reload(); 
                 }
             }, 1000);
