@@ -4,179 +4,210 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radioparea - On Air</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
     
-   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap');
-
-    :root {
-        --comic-yellow: #FFDE00;
-        --comic-orange: #FF6B00;
-        --text-color: #FFFFFF;
-    }
-
-    html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        font-family: 'Fredoka', cursive, sans-serif;
-    }
-
-    body { 
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        min-height: 100vh;
-        box-sizing: border-box;
-        padding: 20px 10px;
-        overflow-y: auto; 
-
-        background-image: url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}"); 
-        background-size: 100% 100%;
-        background-attachment: fixed;
-        background-position: center center;
-        background-repeat: no-repeat;
-        background-color: #1a1a2e;
-    }
-
-    /* 🏷️ ΤΙΤΛΟΣ TOP */
-    .top-header h1 { 
-        font-size: 2.2em;
-        font-weight: 700;
-        color: var(--comic-yellow); 
-        margin: 10px 0;
-        text-transform: uppercase;
-        text-align: center;
-        -webkit-text-stroke: 1.5px #000;
-        text-shadow: 3px 3px 0px #FF4500, 5px 5px 0px #000;
-    }
-
-    /* 📻 ΟΡΙΖΟΝΤΙΑ ΔΙΑΤΑΞΗ PLAYER & INFO */
-    .main-wrapper {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-        gap: 20px;
-        width: 100%;
-        max-width: 850px;
-        background: rgba(0, 0, 0, 0.45); /* Ελαφριά διαφάνεια */
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        padding: 20px;
-        border-radius: 20px;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.6);
-    }
-
-    .player-section {
-        flex: 1 1 320px;
-        max-width: 400px;
-    }
-
-    .info-section {
-        flex: 1 1 300px;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .calligraphy-text-base {
-        font-size: 1.5em; 
-        font-weight: 700;
-        color: var(--comic-yellow);
-        margin-bottom: 5px;
-        -webkit-text-stroke: 1px #000;
-        text-shadow: 2px 2px 0px #FF6B00;
-    }
-
-    .dj-name-style {
-        color: #FFF;
-        -webkit-text-stroke: 1px #000;
-        text-shadow: 2px 2px 0px #00A8FF;
-    }
-
-    #sonic_title {
-        font-size: 0.95em;
-        color: #FFF;
-        margin: 8px 0;
-        text-shadow: 1px 1px 2px #000;
-    }
-
-    /* 🔘 ΚΟΥΜΠΙ BOTTOM */
-    .bottom-section {
-        margin-top: 15px;
-        margin-bottom: 10px;
-    }
-
-    .login-btn {
-        background: linear-gradient(180deg, #2ECC71 0%, #27AE60 100%);
-        color: #FFF; 
-        border: 2px solid #000; 
-        padding: 12px 35px; 
-        border-radius: 50px; 
-        cursor: pointer;
-        font-family: 'Fredoka', cursive, sans-serif;
-        font-size: 1.2em;
-        font-weight: bold;
-        text-transform: uppercase;
-        box-shadow: 0 5px 0px #1e8449, 0 8px 10px rgba(0,0,0,0.4);
-        transition: all 0.1s ease;
-        -webkit-text-stroke: 0.5px #000;
-    }
-    
-    .login-btn:hover { 
-        transform: translateY(-2px);
-        box-shadow: 0 7px 0px #1e8449, 0 10px 12px rgba(0,0,0,0.4);
-    } 
-
-    @media (max-width: 600px) {
-        .main-wrapper {
-            flex-direction: column;
+    <style>
+        :root {
+            --comic-yellow: #FFDE00;
+            --comic-orange: #FF6B00;
+            --text-color: #FFFFFF;
         }
-    }
-</style>
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+
+        body { 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            padding: 20px;
+            overflow-y: auto; 
+
+            /* BACKGROUND */
+            background-image: url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}"); 
+            background-size: 100% 100%;
+            background-attachment: fixed;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-color: #1a1a2e;
+        }
+
+        /* 1. ΤΙΤΛΟΣ ΠΑΝΩ */
+        .top-header h1 { 
+            font-size: 2.4em;
+            font-weight: 700;
+            color: var(--comic-yellow); 
+            margin: 10px 0 20px 0;
+            text-transform: uppercase;
+            text-align: center;
+            -webkit-text-stroke: 1.5px #000;
+            text-shadow: 3px 3px 0px #FF4500, 5px 5px 0px #000;
+        }
+
+        /* 2. ΚΥΡΙΩΣ ΠΕΡΙΟΧΗ ΧΩΡΙΣ ΚΟΥΤΙ (GRID / FLEX) */
+        .content-layout {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 950px;
+            gap: 30px;
+            margin: auto 0;
+        }
+
+        /* ΑΡΙΣΤΕΡΗ ΠΛΕΥΡΑ: Player & Metadata */
+        .left-column {
+            flex: 1;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .player-wrapper iframe {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+        }
+
+        .metadata-box {
+            background: rgba(0, 0, 0, 0.35); /* Ελαφρύ τοπικό φόντο για αναγνωσιμότητα */
+            backdrop-filter: blur(4px);
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #FFF;
+            text-shadow: 1px 1px 3px #000;
+        }
+
+        #sonic_title {
+            font-size: 1em;
+            color: #FFF;
+            margin-bottom: 5px;
+        }
+
+        #sonic_listeners {
+            font-size: 0.9em;
+            color: var(--comic-yellow);
+            font-weight: bold;
+        }
+
+        /* ΔΕΞΙΑ ΠΛΕΥΡΑ: DJ Info */
+        .right-column {
+            flex: 1;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(4px);
+            padding: 15px 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .dj-title-text {
+            font-size: 1.6em; 
+            font-weight: 700;
+            color: var(--comic-yellow);
+            margin-bottom: 8px;
+            -webkit-text-stroke: 1px #000;
+            text-shadow: 2px 2px 0px #FF6B00;
+        }
+
+        .dj-name-style {
+            color: #FFF;
+            -webkit-text-stroke: 1px #000;
+            text-shadow: 2px 2px 0px #00A8FF;
+        }
+
+        /* 3. ΚΟΥΜΠΙ ΚΑΤΩ */
+        .bottom-section {
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .login-btn {
+            background: linear-gradient(180deg, #2ECC71 0%, #27AE60 100%);
+            color: #FFF; 
+            border: 2px solid #000; 
+            padding: 12px 40px; 
+            border-radius: 50px; 
+            cursor: pointer;
+            font-family: 'Fredoka', cursive, sans-serif;
+            font-size: 1.25em;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 5px 0px #1e8449, 0 8px 10px rgba(0,0,0,0.5);
+            transition: all 0.1s ease;
+            -webkit-text-stroke: 0.5px #000;
+        }
+        
+        .login-btn:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 7px 0px #1e8449, 0 10px 12px rgba(0,0,0,0.5);
+        }
+
+        /* Responsive για κινητά */
+        @media (max-width: 768px) {
+            .content-layout {
+                flex-direction: column;
+                align-items: center;
+            }
+            .left-column, .right-column {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     
-    <!-- 1. ΤΙΤΛΟΣ ΠΑΝΩ -->
+    <!-- 1. ΤΙΤΛΟΣ -->
     <div class="top-header">
         <h1>📻 RADIOPAREA IS ON AIR</h1>
     </div>
 
-    <!-- 2. ΟΡΙΖΟΝΤΙΑ ΔΙΑΤΑΞΗ PLAYER + INFO -->
-    <div class="main-wrapper">
-        <div class="player-section">
-            <iframe src="https://or.mysonicserver.com/cp/widgets/player/single/?p=8050" height="110" width="100%" scrolling="no" style="border:none;"></iframe>
-            <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+    <!-- 2. ΑΡΙΣΤΕΡΑ (PLAYER + META) / ΔΕΞΙΑ (DJ) -->
+    <div class="content-layout">
+        
+        <!-- ΑΡΙΣΤΕΡΑ -->
+        <div class="left-column">
+            <div class="player-wrapper">
+                <iframe src="https://or.mysonicserver.com/cp/widgets/player/single/?p=8050" height="110" width="100%" scrolling="no" style="border:none;"></iframe>
+                <script id='sonic_js' data-port='8050' src='https://or.mysonicserver.com/cp/widgets.js?r=381'></script>
+            </div>
+
+            <div class="metadata-box">
+                <div id='sonic_title'></div>
+                <div id='sonic_listeners'>ΑΚΡΟΑΤΕΣ</div>
+            </div>
         </div>
 
-        <div class="info-section">
-            <div class="calligraphy-block">
-                <span class="calligraphy-text-base">
-                    RADIOPAREA ΜΕ <span id='sonic_dj' class='dj-name-style'></span>
-                </span>
+        <!-- ΔΕΞΙΑ -->
+        <div class="right-column">
+            <div class="dj-title-text">
+                RADIOPAREA ΜΕ <br><span id='sonic_dj' class='dj-name-style'></span>
             </div>
-            <div id='sonic_title'></div>
             <div id='dj_profile'></div>
-            <div id='sonic_listeners' style="font-size: 0.9em; color: var(--comic-yellow);">ΑΚΡΟΑΤΕΣ</div>
         </div>
+
     </div>
 
-    <!-- 3. ΚΟΥΜΠΙ ΚΑΤΩ -->
+    <!-- 3. ΚΟΥΜΠΙ -->
     <div class="bottom-section">
         <button onclick="openLoginModal()" class="login-btn">Είσοδος στο Chat</button>
     </div>
-
-    <!-- Το Login Modal παραμένει όπως ήταν -->
-    ...
-</body>
 
     <script>
         // 1. ΛΕΙΤΟΥΡΓΙΕΣ MODAL & LOGIN
