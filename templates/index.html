@@ -294,9 +294,9 @@
 
     </div>
 
-    <!-- 🎧 FLOATING DJ CARD (Πλάι κάτω, ενσωματωμένο στο φόντο) -->
+    <!-- 🎧 FLOATING DJ CARD (Διορθωμένο id="sonic_dj_img") -->
     <div class="floating-dj-card">
-        <img id="sonic_dj_image" src="https://or.mysonicserver.com/cp/widgets/player/single/default_dj.png" alt="DJ Avatar">
+        <img id="sonic_dj_img" src="https://or.mysonicserver.com/cp/widgets/player/single/default_dj.png" alt="DJ Avatar">
         <div class="dj-details">
             <div class="dj-title-line">
                 DJ: <span id="sonic_dj" style="color: var(--comic-yellow);">-</span>
@@ -311,7 +311,7 @@
     <!-- 🖼️ ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ BACKGROUND -->
     <div class="center-hero-space"></div>
 
-    <!-- JS ΛΕΙΤΟΥΡΓΙΑΣ PLAYER & MODAL -->
+    <!-- JS ΛΕΙΤΟΥΡΓΙΑΣ PLAYER, MODAL & STATS -->
     <script>
         const audio = document.getElementById('radioStream');
         const playBtn = document.getElementById('playPauseBtn');
@@ -359,6 +359,31 @@
                 }
             }, 1000);
         }
+
+        // 2. LIVE ΕΝΗΜΕΡΩΣΗ ΜΕΤΡΗΤΩΝ ONLINE & ΕΠΙΣΚΕΠΤΩΝ
+        function updateSiteStats() {
+            fetch('/api/stats')
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response error');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.online_users !== undefined) {
+                        document.getElementById('online_users_count').innerText = data.online_users;
+                    }
+                    if (data.page_visitors !== undefined) {
+                        document.getElementById('page_visitors_count').innerText = data.page_visitors;
+                    }
+                })
+                .catch(err => {
+                    console.log("Αναμονή για σύνδεση με το Flask /api/stats endpoint");
+                });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateSiteStats();
+            setInterval(updateSiteStats, 10000);
+        });
     </script>
 
     <!-- MODAL LOGIN -->
