@@ -164,67 +164,70 @@
         }
 
         /* 🎧 FLOATING DJ & TRACK WIDGET (ΕΝΣΩΜΑΤΩΜΕΝΟ ΣΤΟ ΦΟΝΤΟ) */
-        .floating-dj-card {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(15, 15, 30, 0.75);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 8px 16px 8px 8px;
-            border-radius: 50px;
-            border: 2px solid var(--comic-yellow);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.8);
-            z-index: 99;
-            transition: all 0.3s ease;
-        }
+.floating-dj-card {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(15, 15, 30, 0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 8px 16px 8px 8px;
+    border-radius: 50px;
+    border: 2px solid var(--comic-yellow);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.8);
+    z-index: 99;
+    transition: all 0.3s ease;
+}
 
-        .floating-dj-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(255, 222, 0, 0.3);
-        }
+.floating-dj-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(255, 222, 0, 0.3);
+}
 
-        #sonic_dj_image {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: 2px solid var(--comic-yellow);
-            object-fit: cover;
-            box-shadow: 0 0 10px rgba(255, 222, 0, 0.5);
-            background: #000;
-        }
+/* ⚠️ ΔΙΟΡΘΩΘΗΚΕ ΤΟ ID ΣΕ #sonic_dj_img ΚΑΙ ΜΕΓΑΛΩΣΕ ΤΟ ΜΕΓΕΘΟΣ */
+#sonic_dj_img {
+    width: 55px !important;
+    height: 55px !important;
+    min-width: 55px;
+    min-height: 55px;
+    border-radius: 50%;
+    border: 2px solid var(--comic-yellow);
+    object-fit: cover;
+    box-shadow: 0 0 10px rgba(255, 222, 0, 0.5);
+    background: #000;
+}
 
-        .dj-details {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            max-width: 220px;
-        }
+.dj-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 220px;
+}
 
-        .dj-title-line {
-            font-size: 0.95em;
-            font-weight: bold;
-            color: #00A8FF;
-            text-shadow: 1px 1px 2px #000;
-            white-space: nowrap;
-        }
+.dj-title-line {
+    font-size: 0.95em;
+    font-weight: bold;
+    color: #00A8FF;
+    text-shadow: 1px 1px 2px #000;
+    white-space: nowrap;
+}
 
-        #sonic_title {
-            font-size: 0.8em;
-            color: #FFFFFF;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-shadow: 1px 1px 2px #000;
-        }
+#sonic_title {
+    font-size: 0.8em;
+    color: #FFFFFF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 1px 1px 2px #000;
+}
 
-        /* ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ BACKGROUND */
-        .center-hero-space {
-            flex: 1;
-        }
+/* ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ BACKGROUND */
+.center-hero-space {
+    flex: 1;
+}
 
         @media (max-width: 768px) {
             .stats-container {
