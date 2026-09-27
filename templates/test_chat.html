@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Parea - Merry Christmas 🔥🎄</title>
+    <title>Radio Parea</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Orbitron:wght@700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
@@ -365,13 +365,7 @@
                 <i class="fas fa-play" id="play-icon" style="font-size: 1.5em;"></i>
             </button>
             <div style="text-align: center;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-    <div style="color:white; font-family:'Dancing Script'; font-size:1.8em; text-shadow: 0 0 15px var(--fire);">
-        Radio Parea 
-    </div>
-    <img src="https://i.postimg.cc/wBLQbHkS/h07087.gif" 
-         style="height: 60px; width: auto; border-radius: 10px; filter: drop-shadow(0 0 8px var(--gold)); border: 1px solid rgba(212, 175, 55, 0.3);">
-</div>
+                <div style="color:white; font-family:'Dancing Script'; font-size:1.8em; text-shadow: 0 0 15px var(--fire);">Radio Parea 🎅</div>
                 <input type="range" id="volume-control" min="0" max="1" step="0.1" value="0.5" style="accent-color:var(--gold); width:90px; cursor: pointer;">
             </div>
             <div style="text-align: left; min-width: 120px;">
@@ -581,10 +575,13 @@
         
         <label>Όνομα (Nickname):</label>
 <input type="text" id="new-nickname" value="{{ current_user.display_name }}" 
-       {% if current_user.has_setup_profile %} readonly style="background: #222; color: #777; cursor: not-allowed;" {% endif %} 
+       {% if current_user.name_is_set and current_user.role != 'owner' %} readonly style="background: #222; color: #777; cursor: not-allowed;" {% endif %} 
        placeholder="Γράψε το όνομά σου...">
-{% if current_user.has_setup_profile %}
-<p style="color: gray; font-size: 0.8em; margin-top: -5px;">Το όνομα είναι κλειδωμένο. Μπορείς να αλλάξεις μόνο χρώμα και εικόνα.</p>
+
+{% if current_user.name_is_set and current_user.role != 'owner' %}
+<p style="color: #ff4d4d; font-size: 0.8em; margin-top: -5px;">Το όνομα έχει κλειδωθεί μόνιμα.</p>
+{% else %}
+<p style="color: #81C784; font-size: 0.8em; margin-top: -5px;">Μπορείς να αλλάξεις το όνομά σου μόνο μία φορά!</p>
 {% endif %}
         
         <label>Avatar URL (Link εικόνας):</label>
