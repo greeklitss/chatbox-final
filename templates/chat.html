@@ -518,7 +518,7 @@
     overflow-y: auto;
     padding: 20px;
     background-image: url('/static/radioparea.png') !important;
-    background-image: linear-gradient(rgba(5, 10, 20, 0.78), rgba(5, 10, 20, 0.78)), url("/static/radioparea.png") !important;
+    background-image: none !important;
     background-size: cover !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
@@ -721,16 +721,7 @@ body{height:100vh;min-height:0;overflow:hidden;display:flex;flex-direction:colum
 .chat-right .input-area{padding:10px;}
 .chat-right #chat-input{min-height:42px;padding:10px;font-size:1em;}
 .chat-right .style-bar{margin:8px 0!important;}
-.chat-right .input-area{position:relative;z-index:30;pointer-events:auto;padding:10px;}
-.chat-right #chat-input{position:relative;z-index:31;pointer-events:auto;user-select:text;min-height:42px;padding:10px;font-size:1em;}
-.chat-right .toolbar,.chat-right .style-bar{position:relative;z-index:31;pointer-events:auto;margin:8px 0!important;}
 .chat-right .mist-container{z-index:1;}
-.bot-message{display:flex;align-items:flex-start;gap:10px;}
-.bot-message-body{display:flex;flex:1;min-width:0;flex-direction:column;}
-.bot-message-header{display:flex;align-items:center;gap:8px;}
-.bot-message-actions{display:inline-flex;gap:5px;}
-.bot-message-actions button{background:transparent;border:0;color:var(--gold);padding:2px 4px;cursor:pointer;font-size:.75em;}
-.bot-message-actions button:hover{color:#fff;}
 @media(max-width:1100px) and (min-width:769px){.chat-right .sidebar{width:155px!important;min-width:155px;}.stats-container{display:none;}}
 @media(max-width:768px){
  html,body{height:auto;min-height:100%;}
@@ -741,7 +732,6 @@ body{height:100vh;min-height:0;overflow:hidden;display:flex;flex-direction:colum
  .floating-dj-card{bottom:10px;left:50%;transform:translateX(-50%);width:90%;max-width:320px;justify-content:center;}
  .chat-right{width:100%;flex:1 0 auto;min-height:720px;height:auto;overflow:visible;border-left:0;border-top:2px solid #D4AF37;}
  .chat-right .chat-controls{min-height:54px;}
- .chat-right .chat-controls{min-height:54px;}.chat-right .input-area{position:relative;z-index:30;pointer-events:auto}.chat-right #chat-input{position:relative;z-index:31;pointer-events:auto;user-select:text}
  .chat-right .main{height:660px;min-height:660px;flex:none;}
  .chat-right .sidebar{width:105px!important;min-width:105px;}
  .chat-right .input-area{padding:8px;}
@@ -854,9 +844,6 @@ body{height:100vh;min-height:0;overflow:hidden;display:flex;flex-direction:colum
     <button type="button" class="tool-btn" onclick="document.getElementById('chat-input').focus(); document.execCommand('bold')"><b>B</b></button>
     <button type="button" class="tool-btn" onclick="document.getElementById('chat-input').focus(); document.execCommand('italic')"><i>I</i></button>
     <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:30px; height:30px; cursor:pointer; vertical-align:middle;">
-    <button type="button" class="tool-btn" onmousedown="saveChatSelection(); event.preventDefault()" onclick="applyChatFormat('bold')"><b>B</b></button>
-    <button type="button" class="tool-btn" onmousedown="saveChatSelection(); event.preventDefault()" onclick="applyChatFormat('italic')"><i>I</i></button>
-    <input type="color" onmousedown="saveChatSelection()" onchange="applyChatFormat('foreColor', this.value)" style="width:30px; height:30px; cursor:pointer; vertical-align:middle;">
 
     <script>
         // Εδώ προσθέτεις τα links σου. Αν αφήσεις κενό '', το κουμπί δεν θα φαίνεται.
@@ -1048,51 +1035,6 @@ body{height:100vh;min-height:0;overflow:hidden;display:flex;flex-direction:colum
         const socket = io();
         const chatInput = document.getElementById('chat-input');
         const chatBox = document.getElementById('chat-box');
-        let savedChatRange = null;
-
-        function botAvatarUrl(name, color = '#3498DB') {
-            const initials = (name.match(/[A-Za-zΑ-Ωα-ω]/g) || []).slice(0, 2).join('').toUpperCase() || '🤖';
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="48" fill="${color}"/><circle cx="48" cy="37" r="22" fill="rgba(255,255,255,.18)"/><text x="48" y="59" text-anchor="middle" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#fff">${initials}</text></svg>`;
-            return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-        }
-
-        const demoOnlineBots = [
-            { display_name: 'Giannis_K', color: '#3498DB' },
-            { display_name: 'Anna_Florina', color: '#E879F9' },
-            { display_name: 'Kostas_DJ', color: '#2ECC71' },
-            { display_name: 'Eleni_92', color: '#FB923C' }
-        ].map(bot => ({ ...bot, avatar_url: botAvatarUrl(bot.display_name, bot.color) }));
-
-        function renderOnlineUsers(users = []) {
-            const userList = document.getElementById('user-list-content');
-            if (!userList) return;
-            const realUsers = users.filter(user => !demoOnlineBots.some(bot => bot.display_name === user.display_name));
-            userList.innerHTML = [...realUsers, ...demoOnlineBots].map(user => `
-                <div style="margin-bottom:15px;display:flex;flex-direction:column;align-items:center;">
-                    <img src="${user.avatar_url || 'https://i.imgur.com/6VBx3io.png'}" onerror="this.onerror=null;this.src='https://i.imgur.com/6VBx3io.png'" style="width:50px;height:50px;border-radius:50%;border:2px solid ${user.color || '#D4AF37'};object-fit:cover;">
-                    <div style="color:${user.color || '#D4AF37'};font-size:.85em;font-weight:bold;margin-top:5px;text-shadow:1px 1px 2px #000;">${user.display_name}</div>
-                </div>`).join('');
-        }
-
-        document.addEventListener('DOMContentLoaded', () => renderOnlineUsers());
-
-        function saveChatSelection() {
-            const selection = window.getSelection();
-            if (selection && selection.rangeCount && chatInput.contains(selection.anchorNode)) {
-                savedChatRange = selection.getRangeAt(0).cloneRange();
-            }
-        }
-
-        function applyChatFormat(command, value = null) {
-            chatInput.focus();
-            if (savedChatRange) {
-                const selection = window.getSelection();
-                selection.removeAllRanges();
-                selection.addRange(savedChatRange);
-            }
-            document.execCommand(command, false, value);
-            saveChatSelection();
-        }
 
 
 
@@ -1307,7 +1249,6 @@ function sendMessage() {
                     </div>`).join('');
             }
         });
-}      socket.on('users_update', (users) => renderOnlineUsers(users));
 
 function saveProfile() {
     const nick = document.getElementById('new-nickname').value;
@@ -1461,7 +1402,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ep.style.display = 'none';
         }
     });
-});
 
  
 function sendCustomGif(url) {
@@ -1536,32 +1476,9 @@ function sendCustomGif(url) {
             { name: "Anna_Florina", text: "Καλησπέρα στην όμορφη παρέα! ❤️", isDj: false },
             { name: "Kostas_DJ", text: "Χαιρετίσματα σε όλους τους ακροατές!", isDj: false },
             { name: "Eleni_92", text: "Βάλτε μας και λίγο χορευτικό! 💃", isDj: false }
-            { name: "Eleni_92", text: "Βάλτε μας και λίγο χορευτικό! 💃", isDj: false },
-            { name: "Makis_3", text: "Καλή ακρόαση σε όλους, από εδώ με καφεδάκι ☕", isDj: false },
-            { name: "Nikos_77", text: "Πολύ ωραία παρέα σήμερα! 😊", isDj: false },
-            { name: "Maria_P", text: "Σας ακούμε δυνατά από το αυτοκίνητο 🚗", isDj: false },
-            { name: "Stella", text: "Καλησπέρα σε όλη την ομάδα! ✨", isDj: false },
-            { name: "Giorgos_A", text: "Μόλις μπήκα στην παρέα, καλησπέρα!", isDj: false },
-            { name: "Eirini", text: "Αυτό το τραγούδι μου έφτιαξε τη διάθεση 🎵", isDj: false },
-            { name: "Panos_GR", text: "Καλή συνέχεια με ωραίες μουσικές!", isDj: false },
-            { name: "Lena_88", text: "Χαιρετισμούς από Θεσσαλονίκη! 👋", isDj: false },
-            { name: "Takis", text: "Εδώ είμαστε, σας ακούμε! 📻", isDj: false },
-            { name: "Rena", text: "Να έχετε όλοι ένα υπέροχο βράδυ 🌙", isDj: false },
-            { name: "Marios", text: "Στείλτε καμιά αφιέρωση στην παρέα! 🎤", isDj: false },
-            { name: "Sofia", text: "Πάντα με καλή μουσική και καλή διάθεση 💛", isDj: false }
         ];
 
         let msgIndex = 0;
-
-        function editFakeBotMessage(messageElement) {
-            const textElement = messageElement.querySelector('.message-content');
-            const updatedText = prompt('Διόρθωσε το fake μήνυμα:', textElement.textContent);
-            if (updatedText !== null && updatedText.trim()) textElement.textContent = updatedText.trim();
-        }
-
-        function deleteFakeBotMessage(messageElement) {
-            if (confirm('Να διαγραφεί αυτό το fake μήνυμα;')) messageElement.remove();
-        }
 
         function addLivePreviewMessage() {
             const container = document.getElementById('chat-box');
@@ -1569,7 +1486,6 @@ function sendCustomGif(url) {
 
             const msgData = sampleMessages[msgIndex];
             
-            const msgData = sampleMessages[Math.floor(Math.random() * sampleMessages.length)];
             const msgElement = document.createElement('div');
             msgElement.className = 'chat-msg bot-message';
             
@@ -1580,43 +1496,10 @@ function sendCustomGif(url) {
             const textSpan = document.createElement('span');
             textSpan.className = 'msg-text';
             textSpan.innerText = " " + msgData.text;
-            msgElement.className = 'message bot-message';
 
             msgElement.appendChild(authorSpan);
             msgElement.appendChild(textSpan);
-            const avatar = document.createElement('img');
-            avatar.className = 'message-avatar';
-            avatar.src = botAvatarUrl(msgData.name, msgData.isDj ? '#FFDE00' : '#3498DB');
-            avatar.alt = `${msgData.name} avatar`;
 
-            const body = document.createElement('div');
-            body.className = 'bot-message-body';
-            const header = document.createElement('div');
-            header.className = 'bot-message-header';
-            const author = document.createElement('strong');
-            author.className = msgData.isDj ? 'user-dj' : 'user-listener';
-            author.textContent = msgData.name + ':';
-
-            const actions = document.createElement('span');
-            actions.className = 'bot-message-actions';
-            const editButton = document.createElement('button');
-            editButton.type = 'button';
-            editButton.title = 'Διόρθωση fake μηνύματος';
-            editButton.innerHTML = '<i class="fas fa-edit"></i>';
-            editButton.onclick = () => editFakeBotMessage(msgElement);
-            const deleteButton = document.createElement('button');
-            deleteButton.type = 'button';
-            deleteButton.title = 'Διαγραφή fake μηνύματος';
-            deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteButton.onclick = () => deleteFakeBotMessage(msgElement);
-            actions.append(editButton, deleteButton);
-            header.append(author, actions);
-
-            const text = document.createElement('span');
-            text.className = 'message-content';
-            text.textContent = msgData.text;
-            body.append(header, text);
-            msgElement.append(avatar, body);
             container.appendChild(msgElement);
 
             // Αυτόματο scroll προς τα κάτω
@@ -1633,12 +1516,7 @@ function sendCustomGif(url) {
         document.addEventListener("DOMContentLoaded", () => {
             updateSiteStats();
             setInterval(updateSiteStats, 10000);
-            // Ένα τυχαίο fake μήνυμα ανά πέντε λεπτά, με πεντάλεπτη καθυστέρηση στην αρχή.
-            setTimeout(() => {
-                addLivePreviewMessage();
             setInterval(addLivePreviewMessage, 6000);
-                setInterval(addLivePreviewMessage, 5 * 60 * 1000);
-            }, 5 * 60 * 1000);
         });
     </script>
 
