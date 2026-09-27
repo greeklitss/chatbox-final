@@ -61,7 +61,54 @@
             text-shadow: 2px 2px 0px #FF4500;
         }
 
-        /* 📊 Μετρητές στατιστικών */
+        /* 🍄 2. CUSTOM MUSHROOM PLAYER */
+        .custom-player {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 4px 14px 4px 10px;
+            border-radius: 50px;
+            border: 2px solid var(--comic-yellow);
+            box-shadow: 0 0 10px rgba(255, 222, 0, 0.25);
+        }
+
+        .mushroom-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.8em;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0px 3px 0px #000);
+            transition: transform 0.15s ease;
+            user-select: none;
+            line-height: 1;
+        }
+
+        .mushroom-btn:hover {
+            transform: scale(1.15) rotate(-5deg);
+        }
+
+        .mushroom-btn.playing {
+            animation: mushroomPulse 1.2s infinite alternate ease-in-out;
+        }
+
+        @keyframes mushroomPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.15); }
+        }
+
+        .volume-slider {
+            width: 65px;
+            accent-color: var(--comic-yellow);
+            cursor: pointer;
+        }
+
+        /* 📊 3. ΜΕΤΡΗΤΕΣ ΣΤΑΤΙΣΤΙΚΩΝ */
         .stats-container {
             display: flex;
             align-items: center;
@@ -86,6 +133,29 @@
             color: var(--comic-yellow);
         }
 
+        /* 4. ΚΟΥΜΠΙ LOGIN */
+        .login-btn-top {
+            background: linear-gradient(180deg, #2ECC71 0%, #27AE60 100%);
+            color: #FFF; 
+            border: 2px solid #000; 
+            padding: 7px 18px; 
+            border-radius: 30px; 
+            cursor: pointer;
+            font-family: 'Fredoka', cursive, sans-serif;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-transform: uppercase;
+            white-space: nowrap;
+            box-shadow: 0 4px 0px #1e8449;
+            transition: all 0.1s ease;
+            -webkit-text-stroke: 0.5px #000;
+        }
+        
+        .login-btn-top:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0px #1e8449;
+        }
+
         /* 📐 MAIN WRAPPER (60/40 SPLIT LAYOUT) */
         .main-wrapper {
             display: flex;
@@ -105,6 +175,72 @@
             background-position: center center;
             background-color: #1a1a2e;
             position: relative;
+        }
+
+        /* 🎧 FLOATING DJ SECTION - ΧΩΡΙΣ ΚΑΨΟΥΛΑ (ΠΑΝΩ ΣΤΗΝ ΕΙΚΟΝΑ) */
+        .floating-dj-card {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: transparent;
+            padding: 0 0 10px 0;
+            border: none;
+            box-shadow: none;
+            border-bottom: 2px solid #D4AF37;
+            z-index: 99;
+            max-width: 380px;
+        }
+
+        #dj_profile, #dj_profile img {
+            width: 80px !important;
+            height: 80px !important;
+            min-width: 80px;
+            min-height: 80px;
+            border-radius: 50%;
+            border: 3px solid #D4AF37;
+            box-shadow: 0 0 20px #D4AF37;
+            object-fit: cover;
+            background-color: #1a1a1a;
+            display: block;
+        }
+
+        .dj-details {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+            max-width: 220px;
+        }
+
+        #sonic_dj { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1em !important;
+            font-weight: bold; 
+            color: #D4AF37 !important;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px #ff4400;
+        }
+
+        #sonic_title {
+            font-size: 0.85em;
+            color: #ffffff;
+            white-space: nowrap;
+            display: inline-block;
+            padding-left: 100%;
+            animation: marqueeTitle 12s linear infinite;
+            margin-top: 2px;
+        }
+
+        #sonic_title:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes marqueeTitle {
+            0%   { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
         }
 
         /* 💬 40% ΔΕΞΙΑ: CHATBOX PANEL */
@@ -330,346 +466,8 @@
             border-bottom: 3px solid var(--gold);
             z-index: 1000;
             min-height: 125px;
-        } to { opacity: 1; text-shadow: 0 0 20px var(--fire), 2px 2px 5px #000; } }
-
-        /* CHAT WINDOW & MESSAGES (TRANSPARENT) */
-        /* Μικρά και ομοιόμορφα avatar στο κείμενο */
-.message-avatar {
-    width: 30px !important;
-    height: 30px !important;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 8px;
-    vertical-align: middle;
-    border: 1px solid var(--gold);
-}
-
-/* Στυλ για την ώρα και ημερομηνία */
-.msg-time {
-    font-size: 0.7em;
-    color: #888;
-    margin-left: 10px;
-    white-space: pre; /* Για να κρατάει τα κενά που ζήτησες */
-}
-
-/* Για να μην σπάει το chat από μεγάλες λέξεις */
-.message-content {
-    word-break: break-word;
-}
-
-
-
-.main { 
-    display: flex !important; 
-    flex-direction: row !important; /* Αναγκάζει Sidebar και Chat να είναι στην ίδια ευθεία */
-    width: 100%; 
-    max-width: 100vw;
-    height: 800px; /* Ή όσο ύψος θέλεις */
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
-#chat-window { 
-    flex: 1; /* Παίρνει όλο τον ελεύθερο χώρο αριστερά */
-    display: flex; 
-    flex-direction: column; 
-    height: 100%;
-}
-#chat-box {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    background-image: none !important;
-    background-size: cover !important;
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-    background-color: rgba(5, 10, 20, 0.5) !important;
-    border: 1px solid rgba(212, 175, 55, 0.3);
-    position: relative;
-    z-index: 2;
-}
-        .message { 
-            background: transparent !important; /* Εξαφάνιση γκρι μπάρας */
-            border: none !important; 
-            padding: 8px 0px; 
-            margin-bottom: 5px;
-            color: white !important;
-            /* Περίγραμμα στα γράμματα για να φαίνονται παντού */
-            text-shadow: 2px 2px 4px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
-            font-size: 1.1em;
         }
-
-        /* INPUT AREA */
-        .input-area { 
-            background: rgba(0, 0, 0, 0.85); 
-            padding: 15px; 
-            border-top: 2px solid var(--gold);
-            z-index: 10;
-        }
-        
-
-        .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
-        
-        #chat-input { 
-            flex: 1; 
-            padding: 15px; 
-            border-radius: 15px; 
-            border: 2px solid var(--gold); 
-            background: #111; 
-            color: white; 
-            outline: none; 
-            min-height: 45px; 
-            font-size: 1.2em; 
-        }
-
-        .tool-btn { background: rgba(212,175,55,0.1); border: 1px solid var(--gold); color: white; padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; }
-        .tool-btn:hover { background: var(--gold); color: black; transform: scale(1.1); }
-        .emoji-btn { font-size: 1.4em; }
-
-        /* SIDEBAR */
-.sidebar { 
-    width: 200px !important; 
-    min-width: 200px;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.85); 
-    border-left: 2px solid var(--gold); 
-    display: flex;
-    flex-direction: column;
-}
-
-#gif-picker {
-    z-index: 9999 !important;
-    display: none; /* Αρχικά κρυφό */
-    flex-direction: column;
-}
-
-#gif-results {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr); /* 2 στήλες */
-    gap: 10px;
-    padding: 10px;
-}
-
-.emoji-picker {
-    z-index: 99999 !important;
-}
-
-#gif-results img {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: transform 0.2s;
-}
-
-#gif-results img:hover {
-    transform: scale(1.05);
-    border: 1px solid var(--gold);
-}
-
-        #user-list-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-        }
-
-        /* SCROLLBAR */
-        #chat-box::-webkit-scrollbar { width: 6px; }
-        #chat-box::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
-        #chat-box::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-
-        /* MODAL */
-        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); }
-        .modal-content { background: #111; margin: 10% auto; padding: 30px; border: 2px solid var(--gold); width: 320px; border-radius: 25px; color: white; box-shadow: 0 0 30px var(--gold); }
-        
-        input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--gold); background: #222; color: white; }
-
-/* Ρυθμίσεις για τα emojis μέσα στο παράθυρο επιλογής (Picker) */
-.emoji-item {
-    font-size: 32px !important; /* Μεγαλώνει τα προσωπάκια για να τα βλέπεις καλά */
-    cursor: pointer;
-    padding: 5px;
-    display: inline-block;
-    transition: transform 0.2s;
-}
-
-.emoji-item:hover {
-    transform: scale(1.2); /* Μεγαλώνει λίγο όταν πας το ποντίκι πάνω του */
-}
-
-/* --- ΡΥΘΜΙΣΕΙΣ ΓΙΑ ΕΙΚΟΝΕΣ ΚΑΙ EMOJIS --- */
-
-/* 1. Γενική ρύθμιση για όλες τις εικόνες στα μηνύματα */
-.message-content img {
-    vertical-align: middle;
-    object-fit: contain;
-    border: none !important;
-    box-shadow: none !important;
-    margin: 2px;
-}
-
-/* 2. Φατσούλες-Εικόνες και μικρά GIFs από το μενού (48px) */
-/* Η JavaScript προσθέτει την κλάση .emoji σε αυτά */
-.message-content img.emoji {
-    width: 48px !important;
-    height: 48px !important;
-    display: inline-block !important;
-    vertical-align: middle;
-}
-
-/* 3. Φατσούλες-Κείμενο (π.χ. 😀, 🔥) */
-/* Η JavaScript προσθέτει την κλάση .emoji-text σε αυτά */
-.message-content span.emoji-text {
-    font-size: 42px !important;
-    line-height: normal;
-    display: inline-block;
-    vertical-align: middle;
-    margin: 0 2px;
-}
-
-/* 4. Μεγάλες Εικόνες (Αντιγραφή, Επικόλληση, Links) */
-/* Στοχεύουμε εικόνες που ΔΕΝ είναι emojis */
-.message-content img:not(.emoji) {
-    width: auto !important;
-    height: auto !important;
-    max-width: 280px !important; /* Το όριο για να μην ξεχειλώνουν */
-    max-height: 280px !important;
-    display: block; /* Πηγαίνουν σε δική τους γραμμή */
-    margin: 10px 0;
-    border-radius: 10px;
-    border: none !important;
-}
-
-/* 5. Το κανονικό κείμενο των μηνυμάτων */
-.message-content {
-    font-size: 16px !important; /* Επαναφορά γραμμάτων στο κανονικό */
-    line-height: 1.5;
-    word-wrap: break-word;
-}
-
-/* 6. Ρύθμιση για το Picker (emoticons.html) */
-.emoji-item {
-    font-size: 32px; /* Για να τα βλέπεις μεγάλα στο μενού επιλογής */
-    cursor: pointer;
-    padding: 5px;
-    display: inline-block;
-}
-
-.emoji-item img {
-    width: 40px !important;
-    height: 40px !important;
-    vertical-align: middle;
-    border: none !important;
-}
-     
-body{height:100vh;min-height:0;overflow:hidden;background:#1a1a2e}.main-wrapper{flex:1;min-height:0;height:calc(100vh - 60px)}.hero-left{width:60%;flex:0 0 60%}.chat-right{width:40%;flex:1 1 40%;min-width:0;padding:0;justify-content:flex-start;overflow:hidden}.chat-controls{flex:0 0 auto;min-height:0;padding:8px 12px;border-bottom:2px solid var(--gold)}.chat-right .main{width:100%;max-width:none;height:auto;min-height:0;flex:1;overflow:hidden}.chat-right #chat-window{min-width:0}.chat-right #chat-box{padding:12px}.chat-right .sidebar{width:125px!important;min-width:125px}.chat-right .input-area{padding:9px}.chat-right #chat-input{min-height:34px;padding:9px;font-size:1em}.bot-message{padding:5px 0!important}
-@media(max-width:768px){body{height:auto;min-height:100vh;overflow-y:auto}.main-wrapper{height:auto;min-height:calc(100vh - 60px);overflow:visible}.hero-left{width:100%;flex:0 0 220px;height:220px}.chat-right{width:100%;flex:1 0 auto;min-height:600px;overflow:visible}.chat-right .main{height:600px;flex:none}.chat-right .sidebar{width:100px!important;min-width:100px}}
-
-
-/* VIP ΧΡΥΣΟΣ ΚΑΠΝΟΣ - ΒΕΛΤΙΩΜΕΝΟΣ */
-.mist-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    pointer-events: none;
-    overflow: hidden;
-    background: transparent;
-}
-
-.mist-layer {
-    position: absolute;
-    width: 200%;
-    height: 200%;
-    /* Αυξήσαμε το 0.08 σε 0.2 για να φαίνεται περισσότερο */
-    background: radial-gradient(circle, rgba(212, 175, 55, 0.4) 0%, transparent 65%);
-    filter: blur(40px);
-    animation: mistFloat 15s ease-in-out infinite;
-}
-
-/* Προσθήκη δεύτερου στρώματος για βάθος */
-.mist-layer::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
-    animation: mistFloat 45s ease-in-out infinite reverse;
-}
-
-@keyframes mistFloat {
-    0% { transform: translate(-20%, -20%) rotate(0deg); }
-    50% { transform: translate(10%, 10%) rotate(5deg) scale(1.2); }
-    100% { transform: translate(-20%, -20%) rotate(0deg); }
-}
-        :root {
-            --gold: #D4AF37;
-            --fire: #ff4400;
-            --red: #ff4444;
-        }
-
-        body {
-    background-color: #050a14;
-    margin: 0;
-    /* ΑΛΛΑΓΗ: Βγάζουμε το height: 100vh και το overflow: hidden */
-    min-height: 100vh; 
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto; /* Επιτρέπει το σκρολάρισμα προς τα κάτω */
-    overflow-x: hidden;
-    font-family: 'Roboto', sans-serif;
-}
-
-
-        /* HEADER */
-        .header {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid var(--gold);
-            z-index: 1000;
-            min-height: 125px;
-        }
-
-        #sonic_dj { 
-            font-family: 'Orbitron';
-            font-size: 1.5em !important;
-            font-weight: bold; 
-            color: var(--gold) !important;
-            text-transform: uppercase;
-            text-shadow: 0 0 10px var(--fire), 0 0 20px var(--fire);
-            animation: text-flicker 0.1s infinite alternate;
-        }
-
-        @keyframes text-flicker { from { opacity: 0.8; } to { opacity: 1; text-shadow: 0 0 20px var(--fire), 2px 2px 5px #000; } }
-
-        .player-frame { 
-            display: flex; 
-            align-items: center; 
-            gap: 15px; 
-            background: rgba(0,0,0,0.8); 
-            padding: 10px 25px; 
-            border-radius: 60px; 
-            border: 2px solid var(--gold); 
-            position: relative; 
-            box-shadow: 0 0 25px var(--fire); 
-        }
-
-        .flame-wrapper { position: absolute; bottom: -8px; width: 100%; height: 15px; display: flex; justify-content: center; }
-        .flame { width: 18px; height: 18px; background: var(--fire); border-radius: 50% 0 50% 50%; transform: rotate(-45deg); animation: burn 0.4s infinite alternate; filter: blur(1px); opacity: 0.8; margin: 0 2px; }
-        @keyframes burn { from { transform: rotate(-45deg) scale(1); } to { transform: rotate(-45deg) scale(1.4) translateY(-8px); } }
-
-        #dj_profile img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--gold); box-shadow: 0 0 20px var(--gold); object-fit: cover; }
-
-        /* CHAT WINDOW & MESSAGES (TRANSPARENT) */
+/* CHAT WINDOW & MESSAGES (TRANSPARENT) */
         /* Μικρά και ομοιόμορφα avatar στο κείμενο */
 .message-avatar {
     width: 30px !important;
@@ -901,18 +699,115 @@ body{height:100vh;min-height:0;overflow:hidden;background:#1a1a2e}.main-wrapper{
     border: none !important;
 }
      
-.custom-player{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);padding:4px 14px 4px 10px;border-radius:50px;border:2px solid var(--comic-yellow);box-shadow:0 0 10px rgba(255,222,0,.25)}.mushroom-btn{background:none;border:none;cursor:pointer;font-size:1.8em;padding:0;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 0 #000);transition:transform .15s;line-height:1}.mushroom-btn:hover{transform:scale(1.15) rotate(-5deg)}.mushroom-btn.playing{animation:mushroomPulse 1.2s infinite alternate ease-in-out}@keyframes mushroomPulse{to{transform:scale(1.15)}}.volume-slider{width:65px;accent-color:var(--comic-yellow);cursor:pointer}.floating-dj-card{position:absolute;bottom:25px;left:25px;display:flex;align-items:center;gap:15px;padding:0 0 10px;border-bottom:2px solid #D4AF37;z-index:99;max-width:380px}#dj_profile,#dj_profile img{width:80px!important;height:80px!important;min-width:80px;min-height:80px;border-radius:50%;border:3px solid #D4AF37;box-shadow:0 0 20px #D4AF37;object-fit:cover;background:#1a1a1a;display:block}.dj-details{display:flex;flex-direction:column;justify-content:center;overflow:hidden;max-width:220px}#sonic_dj{font-family:'Orbitron',sans-serif;font-size:1.1em!important;font-weight:bold;color:#D4AF37!important;text-transform:uppercase;text-shadow:0 0 10px #ff4400}#sonic_title{font-size:.85em;color:#fff;white-space:nowrap;display:inline-block;padding-left:100%;animation:marqueeTitle 12s linear infinite;margin-top:2px}#sonic_title:hover{animation-play-state:paused}@keyframes marqueeTitle{to{transform:translate(-100%,0)}}@media(max-width:768px){.custom-player{padding:2px 8px;gap:6px}.volume-slider{width:45px}.floating-dj-card{bottom:10px;left:50%;transform:translateX(-50%);width:90%;max-width:320px;justify-content:center}}
-body{height:100vh;min-height:0;overflow:hidden;background:#1a1a2e}.main-wrapper{flex:1;min-height:0;height:calc(100vh - 60px)}.hero-left{width:60%;flex:0 0 60%}.chat-right{width:40%;flex:1 1 40%;min-width:0;padding:0;justify-content:flex-start;overflow:hidden}.chat-controls{flex:0 0 auto;min-height:0;padding:8px 12px;border-bottom:2px solid var(--gold)}.chat-right .main{width:100%;max-width:none;height:auto;min-height:0;flex:1;overflow:hidden}.chat-right #chat-window{min-width:0}.chat-right .sidebar{width:125px!important;min-width:125px}.chat-right .input-area{padding:9px}.chat-right #chat-input{min-height:34px;padding:9px;font-size:1em}@media(max-width:768px){body{height:auto;min-height:100vh;overflow-y:auto}.main-wrapper{height:auto;min-height:calc(100vh - 60px);overflow:visible}.hero-left{width:100%;flex:0 0 260px;height:260px}.floating-dj-card{bottom:10px;left:50%;transform:translateX(-50%);width:90%;max-width:320px;justify-content:center}.chat-right{width:100%;flex:1 0 auto;min-height:600px;overflow:visible}.chat-right .main{height:600px;flex:none}.chat-right .sidebar{width:110px!important;min-width:110px}}
+
+/* Integrated layout: preserve the index's left/right composition and give chat equal room. */
+html,body{height:100%;min-height:100%;}
+body{height:100vh;min-height:0;overflow:hidden;display:flex;flex-direction:column;background:#1a1a2e;}
+.top-navbar{flex:0 0 60px;}
+.main-wrapper{display:flex;flex:1;min-height:0;width:100%;height:calc(100vh - 60px);overflow:hidden;}
+.hero-left{width:50%;flex:0 0 50%;height:100%;}
+.chat-right{width:50%;flex:1 1 50%;min-width:0;height:100%;padding:0;justify-content:flex-start;overflow:hidden;border-left:2px solid #D4AF37;}
+.chat-controls{flex:0 0 auto;min-height:0;height:auto;padding:7px 12px;border-bottom:2px solid var(--gold);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.chat-controls .chat-controls-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.chat-controls .chat-title{font-family:'Orbitron',sans-serif;color:var(--gold);font-weight:bold;white-space:nowrap;}
+.chat-right .main{display:flex!important;flex-direction:row!important;width:100%;max-width:none;height:auto;min-height:0;flex:1;overflow:hidden;margin:0;padding:0;}
+.chat-right #chat-window{flex:1;min-width:0;height:100%;}
+.chat-right #chat-box{min-height:0;padding:14px;}
+.chat-right .sidebar{width:220px!important;min-width:220px;height:100%;}
+.chat-right .input-area{padding:10px;}
+.chat-right #chat-input{min-height:42px;padding:10px;font-size:1em;}
+.chat-right .style-bar{margin:8px 0!important;}
+.chat-right .mist-container{z-index:1;}
+@media(max-width:1100px) and (min-width:769px){.chat-right .sidebar{width:155px!important;min-width:155px;}.stats-container{display:none;}}
+@media(max-width:768px){
+ html,body{height:auto;min-height:100%;}
+ body{height:auto;min-height:100vh;overflow-y:auto;}
+ .top-navbar{flex:0 0 auto;min-height:60px;height:auto;}
+ .main-wrapper{height:auto;min-height:calc(100vh - 60px);overflow:visible;flex-direction:column;}
+ .hero-left{width:100%;flex:0 0 260px;height:260px;}
+ .floating-dj-card{bottom:10px;left:50%;transform:translateX(-50%);width:90%;max-width:320px;justify-content:center;}
+ .chat-right{width:100%;flex:1 0 auto;min-height:720px;height:auto;overflow:visible;border-left:0;border-top:2px solid #D4AF37;}
+ .chat-right .chat-controls{min-height:54px;}
+ .chat-right .main{height:660px;min-height:660px;flex:none;}
+ .chat-right .sidebar{width:105px!important;min-width:105px;}
+ .chat-right .input-area{padding:8px;}
+ .chat-right #chat-input{min-height:38px;padding:8px;}
+}
 
 </style>
 </head>
 <body>
-<div class="top-navbar"><div class="brand-title">📻 RADIOPAREA</div><div class="custom-player"><button id="playPauseBtn" class="mushroom-btn" onclick="togglePlay()" title="Play / Pause">🍄</button><div style="display:flex;flex-direction:column;gap:2px"><span id="playerStateText" style="color:var(--comic-yellow);font-size:.7em;font-weight:bold;text-shadow:1px 1px 2px #000">CLICK TO PLAY</span><div style="display:flex;align-items:center;gap:4px"><span style="font-size:.8em">🔊</span><input type="range" id="volumeControl" class="volume-slider" min="0" max="1" step="0.05" value="0.8" oninput="changeVolume(this.value)"></div></div><audio id="radioStream" src="https://or.mysonicserver.com/8050/stream" preload="none"></audio></div><div class="stats-container"><div class="stat-item" title="Συνδεδεμένοι Χρήστες"><span style="color:#2ECC71">🟢</span><span id="online_users_count" class="stat-value">0</span></div><span>|</span><div class="stat-item" title="Επισκέπτες Σελίδας"><span>👁️</span><span id="page_visitors_count" class="stat-value">0</span></div></div></div>
+    <div class="top-navbar">
+        
+        <!-- 1. ΤΙΤΛΟΣ -->
+        <div class="brand-title">
+            📻 RADIOPAREA
+        </div>
+
+        <!-- 🍄 2. CUSTOM MUSHROOM PLAYER -->
+        <div class="custom-player">
+            <button id="playPauseBtn" class="mushroom-btn" onclick="togglePlay()" title="Play / Pause">
+                🍄
+            </button>
+            
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+                <span id="playerStateText" style="color: var(--comic-yellow); font-size: 0.7em; font-weight: bold; text-shadow: 1px 1px 2px #000;">
+                    CLICK TO PLAY
+                </span>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 0.8em;">🔊</span>
+                    <input type="range" id="volumeControl" class="volume-slider" min="0" max="1" step="0.05" value="0.8" oninput="changeVolume(this.value)">
+                </div>
+            </div>
+
+            <!-- STREAM AUDIO -->
+            <audio id="radioStream" src="https://or.mysonicserver.com/8050/stream" preload="none"></audio>
+        </div>
+
+        <!-- 📊 3. ΜΕΤΡΗΤΕΣ -->
+        <div class="stats-container">
+            <div class="stat-item" title="Συνδεδεμένοι Χρήστες">
+                <span style="color: #2ECC71;">🟢</span>
+                <span id="online_users_count" class="stat-value">0</span>
+            </div>
+            <span>|</span>
+            <div class="stat-item" title="Επισκέπτες Σελίδας">
+                <span>👁️</span>
+                <span id="page_visitors_count" class="stat-value">0</span>
+            </div>
+        </div>
+</div>
+
+
 <div class="main-wrapper">
-<div class="hero-left"><div class="floating-dj-card"><div id="dj_profile"></div><div class="dj-details"><div id="sonic_dj">DJ ON AIR</div><div id="sonic_title">Radio Parea Live</div><div style="color:#D4AF37;font-size:.8em;margin-top:5px;font-weight:bold;font-family:'Orbitron',sans-serif">ΑΚΡΟΑΤΕΣ: <span id="sonic_listeners">0</span></div></div></div></div>
-<section class="chat-right">
+        <div class="hero-left">
+            <!-- 🎧 FLOATING DJ SECTION -->
+            <div class="floating-dj-card">
+                <div id="dj_profile"></div>
+                    
+                <div class="dj-details">
+                    <div id="sonic_dj">DJ ON AIR</div>
+                    <div id="sonic_title">Radio Parea Live</div>
+                    <div style="color:#D4AF37; font-size:0.8em; margin-top:5px; font-weight:bold; font-family: 'Orbitron', sans-serif;">
+                        ΑΚΡΟΑΤΕΣ: <span id="sonic_listeners">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+<div class="chat-right">
 <div class="mist-container"><div class="mist-layer"></div></div>
-<div class="header chat-controls"><div style="display:flex;flex-direction:column;gap:8px;">{% if current_user.role == 'owner' %}<button onclick="clearChat()" style="background:#ff4444;color:white;border:none;padding:10px;cursor:pointer;border-radius:5px;"><i class="fas fa-trash"></i> ΣΚΟΥΠΑ</button>{% endif %}<button onclick="document.getElementById('setModal').style.display='block'" class="tool-btn"><i class="fas fa-user-circle"></i> ΠΡΟΦΙΛ</button><a href="{{ url_for('logout') }}" class="tool-btn" style="color:var(--red);border-color:var(--red);text-decoration:none;text-align:center;"><i class="fas fa-power-off"></i> ΕΞΟΔΟΣ</a></div></div>
+<div class="header chat-controls">
+    <div class="chat-title">💬 RadioParea Live Chat <span class="live-badge">● LIVE</span></div>
+            <div class="chat-controls-actions">
+            {% if current_user.role == 'owner' %}
+            <button onclick="clearChat()" style="background:#ff4444; color:white; border:none; padding:10px; cursor:pointer; border-radius:5px;">
+                <i class="fas fa-trash"></i> ΣΚΟΥΠΑ
+            </button>
+            {% endif %}
+            <button onclick="document.getElementById('setModal').style.display='block'" class="tool-btn"><i class="fas fa-user-circle"></i> ΠΡΟΦΙΛ</button>
+            <a href="{{ url_for('logout') }}" class="tool-btn" style="color:var(--red); border-color:var(--red); text-decoration:none; text-align:center;"><i class="fas fa-power-off"></i> ΕΞΟΔΟΣ</a>
+        </div>
+</div>
 <div class="main">
         <div id="chat-window"> 
             
@@ -1098,7 +993,7 @@ body{height:100vh;min-height:0;overflow:hidden;background:#1a1a2e}.main-wrapper{
         </div>
     </div>
 </div>
-</section>
+</div>
 </div>
 <div id="setModal" class="modal" style="{% if not current_user.has_setup_profile %} display:block; backdrop-filter: blur(15px); {% endif %}">
     <div class="modal-content" style="border: 2px solid var(--fire); box-shadow: 0 0 30px var(--fire);">
@@ -1495,16 +1390,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (e) => {
         const gp = document.getElementById('gif-picker');
         const ep = document.getElementById('custom-emoji-picker');
-        const progModal = document.getElementById('progModal');
 
         if (gp && gp.style.display === 'flex' && !gp.contains(e.target) && !e.target.classList.contains('ignore-emoji')) {
             gp.style.display = 'none';
         }
         if (ep && ep.style.display === 'block' && !ep.contains(e.target) && e.target.id !== 'emoji-trigger') {
             ep.style.display = 'none';
-        }
-        if (e.target === progModal) {
-            progModal.style.display = "none";
         }
     });
 
@@ -1515,6 +1406,7 @@ function sendCustomGif(url) {
     document.getElementById('chat-input').focus();
 }
 </script>
+
 <div id="progModal" style="display:none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center;">
     <div style="background: #111; border: 2px solid var(--gold); width: 90%; max-width: 900px; padding: 20px; border-radius: 15px; position: relative;">
         <span onclick="document.getElementById('progModal').style.display='none'" style="position: absolute; right: 20px; top: 10px; color: var(--gold); font-size: 35px; font-weight: bold; cursor: pointer;">&times;</span>
@@ -1530,7 +1422,101 @@ function sendCustomGif(url) {
     </div>
 </div>
 
-<script>const audio=document.getElementById('radioStream'),playBtn=document.getElementById('playPauseBtn'),stateText=document.getElementById('playerStateText');function togglePlay(){if(audio.paused){audio.play();playBtn.classList.add('playing');stateText.innerText='ON AIR 🎶';stateText.style.color='#2ECC71'}else{audio.pause();playBtn.classList.remove('playing');stateText.innerText='PAUSED 🍄';stateText.style.color='#FFDE00'}}function changeVolume(v){audio.volume=v}function updateSiteStats(){fetch('/api/stats').then(r=>r.ok?r.json():null).then(d=>{if(!d)return;if(d.online_users!==undefined)document.getElementById('online_users_count').textContent=d.online_users;if(d.page_visitors!==undefined)document.getElementById('page_visitors_count').textContent=d.page_visitors}).catch(()=>{})}document.addEventListener('DOMContentLoaded',()=>{updateSiteStats();setInterval(updateSiteStats,10000)})</script><script id="sonic_js" data-port="8050" src="https://or.mysonicserver.com/cp/widgets.js?v=254"></script>
-<script>const sampleMessages=[{name:"Giannis_K",text:"Τέλειο το κομμάτι! 🎶",isDj:false},{name:"🎧 DJ MaBaker",text:"Ευχαριστώ παιδιά! Συνεχίζουμε δυνατά!",isDj:true},{name:"Anna_Florina",text:"Καλησπέρα στην όμορφη παρέα! ❤️",isDj:false},{name:"Kostas_DJ",text:"Χαιρετίσματα σε όλους τους ακροατές!",isDj:false},{name:"Eleni_92",text:"Βάλτε μας και λίγο χορευτικό! 💃",isDj:false}];let botMessageIndex=0;function addLivePreviewMessage(){const box=document.getElementById('chat-box');if(!box)return;const m=sampleMessages[botMessageIndex],row=document.createElement('div');row.className='message bot-message';row.innerHTML=`<div style="display:flex;flex-direction:column"><strong style="color:${m.isDj?'#FFDE00':'#3498DB'}">${m.name}:</strong><span>${m.text}</span></div>`;box.appendChild(row);box.scrollTop=box.scrollHeight;botMessageIndex=(botMessageIndex+1)%sampleMessages.length}document.addEventListener('DOMContentLoaded',()=>setInterval(addLivePreviewMessage,6000))</script>
+    <!-- JS ΛΕΙΤΟΥΡΓΙΑΣ PLAYER, CHAT PREVIEW, MODAL & STATS -->
+    <script>
+        const audio = document.getElementById('radioStream');
+        const playBtn = document.getElementById('playPauseBtn');
+        const stateText = document.getElementById('playerStateText');
+
+        function togglePlay() {
+            if (audio.paused) {
+                audio.play();
+                playBtn.classList.add('playing');
+                stateText.innerText = "ON AIR 🎶";
+                stateText.style.color = "#2ECC71";
+            } else {
+                audio.pause();
+                playBtn.classList.remove('playing');
+                stateText.innerText = "PAUSED 🍄";
+                stateText.style.color = "#FFDE00";
+            }
+        }
+
+        function changeVolume(val) {
+            audio.volume = val;
+        }
+
+        function updateSiteStats() {
+            fetch('/api/stats')
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response error');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.online_users !== undefined) {
+                        document.getElementById('online_users_count').innerText = data.online_users;
+                    }
+                    if (data.page_visitors !== undefined) {
+                        document.getElementById('page_visitors_count').innerText = data.page_visitors;
+                    }
+                })
+                .catch(err => {
+                    console.log("Αναμονή για σύνδεση με το Flask /api/stats endpoint");
+                });
+        }
+
+        /* 💬 LIVE CHAT PREVIEW SIMULATION */
+        const sampleMessages = [
+            { name: "Giannis_K", text: "Τέλειο το κομμάτι! 🎶", isDj: false },
+            { name: "🎧 DJ MaBaker", text: "Ευχαριστώ παιδιά! Συνεχίζουμε δυνατά!", isDj: true },
+            { name: "Anna_Florina", text: "Καλησπέρα στην όμορφη παρέα! ❤️", isDj: false },
+            { name: "Kostas_DJ", text: "Χαιρετίσματα σε όλους τους ακροατές!", isDj: false },
+            { name: "Eleni_92", text: "Βάλτε μας και λίγο χορευτικό! 💃", isDj: false }
+        ];
+
+        let msgIndex = 0;
+
+        function addLivePreviewMessage() {
+            const container = document.getElementById('chat-box');
+            if (!container) return;
+
+            const msgData = sampleMessages[msgIndex];
+            
+            const msgElement = document.createElement('div');
+            msgElement.className = 'chat-msg bot-message';
+            
+            const authorSpan = document.createElement('span');
+            authorSpan.className = msgData.isDj ? 'user-dj' : 'user-listener';
+            authorSpan.innerText = msgData.name + ":";
+            
+            const textSpan = document.createElement('span');
+            textSpan.className = 'msg-text';
+            textSpan.innerText = " " + msgData.text;
+
+            msgElement.appendChild(authorSpan);
+            msgElement.appendChild(textSpan);
+
+            container.appendChild(msgElement);
+
+            // Αυτόματο scroll προς τα κάτω
+            container.scrollTop = container.scrollHeight;
+
+            // Κρατάμε μέχρι 10 μηνύματα στην οθόνη
+            if (container.querySelectorAll('.bot-message').length > 10) {
+                container.querySelector('.bot-message')?.remove();
+            }
+
+            msgIndex = (msgIndex + 1) % sampleMessages.length;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateSiteStats();
+            setInterval(updateSiteStats, 10000);
+            setInterval(addLivePreviewMessage, 6000);
+        });
+    </script>
+
+
+    <script id="sonic_js" data-port="8050" src="https://or.mysonicserver.com/cp/widgets.js?v=254"></script>
 </body>
 </html>
