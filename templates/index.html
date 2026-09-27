@@ -39,7 +39,7 @@
             background-color: #1a1a2e;
         }
 
-        /* 🚀 TOP NAVBAR BAR (Λεπτή & Διακριτική) */
+        /* 🚀 TOP NAVBAR BAR */
         .top-navbar {
             width: 100%;
             background: rgba(0, 0, 0, 0.75);
@@ -163,63 +163,64 @@
             box-shadow: 0 6px 0px #1e8449;
         }
 
-/* 🎧 FLOATING DJ CARD (INDEX) - MEGA SIZE */
-.floating-dj-card {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    background: rgba(0, 0, 0, 0.85);
-    padding: 12px 22px;
-    border-radius: 60px;
-    border: 2px solid #D4AF37;
-    box-shadow: 0 0 25px rgba(212, 175, 55, 0.5);
-    z-index: 999;
-}
+        /* 🎧 FLOATING DJ CARD (INDEX) */
+        .floating-dj-card {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 12px 22px;
+            border-radius: 60px;
+            border: 2px solid #D4AF37;
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.5);
+            z-index: 999;
+        }
 
-/* Μεγαλώσαμε τον κύκλο στα 85px */
-#sonic_dj_img { 
-    width: 85px !important; 
-    height: 85px !important; 
-    min-width: 85px;
-    min-height: 85px;
-    border-radius: 50%; 
-    border: 3px solid #D4AF37; 
-    box-shadow: 0 0 20px #D4AF37; 
-    object-fit: cover; 
-    background-color: #1a1a1a;
-}
+        /* Στυλ για το DJ Profile Image από το SonicPanel */
+        #dj_profile, #dj_profile img {
+            width: 85px !important;
+            height: 85px !important;
+            min-width: 85px;
+            min-height: 85px;
+            border-radius: 50%;
+            border: 3px solid #D4AF37;
+            box-shadow: 0 0 20px #D4AF37;
+            object-fit: cover;
+            background-color: #1a1a1a;
+            display: block;
+        }
 
-.dj-details {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
+        .dj-details {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
 
-#sonic_dj { 
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.2em !important;
-    font-weight: bold; 
-    color: #D4AF37 !important;
-    text-transform: uppercase;
-    text-shadow: 0 0 10px #ff4400;
-}
+        #sonic_dj { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2em !important;
+            font-weight: bold; 
+            color: #D4AF37 !important;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px #ff4400;
+        }
 
-#sonic_title {
-    font-size: 0.85em;
-    color: #ffffff;
-    max-width: 200px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 2px;
-}
-/* ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ BACKGROUND */
-.center-hero-space {
-    flex: 1;
-}
+        #sonic_title {
+            font-size: 0.85em;
+            color: #ffffff;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .center-hero-space {
+            flex: 1;
+        }
 
         @media (max-width: 768px) {
             .stats-container {
@@ -266,13 +267,8 @@
             <audio id="radioStream" src="https://or.mysonicserver.com/8050/stream" preload="none"></audio>
         </div>
 
-        <!-- 📊 3. ΜΕΤΡΗΤΕΣ (Ακροατές / Συνδεδεμένοι / Επισκέπτες) -->
+        <!-- 📊 3. ΜΕΤΡΗΤΕΣ (Συνδεδεμένοι / Επισκέπτες) -->
         <div class="stats-container">
-            <div class="stat-item" title="Ακροατές Ραδιοφώνου">
-                <span>🎧</span>
-                <span id="sonic_listeners" class="stat-value">0</span>
-            </div>
-            <span>|</span>
             <div class="stat-item" title="Συνδεδεμένοι Χρήστες">
                 <span style="color: #2ECC71;">🟢</span>
                 <span id="online_users_count" class="stat-value">0</span>
@@ -289,26 +285,41 @@
 
     </div>
 
-  <!-- 🎧 FLOATING DJ CARD (INDEX) -->
-<div class="floating-dj-card">
-    <!-- Η εικόνα με αυτόματο fallback σε περίπτωση που η Sonic επιστρέψει μαύρο/κενό -->
-    <img id="sonic_dj_img" 
-         src="https://or.mysonicserver.com/cp/widgets/player/single/default_dj.png" 
-         onerror="this.src='https://or.mysonicserver.com/cp/widgets/player/single/default_dj.png';" 
-         alt="DJ Photo">
-         
-    <div class="dj-details">
-        <div id="sonic_dj">DJ ON AIR</div>
-        <div id="sonic_title">Radio Parea Live</div>
-        <div style="color:#D4AF37; font-size:0.8em; margin-top:5px; font-weight:bold; font-family: 'Orbitron', sans-serif;">
-            ΑΚΡΟΑΤΕΣ: <span id="sonic_listeners">0</span>
+    <!-- 🎧 FLOATING DJ CARD WITH SONICPANEL METADATA -->
+    <div class="floating-dj-card">
+        <div id="dj_profile"></div>
+            
+        <div class="dj-details">
+            <div id="sonic_dj">DJ ON AIR</div>
+            <div id="sonic_title">Radio Parea Live</div>
+            <div style="color:#D4AF37; font-size:0.8em; margin-top:5px; font-weight:bold; font-family: 'Orbitron', sans-serif;">
+                ΑΚΡΟΑΤΕΣ: <span id="sonic_listeners">0</span>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- WIDGET SCRIPT SONICPANEL -->
-<script id="sonic_js" data-port="8050" src="https://or.mysonicserver.com/cp/widgets.js?v=254"></script>    <!-- 🖼️ ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ BACKGROUND -->
+    <!-- 🖼️ ΕΛΕΥΘΕΡΟΣ ΧΩΡΟΣ ΓΙΑ ΤΗΝ ΕΙΚΟΝΑ BACKGROUND -->
     <div class="center-hero-space"></div>
+
+    <!-- MODAL LOGIN -->
+    <div id="loginModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter: blur(5px);">
+        <div style="background:#1a1a2e; margin:5% auto; padding:25px; border:2px solid #F1C40F; width:320px; border-radius:15px; text-align:center; position:relative; box-shadow: 0 0 20px #F1C40F;">
+            <span onclick="closeLoginModal()" style="position:absolute; right:15px; top:10px; cursor:pointer; color:#fff; font-size:28px;">&times;</span>
+            <h2 style="font-family:'Orbitron'; color:#F1C40F; margin-bottom:20px;">ΕΙΣΟΔΟΣ</h2>
+            
+            <button onclick="loginWithGoogle()" style="background:#db4437; color:white; border:none; padding:12px; width:100%; border-radius:5px; cursor:pointer; font-weight:bold; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:10px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Logo.svg" width="18"> Σύνδεση με Google
+            </button>
+
+            <p style="color:#666; margin: 10px 0;">ή</p>
+
+            <form action="{{ url_for('login_page') }}" method="POST">
+                <input type="text" name="username" placeholder="Username" required style="width:100%; padding:10px; margin-bottom:10px; border-radius:5px; border:1px solid #333; background:#0f0f1e; color:white; box-sizing: border-box;">
+                <input type="password" name="password" placeholder="Password" required style="width:100%; padding:10px; margin-bottom:15px; border-radius:5px; border:1px solid #333; background:#0f0f1e; color:white; box-sizing: border-box;">
+                <button type="submit" class="login-btn-top" style="width:100%; border:none; cursor:pointer; padding:10px;">ΕΙΣΟΔΟΣ</button>
+            </form>
+        </div>
+    </div>
 
     <!-- JS ΛΕΙΤΟΥΡΓΙΑΣ PLAYER, MODAL & STATS -->
     <script>
@@ -334,7 +345,6 @@
             audio.volume = val;
         }
 
-        // 1. ΛΕΙΤΟΥΡΓΙΕΣ MODAL & LOGIN
         function openLoginModal() {
             document.getElementById("loginModal").style.display = "block";
         }
@@ -359,7 +369,6 @@
             }, 1000);
         }
 
-        // 2. LIVE ΕΝΗΜΕΡΩΣΗ ΜΕΤΡΗΤΩΝ ONLINE & ΕΠΙΣΚΕΠΤΩΝ
         function updateSiteStats() {
             fetch('/api/stats')
                 .then(response => {
@@ -385,24 +394,7 @@
         });
     </script>
 
-    <!-- MODAL LOGIN -->
-    <div id="loginModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter: blur(5px);">
-        <div style="background:#1a1a2e; margin:5% auto; padding:25px; border:2px solid #F1C40F; width:320px; border-radius:15px; text-align:center; position:relative; box-shadow: 0 0 20px #F1C40F;">
-            <span onclick="closeLoginModal()" style="position:absolute; right:15px; top:10px; cursor:pointer; color:#fff; font-size:28px;">&times;</span>
-            <h2 style="font-family:'Orbitron'; color:#F1C40F; margin-bottom:20px;">ΕΙΣΟΔΟΣ</h2>
-            
-            <button onclick="loginWithGoogle()" style="background:#db4437; color:white; border:none; padding:12px; width:100%; border-radius:5px; cursor:pointer; font-weight:bold; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:10px;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Logo.svg" width="18"> Σύνδεση με Google
-            </button>
-
-            <p style="color:#666; margin: 10px 0;">ή</p>
-
-            <form action="{{ url_for('login_page') }}" method="POST">
-                <input type="text" name="username" placeholder="Username" required style="width:100%; padding:10px; margin-bottom:10px; border-radius:5px; border:1px solid #333; background:#0f0f1e; color:white; box-sizing: border-box;">
-                <input type="password" name="password" placeholder="Password" required style="width:100%; padding:10px; margin-bottom:15px; border-radius:5px; border:1px solid #333; background:#0f0f1e; color:white; box-sizing: border-box;">
-                <button type="submit" class="login-btn-top" style="width:100%; border:none; cursor:pointer; padding:10px;">ΕΙΣΟΔΟΣ</button>
-            </form>
-        </div>
-    </div>
+    <!-- WIDGET SCRIPT SONICPANEL (Στο τέλος του body) -->
+    <script id="sonic_js" data-port="8050" src="https://or.mysonicserver.com/cp/widgets.js?v=254"></script>
 </body>
 </html>
