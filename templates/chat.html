@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Parea  🔥</title>
+    <title>Radio Parea</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Orbitron:wght@700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
@@ -145,7 +145,6 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    transition: all 0.5s ease-in-out; /* ΟΜΑΛΗ ΜΕΤΑΒΑΣΗ ΓΙΑ ΟΛΟ ΤΟ LAYOUT */
 }
 
 #chat-window { 
@@ -205,9 +204,7 @@
         .tool-btn:hover { background: var(--gold); color: black; transform: scale(1.1); }
         .emoji-btn { font-size: 1.4em; }
 
-
-
-/* SIDEBAR */
+        /* SIDEBAR */
 .sidebar { 
     width: 200px !important; 
     min-width: 200px;
@@ -216,31 +213,6 @@
     border-left: 2px solid var(--gold); 
     display: flex;
     flex-direction: column;
-    transition: all 0.5s ease-in-out; /* ΟΜΑΛΗ ΜΕΤΑΒΑΣΗ ΓΙΑ ΤΟ ΜΑΖΕΜΑ */
-}
-
-/* --- Η ΔΙΟΡΘΩΣΗ: EXPANDED MODE --- */
-/* Όταν ο χρήστης είναι συνδεδεμένος, η sidebar μαζεύεται διακριτικά στα 75px */
-.main.chat-expanded .sidebar {
-    width: 75px !important;
-    min-width: 75px !important;
-}
-
-/* Κρύβουμε τα κείμενα των χρηστών/στοιχείων στη sidebar για να μην στριμώχνονται */
-.main.chat-expanded .sidebar span,
-.main.chat-expanded .sidebar strong,
-.main.chat-expanded .sidebar p {
-    display: none !important;
-}
-
-/* Ευθυγραμμίζουμε στο κέντρο τα avatars ή τα εικονίδια που θα μείνουν ορατά και μαζεύουμε το μέγεθος */
-.main.chat-expanded .sidebar .user-item, 
-.main.chat-expanded .sidebar img {
-    justify-content: center !important;
-    margin: 5px auto !important;
-    width: 45px !important;  /* Ιδανικό μέγεθος για να φαίνεται όμορφο στα 75px πλάτος */
-    height: 45px !important;
-    border-radius: 50%;     /* Τα κάνει στρογγυλά για απόλυτο στυλ */
 }
 
 #gif-picker {
@@ -274,22 +246,22 @@
     border: 1px solid var(--gold);
 }
 
-#user-list-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px;
-}
+        #user-list-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
 
-/* SCROLLBAR */
-#chat-box::-webkit-scrollbar { width: 6px; }
-#chat-box::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
-#chat-box::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+        /* SCROLLBAR */
+        #chat-box::-webkit-scrollbar { width: 6px; }
+        #chat-box::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+        #chat-box::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
 
-/* MODAL */
-.modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); }
-.modal-content { background: #111; margin: 10% auto; padding: 30px; border: 2px solid var(--gold); width: 320px; border-radius: 25px; color: white; box-shadow: 0 0 30px var(--gold); }
-
-input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--gold); background: #222; color: white; }
+        /* MODAL */
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); }
+        .modal-content { background: #111; margin: 10% auto; padding: 30px; border: 2px solid var(--gold); width: 320px; border-radius: 25px; color: white; box-shadow: 0 0 30px var(--gold); }
+        
+        input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--gold); background: #222; color: white; }
 
 /* Ρυθμίσεις για τα emojis μέσα στο παράθυρο επιλογής (Picker) */
 .emoji-item {
@@ -298,11 +270,12 @@ input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10
     padding: 5px;
     display: inline-block;
     transition: transform 0.2s;
-} /* <-- ΕΔΩ ΜΠΗΚΕ Η ΑΓΚΥΛΗ ΠΟΥ ΕΛΕΙΠΕ */
+}
 
 .emoji-item:hover {
     transform: scale(1.2); /* Μεγαλώνει λίγο όταν πας το ποντίκι πάνω του */
 }
+
 /* --- ΡΥΘΜΙΣΕΙΣ ΓΙΑ ΕΙΚΟΝΕΣ ΚΑΙ EMOJIS --- */
 
 /* 1. Γενική ρύθμιση για όλες τις εικόνες στα μηνύματα */
@@ -375,6 +348,11 @@ input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10
     
     <div class="header">
         <div style="display:flex; flex-direction:column; gap:8px;">
+            {% if current_user.role == 'owner' %}
+            <button onclick="clearChat()" style="background:#ff4444; color:white; border:none; padding:10px; cursor:pointer; border-radius:5px;">
+                <i class="fas fa-trash"></i> ΣΚΟΥΠΑ
+            </button>
+            {% endif %}
             <button onclick="document.getElementById('setModal').style.display='block'" class="tool-btn"><i class="fas fa-user-circle"></i> ΠΡΟΦΙΛ</button>
             <a href="{{ url_for('logout') }}" class="tool-btn" style="color:var(--red); border-color:var(--red); text-decoration:none; text-align:center;"><i class="fas fa-power-off"></i> ΕΞΟΔΟΣ</a>
         </div>
@@ -387,7 +365,7 @@ input[type="text"], input[type="color"] { width: 100%; padding: 10px; margin: 10
                 <i class="fas fa-play" id="play-icon" style="font-size: 1.5em;"></i>
             </button>
             <div style="text-align: center;">
-                <div style="color:white; font-family:'Dancing Script'; font-size:1.8em; text-shadow: 0 0 15px var(--fire);">Radio Parea </div>
+                <div style="color:white; font-family:'Dancing Script'; font-size:1.8em; text-shadow: 0 0 15px var(--fire);">Radio Parea 🎅</div>
                 <input type="range" id="volume-control" min="0" max="1" step="0.1" value="0.5" style="accent-color:var(--gold); width:90px; cursor: pointer;">
             </div>
             <div style="text-align: left; min-width: 120px;">
@@ -667,12 +645,8 @@ socket.on("message", function(data) {
     }
 
     msgDiv.innerHTML = `
-<img src="${data.avatar_url}" 
-     class="message-avatar clickable-avatar" 
-     data-avatar="${data.avatar_url}" 
-     data-name="${data.display_name}" 
-     data-id="${data.user_id}"
-     style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover; cursor:pointer;">
+        <img src="${data.avatar_url}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
+        <div style="display: flex; flex-direction: column;">
             <div style="display: flex; align-items: baseline; gap: 8px;">
                 <strong style="color: ${data.color}; font-size: 0.9em;">${data.display_name}:</strong>
                 ${actions}
@@ -906,25 +880,6 @@ function updateDJImage() {
     }
 }
 setInterval(updateDJImage, 5000);
-// ΠΡΟΣΘΗΚΗ: Συναρτήσεις για το Modal
-function openUserModal(avatar, name, userId) {
-    document.getElementById('modal-avatar').src = avatar;
-    document.getElementById('modal-username').innerText = name;
-    
-    // Έλεγχος αν ο χρήστης είναι Admin/Owner (βάσει του role στο Flask)
-    const isAdmin = '{{ current_user.role }}' === 'admin' || '{{ current_user.role }}' === 'owner';
-    const sweepBtn = document.getElementById('sweep-btn-modal');
-    
-    sweepBtn.style.display = isAdmin ? 'block' : 'none';
-    document.getElementById('userProfileModal').style.display = 'flex';
-}
-
-function requestClearChat() {
-    if(confirm("✨ Σίγουρα θέλεις να καθαρίσεις το chat;")) {
-        socket.emit('clear_chat_request');
-        document.getElementById('userProfileModal').style.display = 'none';
-    }
-}
 </script>
 
 <script>
@@ -1024,21 +979,10 @@ function initEmojiPicker() {
 document.addEventListener('DOMContentLoaded', () => {
     initEmojiPicker();
 
-    // Event Delegation: Ακούει κλικ σε όλα τα avatars (ακόμα και σε όσα μπαίνουν μετά)
     document.addEventListener('click', (e) => {
-        // 1. Έλεγχος για το Modal του Προφίλ
-        if (e.target.classList.contains('clickable-avatar')) {
-            const avatar = e.target.getAttribute('data-avatar');
-            const name = e.target.getAttribute('data-name');
-            const id = e.target.getAttribute('data-id');
-            openUserModal(avatar, name, id);
-        }
-
-        // 2. Διαχείριση των άλλων Modals/Pickers
         const gp = document.getElementById('gif-picker');
         const ep = document.getElementById('custom-emoji-picker');
         const progModal = document.getElementById('progModal');
-        const userModal = document.getElementById('userProfileModal');
 
         if (gp && gp.style.display === 'flex' && !gp.contains(e.target) && !e.target.classList.contains('ignore-emoji')) {
             gp.style.display = 'none';
@@ -1049,17 +993,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === progModal) {
             progModal.style.display = "none";
         }
-        // Κλείσιμο του User Modal αν πατηθεί έξω από αυτό
-        if (e.target === userModal) {
-            userModal.style.display = "none";
-        }
     });
 
+// Ξεκινάει η ανανέωση της εικόνας DJ
     if (typeof updateDJImage === 'function') {
         setInterval(updateDJImage, 5000);
     } 
-});
-
+}); 
 function sendCustomGif(url) {
     if (!url || url.includes('LINK_')) return; 
     socket.emit('message', { content: url });
@@ -1080,29 +1020,5 @@ function sendCustomGif(url) {
         </div>
     </div>
 </div>
-<div id="userProfileModal" class="modal" style="display:none; align-items:center; justify-content:center;">
-        <div class="modal-content" style="text-align:center; position:relative;">
-            <span onclick="document.getElementById('userProfileModal').style.display='none'" style="position:absolute; right:20px; top:10px; cursor:pointer; color:var(--gold);">&times;</span>
-            <img id="modal-avatar" src="" style="width:100px; height:100px; border-radius:50%; border:2px solid var(--gold);">
-            <h2 id="modal-username" style="color:white; font-family:'Orbitron';"></h2>
-            <div id="admin-actions" style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
-                <button id="sweep-btn-modal" onclick="requestClearChat()" style="display:none; background:#ff4444; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">
-                    <i class="fas fa-broom"></i> ΣΚΟΥΠΑ CHAT
-                </button>
-            </div>
-        </div>
-    </div>
-    <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Επιλέγουμε το κεντρικό layout της σελίδας
-        const mainLayout = document.querySelector('.main');
-        
-        // Εφόσον ο χρήστης συνδέθηκε και φορτώνει το chat.html, 
-        // ενεργοποιούμε αμέσως την κλάση chat-expanded
-        if (mainLayout) {
-            mainLayout.classList.add('chat-expanded');
-        }
-    });
-    </script>
 </body>
 </html>
