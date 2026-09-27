@@ -235,18 +235,50 @@
         }
 
         @media (max-width: 768px) {
-            .stats-container {
-                display: none;
-            }
-            .floating-dj-card {
-                bottom: 15px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 90%;
-                max-width: 360px; /* Μεγαλύτερο πλάτος και στα κινητά */
-                justify-content: center;
-            }
-        }
+    /* 🚀 TOP NAVBAR ΣΤΑ ΚΙΝΗΤΑ */
+    .top-navbar {
+        flex-wrap: wrap; /* Επιτρέπει στα στοιχεία να αλλάζουν γραμμή αν δεν χωράνε */
+        justify-content: space-between;
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    /* Σμίκρυνση τίτλου για εξοικονόμηση χώρου */
+    .brand-title {
+        font-size: 1.0em;
+    }
+
+    /* Προσαρμογή player */
+    .custom-player {
+        padding: 2px 8px;
+        gap: 6px;
+    }
+
+    .volume-slider {
+        width: 45px; /* Πιο μικρή μπάρα έντασης στα κινητά */
+    }
+
+    /* Κρυφό το κουτί των στατιστικών στα κινητά (όπως ήδη είχες) */
+    .stats-container {
+        display: none;
+    }
+
+    /* Κουμπί Εισόδου - Πάντα ορατό στα κινητά */
+    .login-btn-top {
+        padding: 6px 12px;
+        font-size: 0.8em;
+    }
+
+    /* 🎧 FLOATING DJ SECTION ΣΤΑ ΚΙΝΗΤΑ */
+    .floating-dj-card {
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 95%;
+        max-width: 340px;
+        justify-content: center;
+    }
+}
     </style>
 </head>
 <body>
