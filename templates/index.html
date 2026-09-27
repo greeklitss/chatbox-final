@@ -193,29 +193,31 @@
             display: block;
         }
 
-        .dj-details {
+.dj-details {
             display: flex;
             flex-direction: column;
             justify-content: center;
-        }
-
-        #sonic_dj { 
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2em !important;
-            font-weight: bold; 
-            color: #D4AF37 !important;
-            text-transform: uppercase;
-            text-shadow: 0 0 10px #ff4400;
+            overflow: hidden; /* Κρύβει το κείμενο που εξέχει */
+            max-width: 240px;  /* Αυξημένο πλάτος για το κείμενο */
         }
 
         #sonic_title {
             font-size: 0.85em;
             color: #ffffff;
-            max-width: 200px;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            display: inline-block;
+            padding-left: 100%;
+            animation: marqueeTitle 12s linear infinite;
             margin-top: 2px;
+        }
+
+        #sonic_title:hover {
+            animation-play-state: paused; /* Παύση όταν περνάει το ποντίκι */
+        }
+
+        @keyframes marqueeTitle {
+            0%   { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
         }
 
         .center-hero-space {
@@ -231,7 +233,7 @@
                 left: 50%;
                 transform: translateX(-50%);
                 width: 90%;
-                max-width: 320px;
+                max-width: 360px; /* Μεγαλύτερο πλάτος και στα κινητά */
                 justify-content: center;
             }
         }
