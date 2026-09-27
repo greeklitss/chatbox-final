@@ -164,21 +164,23 @@
         }
 
         /* 🎧 FLOATING DJ CARD (INDEX) */
+
+        /* 🎧 FLOATING DJ SECTION - ΧΩΡΙΣ ΚΑΨΟΥΛΑ (MEMBER/GUEST STYLE) */
         .floating-dj-card {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
+            bottom: 25px;
+            left: 25px;
             display: flex;
             align-items: center;
             gap: 15px;
-            background: rgba(0, 0, 0, 0.85);
-            padding: 12px 22px;
-            border-radius: 60px;
-            border: 2px solid #D4AF37;
-            box-shadow: 0 0 25px rgba(212, 175, 55, 0.5);
+            background: transparent; /* Αφαιρέθηκε το μαύρο φόντο */
+            padding: 0 0 10px 0; /* Χώρος πάνω από τη γραμμή */
+            border: none; /* Αφαιρέθηκε το εξωτερικό πλαίσιο */
+            box-shadow: none; /* Αφαιρέθηκε η σκιά της κάψουλας */
+            border-bottom: 2px solid #D4AF37; /* Η χρυσή γραμμή από κάτω */
             z-index: 999;
+            max-width: 350px;
         }
-
         /* Στυλ για το DJ Profile Image από το SonicPanel */
         #dj_profile, #dj_profile img {
             width: 85px !important;
