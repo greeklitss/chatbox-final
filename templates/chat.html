@@ -4,173 +4,158 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radio Parea 🔥 Live Chat & Radio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Roboto:wght@400;700&family=Orbitron:wght@700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Roboto:wght@400;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
         :root {
             --comic-yellow: #FFDE00;
-            --comic-orange: #FF6B00;
             --gold: #D4AF37;
             --red: #ff4444;
+            --green: #00FF66;
             --bg-dark: #0a0c16;
-            --card-bg: rgba(15, 18, 35, 0.85);
         }
+
+        * { box-sizing: border-box; }
 
         html, body {
             min-height: 100vh; margin: 0; padding: 0;
-            font-family: 'Fredoka', cursive, 'Roboto', sans-serif;
-            background: radial-gradient(circle at center, #1a1c2e 0%, #080911 100%);
-            color: #ffffff; display: flex; flex-direction: column; overflow-x: hidden;
-        }
-
-        /* 🌫️ ΚΑΠΝΟΣ INDEX (BACKGROUND) */
-        .mist-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; pointer-events: none; overflow: hidden;
-        }
-        .mist-layer {
-            position: absolute; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(255, 107, 0, 0.15) 0%, rgba(212, 175, 55, 0.1) 40%, transparent 70%);
-            filter: blur(50px); animation: mistFloat 18s ease-in-out infinite alternate;
-        }
-        @keyframes mistFloat {
-            0% { transform: translate(-10%, -10%) rotate(0deg) scale(1); }
-            100% { transform: translate(10%, 10%) rotate(10deg) scale(1.15); }
+            font-family: 'Fredoka', 'Roboto', sans-serif;
+            background: #000; color: #ffffff;
+            overflow: hidden;
         }
 
         /* 🚀 TOP NAVBAR INDEX */
         .top-navbar {
-            width: 100%; height: 60px; background: rgba(10, 12, 22, 0.95);
-            backdrop-filter: blur(12px); border-bottom: 3px solid var(--comic-yellow);
-            padding: 0 20px; box-sizing: border-box; display: flex; align-items: center;
-            justify-content: space-between; gap: 15px; z-index: 1000;
+            width: 100vw; height: 60px; background: rgba(10, 12, 22, 0.95);
+            border-bottom: 2px solid var(--gold); padding: 0 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: relative; z-index: 1000;
         }
 
         .brand-title {
             font-size: 1.3em; font-weight: 700; color: var(--comic-yellow);
-            text-transform: uppercase; white-space: nowrap; -webkit-text-stroke: 1px #000; text-shadow: 2px 2px 0px #FF4500;
+            text-transform: uppercase; -webkit-text-stroke: 1px #000; text-shadow: 2px 2px 0px #FF4500;
         }
 
-        /* 🍄 MUSHROOM PLAYER INDEX */
         .custom-player {
             display: flex; align-items: center; gap: 10px;
-            background: rgba(255, 255, 255, 0.05); padding: 4px 14px 4px 10px;
+            background: rgba(255, 255, 255, 0.05); padding: 4px 14px;
             border-radius: 50px; border: 2px solid var(--comic-yellow);
         }
-        .mushroom-btn { background: none; border: none; cursor: pointer; font-size: 1.8em; line-height: 1; }
-        .mushroom-btn.playing { animation: mushroomPulse 1.2s infinite alternate ease-in-out; }
-        @keyframes mushroomPulse { 0% { transform: scale(1); } 100% { transform: scale(1.15); } }
-        .volume-slider { width: 65px; accent-color: var(--comic-yellow); cursor: pointer; }
+        .mushroom-btn { background: none; border: none; cursor: pointer; font-size: 1.6em; line-height: 1; }
 
         .dj-onair-box {
             display: flex; align-items: center; gap: 8px;
             background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold);
-            padding: 3px 10px; border-radius: 20px;
+            padding: 4px 12px; border-radius: 20px; font-size: 0.85em;
         }
 
         .nav-btn {
             background: rgba(212,175,55,0.15); border: 1px solid var(--gold);
             color: #fff; padding: 6px 14px; border-radius: 20px; cursor: pointer;
-            font-size: 0.85em; font-weight: bold; display: flex; align-items: center; gap: 6px; text-decoration: none;
+            font-size: 0.85em; font-weight: bold; text-decoration: none;
+            display: flex; align-items: center; gap: 6px;
         }
         .nav-btn.logout { border-color: var(--red); color: var(--red); }
 
-        /* 📐 MAIN 50/50 SPLIT CONTAINER */
-        .split-main-container {
-            display: grid; grid-template-columns: 45% 55%;
+        /* 📐 SPLIT 50/50 CONTAINER */
+        .split-wrapper {
+            display: grid; grid-template-columns: 50% 50%;
             width: 100vw; height: calc(100vh - 60px);
-            position: relative; z-index: 2; overflow: hidden;
+            position: relative;
         }
 
-        /* 🎴 ΑΡΙΣΤΕΡΟ ΜΕΡΟΣ: INDEX CONTENT */
-        .index-side {
-            padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px;
-            border-right: 2px solid rgba(212, 175, 55, 0.3);
-            background: rgba(5, 7, 15, 0.4); backdrop-filter: blur(5px);
+        /* 🖼️ ΑΡΙΣΤΕΡΑ: ΑΥΤΟΥΣΙΟ ΤΟ ΕΙΚΑΣΤΙΚΟ ΤΟΥ INDEX */
+        .index-visual-side {
+            position: relative;
+            background: url('https://i.imgur.com/your-smurfs-bg.jpg') center/cover no-repeat; /* Βάλε το URL της εικόνας σου */
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 20px; border-right: 2px solid var(--gold);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
         }
 
-        .welcome-card {
-            background: var(--card-bg); border: 2px solid var(--gold); border-radius: 15px;
-            padding: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        /* Στρογγυλό σχήμα/πλαίσιο αν η εικόνα είναι σε κύκλο */
+        .smurf-banner-container {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
         }
 
-        .info-widget {
-            background: var(--card-bg); border: 1px solid var(--gold); border-radius: 12px;
-            padding: 10px; height: 260px; overflow: hidden;
+        .smurf-image {
+            max-width: 90%; max-height: 85%;
+            object-fit: contain; border-radius: 50%;
+            filter: drop-shadow(0 0 25px rgba(255,222,0,0.4));
         }
 
-        /* 💬 ΔΕΞΙ ΜΕΡΟΣ: ΠΛΗΡΕΣ CHAT & ONLINE USERS */
-        .chat-side {
-            display: flex; flex-direction: row; height: 100%; overflow: hidden;
+        /* DJ CARD & AUDIENCE (Κάτω Αριστερά) */
+        .dj-card-overlay {
+            position: absolute; bottom: 20px; left: 20px;
+            display: flex; align-items: center; gap: 12px;
+            background: rgba(10, 12, 22, 0.85); border: 2px solid var(--gold);
+            padding: 8px 15px; border-radius: 15px; backdrop-filter: blur(8px);
+        }
+        .dj-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--comic-yellow); object-fit: cover; }
+
+        /* 💬 ΔΕΞΙΑ: ΑΥΤΟΥΣΙΟ ΤΟ CHAT ΚΑΙ ONLINE LIST */
+        .chat-full-side {
+            display: flex; flex-direction: row; height: 100%;
+            background: rgba(8, 10, 20, 0.98);
         }
 
-        #chat-window { flex: 1; display: flex; flex-direction: column; height: 100%; }
+        .chat-container { flex: 1; display: flex; flex-direction: column; height: 100%; }
 
-        #chat-box {
+        #chat-messages {
             flex: 1; overflow-y: auto; padding: 15px;
-            background: linear-gradient(135deg, rgba(15, 18, 35, 0.85), rgba(5, 7, 15, 0.92));
-            backdrop-filter: blur(10px);
+            background: rgba(15, 18, 35, 0.6);
         }
 
-        .message {
-            background: rgba(255, 255, 255, 0.03) !important; border-radius: 10px;
-            padding: 8px 12px; margin-bottom: 10px; color: white !important;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .msg-card {
+            background: rgba(255, 255, 255, 0.04); border-radius: 10px;
+            padding: 8px 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05);
         }
-        .message-avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--gold); object-fit: cover; }
-        .msg-time { font-size: 0.75em; color: #aaa; margin-left: 6px; }
 
-        .input-area { background: rgba(8, 10, 20, 0.98); padding: 10px 14px; border-top: 2px solid var(--gold); }
-        .toolbar { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; flex-wrap: wrap; }
+        .chat-input-area {
+            padding: 12px; background: rgba(5, 7, 15, 0.95);
+            border-top: 2px solid var(--gold);
+        }
+
+        .chat-toolbar { display: flex; gap: 6px; margin-bottom: 8px; }
         
-        #chat-input {
-            flex: 1; padding: 10px 12px; border-radius: 10px;
-            border: 2px solid var(--gold); background: #0d0e18; color: white;
-            outline: none; min-height: 40px; box-sizing: border-box;
-        }
-
-        .tool-btn {
-            background: rgba(212,175,55,0.1); border: 1px solid var(--gold);
-            color: white; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;
+        #editable-input {
+            width: 100%; min-height: 42px; background: #0a0b12;
+            border: 2px solid var(--gold); border-radius: 8px;
+            color: white; padding: 8px 12px; outline: none;
         }
 
         .sidebar-online {
-            width: 180px; height: 100%; background: rgba(6, 8, 16, 0.95);
-            border-left: 1px solid rgba(212, 175, 55, 0.3); display: flex; flex-direction: column;
+            width: 160px; height: 100%; background: #060810;
+            border-left: 1px solid rgba(212,175,55,0.3); padding: 10px;
         }
 
         /* MODAL */
         .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); }
-        .modal-content { background: #121424; margin: 8% auto; padding: 25px; border: 2px solid var(--gold); width: 320px; border-radius: 20px; color: white; }
+        .modal-content { background: #121424; margin: 10% auto; padding: 20px; border: 2px solid var(--gold); width: 300px; border-radius: 15px; }
     </style>
 </head>
 <body>
 
-    <div class="mist-container"><div class="mist-layer"></div></div>
-
-    <!-- 🚀 NAVBAR INDEX -->
+    <!-- 🚀 TOP NAVBAR INDEX -->
     <div class="top-navbar">
         <div class="brand-title">📻 RADIOPAREA</div>
 
-        <!-- 🍄 PLAYER INDEX -->
         <div class="custom-player">
-            <button id="play-pause-btn" class="mushroom-btn">🍄</button>
-            <div style="display: flex; flex-direction: column; gap: 2px;">
-                <span id="playerStateText" style="color: var(--comic-yellow); font-size: 0.7em; font-weight: bold;">LIVE STREAM</span>
-                <div style="display: flex; align-items: center; gap: 4px;">
-                    <span style="font-size: 0.7em;">🔊</span>
-                    <input type="range" id="volume-control" class="volume-slider" min="0" max="1" step="0.05" value="0.8">
-                </div>
-            </div>
+            <button id="play-btn" class="mushroom-btn">🍄</button>
+            <span id="player-status" style="color: var(--comic-yellow); font-size: 0.75em; font-weight: bold;">LIVE STREAM</span>
+            <input type="range" id="vol" min="0" max="1" step="0.05" value="0.8" style="width:60px; accent-color: var(--comic-yellow);">
         </div>
 
         <div class="dj-onair-box">
-            <img src="https://i.imgur.com/6VBx3io.png" style="width:24px; height:24px; border-radius:50%; border:1px solid var(--gold);">
-            <span style="font-size: 0.75em; color: var(--gold); font-weight: bold;">ON AIR: <span style="color: #fff;">MA BAKER</span></span>
+            <span style="color: var(--green);">●</span>
+            <span style="color: var(--gold); font-weight: bold;">ON AIR: <span style="color: #fff;">MA BAKER</span></span>
         </div>
 
-        <div class="user-nav-actions" style="display:flex; gap:8px;">
+        <div style="display:flex; gap:10px;">
             <button onclick="document.getElementById('setModal').style.display='block'" class="nav-btn">
                 <i class="fas fa-user-circle"></i> {{ current_user.display_name }}
             </button>
@@ -180,70 +165,60 @@
         </div>
     </div>
 
-    <!-- 📐 SPLIT 50/50 LAYOUT -->
-    <div class="split-main-container">
+    <!-- 📐 SPLIT 50 / 50 -->
+    <div class="split-wrapper">
 
-        <!-- ⬅️ ΑΡΙΣΤΕΡΑ: INDEX VIBES & CARDS -->
-        <div class="index-side">
-            <div class="welcome-card">
-                <h3 style="margin:0 0 10px 0; color:var(--comic-yellow);">Καλώς ήρθες στην παρέα! 🔥</h3>
-                <p style="margin:0; font-size:0.9em; color:#ddd;">Είσαι συνδεδεμένος στο live stream του Radio Parea. Άκουσε μουσική και συνομίλησε ζωντανά!</p>
+        <!-- 🖼️ ΑΡΙΣΤΕΡΑ: ΕΙΚΑΣΤΙΚΟ INDEX (ΣΤΡΟΥΜΦ) -->
+        <div class="index-visual-side">
+            <div class="smurf-banner-container">
+                <!-- Βάλε το δικό σου αρχείο εικόνας των Στρουμφ -->
+                <img src="/static/images/smurfs_main.png" class="smurf-image" alt="RadioParea Smurfs">
             </div>
 
-            <div class="info-widget">
-                <div style="color:var(--gold); font-weight:bold; font-family:'Orbitron'; font-size:0.8em; margin-bottom:8px; text-align:center;">
-                    <i class="fas fa-calendar-alt"></i> ΠΡΟΓΡΑΜΜΑ & EVENTS
+            <!-- DJ CARD OVERLAY (Κάτω Αριστερά) -->
+            <div class="dj-card-overlay">
+                <img src="https://i.imgur.com/6VBx3io.png" class="dj-avatar" alt="MABAKER">
+                <div>
+                    <div style="color: var(--gold); font-weight: bold; font-size: 0.9em;">MA BAKER</div>
+                    <div style="font-size: 0.75em; color: #aaa;">ΑΚΡΟΑΤΕΣ: <span style="color:var(--comic-yellow); font-weight:bold;">3</span></div>
                 </div>
-                <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vSWKUdDqxVATw0zJ3dhv9itmtduJhmEBG1xCRthIoO7881_ex7OXANm7aEeEuCd9A/embed?start=true&loop=true&delayms=5000&rm=minimal" frameborder="0" style="width:100%; height:200px; border-radius:8px;"></iframe>
             </div>
         </div>
 
-        <!-- ➡️ ΔΕΞΙΑ: ΑΥΤΟΥΣΙΟ ΤΟ ΛΕΙΤΟΥΡΓΙΚΟ CHAT -->
-        <div class="chat-side">
-            <div id="chat-window">
+        <!-- 💬 ΔΕΞΙΑ: ΑΥΤΟΥΣΙΟ ΤΟ CHAT -->
+        <div class="chat-full-side">
+            <div class="chat-container">
                 
-                <div id="chat-box">
+                <div id="chat-messages">
                     {% for msg in history %}
-                    <div class="message" id="msg-{{ msg.id }}" style="display:flex; gap:8px;">
-                        <img src="{{ msg.author.avatar_url or 'https://ui-avatars.com/api/?name=' + msg.author.display_name }}" class="message-avatar">
-                        <div>
-                            <div style="display:flex; align-items:baseline; gap:6px;">
-                                <strong style="color: {{ msg.author.color }}; font-size:0.85em;">{{ msg.author.display_name }}:</strong>
-                                <span class="msg-time">{{ msg.timestamp.strftime("%H:%M") }}</span>
-                                <i class="fas fa-reply" onclick="replyTo('{{ msg.author.display_name }}')" style="cursor:pointer; font-size:0.7em; color:var(--gold);"></i>
-                                {% if current_user.role in ['admin', 'owner'] %}
-                                <i class="fas fa-trash" onclick="deleteMsg({{ msg.id }})" style="cursor:pointer; font-size:0.7em; color:red;"></i>
-                                {% endif %}
-                            </div>
-                            <span class="message-content" style="font-size:0.95em;">{{ msg.content | safe }}</span>
-                        </div>
+                    <div class="msg-card">
+                        <strong style="color: {{ msg.author.color }}; font-size:0.9em;">{{ msg.author.display_name }}:</strong>
+                        <span style="font-size:0.95em; color:#fff;">{{ msg.content | safe }}</span>
                     </div>
                     {% endfor %}
                 </div>
 
-                <!-- CHAT TOOLBAR & INPUT -->
-                <div class="input-area">
-                    <div class="toolbar">
-                        <button type="button" class="tool-btn" onclick="document.execCommand('bold')"><b>B</b></button>
-                        <button type="button" class="tool-btn" onclick="document.execCommand('italic')"><i>I</i></button>
-                        <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:24px; height:24px; cursor:pointer; border:none; background:none;">
-                        <button type="button" class="tool-btn">😊</button>
-                        <button type="button" class="tool-btn">GIF</button>
+                <div class="chat-input-area">
+                    <div class="chat-toolbar">
+                        <button onclick="document.execCommand('bold')" class="nav-btn" style="padding:2px 8px;"><b>B</b></button>
+                        <button onclick="document.execCommand('italic')" class="nav-btn" style="padding:2px 8px;"><i>I</i></button>
+                        <button class="nav-btn" style="padding:2px 8px;">😊</button>
+                        <button class="nav-btn" style="padding:2px 8px;">GIF</button>
                     </div>
 
                     <div style="display:flex; gap:8px;">
-                        <div id="chat-input" contenteditable="true" placeholder="Γράψτε μήνυμα..."></div>
-                        <button onclick="sendMessage()" style="background:var(--gold); border:none; padding:0 18px; border-radius:8px; font-weight:bold; cursor:pointer;">ΣΤΕΙΛΕ</button>
+                        <div id="editable-input" contenteditable="true" placeholder="Γράψε μήνυμα..."></div>
+                        <button onclick="sendMsg()" style="background:var(--gold); border:none; padding:0 20px; border-radius:8px; font-weight:bold; cursor:pointer;">ΣΤΕΙΛΕ</button>
                     </div>
                 </div>
+
             </div>
 
-            <!-- ONLINE USERS -->
             <div class="sidebar-online">
-                <div style="color:var(--gold); font-weight:bold; padding:10px; font-size:0.8em; text-align:center; border-bottom:1px solid rgba(212,175,55,0.2);">
-                    <i class="fas fa-users"></i> ONLINE
+                <div style="color:var(--gold); font-weight:bold; font-size:0.8em; text-align:center; border-bottom:1px solid rgba(212,175,55,0.3); padding-bottom:8px;">
+                    🟢 ONLINE
                 </div>
-                <div id="user-list-content" style="padding:10px; overflow-y:auto; flex:1;"></div>
+                <div id="online-users" style="margin-top:10px;"></div>
             </div>
         </div>
 
@@ -252,57 +227,29 @@
     <!-- MODAL PROFILE -->
     <div id="setModal" class="modal">
         <div class="modal-content">
-            <h3 style="text-align:center; color:var(--gold); margin-top:0;">ΡΥΘΜΙΣΕΙΣ ΠΡΟΦΙΛ</h3>
-            <label style="font-size:0.85em;">Όνομα:</label>
-            <input type="text" id="new-nickname" value="{{ current_user.display_name }}" style="width:100%; padding:8px; margin:8px 0; background:#0a0b12; color:white; border:1px solid var(--gold); border-radius:6px;">
-            <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; background:var(--gold); border:none; padding:10px; margin-top:10px; cursor:pointer; font-weight:bold; border-radius:8px;">ΚΛΕΙΣΙΜΟ</button>
+            <h3 style="text-align:center; color:var(--gold); margin-top:0;">ΠΡΟΦΙΛ</h3>
+            <input type="text" value="{{ current_user.display_name }}" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid var(--gold); border-radius:5px;">
+            <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; background:var(--gold); border:none; padding:8px; margin-top:10px; font-weight:bold; cursor:pointer;">ΚΛΕΙΣΙΜΟ</button>
         </div>
     </div>
 
-    <!-- JS LOGIC -->
     <script>
         const socket = io();
-        const chatInput = document.getElementById('chat-input');
-        const chatBox = document.getElementById('chat-box');
-
-        /* STREAM PLAYER */
-        const audio = new Audio('https://or.mysonicserver.com:8050/;');
-        audio.volume = 0.8;
-        const playBtn = document.getElementById('play-pause-btn');
-        const stateText = document.getElementById('playerStateText');
-
-        playBtn.onclick = () => {
-            if (audio.paused) {
-                audio.play(); playBtn.classList.add('playing');
-                stateText.innerText = "ON AIR 🎶"; stateText.style.color = "#2ECC71";
-            } else {
-                audio.pause(); playBtn.classList.remove('playing');
-                stateText.innerText = "PAUSED 🍄"; stateText.style.color = "#FFDE00";
-            }
-        };
-
-        document.getElementById('volume-control').oninput = function() { audio.volume = this.value; };
-
-        function sendMessage() {
-            const content = chatInput.innerHTML.trim();
-            if(content && content !== '<br>') {
-                socket.emit('message', { content: content });
-                chatInput.innerHTML = '';
+        function sendMsg() {
+            const input = document.getElementById('editable-input');
+            if(input.innerHTML.trim() !== '') {
+                socket.emit('message', { content: input.innerHTML });
+                input.innerHTML = '';
             }
         }
-
         socket.on("message", data => {
             const div = document.createElement('div');
-            div.className = 'message'; div.style = "display:flex; gap:8px;";
-            div.innerHTML = `<img src="${data.avatar_url || 'https://i.imgur.com/6VBx3io.png'}" class="message-avatar">
-                             <div><strong style="color:${data.color}; font-size:0.85em;">${data.display_name}:</strong>
-                             <div style="font-size:0.95em;">${data.content}</div></div>`;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            div.className = 'msg-card';
+            div.innerHTML = `<strong style="color:${data.color}">${data.display_name}:</strong> <span>${data.content}</span>`;
+            const box = document.getElementById('chat-messages');
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         });
-
-        function replyTo(username) { chatInput.innerHTML = `<strong style="color:var(--gold);">@${username}</strong>&nbsp;` + chatInput.innerHTML; chatInput.focus(); }
-        function deleteMsg(id) { if(confirm("Διαγραφή μηνύματος;")) socket.emit("delete_message", {id: id}); }
     </script>
 </body>
 </html>
