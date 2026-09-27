@@ -21,39 +21,32 @@
             padding: 0;
             font-family: 'Fredoka', cursive, sans-serif;
             overflow-x: hidden;
+            background-color: #1a1a2e;
         }
 
         body { 
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             min-height: 100vh;
             box-sizing: border-box;
-
-            /* BACKGROUND */
-            background-image: url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}"); 
-            background-size: 100% 100%;
-            background-attachment: fixed;
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-color: #1a1a2e;
         }
 
         /* 🚀 TOP NAVBAR BAR */
         .top-navbar {
             width: 100%;
-            background: rgba(0, 0, 0, 0.75);
+            height: 60px;
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             border-bottom: 3px solid var(--comic-yellow);
-            padding: 6px 20px;
+            padding: 0 20px;
             box-sizing: border-box;
             display: flex;
             flex-direction: row;
             align-items: center;
             justify-content: space-between;
             gap: 15px;
-            z-index: 100;
+            z-index: 1000;
             box-shadow: 0 5px 20px rgba(0,0,0,0.8);
         }
 
@@ -84,7 +77,7 @@
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 2em;
+            font-size: 1.8em;
             padding: 0;
             margin: 0;
             display: flex;
@@ -163,30 +156,49 @@
             box-shadow: 0 6px 0px #1e8449;
         }
 
-        /* 🎧 FLOATING DJ CARD (INDEX) */
+        /* 📐 MAIN WRAPPER (60/40 SPLIT LAYOUT) */
+        .main-wrapper {
+            display: flex;
+            flex-direction: row;
+            width: 100vw;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
 
-        /* 🎧 FLOATING DJ SECTION - ΧΩΡΙΣ ΚΑΨΟΥΛΑ (MEMBER/GUEST STYLE) */
+        /* 🖼️ 60% ΑΡΙΣΤΕΡΑ: ΕΙΚΟΝΑ ΦΟΝΤΟΥ (ΟΛΟΚΛΗΡΗ ΧΩΡΙΣ ΝΑ ΚΟΒΕΤΑΙ) */
+        .hero-left {
+            width: 60%;
+            height: 100%;
+            background-image: url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}");
+            background-size: contain; /* 👈 ΦΑΙΝΕΤΑΙ 100% ΟΛΟΚΛΗΡΗ */
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-color: #1a1a2e;
+            position: relative;
+        }
+
+        /* 🎧 FLOATING DJ SECTION - ΧΩΡΙΣ ΚΑΨΟΥΛΑ (ΠΑΝΩ ΣΤΗΝ ΕΙΚΟΝΑ) */
         .floating-dj-card {
-            position: fixed;
+            position: absolute;
             bottom: 25px;
             left: 25px;
             display: flex;
             align-items: center;
             gap: 15px;
-            background: transparent; /* Αφαιρέθηκε το μαύρο φόντο */
-            padding: 0 0 10px 0; /* Χώρος πάνω από τη γραμμή */
-            border: none; /* Αφαιρέθηκε το εξωτερικό πλαίσιο */
-            box-shadow: none; /* Αφαιρέθηκε η σκιά της κάψουλας */
-            border-bottom: 2px solid #D4AF37; /* Η χρυσή γραμμή από κάτω */
-            z-index: 999;
-            max-width: 350px;
+            background: transparent;
+            padding: 0 0 10px 0;
+            border: none;
+            box-shadow: none;
+            border-bottom: 2px solid #D4AF37;
+            z-index: 99;
+            max-width: 380px;
         }
-        /* Στυλ για το DJ Profile Image από το SonicPanel */
+
         #dj_profile, #dj_profile img {
-            width: 85px !important;
-            height: 85px !important;
-            min-width: 85px;
-            min-height: 85px;
+            width: 80px !important;
+            height: 80px !important;
+            min-width: 80px;
+            min-height: 80px;
             border-radius: 50%;
             border: 3px solid #D4AF37;
             box-shadow: 0 0 20px #D4AF37;
@@ -195,16 +207,17 @@
             display: block;
         }
 
-       .dj-details {
+        .dj-details {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            overflow: hidden; /* Κρύβει το κείμενο που εξέχει */
-            max-width: 240px;  /* Αυξημένο πλάτος για το κείμενο */
+            overflow: hidden;
+            max-width: 220px;
         }
+
         #sonic_dj { 
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.2em !important;
+            font-size: 1.1em !important;
             font-weight: bold; 
             color: #D4AF37 !important;
             text-transform: uppercase;
@@ -222,7 +235,7 @@
         }
 
         #sonic_title:hover {
-            animation-play-state: paused; /* Παύση όταν περνάει το ποντίκι */
+            animation-play-state: paused;
         }
 
         @keyframes marqueeTitle {
@@ -230,137 +243,159 @@
             100% { transform: translate(-100%, 0); }
         }
 
-        .center-hero-space {
-            flex: 1;
+        /* 💬 40% ΔΕΞΙΑ: CHATBOX PANEL */
+        .chat-right {
+            width: 40%;
+            height: 100%;
+            background: rgba(10, 10, 20, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-left: 2px solid #D4AF37;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            color: #D4AF37;
+            font-size: 1.0em;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+            padding-bottom: 10px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .live-badge {
+            color: #2ECC71;
+            font-size: 0.85em;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .chat-messages-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 15px 0;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .chat-msg {
+            font-size: 0.85em;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: #fff;
+            line-height: 1.4;
+            animation: fadeInMsg 0.4s ease-in-out;
+            border-left: 3px solid transparent;
+        }
+
+        @keyframes fadeInMsg {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-dj {
+            color: #FFDE00;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .user-listener {
+            color: #3498DB;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .chat-footer-cta {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid #D4AF37;
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .chat-footer-cta p {
+            margin: 0 0 8px 0;
+            color: #fff;
+            font-size: 0.85em;
+        }
+
+        /* 📱 RESPONSIVE ΓΙΑ ΚΙΝΗΤΑ (VERTICAL LAYOUT) */
         @media (max-width: 768px) {
-    /* 🚀 TOP NAVBAR ΣΤΑ ΚΙΝΗΤΑ */
-    .top-navbar {
-        flex-wrap: wrap; /* Επιτρέπει στα στοιχεία να αλλάζουν γραμμή αν δεν χωράνε */
-        justify-content: space-between;
-        padding: 8px 10px;
-        gap: 8px;
-    }
+            .top-navbar {
+                height: auto;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                padding: 8px 10px;
+                gap: 8px;
+            }
 
-    /* Σμίκρυνση τίτλου για εξοικονόμηση χώρου */
-    .brand-title {
-        font-size: 1.0em;
-    }
+            .brand-title {
+                font-size: 1.0em;
+            }
 
-    /* Προσαρμογή player */
-    .custom-player {
-        padding: 2px 8px;
-        gap: 6px;
-    }
+            .custom-player {
+                padding: 2px 8px;
+                gap: 6px;
+            }
 
-    .volume-slider {
-        width: 45px; /* Πιο μικρή μπάρα έντασης στα κινητά */
-    }
+            .volume-slider {
+                width: 45px;
+            }
 
-    /* Κρυφό το κουτί των στατιστικών στα κινητά (όπως ήδη είχες) */
-    .stats-container {
-        display: none;
-    }
+            .stats-container {
+                display: none;
+            }
 
-    /* Κουμπί Εισόδου - Πάντα ορατό στα κινητά */
-    .login-btn-top {
-        padding: 6px 12px;
-        font-size: 0.8em;
-    }
+            .login-btn-top {
+                padding: 6px 12px;
+                font-size: 0.8em;
+            }
 
-    /* 🎧 FLOATING DJ SECTION ΣΤΑ ΚΙΝΗΤΑ */
-    .floating-dj-card {
-        bottom: 15px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 95%;
-        max-width: 340px;
-        justify-content: center;
-    }
-}
-   /* 💬 REAL CHAT PREVIEW BOX */
-.chat-preview-container {
-    position: fixed;
-    top: 50%;
-    right: 25px;
-    transform: translateY(-50%);
-    width: 290px;
-    background: rgba(10, 10, 20, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 2px solid #D4AF37;
-    border-radius: 15px;
-    padding: 12px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
-    z-index: 900;
-}
+            .main-wrapper {
+                flex-direction: column;
+                height: auto;
+                min-height: calc(100vh - 60px);
+                overflow-y: auto;
+            }
 
-.chat-preview-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: bold;
-    color: #D4AF37;
-    font-size: 0.85em;
-    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
-    padding-bottom: 8px;
-    margin-bottom: 10px;
-    font-family: 'Orbitron', sans-serif;
-}
+            .hero-left {
+                width: 100%;
+                height: 260px;
+                background-size: contain;
+            }
 
-.live-badge {
-    color: #2ECC71;
-    font-size: 0.8em;
-    animation: blink 1.5s infinite;
-}
+            .floating-dj-card {
+                bottom: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 90%;
+                max-width: 320px;
+                justify-content: center;
+            }
 
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-}
-
-.chat-preview-messages {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 200px;
-    overflow-y: hidden; /* Κρύβει τη μπάρα κυλίσης για πιο καθαρό εφέ */
-}
-
-.chat-msg {
-    font-size: 0.8em;
-    background: rgba(255, 255, 255, 0.06);
-    padding: 6px 10px;
-    border-radius: 8px;
-    color: #fff;
-    line-height: 1.3;
-    animation: fadeInMsg 0.4s ease-in-out;
-}
-
-@keyframes fadeInMsg {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.user-dj {
-    color: #FFDE00;
-    font-weight: bold;
-    margin-right: 5px;
-}
-
-.user-listener {
-    color: #3498DB;
-    font-weight: bold;
-    margin-right: 5px;
-}
-
-/* Κρύβουμε το preview στα κινητά για να μην εμποδίζει */
-@media (max-width: 768px) {
-    .chat-preview-container {
-        display: none;
-    }
-}
+            .chat-right {
+                width: 100%;
+                height: auto;
+                min-height: 380px;
+                border-left: none;
+                border-top: 2px solid #D4AF37;
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -393,7 +428,7 @@
             <audio id="radioStream" src="https://or.mysonicserver.com/8050/stream" preload="none"></audio>
         </div>
 
-        <!-- 📊 3. ΜΕΤΡΗΤΕΣ (Συνδεδεμένοι / Επισκέπτες) -->
+        <!-- 📊 3. ΜΕΤΡΗΤΕΣ -->
         <div class="stats-container">
             <div class="stat-item" title="Συνδεδεμένοι Χρήστες">
                 <span style="color: #2ECC71;">🟢</span>
@@ -411,40 +446,55 @@
 
     </div>
 
-    <!-- 🎧 FLOATING DJ CARD WITH SONICPANEL METADATA -->
-    <div class="floating-dj-card">
-        <div id="dj_profile"></div>
-            
-        <div class="dj-details">
-            <div id="sonic_dj">DJ ON AIR</div>
-            <div id="sonic_title">Radio Parea Live</div>
-            <div style="color:#D4AF37; font-size:0.8em; margin-top:5px; font-weight:bold; font-family: 'Orbitron', sans-serif;">
-                ΑΚΡΟΑΤΕΣ: <span id="sonic_listeners">0</span>
+    <!-- 📐 MAIN WRAPPER (60/40) -->
+    <div class="main-wrapper">
+        
+        <!-- 🖼️ ΑΡΙΣΤΕΡΑ 60%: ΕΙΚΟΝΑ & DJ PROFILE -->
+        <div class="hero-left">
+            <!-- 🎧 FLOATING DJ SECTION -->
+            <div class="floating-dj-card">
+                <div id="dj_profile"></div>
+                    
+                <div class="dj-details">
+                    <div id="sonic_dj">DJ ON AIR</div>
+                    <div id="sonic_title">Radio Parea Live</div>
+                    <div style="color:#D4AF37; font-size:0.8em; margin-top:5px; font-weight:bold; font-family: 'Orbitron', sans-serif;">
+                        ΑΚΡΟΑΤΕΣ: <span id="sonic_listeners">0</span>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <!-- 💬 ΔΕΞΙΑ 40%: CHAT PANEL -->
+        <div class="chat-right">
+            <div class="chat-header">
+                <span>💬 RadioParea Live Chat</span>
+                <span class="live-badge">● LIVE</span>
+            </div>
+
+            <div class="chat-messages-container" id="previewMessages">
+                <div class="chat-msg">
+                    <span class="msg-author user-dj">🎧 DJ MaBaker:</span>
+                    <span class="msg-text">Καλησπέρα σε όλη την παρέα! Στείλτε μου τις αφιερώσεις σας! 🎶</span>
+                </div>
+                <div class="chat-msg">
+                    <span class="msg-author user-listener">Makis_3:</span>
+                    <span class="msg-text">Καλησπέρα MaBaker! Βάλε μας ένα καλό ζεϊμπέκικο! 🔥</span>
+                </div>
+                <div class="chat-msg">
+                    <span class="msg-author user-listener">Elena_Fl:</span>
+                    <span class="msg-text">Καλησπέρα παιδιά, καλή ακρόαση σε όλους! ☕</span>
+                </div>
+            </div>
+
+            <div class="chat-footer-cta">
+                <p>Θέλεις να συμμετέχεις στη συζήτηση;</p>
+                <button onclick="openLoginModal()" class="login-btn-top" style="width: 100%;">Συνδέσου στο Chat</button>
+            </div>
+        </div>
+
     </div>
 
-   <!-- 💬 REAL LIVE CHAT PREVIEW -->
-<div class="chat-preview-container">
-    <div class="chat-preview-header">
-        <span>💬 RadioParea Live Chat</span>
-        <span class="live-badge">● LIVE</span>
-    </div>
-    <div class="chat-preview-messages" id="previewMessages">
-        <div class="chat-msg">
-            <span class="msg-author user-dj">🎧 DJ MaBaker:</span>
-            <span class="msg-text">Καλησπέρα σε όλη την παρέα! Στείλτε μου τις αφιερώσεις σας! 🎶</span>
-        </div>
-        <div class="chat-msg">
-            <span class="msg-author user-listener">Makis_3:</span>
-            <span class="msg-text">Καλησπέρα MaBaker! Βάλε μας ένα καλό ζεϊμπέκικο! 🔥</span>
-        </div>
-        <div class="chat-msg">
-            <span class="msg-author user-listener">Elena_Fl:</span>
-            <span class="msg-text">Καλησπέρα παιδιά, καλή ακρόαση σε όλους! ☕</span>
-        </div>
-    </div>
-</div>
     <!-- MODAL LOGIN -->
     <div id="loginModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter: blur(5px);">
         <div style="background:#1a1a2e; margin:5% auto; padding:25px; border:2px solid #F1C40F; width:320px; border-radius:15px; text-align:center; position:relative; box-shadow: 0 0 20px #F1C40F;">
@@ -465,7 +515,7 @@
         </div>
     </div>
 
-    <!-- JS ΛΕΙΤΟΥΡΓΙΑΣ PLAYER, MODAL & STATS -->
+    <!-- JS ΛΕΙΤΟΥΡΓΙΑΣ PLAYER, CHAT PREVIEW, MODAL & STATS -->
     <script>
         const audio = document.getElementById('radioStream');
         const playBtn = document.getElementById('playPauseBtn');
@@ -532,59 +582,58 @@
                 });
         }
 
+        /* 💬 LIVE CHAT PREVIEW SIMULATION */
+        const sampleMessages = [
+            { name: "Giannis_K", text: "Τέλειο το κομμάτι! 🎶", isDj: false },
+            { name: "🎧 DJ MaBaker", text: "Ευχαριστώ παιδιά! Συνεχίζουμε δυνατά!", isDj: true },
+            { name: "Anna_Florina", text: "Καλησπέρα στην όμορφη παρέα! ❤️", isDj: false },
+            { name: "Kostas_DJ", text: "Χαιρετίσματα σε όλους τους ακροατές!", isDj: false },
+            { name: "Eleni_92", text: "Βάλτε μας και λίγο χορευτικό! 💃", isDj: false }
+        ];
+
+        let msgIndex = 0;
+
+        function addLivePreviewMessage() {
+            const container = document.getElementById('previewMessages');
+            if (!container) return;
+
+            const msgData = sampleMessages[msgIndex];
+            
+            const msgElement = document.createElement('div');
+            msgElement.className = 'chat-msg';
+            
+            const authorSpan = document.createElement('span');
+            authorSpan.className = msgData.isDj ? 'user-dj' : 'user-listener';
+            authorSpan.innerText = msgData.name + ":";
+            
+            const textSpan = document.createElement('span');
+            textSpan.className = 'msg-text';
+            textSpan.innerText = " " + msgData.text;
+
+            msgElement.appendChild(authorSpan);
+            msgElement.appendChild(textSpan);
+
+            container.appendChild(msgElement);
+
+            // Αυτόματο scroll προς τα κάτω
+            container.scrollTop = container.scrollHeight;
+
+            // Κρατάμε μέχρι 10 μηνύματα στην οθόνη
+            if (container.children.length > 10) {
+                container.removeChild(container.children[0]);
+            }
+
+            msgIndex = (msgIndex + 1) % sampleMessages.length;
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             updateSiteStats();
             setInterval(updateSiteStats, 10000);
+            setInterval(addLivePreviewMessage, 6000);
         });
     </script>
 
-    <!-- WIDGET SCRIPT SONICPANEL (Στο τέλος του body) -->
+    <!-- WIDGET SCRIPT SONICPANEL -->
     <script id="sonic_js" data-port="8050" src="https://or.mysonicserver.com/cp/widgets.js?v=254"></script>
-
-    <script>
-    // Λίστα με φυσικά μηνύματα από ακροατές
-    const sampleMessages = [
-        { name: "Giannis_K", text: "Τέλειο το κομμάτι! 🎶", isDj: false },
-        { name: "🎧 DJ MaBaker", text: "Ευχαριστώ παιδιά! Συνεχίζουμε δυνατά!", isDj: true },
-        { name: "Anna_Florina", text: "Καλησπέρα στην όμορφη παρέα! ❤️", isDj: false },
-        { name: "Kostas_DJ", text: "Χαιρετίσματα σε όλους τους ακροατές!", isDj: false },
-        { name: "Eleni_92", text: "Βάλτε μας και λίγο χορευτικό! 💃", isDj: false }
-    ];
-
-    let msgIndex = 0;
-
-    function addLivePreviewMessage() {
-        const container = document.getElementById('previewMessages');
-        if (!container) return;
-
-        const msgData = sampleMessages[msgIndex];
-        
-        const msgElement = document.createElement('div');
-        msgElement.className = 'chat-msg';
-        
-        const authorSpan = document.createElement('span');
-        authorSpan.className = msgData.isDj ? 'user-dj' : 'user-listener';
-        authorSpan.innerText = msgData.name + ":";
-        
-        const textSpan = document.createElement('span');
-        textSpan.className = 'msg-text';
-        textSpan.innerText = " " + msgData.text;
-
-        msgElement.appendChild(authorSpan);
-        msgElement.appendChild(textSpan);
-
-        container.appendChild(msgElement);
-
-        // Κρατάμε πάντα μόνο τα τελευταία 4 μηνύματα
-        if (container.children.length > 4) {
-            container.removeChild(container.children[0]);
-        }
-
-        msgIndex = (msgIndex + 1) % sampleMessages.length;
-    }
-
-    // Προσθήκη νέου μηνύματος κάθε 6 δευτερόλεπτα
-    setInterval(addLivePreviewMessage, 6000);
-</script>
 </body>
 </html>
