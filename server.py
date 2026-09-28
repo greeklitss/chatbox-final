@@ -94,6 +94,12 @@ class Message(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
 
+class SiteStats(db.Model):
+    """Persistent counters shown in the header (page visits since deployment)."""
+    id = db.Column(db.Integer, primary_key=True)
+    page_visitors = db.Column(db.Integer, nullable=False, default=0)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -211,10 +217,29 @@ def create_app():
     @app.route("/chat")
     @login_required
     def chat_page():
+        stats = db.session.get(SiteStats, 1)
+        if stats is None:
+            stats = SiteStats(id=1, page_visitors=0)
+            db.session.add(stats)
+            db.session.flush()
+        stats.page_visitors = (stats.page_visitors or 0) + 1
+        db.session.commit()
+
         # Παίρνουμε τα 50 τελευταία μηνύματα
         history = Message.query.order_by(Message.timestamp.desc()).limit(50).all()
         history.reverse() 
         return render_template("chat.html", history=history)
+
+    @app.route("/api/stats")
+    @login_required
+    def api_stats():
+        online_ids = {info.get("id") for info in ONLINE_USERS.values()}
+        online_ids.discard(None)
+        stats = db.session.get(SiteStats, 1)
+        return jsonify({
+            "online_users": len(online_ids),
+            "page_visitors": stats.page_visitors if stats else 0,
+        })
 
     @app.route("/test") # Η νέα διαδρομή
     @login_required     # Μόνο εσύ (που είσαι logged in) μπορείς να μπεις
@@ -351,7 +376,7 @@ def create_app():
             Message.query.delete()
             db.session.commit()
             # Το "Χαρούμενο Μήνυμα" αποθηκεύεται ως νέο μήνυμα για να μην χάνεται
-            sys_content = "✨ Η σκούπα πέρασε! Το chat μας λάμπει και πάλι! 🎄"         
+            sys_content = "Η σκούπα πέρασε! Το chat μας λάμπει και πάλι!"
             notice = Message(content=sys_content, author=current_user)
             db.session.add(notice)
             db.session.commit()
