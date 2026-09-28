@@ -171,6 +171,8 @@
             height: 100%;
             background-image: url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}");
             background-size: contain; /* 👈 ΦΑΙΝΕΤΑΙ 100% ΟΛΟΚΛΗΡΗ */
+            background-image: url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}"), url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}");
+            background-size: contain, cover; /* 👈 ΦΑΙΝΕΤΑΙ 100% ΟΛΟΚΛΗΡΗ */
             background-repeat: no-repeat;
             background-position: center center;
             background-color: #1a1a2e;
@@ -399,13 +401,16 @@
     
 :root{--gold:#D4AF37;--fire:#ff4400;--red:#ff4444;}
 .top-navbar{position:relative;}
-.top-navbar .toolbar{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:0 1 auto;min-width:0;overflow-x:auto;flex-wrap:nowrap;margin:0;padding:0;}
-.top-navbar .toolbar .tool-btn{background:linear-gradient(180deg,#2ECC71 0%,#27AE60 100%);color:#fff;border:2px solid #000;border-radius:30px;padding:6px 12px;box-shadow:0 3px 0 #1e8449;white-space:nowrap;text-shadow:.5px .5px #000;}
-.top-navbar .toolbar .tool-btn:hover{background:#27AE60;color:#fff;transform:translateY(-1px);}
-.top-navbar .toolbar input[type=color]{width:36px!important;height:36px;padding:3px;margin:0!important;border-radius:24px;flex:0 0 36px;cursor:pointer;}
-.top-navbar .toolbar #gif-picker,.top-navbar .toolbar #custom-emoji-picker{position:fixed!important;top:75px!important;bottom:auto!important;left:auto!important;right:15px!important;z-index:5000!important;}
+.site-chat-controls{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto;}
+.input-area .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:0;}
+.input-area .toolbar .tool-btn{background:linear-gradient(180deg,#2ECC71 0%,#27AE60 100%);color:#fff;border:2px solid #000;border-radius:30px;padding:6px 12px;box-shadow:0 3px 0 #1e8449;white-space:nowrap;text-shadow:.5px .5px #000;}
+.input-area .toolbar .tool-btn:hover{background:#27AE60;color:#fff;transform:translateY(-1px);}
+.input-area .toolbar input[type=color]{width:36px!important;height:36px;padding:3px;margin:0!important;border-radius:24px;flex:0 0 36px;cursor:pointer;}
+.input-area #gif-picker{position:absolute!important;top:auto!important;bottom:160px!important;left:12px!important;z-index:9999!important;}
+.input-area #custom-emoji-picker{position:absolute!important;top:auto!important;bottom:85px!important;left:10px!important;z-index:10001!important;}
 .main-wrapper{height:calc(100vh - 60px);}
-.hero-left{width:40%;flex:0 0 40%;}
+.hero-left{width:40%;flex:0 0 40%;background-size:cover!important;}
+.hero-left{width:40%;flex:0 0 40%;background-size:contain,cover!important;}
 .chat-right{width:60%;flex:1 1 60%;min-width:0;height:100%;padding:0;justify-content:flex-start;overflow:hidden;border-left:2px solid #D4AF37;}
 .chat-header{flex:0 0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 12px;margin:0;border-bottom:1px solid rgba(212,175,55,.3);}
 .chat-admin-actions{margin-left:auto;display:flex;align-items:center;gap:7px;}
@@ -428,9 +433,13 @@
 .message-avatar{width:34px!important;height:34px!important;border-radius:50%;object-fit:cover;margin-right:5px;vertical-align:middle;border:1px solid var(--gold);}
 .message-content{font-size:16px!important;line-height:1.5;word-break:break-word;}
 .message-content img.emoji{width:40px!important;height:40px!important;object-fit:contain;vertical-align:middle;}
-.modal{z-index:4000;}
-@media(max-width:1100px) and (min-width:769px){.top-navbar{gap:8px;padding:0 10px}.brand-title{font-size:1em}.custom-player{gap:6px;padding:3px 8px}.stats-container{display:none}.top-navbar .toolbar .tool-btn{padding:5px 8px}.sidebar{width:120px!important;min-width:120px;}}
-@media(max-width:768px){.top-navbar{height:auto;min-height:60px;flex-wrap:wrap;padding:8px;gap:8px}.top-navbar .toolbar{order:4;width:100%;flex:1 0 100%;justify-content:flex-start}.main-wrapper{height:auto;min-height:calc(100vh - 60px);overflow:visible;flex-direction:column}.hero-left{width:100%;flex:0 0 260px;height:260px}.chat-right{width:100%;flex:1 0 auto;min-height:720px;height:720px;overflow:hidden;border-left:0;border-top:2px solid #D4AF37}.sidebar{width:100px!important;min-width:100px}.chat-header{gap:6px;padding:7px}.chat-header>span:first-child{font-size:.82em}.chat-admin-actions{gap:4px}.chat-action{font-size:10px;padding:5px 7px}.input-area{padding:8px}.input-area .style-bar{max-height:70px;overflow:auto}.top-navbar .toolbar #gif-picker,.top-navbar .toolbar #custom-emoji-picker{right:8px!important;top:115px!important;}}
+.modal{display:none;position:fixed;z-index:4000;left:0;top:0;width:100%;height:100%;overflow:auto;background:rgba(0,0,0,.92);}
+.modal-content{background:#111;margin:8vh auto;padding:24px;border:2px solid var(--gold);width:min(320px,calc(100% - 48px));border-radius:20px;color:#fff;box-shadow:0 0 30px var(--gold);}
+.cleaning-notice{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;box-sizing:border-box;color:#fff;font-weight:bold;text-shadow:1px 2px 4px #000;}
+.cleaning-notice img{width:min(220px,55%);height:auto;max-height:260px;object-fit:contain;}
+.message-content img.chat-inline-image{display:block;max-width:min(360px,100%);max-height:320px;width:auto;height:auto;object-fit:contain;border-radius:10px;margin:8px 0;}
+@media(max-width:1100px) and (min-width:769px){.top-navbar{gap:8px;padding:0 10px}.brand-title{font-size:1em}.custom-player{gap:6px;padding:3px 8px}.stats-container{display:none}.site-chat-controls{gap:5px}.chat-action{padding:5px 8px;font-size:11px}.sidebar{width:120px!important;min-width:120px;}}
+@media(max-width:768px){.top-navbar{height:auto;min-height:60px;flex-wrap:wrap;padding:8px;gap:8px}.site-chat-controls{order:4;width:100%;flex:1 0 100%;justify-content:flex-end}.input-area .toolbar{justify-content:flex-start}.main-wrapper{height:auto;min-height:calc(100vh - 60px);overflow:visible;flex-direction:column}.hero-left{width:100%;flex:0 0 260px;height:260px}.chat-right{width:100%;flex:1 0 auto;min-height:720px;height:720px;overflow:hidden;border-left:0;border-top:2px solid #D4AF37}.sidebar{width:100px!important;min-width:100px}.chat-header{gap:6px;padding:7px}.chat-header>span:first-child{font-size:.82em}.chat-action{font-size:10px;padding:5px 7px}.input-area{padding:8px}.input-area .style-bar{max-height:70px;overflow:auto}.input-area #gif-picker{bottom:150px!important;left:8px!important}.input-area #custom-emoji-picker{bottom:75px!important;left:8px!important}}
 
     .online-user{display:flex;flex-direction:column;align-items:center;gap:4px;margin:8px 2px;text-align:center;font-size:11px;font-weight:bold}.online-user img{width:42px;height:42px;border-radius:50%;border:2px solid var(--gold);object-fit:cover}.bot-message{display:flex;align-items:flex-start;gap:9px}.bot-message-body{display:flex;flex-direction:column;min-width:0}.bot-message-header{display:flex;align-items:center;gap:7px}.bot-message-actions{display:inline-flex;gap:4px}.bot-message-actions button{background:transparent;border:0;color:var(--gold);cursor:pointer}.bot-message-actions button:hover{color:#fff}
 </style>
@@ -480,7 +489,63 @@
         </div>
 
         <!-- 4. ΚΟΥΜΠΙ ΕΙΣΟΔΟΥ -->
-        <div class="toolbar">
+        <div class="site-chat-controls">
+            {% if current_user.role == 'owner' %}<button type="button" onclick="clearChat()" class="chat-action broom-action"><i class="fas fa-trash"></i> ΣΚΟΥΠΑ</button>{% endif %}
+            <button type="button" onclick="document.getElementById('setModal').style.display='block'" class="chat-action"><i class="fas fa-user-circle"></i> ΠΡΟΦΙΛ</button>
+            <a href="{{ url_for('logout') }}" class="chat-action logout-action"><i class="fas fa-power-off"></i> ΕΞΟΔΟΣ</a>
+        </div>
+
+    </div>
+
+    <!-- 📐 MAIN WRAPPER (60/40) -->
+    <div class="main-wrapper">
+        
+        <!-- 🖼️ ΑΡΙΣΤΕΡΑ 60%: ΕΙΚΟΝΑ & DJ PROFILE -->
+        <div class="hero-left">
+            <!-- 🎧 FLOATING DJ SECTION -->
+            <div class="floating-dj-card">
+                <div id="dj_profile"></div>
+                    
+                <div class="dj-details">
+                    <div id="sonic_dj">DJ ON AIR</div>
+                    <div id="sonic_title">Radio Parea Live</div>
+                    <div style="color:#D4AF37; font-size:0.8em; margin-top:5px; font-weight:bold; font-family: 'Orbitron', sans-serif;">
+                        ΑΚΡΟΑΤΕΣ: <span id="sonic_listeners">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 💬 ΔΕΞΙΑ 40%: CHAT PANEL -->
+        <div class="chat-right">
+            <div class="chat-header">
+                <span>💬 RadioParea Live Chat</span><span class="live-badge">● LIVE</span>
+            </div>
+            <div class="live-chat-main">
+                <div id="chat-window">
+                    <div id="chat-box">
+                {% for msg in history %}
+                <div class="message" id="msg-{{ msg.id }}" style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                    <img src="{{ msg.author.avatar_url or 'https://ui-avatars.com/api/?name=' + msg.author.display_name }}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold);">
+                    <div style="display: flex; flex-direction: column;">
+                        <div style="display: flex; align-items: baseline; gap: 8px;">
+                            <strong style="color: {{ msg.author.color }}; font-size: 0.9em;">{{ msg.author.display_name }}:</strong>
+                            <span class="msg-time">{{ msg.timestamp.strftime("%H:%M   %d.%m.%Y") }}</span>
+                            <i class="fas fa-edit" onclick="editMsg({{ msg.id }})" style="cursor:pointer; font-size:0.7em; color:gray; margin-left:5px;"></i>
+                            {% if current_user.role in ['admin', 'owner'] %}
+                            <i class="fas fa-trash" onclick="deleteMsg({{ msg.id }})" style="cursor:pointer; font-size:0.7em; color:red; margin-left:5px;"></i>
+                            {% endif %}
+                        </div>
+                        <span class="message-content" style="color: white; text-shadow: 1px 1px 2px black;">{{ msg.content | safe }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+                    <div class="input-area">
+                        <div id="gif-picker" style="display:none; position:absolute; bottom:160px; left:20px; background:#000; border:2px solid var(--gold); border-radius:15px; width:300px; height:400px; z-index:9999; padding:10px; flex-direction:column;">
+        <input type="text" id="gif-search" placeholder="Αναζήτηση GIF..." onkeyup="searchGifs(this.value)" style="width:92%; padding:8px; background:#222; color:white; border:1px solid var(--gold); margin-bottom:10px;">
+        <div id="gif-results" style="overflow-y:auto; display:grid; grid-template-columns: 1fr 1fr; gap:5px;"></div>
+    </div><div class="toolbar">
     <button type="button" class="tool-btn" onclick="document.getElementById('chat-input').focus(); document.execCommand('bold')"><b>B</b></button>
     <button type="button" class="tool-btn" onclick="document.getElementById('chat-input').focus(); document.execCommand('italic')"><i>I</i></button>
     <input type="color" onchange="document.execCommand('foreColor', false, this.value)" style="width:30px; height:30px; cursor:pointer; vertical-align:middle;">
@@ -532,61 +597,6 @@
 </style>
 <button type="button" class="tool-btn ignore-emoji" onclick="toggleGifPicker(event)">GIF</button>
     </div>
-
-    </div>
-
-    <!-- 📐 MAIN WRAPPER (60/40) -->
-    <div class="main-wrapper">
-        
-        <!-- 🖼️ ΑΡΙΣΤΕΡΑ 60%: ΕΙΚΟΝΑ & DJ PROFILE -->
-        <div class="hero-left">
-            <!-- 🎧 FLOATING DJ SECTION -->
-            <div class="floating-dj-card">
-                <div id="dj_profile"></div>
-                    
-                <div class="dj-details">
-                    <div id="sonic_dj">DJ ON AIR</div>
-                    <div id="sonic_title">Radio Parea Live</div>
-                    <div style="color:#D4AF37; font-size:0.8em; margin-top:5px; font-weight:bold; font-family: 'Orbitron', sans-serif;">
-                        ΑΚΡΟΑΤΕΣ: <span id="sonic_listeners">0</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 💬 ΔΕΞΙΑ 40%: CHAT PANEL -->
-        <div class="chat-right">
-            <div class="chat-header">
-                <span>💬 RadioParea Live Chat</span><span class="live-badge">● LIVE</span>
-                <div class="chat-admin-actions">
-                    {% if current_user.role == 'owner' %}
-                    <button type="button" onclick="clearChat()" class="chat-action broom-action"><i class="fas fa-trash"></i> ΣΚΟΥΠΑ</button>
-                    {% endif %}
-                    <button type="button" onclick="document.getElementById('setModal').style.display='block'" class="chat-action"><i class="fas fa-user-circle"></i> ΠΡΟΦΙΛ</button>
-                    <a href="{{ url_for('logout') }}" class="chat-action logout-action"><i class="fas fa-power-off"></i> ΕΞΟΔΟΣ</a>
-                </div>
-            </div>
-            <div class="live-chat-main">
-                <div id="chat-window">
-                    <div id="chat-box">
-                {% for msg in history %}
-                <div class="message" id="msg-{{ msg.id }}" style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
-                    <img src="{{ msg.author.avatar_url or 'https://ui-avatars.com/api/?name=' + msg.author.display_name }}" class="message-avatar" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold);">
-                    <div style="display: flex; flex-direction: column;">
-                        <div style="display: flex; align-items: baseline; gap: 8px;">
-                            <strong style="color: {{ msg.author.color }}; font-size: 0.9em;">{{ msg.author.display_name }}:</strong>
-                            <span class="msg-time">{{ msg.timestamp.strftime("%H:%M   %d.%m.%Y") }}</span>
-                            <i class="fas fa-edit" onclick="editMsg({{ msg.id }})" style="cursor:pointer; font-size:0.7em; color:gray; margin-left:5px;"></i>
-                            {% if current_user.role in ['admin', 'owner'] %}
-                            <i class="fas fa-trash" onclick="deleteMsg({{ msg.id }})" style="cursor:pointer; font-size:0.7em; color:red; margin-left:5px;"></i>
-                            {% endif %}
-                        </div>
-                        <span class="message-content" style="color: white; text-shadow: 1px 1px 2px black;">{{ msg.content | safe }}</span>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-                    <div class="input-area">
                         <div class="style-bar" style="display: flex; gap: 8px; margin: 10px 0; padding: 8px; background: rgba(212,175,55,0.1); border-radius: 10px; flex-wrap: wrap; border: 1px solid rgba(212,175,55,0.2);">
     
     <select id="text-font" style="background:#000; color:#d4af37; border:1px solid #d4af37; font-size:11px; border-radius:4px; cursor:pointer;">
@@ -699,6 +709,37 @@
         </div>
     </div>
 
+<div id="setModal" class="modal" style="{% if not current_user.has_setup_profile %} display:block; backdrop-filter: blur(15px); {% endif %}">
+    <div class="modal-content" style="border: 2px solid var(--fire); box-shadow: 0 0 30px var(--fire);">
+        <h3 style="text-align:center; color:var(--gold); font-family:'Orbitron';">
+            {% if not current_user.has_setup_profile %} ΚΑΛΩΣΗΡΘΕΣ! ΦΤΙΑΞΕ ΤΟ ΠΡΟΦΙΛ ΣΟΥ {% else %} ΡΥΘΜΙΣΕΙΣ {% endif %}
+        </h3>
+        
+        <label>Όνομα (Nickname):</label>
+<input type="text" id="new-nickname" value="{{ current_user.display_name }}" 
+       {% if current_user.name_is_set and current_user.role != 'owner' %} readonly style="background: #222; color: #777; cursor: not-allowed;" {% endif %} 
+       placeholder="Γράψε το όνομά σου...">
+
+{% if current_user.name_is_set and current_user.role != 'owner' %}
+<p style="color: #ff4d4d; font-size: 0.8em; margin-top: -5px;">Το όνομα έχει κλειδωθεί μόνιμα.</p>
+{% else %}
+<p style="color: #81C784; font-size: 0.8em; margin-top: -5px;">Μπορείς να αλλάξεις το όνομά σου μόνο μία φορά!</p>
+{% endif %}
+        
+        <label>Avatar URL (Link εικόνας):</label>
+        <input type="text" id="new-avatar" value="{{ current_user.avatar_url or '' }}" placeholder="https://link.to-your-image.png">
+        
+        <label>Χρώμα Ονόματος στο Chat:</label>
+        <input type="color" id="new-color" value="{{ current_user.color or '#D4AF37' }}">
+        
+        <button onclick="saveProfile()" style="width:100%; background:var(--gold); border:none; padding:15px; margin-top:10px; cursor:pointer; font-weight:bold; border-radius:10px; font-size:1.1em;">ΑΠΟΘΗΚΕΥΣΗ & ΕΙΣΟΔΟΣ</button>
+        
+        {% if current_user.has_setup_profile %}
+        <button onclick="document.getElementById('setModal').style.display='none'" style="width:100%; background:none; color:gray; border:none; margin-top:10px; cursor:pointer;">Ακύρωση</button>
+        {% endif %}
+    </div>
+</div>
+
     <!-- MODAL LOGIN (kept from the original index) -->
     <div id="loginModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter: blur(5px);">
         <div style="background:#1a1a2e; margin:5% auto; padding:25px; border:2px solid #F1C40F; width:320px; border-radius:15px; text-align:center; position:relative; box-shadow: 0 0 20px #F1C40F;">
@@ -731,6 +772,19 @@ function closeLoginModal(){document.getElementById('loginModal').style.display='
 function loginWithGoogle(){const width=500,height=600,left=(window.innerWidth-width)/2,top=(window.innerHeight-height)/2;const authWindow=window.open('/google_login','GoogleLogin',`width=${width},height=${height},top=${top},left=${left}`);if(!authWindow)return;const timer=setInterval(()=>{if(authWindow.closed){clearInterval(timer);window.location.reload();}},1000);}
 function updateSiteStats(){fetch('/api/stats').then(r=>{if(!r.ok)throw new Error('Stats request failed');return r.json();}).then(data=>{if(data.online_users!==undefined)document.getElementById('online_users_count').textContent=data.online_users;if(data.page_visitors!==undefined)document.getElementById('page_visitors_count').textContent=data.page_visitors;}).catch(()=>{});}
 document.addEventListener('DOMContentLoaded',()=>{updateSiteStats();setInterval(updateSiteStats,10000);});
+</script>
+<script>
+const demoBots=[
+ {name:'Giannis_K',color:'#3498DB',avatar:'https://ui-avatars.com/api/?name=Giannis_K&background=3498DB&color=fff'},
+ {name:'Anna_Florina',color:'#E879F9',avatar:'https://ui-avatars.com/api/?name=Anna_Florina&background=E879F9&color=fff'},
+ {name:'Kostas_DJ',color:'#2ECC71',avatar:'https://ui-avatars.com/api/?name=Kostas_DJ&background=2ECC71&color=fff'},
+ {name:'Eleni_92',color:'#FB923C',avatar:'https://ui-avatars.com/api/?name=Eleni_92&background=FB923C&color=fff'}
+];
+const demoBotTexts=['Τέλειο το κομμάτι! 🎶','Καλησπέρα στην όμορφη παρέα! ❤️','Χαιρετίσματα σε όλους τους ακροατές!','Βάλτε μας και λίγο χορευτικό! 💃'];
+let demoBotMessageId=0;
+function renderOnlineUsers(users=[]){const box=document.getElementById('user-list-content');if(!box)return;const humans=users.filter(u=>!demoBots.some(b=>b.name===u.display_name));box.innerHTML=[...humans,...demoBots.map(b=>({display_name:b.name,color:b.color,avatar_url:b.avatar}))].map(u=>`<div class="online-user"><img src="${u.avatar_url||'https://ui-avatars.com/api/?name=User'}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=User'" alt=""><span style="color:${u.color||'#D4AF37'}">${u.display_name}</span></div>`).join('');}
+function addDemoBotMessage(){const box=document.getElementById('chat-box');if(!box)return;const bot=demoBots[Math.floor(Math.random()*demoBots.length)];const text=demoBotTexts[Math.floor(Math.random()*demoBotTexts.length)];const id=`demo-${++demoBotMessageId}`;const row=document.createElement('div');row.className='message bot-message';row.id=`msg-${id}`;row.innerHTML=`<img src="${bot.avatar}" class="message-avatar" alt=""><div class="bot-message-body"><div class="bot-message-header"><strong style="color:${bot.color}">${bot.name}:</strong><span class="msg-time">τώρα</span><span class="bot-message-actions"><button type="button" title="Διόρθωση" onclick="editMsg('${id}')"><i class="fas fa-edit"></i></button><button type="button" title="Διαγραφή" onclick="deleteMsg('${id}')"><i class="fas fa-trash"></i></button></span></div><span class="message-content">${text}</span></div>`;box.appendChild(row);box.scrollTop=box.scrollHeight;}
+document.addEventListener('DOMContentLoaded',()=>{renderOnlineUsers();setInterval(addDemoBotMessage,300000);});
 </script>
 <script>
         const socket = io();
@@ -851,7 +905,8 @@ socket.on("message_edited", data => {
 
 socket.on('clear_chat_client', () => {
     const chatBox = document.getElementById('chat-box');
-    if (chatBox) chatBox.innerHTML = '';
+    if (!chatBox) return;
+    chatBox.innerHTML = `<div class="cleaning-notice"><img src="https://media1.tenor.com/m/cQYLM8zuc44AAAAd/the-smurfs-cleaning.gif" alt="Στρουμφάκι καθαρίζει"><strong>Η σκούπα πέρασε! Το chat μας λάμπει και πάλι!</strong></div>`;
 });
 
         socket.on('update_bg', (data) => {
@@ -875,32 +930,56 @@ socket.on('clear_chat_client', () => {
 
 
 function processMessageContent(content) {
-    if (!content) return "";
-    let html = content;
-
-    // ΠΡΩΤΑ: Βρίσκουμε τα emojis-κείμενο και τους βάζουμε την κλάση emoji-text 
-    // για να μην μεγαλώσουν τα κανονικά γράμματα
-    const emojiRegex = /([\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}])/gu;
-    html = html.replace(emojiRegex, '<span class="emoji-text">$1</span>');
-
-    // ΜΕΤΑ: Διαχείριση εικόνων
-    const imgRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/gi;
-
-    // Αν το html έχει ήδη <img> (από το picker), του βάζουμε την κλάση emoji
-    if (html.includes('<img')) {
-        html = html.replace(/<img /g, '<img class="emoji" ');
-    }
-
-    // Για τα επικολλημένα links ή εικόνες από αντιγραφή
-    html = html.replace(imgRegex, (match) => {
-        if (content.includes('src="' + match + '"')) return match;
-        // Τις βάζουμε χωρίς την κλάση emoji για να πάρουν το μέγεθος 280px
-        return `<br><img src="${match}">`;
+    if (!content) return '';
+    const template = document.createElement('template');
+    template.innerHTML = content;
+    const imageUrl = value => {
+        try {
+            const url = new URL(value);
+            if (!/^https?:$/.test(url.protocol)) return false;
+            return /\.(png|jpe?g|gif|webp|avif|bmp)$/i.test(url.pathname);
+        } catch (_) { return false; }
+    };
+    const makeImage = url => {
+        const img = document.createElement('img');
+        img.src = url; img.alt = 'Εικόνα'; img.className = 'chat-inline-image'; img.loading = 'lazy';
+        img.onerror = () => { const link = document.createElement('a'); link.href = url; link.textContent = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; img.replaceWith(link); };
+        return img;
+    };
+    template.content.querySelectorAll('a[href]').forEach(anchor => {
+        const href = anchor.href;
+        if (imageUrl(href)) anchor.replaceWith(makeImage(href));
     });
-
-    return html;
+    const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    const urlPattern = /https?:\/\/[^\s<>"']+/gi;
+    for (const node of nodes) {
+        const parent = node.parentElement;
+        if (!parent || /^(SCRIPT|STYLE|A)$/.test(parent.tagName)) continue;
+        const text = node.nodeValue;
+        let last = 0, match, changed = false;
+        const fragment = document.createDocumentFragment();
+        urlPattern.lastIndex = 0;
+        while ((match = urlPattern.exec(text))) {
+            let url = match[0], end = match.index + url.length;
+            while (/[.,!?;:)\]]$/.test(url)) { url = url.slice(0, -1); end--; }
+            if (!imageUrl(url)) continue;
+            fragment.append(document.createTextNode(text.slice(last, match.index)));
+            fragment.append(makeImage(url));
+            last = end; changed = true;
+        }
+        if (changed) {
+            fragment.append(document.createTextNode(text.slice(last)));
+            node.replaceWith(fragment);
+        }
+    }
+    const emojiRegex = /([\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}])/gu;
+    template.content.querySelectorAll('.message-content').forEach(el => {
+        el.innerHTML = el.innerHTML.replace(emojiRegex, '<span class="emoji-text">$1</span>');
+    });
+    return template.innerHTML;
 }
-
 
 // Αποστολή μηνύματος (Ενημερωμένη για Font, Size, Marquee)
 function sendMessage() {
