@@ -1239,16 +1239,39 @@ function sendMessage() {
         chatInput.innerHTML = ''; 
         chatInput.focus();
     }
-}      socket.on('users_update', (users) => {
-            const userList = document.getElementById('user-list-content');
-            if (userList) {
-                userList.innerHTML = users.map(u => `
-                    <div style="margin-bottom:15px; display:flex; flex-direction:column; align-items:center;">
-                        <img src="${u.avatar_url || 'https://i.imgur.com/6VBx3io.png'}" style="width:50px; height:50px; border-radius:50%; border:2px solid ${u.color}; object-fit:cover;">
-                        <div style="color:${u.color}; font-size:0.85em; font-weight:bold; margin-top:5px; text-shadow: 1px 1px 2px #000;">${u.display_name}</div>
-                    </div>`).join('');
-            }
-        });
+}      
+        const botsOnline = [
+    { display_name: "Giannis_K", color: "#35b8ff", avatar_url: "https://ui-avatars.com/api/?name=Giannis_K&background=06316a&color=ffffff&bold=true" },
+    { display_name: "Anna_Florina", color: "#ff65d4", avatar_url: "https://ui-avatars.com/api/?name=Anna_Florina&background=06316a&color=ffffff&bold=true" },
+    { display_name: "Kostas_DJ", color: "#38d878", avatar_url: "https://ui-avatars.com/api/?name=Kostas_DJ&background=06316a&color=ffffff&bold=true" },
+    { display_name: "Eleni_92", color: "#ffad42", avatar_url: "https://ui-avatars.com/api/?name=Eleni_92&background=06316a&color=ffffff&bold=true" }
+];
+
+function renderOnlineUsers(users = []) {
+    const userList = document.getElementById("user-list-content");
+    if (!userList) return;
+
+    const onlineNames = new Set(users.map(user => user.display_name));
+    const allUsers = [
+        ...users,
+        ...botsOnline.filter(bot => !onlineNames.has(bot.display_name))
+    ];
+
+    userList.innerHTML = allUsers.map(user => `
+        <div style="margin-bottom:15px;display:flex;flex-direction:column;align-items:center;">
+            <img src="${user.avatar_url || "https://i.imgur.com/6VBx3io.png"}"
+                 alt="${user.display_name}"
+                 style="width:50px;height:50px;border-radius:50%;border:2px solid ${user.color};object-fit:cover;">
+            <div style="color:${user.color};font-size:.85em;font-weight:bold;margin-top:5px;text-shadow:1px 1px 2px #000;">
+                ${user.display_name}
+            </div>
+        </div>
+    `).join("");
+}
+
+socket.on("users_update", renderOnlineUsers);
+renderOnlineUsers();
+        
 
 function saveProfile() {
     const nick = document.getElementById('new-nickname').value;
@@ -1402,7 +1425,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ep.style.display = 'none';
         }
     });
-
+});
  
 function sendCustomGif(url) {
     if (!url || url.includes('LINK_')) return; 
