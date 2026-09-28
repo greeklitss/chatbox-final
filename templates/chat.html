@@ -1470,45 +1470,87 @@ function sendCustomGif(url) {
         }
 
         /* 💬 LIVE CHAT PREVIEW SIMULATION */
+        /* 💬 FAKE CHAT BOTS */
         const sampleMessages = [
-            { name: "Giannis_K", text: "Τέλειο το κομμάτι! 🎶", isDj: false },
-            { name: "🎧 DJ MaBaker", text: "Ευχαριστώ παιδιά! Συνεχίζουμε δυνατά!", isDj: true },
-            { name: "Anna_Florina", text: "Καλησπέρα στην όμορφη παρέα! ❤️", isDj: false },
-            { name: "Kostas_DJ", text: "Χαιρετίσματα σε όλους τους ακροατές!", isDj: false },
-            { name: "Eleni_92", text: "Βάλτε μας και λίγο χορευτικό! 💃", isDj: false }
+            { name: "Giannis_K", text: "Τέλειο το κομμάτι! 🎶", color: "#35b8ff" },
+            { name: "Anna_Florina", text: "Καλησπέρα στην όμορφη παρέα! ❤️", color: "#ff65d4" },
+            { name: "Kostas_DJ", text: "Χαιρετίσματα σε όλους τους ακροατές!", color: "#38d878" },
+            { name: "Eleni_92", text: "Βάλτε μας και λίγο χορευτικό! 💃", color: "#ffad42" }
         ];
 
         let msgIndex = 0;
 
         function addLivePreviewMessage() {
-            const container = document.getElementById('chat-box');
+            const container = document.getElementById("chat-box");
             if (!container) return;
 
-            const msgData = sampleMessages[msgIndex];
-            
-            const msgElement = document.createElement('div');
-            msgElement.className = 'chat-msg bot-message';
-            
-            const authorSpan = document.createElement('span');
-            authorSpan.className = msgData.isDj ? 'user-dj' : 'user-listener';
-            authorSpan.innerText = msgData.name + ":";
-            
-            const textSpan = document.createElement('span');
-            textSpan.className = 'msg-text';
-            textSpan.innerText = " " + msgData.text;
+            const data = sampleMessages[msgIndex];
+            const id = `fake-bot-${Date.now()}`;
 
-            msgElement.appendChild(authorSpan);
-            msgElement.appendChild(textSpan);
+            const row = document.createElement("div");
+            row.id = id;
+            row.className = "message";
+            row.style.cssText =
+                "display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;padding:5px;";
 
-            container.appendChild(msgElement);
+            const avatar = document.createElement("img");
+            avatar.src =
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=06316a&color=ffffff&bold=true`;
+            avatar.alt = `Avatar ${data.name}`;
+            avatar.style.cssText =
+                "width:35px;height:35px;border-radius:50%;border:1px solid #D4AF37;object-fit:cover;";
 
-            // Αυτόματο scroll προς τα κάτω
+            const body = document.createElement("div");
+            body.style.cssText = "display:flex;flex-direction:column;";
+
+            const header = document.createElement("div");
+            header.style.cssText =
+                "display:flex;align-items:center;gap:8px;flex-wrap:wrap;";
+
+            const name = document.createElement("strong");
+            name.textContent = `${data.name}:`;
+            name.style.cssText = `color:${data.color};font-size:.9em;`;
+
+            const time = document.createElement("span");
+            time.className = "msg-time";
+            time.textContent = new Date().toLocaleTimeString("el-GR", {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+
+            const editButton = document.createElement("button");
+            editButton.type = "button";
+            editButton.innerHTML = '<i class="fas fa-edit"></i>';
+            editButton.title = "Επεξεργασία μηνύματος bot";
+            editButton.style.cssText =
+                "cursor:pointer;color:#D4AF37;background:none;border:0;";
+            editButton.onclick = () => {
+                const updated = prompt("Διόρθωση μηνύματος bot:", text.textContent);
+                if (updated !== null && updated.trim()) {
+                    text.textContent = updated.trim();
+                }
+            };
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteButton.title = "Διαγραφή μηνύματος bot";
+            deleteButton.style.cssText =
+                "cursor:pointer;color:#ff4444;background:none;border:0;";
+            deleteButton.onclick = () => {
+                if (confirm("Να διαγραφεί αυτό το μήνυμα bot;")) row.remove();
+            };
+
+            const text = document.createElement("span");
+            text.className = "message-content";
+            text.textContent = data.text;
+            text.style.cssText = "color:#fff;text-shadow:1px 1px 2px #000;";
+
+            header.append(name, time, editButton, deleteButton);
+            body.append(header, text);
+            row.append(avatar, body);
+            container.appendChild(row);
             container.scrollTop = container.scrollHeight;
-
-            // Κρατάμε μέχρι 10 μηνύματα στην οθόνη
-            if (container.querySelectorAll('.bot-message').length > 10) {
-                container.querySelector('.bot-message')?.remove();
-            }
 
             msgIndex = (msgIndex + 1) % sampleMessages.length;
         }
@@ -1516,7 +1558,9 @@ function sendCustomGif(url) {
         document.addEventListener("DOMContentLoaded", () => {
             updateSiteStats();
             setInterval(updateSiteStats, 10000);
-            setInterval(addLivePreviewMessage, 6000);
+
+            // Ένα fake μήνυμα bot κάθε 5 λεπτά.
+            setInterval(addLivePreviewMessage, 5 * 60 * 1000);
         });
     </script>
 
