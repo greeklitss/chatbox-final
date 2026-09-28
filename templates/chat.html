@@ -171,8 +171,6 @@
             height: 100%;
             background-image: url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}");
             background-size: contain; /* 👈 ΦΑΙΝΕΤΑΙ 100% ΟΛΟΚΛΗΡΗ */
-            background-image: url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}"), url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}");
-            background-size: contain, cover; /* 👈 ΦΑΙΝΕΤΑΙ 100% ΟΛΟΚΛΗΡΗ */
             background-repeat: no-repeat;
             background-position: center center;
             background-color: #1a1a2e;
@@ -410,7 +408,12 @@
 .input-area #custom-emoji-picker{position:absolute!important;top:auto!important;bottom:85px!important;left:10px!important;z-index:10001!important;}
 .main-wrapper{height:calc(100vh - 60px);}
 .hero-left{width:40%;flex:0 0 40%;background-size:cover!important;}
-.hero-left{width:40%;flex:0 0 40%;background-size:contain,cover!important;}
+.hero-left{width:40%;flex:0 0 40%;background-size:contain!important;background-position:center!important;background-repeat:no-repeat!important;isolation:isolate;}
+.hero-left::before{content:"";position:absolute;inset:-12px;z-index:-1;background-image:url("{{ url_for('static', filename='radiopareanewstyle.jpg') }}");background-size:cover;background-position:center;filter:blur(14px);opacity:.8;}
+.custom-player{min-width:205px;min-height:58px;box-sizing:border-box;justify-content:center;gap:12px;padding:6px 16px 6px 12px;}
+.custom-player .mushroom-btn{font-size:2.1em;}
+.custom-player .volume-slider{width:78px;}
+.stats-container{display:flex!important;align-items:center;flex:0 0 auto;white-space:nowrap;}
 .chat-right{width:60%;flex:1 1 60%;min-width:0;height:100%;padding:0;justify-content:flex-start;overflow:hidden;border-left:2px solid #D4AF37;}
 .chat-header{flex:0 0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 12px;margin:0;border-bottom:1px solid rgba(212,175,55,.3);}
 .chat-admin-actions{margin-left:auto;display:flex;align-items:center;gap:7px;}
@@ -421,6 +424,7 @@
 .live-chat-main{display:flex;flex:1;min-height:0;width:100%;overflow:hidden;}
 #chat-window{display:flex;flex:1;min-width:0;min-height:0;height:100%;flex-direction:column;}
 #chat-box{flex:1;min-height:0;overflow-y:auto;padding:14px;background-image:url('/static/radioparea.png');background-size:cover;background-position:center;background-repeat:no-repeat;background-color:rgba(5,10,20,.5);position:relative;z-index:2;}
+#chat-box{flex:1;min-height:0;overflow-y:auto;padding:14px;background-image:none!important;background-color:#06316a;position:relative;z-index:2;}
 .input-area{position:relative;flex:0 0 auto;background:rgba(0,0,0,.9);padding:10px;border-top:2px solid var(--gold);z-index:10;}
 .input-area .style-bar{display:flex;gap:6px;margin:0 0 8px!important;padding:7px;background:rgba(212,175,55,.1);border-radius:10px;flex-wrap:wrap;border:1px solid rgba(212,175,55,.2);}
 .input-area .style-bar select{background:#000;color:#d4af37;border:1px solid #d4af37;font-size:11px;border-radius:4px;cursor:pointer;max-width:100%;}
@@ -438,8 +442,11 @@
 .cleaning-notice{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;box-sizing:border-box;color:#fff;font-weight:bold;text-shadow:1px 2px 4px #000;}
 .cleaning-notice img{width:min(220px,55%);height:auto;max-height:260px;object-fit:contain;}
 .message-content img.chat-inline-image{display:block;max-width:min(360px,100%);max-height:320px;width:auto;height:auto;object-fit:contain;border-radius:10px;margin:8px 0;}
+.message-content img.chat-inline-image-error{width:48px;height:48px;object-fit:contain;opacity:.7;border:1px solid rgba(255,255,255,.35);}
 @media(max-width:1100px) and (min-width:769px){.top-navbar{gap:8px;padding:0 10px}.brand-title{font-size:1em}.custom-player{gap:6px;padding:3px 8px}.stats-container{display:none}.site-chat-controls{gap:5px}.chat-action{padding:5px 8px;font-size:11px}.sidebar{width:120px!important;min-width:120px;}}
 @media(max-width:768px){.top-navbar{height:auto;min-height:60px;flex-wrap:wrap;padding:8px;gap:8px}.site-chat-controls{order:4;width:100%;flex:1 0 100%;justify-content:flex-end}.input-area .toolbar{justify-content:flex-start}.main-wrapper{height:auto;min-height:calc(100vh - 60px);overflow:visible;flex-direction:column}.hero-left{width:100%;flex:0 0 260px;height:260px}.chat-right{width:100%;flex:1 0 auto;min-height:720px;height:720px;overflow:hidden;border-left:0;border-top:2px solid #D4AF37}.sidebar{width:100px!important;min-width:100px}.chat-header{gap:6px;padding:7px}.chat-header>span:first-child{font-size:.82em}.chat-action{font-size:10px;padding:5px 7px}.input-area{padding:8px}.input-area .style-bar{max-height:70px;overflow:auto}.input-area #gif-picker{bottom:150px!important;left:8px!important}.input-area #custom-emoji-picker{bottom:75px!important;left:8px!important}}
+@media(max-width:1100px) and (min-width:769px){.top-navbar{gap:8px;padding:0 10px}.brand-title{font-size:1em}.custom-player{min-width:170px;gap:6px;padding:4px 9px}.custom-player .mushroom-btn{font-size:1.8em}.custom-player .volume-slider{width:55px}.stats-container{display:flex!important;gap:5px;padding:4px 7px;font-size:.72em}.site-chat-controls{gap:5px}.chat-action{padding:5px 8px;font-size:11px}.sidebar{width:120px!important;min-width:120px;}}
+@media(max-width:768px){.top-navbar{height:auto;min-height:60px;flex-wrap:wrap;padding:8px;gap:8px}.stats-container{display:flex!important;order:3;padding:4px 8px;font-size:.72em}.site-chat-controls{order:4;width:100%;flex:1 0 100%;justify-content:flex-end}.input-area .toolbar{justify-content:flex-start}.main-wrapper{height:auto;min-height:calc(100vh - 60px);overflow:visible;flex-direction:column}.hero-left{width:100%;flex:0 0 300px;height:300px}.chat-right{width:100%;flex:1 0 auto;min-height:720px;height:720px;overflow:hidden;border-left:0;border-top:2px solid #D4AF37}.sidebar{width:100px!important;min-width:100px}.chat-header{gap:6px;padding:7px}.chat-header>span:first-child{font-size:.82em}.chat-action{font-size:10px;padding:5px 7px}.input-area{padding:8px}.input-area .style-bar{max-height:70px;overflow:auto}.input-area #gif-picker{bottom:150px!important;left:8px!important}.input-area #custom-emoji-picker{bottom:75px!important;left:8px!important}}
 
     .online-user{display:flex;flex-direction:column;align-items:center;gap:4px;margin:8px 2px;text-align:center;font-size:11px;font-weight:bold}.online-user img{width:42px;height:42px;border-radius:50%;border:2px solid var(--gold);object-fit:cover}.bot-message{display:flex;align-items:flex-start;gap:9px}.bot-message-body{display:flex;flex-direction:column;min-width:0}.bot-message-header{display:flex;align-items:center;gap:7px}.bot-message-actions{display:inline-flex;gap:4px}.bot-message-actions button{background:transparent;border:0;color:var(--gold);cursor:pointer}.bot-message-actions button:hover{color:#fff}
 </style>
@@ -483,6 +490,7 @@
             </div>
             <span>|</span>
             <div class="stat-item" title="Επισκέπτες Σελίδας">
+            <div class="stat-item" title="Συνολικές προβολές της σελίδας chat">
                 <span>👁️</span>
                 <span id="page_visitors_count" class="stat-value">0</span>
             </div>
@@ -724,6 +732,7 @@
 <p style="color: #ff4d4d; font-size: 0.8em; margin-top: -5px;">Το όνομα έχει κλειδωθεί μόνιμα.</p>
 {% else %}
 <p style="color: #81C784; font-size: 0.8em; margin-top: -5px;">Μπορείς να αλλάξεις το όνομά σου μόνο μία φορά!</p>
+<p style="color: #81C784; font-size: 0.8em; margin-top: -5px;">Μπορείς να αλλάζεις το όνομά σου όποτε θέλεις!</p>
 {% endif %}
         
         <label>Avatar URL (Link εικόνας):</label>
@@ -782,8 +791,8 @@ const demoBots=[
 ];
 const demoBotTexts=['Τέλειο το κομμάτι! 🎶','Καλησπέρα στην όμορφη παρέα! ❤️','Χαιρετίσματα σε όλους τους ακροατές!','Βάλτε μας και λίγο χορευτικό! 💃'];
 let demoBotMessageId=0;
-function renderOnlineUsers(users=[]){const box=document.getElementById('user-list-content');if(!box)return;const humans=users.filter(u=>!demoBots.some(b=>b.name===u.display_name));box.innerHTML=[...humans,...demoBots.map(b=>({display_name:b.name,color:b.color,avatar_url:b.avatar}))].map(u=>`<div class="online-user"><img src="${u.avatar_url||'https://ui-avatars.com/api/?name=User'}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=User'" alt=""><span style="color:${u.color||'#D4AF37'}">${u.display_name}</span></div>`).join('');}
-function addDemoBotMessage(){const box=document.getElementById('chat-box');if(!box)return;const bot=demoBots[Math.floor(Math.random()*demoBots.length)];const text=demoBotTexts[Math.floor(Math.random()*demoBotTexts.length)];const id=`demo-${++demoBotMessageId}`;const row=document.createElement('div');row.className='message bot-message';row.id=`msg-${id}`;row.innerHTML=`<img src="${bot.avatar}" class="message-avatar" alt=""><div class="bot-message-body"><div class="bot-message-header"><strong style="color:${bot.color}">${bot.name}:</strong><span class="msg-time">τώρα</span><span class="bot-message-actions"><button type="button" title="Διόρθωση" onclick="editMsg('${id}')"><i class="fas fa-edit"></i></button><button type="button" title="Διαγραφή" onclick="deleteMsg('${id}')"><i class="fas fa-trash"></i></button></span></div><span class="message-content">${text}</span></div>`;box.appendChild(row);box.scrollTop=box.scrollHeight;}
+function renderOnlineUsers(users=[]){const count=document.getElementById('online_users_count');if(count)count.textContent=users.length;const box=document.getElementById('user-list-content');if(!box)return;const humans=users.filter(u=>!demoBots.some(b=>b.name===u.display_name));box.innerHTML=[...humans,...demoBots.map(b=>({display_name:b.name,color:b.color,avatar_url:b.avatar}))].map(u=>`<div class="online-user"><img src="${u.avatar_url||'https://ui-avatars.com/api/?name=User'}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=User'" alt=""><span style="color:${u.color||'#D4AF37'}">${u.display_name}</span></div>`).join('');}
+function addDemoBotMessage(){const box=document.getElementById('chat-box');if(!box)return;const bot=demoBots[Math.floor(Math.random()*demoBots.length)];const text=demoBotTexts[Math.floor(Math.random()*demoBotTexts.length)];const id=`demo-${++demoBotMessageId}`;const row=document.createElement('div');row.className='message bot-message';row.id=`msg-${id}`;row.innerHTML=`<img src="${bot.avatar}" class="message-avatar" alt=""><div class="bot-message-body"><div class="bot-message-header"><strong style="color:${bot.color}">${bot.name}:</strong><span class="msg-time">τώρα</span><span class="bot-message-actions"><button type="button" title="Διόρθωση" onclick="editMsg('${id}')"><i class="fas fa-edit"></i></button><button type="button" title="Διαγραφή" onclick="deleteMsg('${id}')"><i class="fas fa-trash"></i></button></span></div><span class="message-content" style="color:${bot.color};text-shadow:0 1px 3px #000">${text}</span></div>`;box.appendChild(row);box.scrollTop=box.scrollHeight;}
 document.addEventListener('DOMContentLoaded',()=>{renderOnlineUsers();setInterval(addDemoBotMessage,300000);});
 </script>
 <script>
@@ -798,6 +807,11 @@ socket.on("message", function(data) {
     const currentUserRole = '{{ current_user.role }}';
     const currentUsername = '{{ current_user.display_name }}'; 
     const chatBox = document.getElementById('chat-box');
+
+    if (data.display_name === 'ΣΥΣΤΗΜΑ' && /Η σκούπα πέρασε/i.test(String(data.content || '').replace(/<[^>]*>/g, ''))) {
+        chatBox.innerHTML = `<div class="cleaning-notice"><img src="https://media1.tenor.com/m/cQYLM8zuc44AAAAd/the-smurfs-cleaning.gif" alt="Στρουμφάκι καθαρίζει"><strong>Η σκούπα πέρασε! Το chat μας λάμπει και πάλι!</strong></div>`;
+        return;
+    }
 
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message';
@@ -923,6 +937,7 @@ socket.on('clear_chat_client', () => {
 
         function clearChat() { 
             if(confirm("Θέλετε να καθαρίσετε το chat; Η σκούπα θα περάσει!")) {
+            if(confirm("Θέλετε να καθαρίσετε το chat; Η σκούπα θα περάσει! ✨")) {
                 socket.emit('clear_chat_request');
             }
         }
@@ -937,13 +952,18 @@ function processMessageContent(content) {
         try {
             const url = new URL(value);
             if (!/^https?:$/.test(url.protocol)) return false;
+            const path = decodeURIComponent(url.pathname).toLowerCase();
             return /\.(png|jpe?g|gif|webp|avif|bmp)$/i.test(url.pathname);
+            return /\.(png|jpe?g|gif|webp|avif|bmp)(?:$|\/)/i.test(path) ||
+                /(^|\.)((media\d*\.giphy\.com)|(media\.tenor\.com)|(i\.postimg\.cc))$/.test(url.hostname);
         } catch (_) { return false; }
     };
     const makeImage = url => {
         const img = document.createElement('img');
         img.src = url; img.alt = 'Εικόνα'; img.className = 'chat-inline-image'; img.loading = 'lazy';
         img.onerror = () => { const link = document.createElement('a'); link.href = url; link.textContent = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; img.replaceWith(link); };
+        img.src = url; img.alt = 'Εικόνα από το chat'; img.className = 'chat-inline-image'; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
+        img.onerror = () => { img.onerror = null; img.classList.add('chat-inline-image-error'); img.alt = 'Η εικόνα δεν φορτώθηκε — άνοιγμα συνδέσμου'; img.title = url; img.style.cursor = 'pointer'; img.addEventListener('click', () => window.open(url, '_blank', 'noopener')); };
         return img;
     };
     template.content.querySelectorAll('a[href]').forEach(anchor => {
